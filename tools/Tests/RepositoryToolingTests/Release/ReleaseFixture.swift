@@ -29,7 +29,7 @@ struct ReleaseFixture {
             "FAKE_ROOT": root.path, "FAKE_CLI": try RepositoryProcess.toolingExecutable().path,
         ]) { _, new in new }
         try write("homebrew-alfred/Casks/littleswitch.rb", HomebrewCaskTests.source)
-        try write("little-switch/appcast.xml", "<rss><channel></channel></rss>\n")
+        try write("little-switch/packaging/appcast.xml", "<rss><channel></channel></rss>\n")
         try write("packaging/release-notes.md", "## Changes\n\n- Release fixture\n")
         try write("packaging/version.env", "# build counter\nMARKETING_VERSION=1.2.3\nBUILD_NUMBER=12\n")
         try write("build/LittleSwitch.app/Contents/Info.plist", "fixture")

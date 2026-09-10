@@ -109,7 +109,7 @@ struct HomebrewReleaseTests {
             let repositories = try fixture.pushes().map { $0.split(separator: "\t")[1] }
             #expect(repositories.map(String.init) == (push ? [fixture.releases.path, fixture.tap.path] : []))
             #expect(
-                try fixture.read("little-switch/appcast.xml").contains(
+                try fixture.read("little-switch/packaging/appcast.xml").contains(
                     "<sparkle:shortVersionString>1.2.3</sparkle:shortVersionString>"))
             for repository in [fixture.tap, fixture.releases] {
                 #expect(try fixture.git(repository, ["status", "--porcelain"]).isEmpty)
