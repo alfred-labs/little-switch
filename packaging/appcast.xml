@@ -5,6 +5,18 @@
         <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
         <description>LittleSwitch releases</description>
         <item>
+            <title>0.4.8</title>
+            <pubDate>Thu, 10 Sep 2026 20:59:58 +0000</pubDate>
+            <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
+            <sparkle:version>20</sparkle:version>
+            <sparkle:shortVersionString>0.4.8</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Fixes</h2>
+<p><strong>Agent tools work again through providers that rename grouped tools.</strong> Some backends flatten grouped tool names or answer with a near-miss spelling; the gateway now restores the exact tool identity, so spawning and waiting for agents succeeds where it previously failed. Saving a provider runs a one-call namespace probe and shows the verdict in the editor.</p>
+<p><strong>Custom routing headers reach the provider again.</strong> Header entries configured on a provider are forwarded with every upstream request.</p>]]></description>
+            <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.4.8/LittleSwitch-0.4.8-arm64.dmg" length="19273201" type="application/octet-stream" sparkle:edSignature="bdJrPPNloqgThvzRjM6/aXeqMD4JOaGthGwBSfh25IpTdG1jwsVGOcLzSTzwLhGxzR+XseuhANJPbAFIbUg6CA=="/>
+        </item>
+        <item>
             <title>0.4.7</title>
             <pubDate>Thu, 10 Sep 2026 15:18:01 +0000</pubDate>
             <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
