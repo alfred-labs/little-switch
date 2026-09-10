@@ -6,12 +6,15 @@
         <description>LittleSwitch releases</description>
         <item>
             <title>0.4.7</title>
-            <pubDate>Thu, 10 Sep 2026 15:13:09 +0000</pubDate>
+            <pubDate>Thu, 10 Sep 2026 15:18:01 +0000</pubDate>
             <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
             <sparkle:version>19</sparkle:version>
             <sparkle:shortVersionString>0.4.7</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <description><![CDATA[<h2>LittleSwitch is now open source</h2><p>The full source code is available on GitHub at <a href="https://github.com/alfred-labs/little-switch">github.com/alfred-labs/little-switch</a>.</p>]]></description>
+            <description><![CDATA[<h2>Improvements</h2>
+<p><strong>LittleSwitch is now open source.</strong> The full source code is available on GitHub at github.com/alfred-labs/little-switch. Build it yourself, audit the code, or contribute.</p>
+<h2>Fixes</h2>
+<p>No app behavior changes in this release.</p>]]></description>
             <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.4.7/LittleSwitch-0.4.7-arm64.dmg" length="19218669" type="application/octet-stream" sparkle:edSignature="PoqgtC1YStlVTHnRxePNDi0DiH9hb/+eWHOt/k3xnAx2FosCbJCVKjC5TNvPFTv8Zi870JTS+z1ZCtiWqcBiDQ=="/>
         </item>
         <item>
