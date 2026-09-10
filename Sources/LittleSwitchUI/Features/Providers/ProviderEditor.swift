@@ -76,12 +76,10 @@ struct ProviderEditor: View {
             .onChange(of: draft.baseURL) { _, _ in
                 resetTestStages()
                 draft.wireProbe = nil
-                draft.namespaceProbe = nil
             }
             .onChange(of: draft.anthropicBaseURL) { _, _ in
                 resetTestStages()
                 draft.wireProbe = nil
-                draft.namespaceProbe = nil
             }
             .onChange(of: draft.credential) { _, _ in resetTestStages() }
             .onChange(of: draft.scriptPath) { _, _ in resetTestStages() }

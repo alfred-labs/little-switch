@@ -75,4 +75,20 @@ struct ProviderThinkingConfigurationTests {
                 == ProviderDisabledThinkingOverride.lowEffort
         )
     }
+
+    @Test("A persisted provider carrying a retired namespace probe still decodes")
+    func decodesLegacyNamespaceProbeKey() throws {
+        let json = #"""
+            {"version":8,"providers":[{
+              "id":"057265e6-9c83-4f9d-92a4-93986f1e30e5",
+              "name":"legacy", "baseURL":"https://example.com", "authMode":"none",
+              "models":[], "status":"ready", "maximumParallelRequests":4,
+              "namespaceProbe":{"verdict":"restored","model":"m","date":7}
+            }],"mappings":{},"autoMode":false,"connected":false}
+            """#
+
+        let decoded = try JSONDecoder().decode(AppConfiguration.self, from: Data(json.utf8))
+
+        #expect(try #require(decoded.providers.first).name == "legacy")
+    }
 }

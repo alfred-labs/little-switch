@@ -11,7 +11,6 @@ struct ProviderWireRows: View {
     /// probed.
     let learnedVerdict: Bool?
     let wireProbe: ProviderWireProbe?
-    let namespaceProbe: ProviderNamespaceProbe?
 
     var body: some View {
         Picker("Responses wire", selection: $responsesWireOverride) {
@@ -43,20 +42,6 @@ struct ProviderWireRows: View {
                 "Probed on save with empty requests: a validation rejection proves a route, 404 proves its absence. "
                     + "Last probe: "
                     + wireProbe.date.formatted(date: .abbreviated, time: .shortened)
-            )
-        }
-        if let namespaceProbe {
-            LabeledContent("Namespaces") {
-                Text(Self.namespaceSummary(namespaceProbe))
-                    .font(SettingsLayout.Typography.supporting)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
-            }
-            .help(
-                "Probed on save with one tiny forced call: the backend answered "
-                    + Self.namespaceExplanation(namespaceProbe.verdict)
-                    + " Last probe: "
-                    + namespaceProbe.date.formatted(date: .abbreviated, time: .shortened)
             )
         }
     }
@@ -91,51 +76,6 @@ struct ProviderWireRows: View {
             "✗"
         case .unknown:
             "?"
-        }
-    }
-
-    private static func namespaceSummary(_ probe: ProviderNamespaceProbe) -> String {
-        var summary = "\(symbol(probe.verdict)) \(label(probe.verdict))"
-        if let model = probe.model {
-            summary += " · \(model)"
-        }
-        return summary
-    }
-
-    private static func symbol(_ verdict: ProviderNamespaceVerdict) -> String {
-        switch verdict {
-        case .restored:
-            "✓"
-        case .rejected:
-            "✗"
-        case .silentlyDropped, .unknown:
-            "?"
-        }
-    }
-
-    private static func label(_ verdict: ProviderNamespaceVerdict) -> String {
-        switch verdict {
-        case .restored:
-            "Native"
-        case .silentlyDropped:
-            "Not called"
-        case .rejected:
-            "Rejected"
-        case .unknown:
-            "Unknown"
-        }
-    }
-
-    private static func namespaceExplanation(_ verdict: ProviderNamespaceVerdict) -> String {
-        switch verdict {
-        case .restored:
-            "with the namespaced pair, so group tools are served natively. "
-        case .silentlyDropped:
-            "by accepting the request without calling the probe tool. "
-        case .rejected:
-            "by rejecting the namespace shape. "
-        case .unknown:
-            "inconclusively — auth, quota, or a server error can look like this. "
         }
     }
 }

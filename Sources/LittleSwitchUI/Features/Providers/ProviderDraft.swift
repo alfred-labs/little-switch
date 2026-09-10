@@ -20,7 +20,6 @@ struct ProviderDraft: Identifiable {
     var disabledThinkingOverride: ProviderDisabledThinkingOverride = .default
     var responsesWireOverride: ProviderResponsesWireOverride?
     var wireProbe: ProviderWireProbe?
-    var namespaceProbe: ProviderNamespaceProbe?
     /// The provider's optional Anthropic surface; empty means the base URL
     /// serves every wire.
     var anthropicBaseURL = ""
@@ -61,7 +60,6 @@ struct ProviderDraft: Identifiable {
         // The route probe belongs to the previous endpoint: it must not
         // vouch for the preset's URLs.
         wireProbe = nil
-        namespaceProbe = nil
     }
 
     init(provider: Provider) {
@@ -80,7 +78,6 @@ struct ProviderDraft: Identifiable {
         responsesWireOverride = provider.responsesWireOverride
         anthropicBaseURL = provider.anthropicBaseURL ?? ""
         wireProbe = provider.wireProbe
-        namespaceProbe = provider.namespaceProbe
         modelContexts = provider.models.map(ModelContextDraft.init).sorted { $0.id < $1.id }
     }
 
@@ -90,7 +87,6 @@ struct ProviderDraft: Identifiable {
         intent = .duplicate(sourceID: provider.id)
         name = ProviderNameValidation.availableCopyName(of: provider.name, providers: providers)
         wireProbe = nil
-        namespaceProbe = nil
     }
 
     var hasAdvancedOverrides: Bool {

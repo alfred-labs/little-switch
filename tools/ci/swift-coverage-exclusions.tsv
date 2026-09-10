@@ -1,7 +1,6 @@
 Sources/LittleSwitch/main.swift	Executable entry point and AppKit application launch boundary.
 Sources/LittleSwitchCore/Providers/Capabilities/ProviderDisabledThinkingOverride.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
 Sources/LittleSwitchCore/Providers/Capabilities/ProviderImageInputOverride.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
-Sources/LittleSwitchCore/Providers/Capabilities/ProviderNamespaceProbing.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
 Sources/LittleSwitchCore/Providers/Capabilities/ProviderResponsesWireOverride.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
 Sources/LittleSwitchCore/Providers/Capabilities/ProviderWireProbing.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
 Sources/LittleSwitchCore/Providers/Models/CredentialSource.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.

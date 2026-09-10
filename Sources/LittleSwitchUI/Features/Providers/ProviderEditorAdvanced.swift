@@ -14,8 +14,7 @@ struct ProviderEditorAdvanced: View {
                 ProviderWireRows(
                     responsesWireOverride: $draft.responsesWireOverride,
                     learnedVerdict: responsesWireVerdict,
-                    wireProbe: draft.wireProbe,
-                    namespaceProbe: draft.namespaceProbe
+                    wireProbe: draft.wireProbe
                 )
                 Picker("Image input", selection: $draft.imageInputOverride) {
                     Text("Automatic").tag(ProviderImageInputOverride?.none)

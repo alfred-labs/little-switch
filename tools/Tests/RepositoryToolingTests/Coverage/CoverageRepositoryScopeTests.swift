@@ -103,7 +103,6 @@ struct CoverageRepositoryScopeTests {
         // Domain extractions verified against llvm-cov: declarations emit no regions.
         "Sources/LittleSwitchCore/Providers/Capabilities/ProviderDisabledThinkingOverride.swift",
         "Sources/LittleSwitchCore/Providers/Capabilities/ProviderImageInputOverride.swift",
-        "Sources/LittleSwitchCore/Providers/Capabilities/ProviderNamespaceProbing.swift",
         "Sources/LittleSwitchCore/Providers/Capabilities/ProviderResponsesWireOverride.swift",
         "Sources/LittleSwitchCore/Providers/Capabilities/ProviderWireProbing.swift",
         "Sources/LittleSwitchCore/Providers/Models/CredentialSource.swift",

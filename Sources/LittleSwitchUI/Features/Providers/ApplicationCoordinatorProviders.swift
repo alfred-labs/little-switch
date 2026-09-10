@@ -72,16 +72,6 @@ extension ApplicationCoordinator {
         provider.lastRefresh = Date()
         provider.status = .ready
         provider.wireProbe = try await wireProbe
-        // The namespace probe runs a real (tiny) generation, so it needs a
-        // discovered model and rides after discovery instead of hiding
-        // under it. A skipped probe is nil: not probed, not unknown.
-        provider.namespaceProbe = try await namespaceProbeForSave(
-            provider: provider,
-            previous: previousProvider,
-            credentialChanged: credentialChanged,
-            secret: credential.secret,
-            wireProbe: provider.wireProbe
-        )
 
         let routingMutationToken = try await beginValidatedRoutingMutation(
             intent: intent,

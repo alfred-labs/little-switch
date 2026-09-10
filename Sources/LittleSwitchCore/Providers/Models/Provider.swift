@@ -42,9 +42,6 @@ public struct Provider: Codable, Equatable, Identifiable, Sendable {
     /// Last endpoint-route probe, refreshed on every save. See
     /// `ProviderWireProbe`.
     public var wireProbe: ProviderWireProbe?
-    /// Last behavioral namespace probe of the Responses route, refreshed on
-    /// saves that re-probe the wire. See `ProviderNamespaceProbe`.
-    public var namespaceProbe: ProviderNamespaceProbe?
 
     public init(
         id: UUID = UUID(),
@@ -63,8 +60,7 @@ public struct Provider: Codable, Equatable, Identifiable, Sendable {
         disabledThinkingOverride: ProviderDisabledThinkingOverride = .default,
         responsesWireOverride: ProviderResponsesWireOverride? = nil,
         anthropicBaseURL: String? = nil,
-        wireProbe: ProviderWireProbe? = nil,
-        namespaceProbe: ProviderNamespaceProbe? = nil
+        wireProbe: ProviderWireProbe? = nil
     ) {
         self.id = id
         self.name = name
@@ -83,7 +79,6 @@ public struct Provider: Codable, Equatable, Identifiable, Sendable {
         self.responsesWireOverride = responsesWireOverride
         self.anthropicBaseURL = anthropicBaseURL
         self.wireProbe = wireProbe
-        self.namespaceProbe = namespaceProbe
     }
 
     public func imageInputsAccepted(for model: DiscoveredModel) -> Bool {
