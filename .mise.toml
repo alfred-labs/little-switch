@@ -153,10 +153,6 @@ run = "./tools/release/notarize-dmg.sh"
 description = "Verify the signed and notarized release DMG"
 run = "./tools/release/verify-dmg.sh"
 
-[tasks."release:publish-legacy"]
-description = "Publish release with legacy appcast mirror (transition window until 2026-10-01)"
-run = "./tools/release/publish-update.sh --legacy-appcast"
-
 [tasks."release:publish"]
 description = "Publish the DMG as Latest and prepare Sparkle and Homebrew updates (--push publishes both)"
 run = "./tools/release/publish-update.sh"
