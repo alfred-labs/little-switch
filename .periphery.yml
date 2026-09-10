@@ -1,0 +1,22 @@
+# Periphery analyzes references, not execution: it finds declarations no
+# production code reaches. Complements the exact-100% coverage gate, which
+# finds the inverse class (code referenced but dead by data invariant).
+# The SwiftPM package is detected automatically — no workspace or schemes.
+#
+# Tests are not indexed: a declaration referenced only by tests counts as
+# unused, which is the repo's policy (test-only scaffolding does not ship).
+# The baseline file records the findings already present when the gate
+# was introduced: scans fail only on NEW unused code, so the debt burns
+# down incrementally. Regenerate with `periphery scan --write-baseline
+# .periphery-baseline.yml` only when the existing findings are fixed or
+# deliberately retained.
+# The baseline retains TrafficLog/TrafficFailure fields used by Codable JSONL
+# records and their retained snapshot projections after the Logs viewer is removed.
+# TrafficLogSnapshot remains the one-shot inspection boundary for retention/replay tests;
+# no retired view, subscription, or Clear command is retained by this exception.
+# ProviderRequestPoolProviderSnapshot keeps narrowly annotated diagnostic fields
+# for reconfiguration identity, queue memory bounds and timeout/cancellation checks;
+# the retired provider-row UI projection is not retained by this exception.
+# Run through `mise run swift:deadcode` to inherit the pinned DEVELOPER_DIR.
+index_exclude:
+  - Tests/**

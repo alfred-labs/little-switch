@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleExecutable</key>
+    <string>LittleSwitch</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.alfredlabs.littleswitch</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon.icns</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>LittleSwitch</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>LSBuildTag</key>
+    <string>development</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2026 LittleSwitch contributors</string>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>LittleSwitch accepts model requests from devices on your local network.</string>
+    <key>SUFeedURL</key>
+    <string>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>EjsuvLX03eR7UK3zvF7RzNM0U/0461gxnm1Lo8mi5cg=</string>
+</dict>
+</plist>

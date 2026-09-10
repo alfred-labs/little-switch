@@ -1,0 +1,203 @@
+[tools]
+swiftlint = "0.65.0"
+periphery = "3.8.0"
+
+[env]
+CLANG_MODULE_CACHE_PATH = "{{config_root}}/.build/clang-cache"
+# xcode-select points at CommandLineTools, which cannot build the test
+# targets (no swift-testing module under the classic --no-parallel driver).
+# Every gate task must run through mise to inherit this pin.
+DEVELOPER_DIR = "/Applications/Xcode.app/Contents/Developer"
+
+[tasks.default]
+description = "Build LittleSwitch"
+run = "mise run build"
+
+[tasks.toolchains]
+description = "Verify Xcode, Swift, swift-format, SwiftLint, and arm64"
+run = "./tools/ci/check-toolchains.sh"
+
+[tasks."swift:format"]
+description = "Require official swift-format output"
+run = "swift format lint --strict --recursive Sources Tests Package.swift tools/Sources tools/Tests tools/Package.swift"
+
+[tasks."swift:lint"]
+description = "Run pinned SwiftLint semantic rules"
+run = "swiftlint lint --strict --no-cache"
+
+[tasks."swift:test"]
+description = "Run Swift Testing suites with strict compiler warnings"
+run = """
+xcrun swift test --disable-sandbox \
+  --cache-path .build/cache --config-path .build/config --security-path .build/security \
+  -Xswiftc -warnings-as-errors
+"""
+
+[tasks."swift:coverage"]
+description = "Require exact 100 percent measured Swift line coverage"
+run = "./tools/ci/check-swift-coverage.sh"
+
+[tasks."swift:deadcode"]
+description = "Require Periphery to find no unreferenced code"
+run = "periphery scan --strict --baseline .periphery-baseline.yml"
+
+[tasks."swift:thread-sanitizer"]
+description = "Run concurrency-sensitive tests with Thread Sanitizer"
+run = """
+xcrun swift test --disable-sandbox --sanitize=thread \
+  --cache-path .build/cache --config-path .build/config --security-path .build/security \
+  -Xswiftc -warnings-as-errors
+"""
+
+[tasks."swift:build"]
+description = "Build the arm64 release executable with strict warnings"
+run = """
+xcrun swift build --disable-sandbox --configuration release \
+  --triple arm64-apple-macosx14.0 \
+  --cache-path .build/cache --config-path .build/config --security-path .build/security \
+  -Xswiftc -warnings-as-errors
+"""
+
+[tasks."repo:test"]
+description = "Run repository policy tests"
+run = """
+set -eu
+mise run tools:test
+mise run --quiet tools:run -- repo check
+"""
+
+[tasks."tools:build"]
+description = "Build the standalone Swift repository tools with strict warnings"
+run = """
+xcrun swift build --disable-sandbox --package-path tools \
+  --scratch-path .build/tooling \
+  --cache-path .build/tooling-cache --config-path .build/tooling-config --security-path .build/tooling-security \
+  -Xswiftc -warnings-as-errors
+"""
+
+[tasks."tools:test"]
+description = "Test the standalone Swift repository tools"
+run = """
+xcrun swift test --disable-sandbox --package-path tools \
+  --scratch-path .build/tooling \
+  --cache-path .build/tooling-cache --config-path .build/tooling-config --security-path .build/tooling-security \
+  -Xswiftc -warnings-as-errors
+"""
+
+[tasks."tools:run"]
+description = "Run littleswitch-tools (pass subcommands after --)"
+run = """
+xcrun swift run --disable-sandbox --package-path tools \
+  --scratch-path .build/tooling \
+  --cache-path .build/tooling-cache --config-path .build/tooling-config --security-path .build/tooling-security \
+  -Xswiftc -warnings-as-errors littleswitch-tools --root "{{config_root}}"
+"""
+
+[tasks."tools:deadcode"]
+description = "Require no unused production declarations in repository tooling"
+dir = "tools"
+run = """
+set -eu
+mise run tools:build
+periphery scan --strict --config .periphery.yml --skip-build \
+  --index-store-path "{{config_root}}/.build/tooling/debug/index/store"
+"""
+
+[tasks."tools:coverage"]
+description = "Require exact 100 percent measured tooling line coverage"
+run = "./tools/ci/check-tooling-coverage.sh"
+
+[tasks."monitoring:readiness"]
+description = "Wait for the local Prometheus and Loki lab with bounded timeouts"
+run = "mise run --quiet tools:run -- monitoring readiness"
+
+[tasks."monitoring:probe"]
+description = "Verify synthetic OTLP JSON ingestion and queries in the local lab"
+run = "mise run --quiet tools:run -- monitoring probe"
+
+[tasks."monitoring:integration"]
+description = "Verify the Swift OTLP exporter against the local Prometheus and Loki lab"
+run = """
+set -eu
+mise run monitoring:readiness
+LITTLESWITCH_MONITORING_LAB=1 xcrun swift test --disable-sandbox \
+  --cache-path .build/cache --config-path .build/config --security-path .build/security \
+  -Xswiftc -warnings-as-errors --filter MonitoringCompose
+"""
+
+[tasks."diagnostics:session-tools"]
+description = "Report last-request MCP definition counts from explicitly selected log segments"
+run = "mise run --quiet tools:run -- diagnostics session-tool-defs"
+
+[tasks."app:build"]
+description = "Build the unsigned Apple Silicon application bundle"
+run = "./tools/build-app.sh"
+
+[tasks."verify:bundle"]
+description = "Verify the native Apple Silicon application bundle"
+run = "./tools/ci/verify-bundle.sh"
+
+[tasks."release:bump"]
+description = "Increment the release build number (optionally set a new marketing version)"
+run = "./tools/release/bump-version.sh"
+
+[tasks."release:dmg"]
+description = "Build and Developer-ID sign the ARM64 release DMG"
+run = "./tools/release/create-dmg.sh"
+
+[tasks."release:notarize"]
+description = "Notarize and staple the signed release DMG"
+run = "./tools/release/notarize-dmg.sh"
+
+[tasks."release:verify"]
+description = "Verify the signed and notarized release DMG"
+run = "./tools/release/verify-dmg.sh"
+
+[tasks."release:publish-legacy"]
+description = "Publish release with legacy appcast mirror (transition window until 2026-10-01)"
+run = "./tools/release/publish-update.sh --legacy-appcast"
+
+[tasks."release:publish"]
+description = "Publish the DMG as Latest and prepare Sparkle and Homebrew updates (--push publishes both)"
+run = "./tools/release/publish-update.sh"
+
+[tasks."release:homebrew"]
+description = "Update Homebrew from the verified published DMG (--push publishes the cask)"
+run = "./tools/release/publish-homebrew.sh"
+
+[tasks.release]
+description = "Build and notarize the DMG, then publish GitHub Latest, Sparkle, and Homebrew"
+run = """
+set -eu
+mise run release:dmg
+mise run release:notarize
+mise run release:verify
+mise run release:publish -- --push
+"""
+
+[tasks.build]
+description = "Build the Apple Silicon LittleSwitch application"
+depends = ["app:build"]
+
+[tasks.check]
+description = "Run every local Swift quality gate"
+run = """
+set -eu
+mise run toolchains
+mise run swift:format
+mise run swift:lint
+mise run repo:test
+mise run tools:coverage
+mise run tools:deadcode
+mise run swift:test
+mise run swift:coverage
+mise run swift:deadcode
+mise run swift:thread-sanitizer
+mise run swift:build
+mise run app:build
+mise run verify:bundle
+"""
+
+[tasks.clean]
+description = "Remove generated SwiftPM and application build products"
+run = "swift package clean && rm -rf build"
