@@ -24,12 +24,12 @@ struct ProviderEditorAdvanced: View {
                 }
                 .settingsMenuPicker()
                 Picker("Disabled thinking", selection: $draft.disabledThinkingOverride) {
-                    Text("Pass through").tag(ProviderDisabledThinkingOverride?.none)
-                    Text("Use low effort").tag(Optional(ProviderDisabledThinkingOverride.lowEffort))
+                    Text("Use low effort").tag(ProviderDisabledThinkingOverride.lowEffort)
+                    Text("Pass through").tag(ProviderDisabledThinkingOverride.passthrough)
                 }
                 .settingsMenuPicker()
                 Text(
-                    "With “Use low effort” selected, requests that disable thinking use low effort unless an effort is already set."
+                    "Use low effort is the default: requests that disable thinking use low effort unless an effort is already set. Pass through preserves the caller's parameters."
                 )
                 .font(SettingsLayout.Typography.supporting)
                 .foregroundStyle(.secondary)

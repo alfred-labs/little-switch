@@ -91,6 +91,8 @@ struct AnthropicThinkingCompatibilityTests {
         arguments: [#"{"thinking":{"type":"disabled"}}"#, "{"])
     func absentOverride(json: String) throws {
         let body = Data(" \n\(json)\t".utf8)
-        #expect(try AnthropicThinkingCompatibility.applying(nil, to: body) == body)
+        #expect(
+            try AnthropicThinkingCompatibility.applying(
+                ProviderDisabledThinkingOverride.passthrough, to: body) == body)
     }
 }

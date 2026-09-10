@@ -67,9 +67,14 @@ extension GatewayTests {
 
     @Test(
         "Native 64-token requests retain their budget and streaming response bytes",
-        arguments: [ProviderDisabledThinkingOverride.lowEffort, nil], [false, true]
+        arguments: [
+            ProviderDisabledThinkingOverride.lowEffort,
+            ProviderDisabledThinkingOverride.passthrough,
+        ], [false, true]
     )
-    func disabledThinkingNativeShape(override: ProviderDisabledThinkingOverride?, streaming: Bool) async throws {
+    func disabledThinkingNativeShape(
+        override: ProviderDisabledThinkingOverride, streaming: Bool
+    ) async throws {
         let fixture = try thinkingFixture(override: override)
         let responseBody = streaming ? "data: {\"type\":\"ping\"}\n\n" : #"{"type":"message","content":[]}"#
         let upstream =
@@ -106,7 +111,7 @@ extension GatewayTests {
         #expect(requests.count == 1)
         var expected = try #require(JSONSerialization.jsonObject(with: incoming) as? [String: Any])
         expected["model"] = "glm-5.2"
-        if override != nil { expected["output_config"] = ["effort": "low"] }
+        if override == .lowEffort { expected["output_config"] = ["effort": "low"] }
         #expect(try JSONSerialization.jsonObject(with: request.body) as? NSDictionary == expected as NSDictionary)
         #expect(recorder.events.first?.claudeRequest.body == incoming)
         #expect(recorder.events.first?.upstreamExchanges.first?.request?.body == request.body)
@@ -166,7 +171,7 @@ extension GatewayTests {
     }
 
     func thinkingFixture(
-        override: ProviderDisabledThinkingOverride? = .lowEffort,
+        override: ProviderDisabledThinkingOverride = .lowEffort,
         webSearch: Bool = false
     ) throws -> GatewayFixture {
         let base = try webSearch ? makeWebSearchFixture(maximumUses: 1) : makeFixture()

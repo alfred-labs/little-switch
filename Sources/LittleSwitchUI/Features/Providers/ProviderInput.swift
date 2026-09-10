@@ -23,7 +23,7 @@ public struct ProviderInput: Sendable {
     public var contextOverrides: [String: Int]?
     public var maximumParallelRequests: Int
     public var imageInputOverride: ProviderImageInputOverride?
-    public var disabledThinkingOverride: ProviderDisabledThinkingOverride?
+    public var disabledThinkingOverride: ProviderDisabledThinkingOverride
     public var responsesWireOverride: ProviderResponsesWireOverride?
     /// The provider's optional Anthropic surface (split-surface providers
     /// like z.ai); nil means the base URL serves every wire.
@@ -42,7 +42,7 @@ public struct ProviderInput: Sendable {
         contextOverrides: [String: Int]? = nil,
         maximumParallelRequests: Int = Provider.defaultMaximumParallelRequests,
         imageInputOverride: ProviderImageInputOverride? = nil,
-        disabledThinkingOverride: ProviderDisabledThinkingOverride? = nil,
+        disabledThinkingOverride: ProviderDisabledThinkingOverride = .default,
         responsesWireOverride: ProviderResponsesWireOverride? = nil,
         anthropicBaseURL: String? = nil
     ) {

@@ -163,7 +163,7 @@ public struct AppConfiguration: Codable, Equatable, Sendable {
                 disabledThinkingOverride: values.decodeIfPresent(
                     ProviderDisabledThinkingOverride.self,
                     forKey: .disabledThinkingOverride
-                ),
+                ) ?? .default,
                 responsesWireOverride: values.decodeIfPresent(
                     ProviderResponsesWireOverride.self,
                     forKey: .responsesWireOverride

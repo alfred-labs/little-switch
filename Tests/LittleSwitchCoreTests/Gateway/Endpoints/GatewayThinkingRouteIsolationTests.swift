@@ -11,7 +11,7 @@ extension GatewayTests {
         arguments: [ProviderResponsesWireOverride.native, .chatCompletions]
     )
     func disabledThinkingRouteIsolation(wire: ProviderResponsesWireOverride) async throws {
-        let base = try thinkingFixture(override: nil)
+        let base = try thinkingFixture(override: .passthrough)
         let mapping = try #require(base.snapshot.codex.resolvedDefaultModel(in: base.snapshot.providers))
         let slug = CodexCatalog.slug(for: mapping, in: base.snapshot.providers)
         let incoming = Data(
@@ -26,7 +26,10 @@ extension GatewayTests {
             : #"{"id":"chatcmpl_1","created":1,"choices":[{"message":{"role":"assistant","content":"ok"},"finish_reason":"stop"}]}"#
         var upstreamBodies: [Data] = []
 
-        for override in [nil, ProviderDisabledThinkingOverride.lowEffort] {
+        for override in [
+            ProviderDisabledThinkingOverride.passthrough,
+            ProviderDisabledThinkingOverride.lowEffort,
+        ] {
             var snapshot = base.snapshot
             snapshot.providers[0].disabledThinkingOverride = override
             snapshot.providers[0].responsesWireOverride = wire

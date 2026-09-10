@@ -17,7 +17,7 @@ struct ProviderDraft: Identifiable {
     var scriptPath = ""
     var credentialRefreshInterval: TimeInterval?
     var imageInputOverride: ProviderImageInputOverride?
-    var disabledThinkingOverride: ProviderDisabledThinkingOverride?
+    var disabledThinkingOverride: ProviderDisabledThinkingOverride = .default
     var responsesWireOverride: ProviderResponsesWireOverride?
     var wireProbe: ProviderWireProbe?
     var namespaceProbe: ProviderNamespaceProbe?
@@ -56,7 +56,7 @@ struct ProviderDraft: Identifiable {
         authMode = preset.authMode
         credentialSource = .manual
         maximumParallelRequests = preset.maximumParallelRequests
-        disabledThinkingOverride = nil
+        disabledThinkingOverride = .default
         anthropicBaseURL = preset.anthropicBaseURL ?? ""
         // The route probe belongs to the previous endpoint: it must not
         // vouch for the preset's URLs.
@@ -96,7 +96,7 @@ struct ProviderDraft: Identifiable {
     var hasAdvancedOverrides: Bool {
         normalizedAnthropicBaseURL != nil
             || imageInputOverride != nil
-            || disabledThinkingOverride != nil
+            || disabledThinkingOverride != .default
             || responsesWireOverride != nil
             || modelContexts.contains { !$0.overrideText.isEmpty }
     }

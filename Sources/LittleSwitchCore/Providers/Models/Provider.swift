@@ -30,8 +30,9 @@ public struct Provider: Codable, Equatable, Identifiable, Sendable {
     public var lastError: String?
     public var maximumParallelRequests: Int
     public var imageInputOverride: ProviderImageInputOverride?
-    /// Nil preserves the caller's thinking and effort parameters.
-    public var disabledThinkingOverride: ProviderDisabledThinkingOverride?
+    /// Behavior for requests that disable thinking. Defaults to low
+    /// effort; `passthrough` preserves the caller's parameters.
+    public var disabledThinkingOverride: ProviderDisabledThinkingOverride
     /// Forced Responses wire; nil = automatic detection. See
     /// `ProviderResponsesWireOverride`.
     public var responsesWireOverride: ProviderResponsesWireOverride?
@@ -59,7 +60,7 @@ public struct Provider: Codable, Equatable, Identifiable, Sendable {
         lastError: String? = nil,
         maximumParallelRequests: Int = Provider.defaultMaximumParallelRequests,
         imageInputOverride: ProviderImageInputOverride? = nil,
-        disabledThinkingOverride: ProviderDisabledThinkingOverride? = nil,
+        disabledThinkingOverride: ProviderDisabledThinkingOverride = .default,
         responsesWireOverride: ProviderResponsesWireOverride? = nil,
         anthropicBaseURL: String? = nil,
         wireProbe: ProviderWireProbe? = nil,

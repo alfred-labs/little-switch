@@ -28,8 +28,11 @@ struct ProviderThinkingConfigurationTests {
 
     @Test(
         "The optional thinking override round-trips through storage",
-        arguments: [ProviderDisabledThinkingOverride.lowEffort, nil])
-    func storageRoundTrip(override: ProviderDisabledThinkingOverride?) throws {
+        arguments: [
+            ProviderDisabledThinkingOverride.lowEffort,
+            ProviderDisabledThinkingOverride.passthrough,
+        ])
+    func storageRoundTrip(override: ProviderDisabledThinkingOverride) throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let configuration = AppConfiguration(providers: [
@@ -52,8 +55,10 @@ struct ProviderThinkingConfigurationTests {
         #expect(try JSONDecoder().decode(Provider.self, from: JSONEncoder().encode(provider)) == provider)
     }
 
-    @Test("Legacy and null provider settings remain pass through", arguments: [1, 7, 8], [false, true])
-    func legacyPassThrough(version: Int, explicitNull: Bool) throws {
+    @Test(
+        "Legacy and null provider settings default to low effort",
+        arguments: [1, 7, 8], [false, true])
+    func legacyDefaultsToLowEffort(version: Int, explicitNull: Bool) throws {
         let field = explicitNull ? #", "disabledThinkingOverride":null"# : ""
         let json = #"""
             {"version":\#(version),"providers":[{
@@ -65,6 +70,9 @@ struct ProviderThinkingConfigurationTests {
 
         let decoded = try JSONDecoder().decode(AppConfiguration.self, from: Data(json.utf8))
 
-        #expect(try #require(decoded.providers.first).disabledThinkingOverride == nil)
+        #expect(
+            try #require(decoded.providers.first).disabledThinkingOverride
+                == ProviderDisabledThinkingOverride.lowEffort
+        )
     }
 }

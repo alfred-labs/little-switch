@@ -4,7 +4,7 @@ package enum AnthropicThinkingCompatibility {
     /// Adds the provider's fallback only when the caller disabled thinking
     /// without choosing an effort. Every ineligible body retains its bytes.
     package static func applying(
-        _ override: ProviderDisabledThinkingOverride?,
+        _ override: ProviderDisabledThinkingOverride,
         to body: Data
     ) throws -> Data {
         guard override == .lowEffort,

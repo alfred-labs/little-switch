@@ -6,8 +6,8 @@ import Testing
 
 @Suite("Provider thinking drafts")
 struct ProviderThinkingDraftTests {
-    @Test("Editing or duplicating a provider exposes its saved thinking setting in Advanced")
-    func revealsSavedOverride() throws {
+    @Test("Editing or duplicating a provider resolves its saved thinking setting")
+    func resolvesSavedThinking() throws {
         let base = Provider(name: "example", baseURL: "https://example.com", authMode: .none)
         var root = try #require(
             JSONSerialization.jsonObject(with: JSONEncoder().encode(base)) as? [String: Any]
@@ -17,32 +17,51 @@ struct ProviderThinkingDraftTests {
             Provider.self, from: JSONSerialization.data(withJSONObject: root)
         )
 
-        #expect(ProviderDraft(provider: provider).hasAdvancedOverrides)
-        #expect(ProviderDraft(duplicating: provider, providers: [provider]).hasAdvancedOverrides)
+        // Low effort is the product default, so a saved low effort round-trips
+        // without counting as an advanced override.
         #expect(ProviderDraft(provider: provider).disabledThinkingOverride == .lowEffort)
         #expect(ProviderDraft(duplicating: provider, providers: [provider]).disabledThinkingOverride == .lowEffort)
+        #expect(!ProviderDraft(provider: provider).hasAdvancedOverrides)
+        #expect(!ProviderDraft(duplicating: provider, providers: [provider]).hasAdvancedOverrides)
+    }
+
+    @Test("Editing or duplicating a provider exposes a saved passthrough in Advanced")
+    func revealsSavedPassthrough() throws {
+        let base = Provider(name: "example", baseURL: "https://example.com", authMode: .none)
+        var root = try #require(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(base)) as? [String: Any]
+        )
+        root["disabledThinkingOverride"] = "passthrough"
+        let provider = try JSONDecoder().decode(
+            Provider.self, from: JSONSerialization.data(withJSONObject: root)
+        )
+
+        #expect(ProviderDraft(provider: provider).hasAdvancedOverrides)
+        #expect(ProviderDraft(duplicating: provider, providers: [provider]).hasAdvancedOverrides)
+        #expect(ProviderDraft(provider: provider).disabledThinkingOverride == .passthrough)
+        #expect(ProviderDraft(duplicating: provider, providers: [provider]).disabledThinkingOverride == .passthrough)
     }
 
     @Test("Thinking overrides remain draft edits until Save and reset when choosing a preset")
     func draftTransaction() {
         let provider = Provider(name: "example", baseURL: "https://example.com", authMode: .none)
         var draft = ProviderDraft(provider: provider)
-        #expect(draft.disabledThinkingOverride == nil)
-        #expect(draft.makeInput().disabledThinkingOverride == nil)
+        #expect(draft.disabledThinkingOverride == .default)
+        #expect(draft.makeInput().disabledThinkingOverride == .default)
+
+        draft.disabledThinkingOverride = .passthrough
+        #expect(draft.makeInput().disabledThinkingOverride == .passthrough)
+        #expect(draft.hasAdvancedOverrides)
+        #expect(provider.disabledThinkingOverride == .default)
+        #expect(ProviderDraft(provider: provider).disabledThinkingOverride == .default)
 
         draft.disabledThinkingOverride = .lowEffort
         #expect(draft.makeInput().disabledThinkingOverride == .lowEffort)
-        #expect(draft.hasAdvancedOverrides)
-        #expect(provider.disabledThinkingOverride == nil)
-        #expect(ProviderDraft(provider: provider).disabledThinkingOverride == nil)
-
-        draft.disabledThinkingOverride = nil
-        #expect(draft.makeInput().disabledThinkingOverride == nil)
         #expect(!draft.hasAdvancedOverrides)
 
         draft.disabledThinkingOverride = .lowEffort
         draft.apply(.ollama)
-        #expect(draft.disabledThinkingOverride == nil)
+        #expect(draft.disabledThinkingOverride == .default)
     }
 
     @Test("A duplicate's input preserves thinking independently of its source")
@@ -59,9 +78,9 @@ struct ProviderThinkingDraftTests {
         #expect(input.disabledThinkingOverride == .lowEffort)
         #expect(input.intent == .duplicate(sourceID: source.id))
         #expect(try #require(input.id) != source.id)
-        draft.disabledThinkingOverride = nil
+        draft.disabledThinkingOverride = .passthrough
         #expect(source.disabledThinkingOverride == .lowEffort)
-        #expect(draft.makeInput().disabledThinkingOverride == nil)
+        #expect(draft.makeInput().disabledThinkingOverride == .passthrough)
     }
 }
 
@@ -88,9 +107,9 @@ struct ProviderThinkingCoordinatorTests {
         #expect(decoded == saved.configuration)
         #expect(ProviderDraft(provider: provider).makeInput().disabledThinkingOverride == .lowEffort)
 
-        input.disabledThinkingOverride = nil
+        input.disabledThinkingOverride = .passthrough
         let cleared = try await fixture.coordinator.saveProvider(input)
-        #expect(cleared.configuration.providers.first?.disabledThinkingOverride == nil)
+        #expect(cleared.configuration.providers.first?.disabledThinkingOverride == .passthrough)
         #expect(fixture.store.configuration == cleared.configuration)
         await fixture.coordinator.shutdown(mode: .handoff)
     }
