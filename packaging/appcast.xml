@@ -4,5 +4,22 @@
         <title>LittleSwitch</title>
         <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
         <description>LittleSwitch releases</description>
+        <item>
+            <title>0.4.5</title>
+            <pubDate>Thu, 10 Sep 2026 14:49:47 +0000</pubDate>
+            <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
+            <sparkle:version>17</sparkle:version>
+            <sparkle:shortVersionString>0.4.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Codex</h2>
+<ul><li>The generated model catalog enables Codex multi-agent v2, so supported models can create and coordinate nested collaboration agents.</li><li>Existing Codex threads keep their original collaboration mode. Auto-review and Guardian flows remain unchanged.</li></ul>
+<h2>Repository</h2>
+<ul><li>Product documentation is now separated from the developer guide, and technical docs have moved to English.</li><li>Source distributions are licensed under BSL 1.1 and convert to MIT four years after publication.</li></ul>
+<h2>Updating</h2>
+<ul><li>Restart Codex after applying the updated model catalog so new sessions receive multi-agent v2 tools.</li></ul>
+<h2>Compatibility</h2>
+<ul><li>Requires an Apple Silicon Mac running macOS 14 or later.</li><li>Existing routes and credentials are preserved.</li></ul>]]></description>
+            <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.4.5/LittleSwitch-0.4.5-arm64.dmg" length="19218786" type="application/octet-stream" sparkle:edSignature="54zS+HWWTGw+rjxi8VnvYkD+GTSUUNSfEkAn0rZzHUDswq4ZICLigkoic0SVyXmNMtqlw2hrd2M1YWG5JOV7Bg=="/>
+        </item>
     </channel>
 </rss>

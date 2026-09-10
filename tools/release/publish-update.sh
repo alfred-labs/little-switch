@@ -85,7 +85,7 @@ release_tools appcast \
     --output "$project_root/packaging/appcast.xml"
 
 git commit --only \
-    -m "release: LittleSwitch $version (build $build)" -- packaging/appcast.xml
+    -m "chore(release): LittleSwitch $version (build $build)" -- packaging/appcast.xml
 
 # During the transition window, mirror the release to the legacy appcast so
 # installs with the old SUFeedURL still receive updates.
@@ -102,7 +102,7 @@ if [ "$legacy_appcast" = 1 ]; then
         --appcast "$legacy_repository/appcast.xml" \
         --output "$legacy_repository/appcast.xml"
     git -C "$legacy_repository" commit --only \
-        -m "release: LittleSwitch $version (build $build)" -- appcast.xml
+        -m "chore(release): LittleSwitch $version (build $build)" -- appcast.xml
 fi
 
 if [ "$push" = 1 ]; then
