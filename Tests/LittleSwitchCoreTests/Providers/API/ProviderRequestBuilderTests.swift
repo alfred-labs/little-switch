@@ -80,39 +80,86 @@ struct ProviderRequestBuilderTests {
         #expect(request.headers["x-request-id"] == ["abc"])
     }
 
-    @Test("Only allowlisted headers survive forwarding; unknown headers are dropped")
-    func allowlistHeaders() throws {
+    @Test(
+        "Forwarding preserves custom routing headers alongside protocol headers",
+        arguments: [ProviderEndpoint.ForwardingAPI.messages, .countTokens, .responses, .chatCompletions]
+    )
+    func customRoutingHeaders(api: ProviderEndpoint.ForwardingAPI) throws {
         let provider = Provider(
             name: "Local",
             baseURL: "http://127.0.0.1:8000/api",
             authMode: .bearer
         )
-        let request = try ProviderRequestBuilder.message(
+        var incoming: HTTPHeaders = [
+            "content-type": "application/json",
+            "anthropic-beta": "tools-2025",
+            "anthropic-version": "2023-06-01",
+            "accept": "application/json",
+            "user-agent": "LittleSwitch/1.0",
+            "x-request-id": "abc",
+            "X-Tenant-ID": "tenant-123",
+            "X-Provider-Route": "coding",
+            "openai-organization": "org-123",
+        ]
+        incoming.add(name: "X-Provider-Route", value: "fallback")
+        let request = try ProviderRequestBuilder.forwarding(
+            api: api,
             provider: provider,
             secret: "selected",
-            headers: [
-                "content-type": "application/json",
-                "anthropic-beta": "tools-2025",
-                "anthropic-version": "2023-06-01",
-                "accept": "application/json",
-                "user-agent": "LittleSwitch/1.0",
-                "x-request-id": "abc",
-                "x-future-provider-token": "leak",
-                "x-custom-session": "private",
-                "openai-organization": "org-123",
-            ],
+            headers: incoming,
             body: Data("{}".utf8)
         )
-        #expect(request.headers["content-type"] == ["application/json"])
-        #expect(request.headers["anthropic-beta"] == ["tools-2025"])
-        #expect(request.headers["anthropic-version"] == ["2023-06-01"])
-        #expect(request.headers["accept"] == ["application/json"])
-        #expect(request.headers["user-agent"] == ["LittleSwitch/1.0"])
-        #expect(request.headers["x-request-id"] == ["abc"])
-        // Unknown headers are dropped by the allowlist, not forwarded.
-        #expect(request.headers["x-future-provider-token"].isEmpty)
-        #expect(request.headers["x-custom-session"].isEmpty)
-        #expect(request.headers["openai-organization"].isEmpty)
+        var expected = incoming
+        expected.add(name: "authorization", value: "Bearer selected")
+        #expect(request.headers == expected)
+    }
+
+    @Test(
+        "Forwarding strips client credentials, private metadata, and connection-specific headers",
+        arguments: [ProviderEndpoint.ForwardingAPI.messages, .countTokens, .responses, .chatCompletions]
+    )
+    func strippedHeaders(api: ProviderEndpoint.ForwardingAPI) throws {
+        let provider = Provider(
+            name: "Local",
+            baseURL: "http://127.0.0.1:8000/api",
+            authMode: .bearer
+        )
+        var incoming: HTTPHeaders = [
+            "Authorization": "incoming",
+            "Cookie": "private",
+            "Proxy-Authorization": "proxy",
+            "Proxy-Authenticate": "challenge",
+            "X-API-Key": "incoming-key",
+            "Host": "localhost:11436",
+            "Content-Length": "42",
+            "Content-Encoding": "zstd",
+            "Connection": " keep-alive, X-Request-ID ",
+            "Keep-Alive": "timeout=5",
+            "TE": "trailers",
+            "Trailer": "x-checksum",
+            "Transfer-Encoding": "chunked",
+            "Upgrade": "h2c",
+            "X-Request-ID": "local-request",
+            "X-Private-Hop": "private",
+            "X-OAI-Attestation": "openai-proof",
+            "X-Codex-Turn-Metadata": "turn-blob",
+            "content-type": "application/json",
+            "X-Tenant-ID": "tenant-123",
+        ]
+        incoming.add(name: "connection", value: "x-PRIVATE-hop")
+        let request = try ProviderRequestBuilder.forwarding(
+            api: api,
+            provider: provider,
+            secret: "selected",
+            headers: incoming,
+            body: Data("{}".utf8)
+        )
+        let expected: HTTPHeaders = [
+            "content-type": "application/json",
+            "X-Tenant-ID": "tenant-123",
+            "authorization": "Bearer selected",
+        ]
+        #expect(request.headers == expected)
     }
 
     @Test("Responses requests use the OpenAI endpoint and remove client compression metadata")

@@ -133,25 +133,37 @@ public enum ProviderRequestBuilder {
         var request = HTTPClientRequest(url: endpoint.absoluteString)
         request.method = .POST
         request.headers = incomingHeaders
-        // Forward only headers the upstream provider needs. Unknown or
-        // client-specific headers (credentials, hop-by-hop, OpenAI session
-        // provenance, private extensions) are dropped by default so a future
-        // provider header cannot leak through the gateway by omission.
-        let forwarded = Set(
-            [
-                "accept",
-                "anthropic-beta",
-                "anthropic-version",
-                "content-type",
-                "user-agent",
-                "x-request-id",
-            ]
-        )
-        var safeHeaders = HTTPHeaders()
-        for (name, value) in request.headers where forwarded.contains(name.lowercased()) {
-            safeHeaders.add(name: name, value: value)
+        let connectionHeaders = request.headers["connection"].flatMap { value in
+            value.split(separator: ",").map {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            }
         }
-        request.headers = safeHeaders
+        let strippedHeaderNames = Set(
+            [
+                "authorization",
+                "connection",
+                "content-encoding",
+                "cookie",
+                "keep-alive",
+                "proxy-authorization",
+                "proxy-authenticate",
+                "x-api-key",
+                "host",
+                "content-length",
+                "te",
+                "trailer",
+                "transfer-encoding",
+                "upgrade",
+                // OpenAI-attested provenance and turn metadata describe a
+                // first-party ChatGPT session; third-party providers have no
+                // use for them and should not receive them.
+                "x-oai-attestation",
+                "x-codex-turn-metadata",
+            ] + connectionHeaders
+        )
+        for name in strippedHeaderNames {
+            request.headers.remove(name: name)
+        }
         try applyAuthentication(provider: provider, secret: secret, headers: &request.headers)
         request.body = .bytes(body)
         return request
