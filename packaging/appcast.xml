@@ -11,10 +11,7 @@
             <sparkle:version>19</sparkle:version>
             <sparkle:shortVersionString>0.4.7</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <description><![CDATA[<p>&lt;h2&gt;Open source&lt;/h2&gt;</p>
-<p>&lt;ul&gt;&lt;li&gt;LittleSwitch is now open source under BSL 1.1. The full source code, build instructions, and developer documentation are available on GitHub.&lt;/li&gt;&lt;li&gt;The release infrastructure now publishes directly from the main repository. No separate releases repository is needed.&lt;/li&gt;&lt;/ul&gt;</p>
-<p>&lt;h2&gt;Compatibility&lt;/h2&gt;</p>
-<p>&lt;ul&gt;&lt;li&gt;Requires an Apple Silicon Mac running macOS 14 or later.&lt;/li&gt;&lt;li&gt;Existing routes and credentials are preserved.&lt;/li&gt;&lt;/ul&gt;</p>]]></description>
+            <description><![CDATA[<h2>LittleSwitch is now open source</h2><p>The full source code is available on GitHub at <a href="https://github.com/alfred-labs/little-switch">github.com/alfred-labs/little-switch</a>.</p>]]></description>
             <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.4.7/LittleSwitch-0.4.7-arm64.dmg" length="19218669" type="application/octet-stream" sparkle:edSignature="PoqgtC1YStlVTHnRxePNDi0DiH9hb/+eWHOt/k3xnAx2FosCbJCVKjC5TNvPFTv8Zi870JTS+z1ZCtiWqcBiDQ=="/>
         </item>
         <item>
