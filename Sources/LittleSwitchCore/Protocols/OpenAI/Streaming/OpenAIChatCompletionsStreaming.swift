@@ -6,6 +6,7 @@ package struct OpenAIChatCompletionsAccumulator: Sendable {
 
     private let prepared: PreparedResponsesChatCompletionsRequest
     private let maximumTurnBytes: Int
+    private let resolver: ProviderToolNamespaceResolver?
     private var phase: ChatCompletionAccumulatorPhase = .open
     private var consumedBytes = 0
     private var metadata: ChatCompletionStreamMetadata?
@@ -20,6 +21,9 @@ package struct OpenAIChatCompletionsAccumulator: Sendable {
     ) {
         self.prepared = prepared
         self.maximumTurnBytes = max(0, maximumTurnBytes)
+        self.resolver =
+            prepared.declaredToolBindings.isEmpty
+            ? nil : ProviderToolNamespaceResolver(declaredBindings: prepared.declaredToolBindings)
     }
 
     package mutating func consume(
@@ -257,7 +261,7 @@ extension OpenAIChatCompletionsAccumulator {
                             name: call.name,
                             arguments: "",
                             status: "in_progress",
-                            binding: prepared.toolBindings[name]
+                            binding: restoredBinding(for: call.name)
                         )
                     )
                 )
@@ -287,8 +291,20 @@ extension OpenAIChatCompletionsAccumulator {
         return events
     }
 
+    /// The binding for an emitted call name: the exact flattened wire name
+    /// first, then a near-miss resolved among the request's declared children.
+    private func restoredBinding(for name: String) -> ResponsesToolNamespaces.Binding? {
+        if let binding = prepared.toolBindings[name] {
+            return binding
+        }
+        guard let resolver, let wireName = resolver.wireName(for: name, namespace: nil) else {
+            return nil
+        }
+        return prepared.toolBindings[wireName]
+    }
+
     private func restoredToolName(_ wireName: String) -> String {
-        prepared.toolBindings[wireName]?.name ?? wireName
+        restoredBinding(for: wireName)?.name ?? wireName
     }
 }
 
@@ -356,7 +372,7 @@ extension OpenAIChatCompletionsAccumulator {
                             name: call.name,
                             arguments: arguments,
                             status: "completed",
-                            binding: prepared.toolBindings[call.name]
+                            binding: restoredBinding(for: call.name)
                         )
                     )
                 )

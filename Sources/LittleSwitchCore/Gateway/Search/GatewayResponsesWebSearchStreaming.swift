@@ -210,7 +210,9 @@ extension GatewayResponder {
                 body: prepared.body,
                 wire: context.needsChatCompletionsAdapter ? .chatCompletions : .responses,
                 eventID: context.eventID,
-                attempt: attempt
+                attempt: attempt,
+                declaredToolBindings: prepared.adapted?.declaredToolBindings
+                    ?? context.prepared.declaredToolBindings
             )
             try Task.checkCancellation()
         } catch is CancellationError {
@@ -253,6 +255,7 @@ extension GatewayResponder {
                     targetModel: context.target.model.id,
                     mode: .streaming(toolStream: true),
                     inheritedToolBindings: context.prepared.toolBindings,
+                    inheritedDeclaredToolBindings: context.prepared.declaredToolBindings,
                     inheritedToolSearchContract: context.prepared.toolSearchContract
                 )
                 adapted = prepared

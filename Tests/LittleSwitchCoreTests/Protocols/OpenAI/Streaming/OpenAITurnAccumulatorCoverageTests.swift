@@ -264,6 +264,25 @@ extension OpenAITurnAccumulatorCoverageTests {
             _ = try responsesFunctionMetadata([:], required: true)
         }
 
+        #expect(
+            try responsesFunctionMetadata(
+                ["call_id": "fc", "name": "ns__tool", "arguments": "{}", "namespace": NSNull()],
+                required: true
+            )?.namespace == nil)
+        #expect(
+            try responsesFunctionMetadata(
+                ["call_id": "fc", "name": "ns__tool", "arguments": "{}", "namespace": "ns"],
+                required: true
+            )?.namespace == "ns")
+        for namespace: Any in [7, ""] {
+            #expect(throws: OpenAIResponsesWebSearch.Error.invalidResponse) {
+                _ = try responsesFunctionMetadata(
+                    ["call_id": "fc", "name": "ns__tool", "arguments": "{}", "namespace": namespace],
+                    required: true
+                )
+            }
+        }
+
         let passthroughCases: [[String: Any]] = [
             ["output_index": -1],
             ["output_index": 0],

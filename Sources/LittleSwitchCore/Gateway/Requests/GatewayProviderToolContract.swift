@@ -17,12 +17,16 @@ package func providerToolFailureFrame(style: GatewayResponder.ErrorStyle) -> Dat
 extension GatewayResponder {
     /// Every model exchange, including retries and bridge follow-ups, validates
     /// new tool output against the declarations on that exact upstream request.
+    /// `declaredToolBindings` carries the request's own namespace flattening so
+    /// a provider's near-miss name can be resolved back onto a declared wire
+    /// name instead of killing the stream.
     package func executeModelRequest(
         _ request: HTTPClientRequest,
         body: Data,
         wire: ProviderToolContract.Wire,
         eventID: UUID,
-        attempt: Int
+        attempt: Int,
+        declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
     ) async throws -> GatewayModelExchange {
         try Task.checkCancellation()
         var response = try await transport.execute(request)
@@ -38,7 +42,11 @@ extension GatewayResponder {
         if collectsJSON { response.body = trace.observing(response.body) }
         do {
             let validated = try await ProviderToolResponse.validated(
-                response, requestBody: body, wire: wire, maximumBytes: maximumErrorBytes
+                response,
+                requestBody: body,
+                wire: wire,
+                maximumBytes: maximumErrorBytes,
+                declaredToolBindings: declaredToolBindings
             ) { bytes in
                 if !collectsJSON { trace.append(bytes) }
             }

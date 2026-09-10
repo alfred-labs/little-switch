@@ -20,7 +20,16 @@ struct ProviderToolContractChatStream: Sendable {
     private var calls: [Key: Call] = [:]
     private var finishedChoices: Set<Int> = []
 
-    mutating func consume(_ root: [String: Any], catalog: ProviderToolContractCatalog) throws {
+    /// With declared namespace bindings the accumulated name may be a
+    /// fragment of a near-miss (`functions.collaboration.` …), so per-fragment
+    /// prefix validation cannot run; identity is instead settled when each
+    /// call's name completes and at stream end. Without bindings the
+    /// fail-closed per-fragment prefix check applies as before.
+    mutating func consume(
+        _ root: [String: Any],
+        catalog: ProviderToolContractCatalog,
+        resolver: ProviderToolNamespaceResolver?
+    ) throws {
         for choice in try providerToolObjects(root["choices"]) {
             let delta = choice["delta"] as? [String: Any] ?? [:]
             try validateProviderToolFreeContent(delta["content"])
@@ -30,37 +39,64 @@ struct ProviderToolContractChatStream: Sendable {
                 guard !finishedChoices.contains(index) else { throw ProviderToolContract.Error.invalidResponse }
                 for call in toolCalls {
                     let key = Key(choice: index, tool: try validIndex(call["index"]))
-                    try consumeCall(call, key: key, catalog: catalog)
+                    try consumeCall(call, key: key, catalog: catalog, resolver: resolver)
                 }
                 if let function = delta["function_call"] {
                     try consumeCall(
-                        ["type": "function", "function": function], key: Key(choice: index, tool: -1), catalog: catalog)
+                        ["type": "function", "function": function],
+                        key: Key(choice: index, tool: -1),
+                        catalog: catalog,
+                        resolver: resolver
+                    )
                 }
             }
             if let reason = choice["finish_reason"], !(reason is NSNull) {
                 let index = try validIndex(choice["index"])
-                try finish(choice: index, catalog: catalog)
+                try finish(choice: index, catalog: catalog, resolver: resolver)
                 finishedChoices.insert(index)
             }
         }
     }
 
-    func finish(catalog: ProviderToolContractCatalog) throws {
+    func finish(catalog: ProviderToolContractCatalog, resolver: ProviderToolNamespaceResolver?) throws {
         for call in calls.values {
-            try catalog.validate(name: call.name, kind: call.kind)
+            try validateCompletedName(call, catalog: catalog, resolver: resolver)
         }
     }
 
-    private func finish(choice: Int, catalog: ProviderToolContractCatalog) throws {
+    private func finish(
+        choice: Int,
+        catalog: ProviderToolContractCatalog,
+        resolver: ProviderToolNamespaceResolver?
+    ) throws {
         for (key, call) in calls where key.choice == choice {
+            try validateCompletedName(call, catalog: catalog, resolver: resolver)
+        }
+    }
+
+    private func validateCompletedName(
+        _ call: Call,
+        catalog: ProviderToolContractCatalog,
+        resolver: ProviderToolNamespaceResolver?
+    ) throws {
+        do {
             try catalog.validate(name: call.name, kind: call.kind)
+        } catch ProviderToolContract.Error.undeclaredTool {
+            guard let resolver,
+                !call.name.isEmpty,
+                let wireName = resolver.wireName(for: call.name, namespace: nil)
+            else {
+                throw ProviderToolContract.Error.undeclaredTool
+            }
+            try catalog.validate(name: wireName, kind: call.kind)
         }
     }
 
     private mutating func consumeCall(
         _ delta: [String: Any],
         key: Key,
-        catalog: ProviderToolContractCatalog
+        catalog: ProviderToolContractCatalog,
+        resolver: ProviderToolNamespaceResolver?
     ) throws {
         let previous = calls[key]
         let rawKind = delta["type"] as? String ?? previous?.kind.rawValue ?? "function"
@@ -77,7 +113,9 @@ struct ProviderToolContractChatStream: Sendable {
                 if !repeatedIdentity { call.name += name }
             }
         }
-        try catalog.validatePrefix(call.name, kind: kind)
+        if resolver == nil {
+            try catalog.validatePrefix(call.name, kind: kind)
+        }
         calls[key] = call
     }
 

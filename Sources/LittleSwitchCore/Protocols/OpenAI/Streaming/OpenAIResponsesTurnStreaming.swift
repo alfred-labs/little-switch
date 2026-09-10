@@ -24,6 +24,7 @@ package struct OpenAIResponsesTurnAccumulator: Sendable {
         let id: String
         let type: String
         let name: String?
+        let namespace: String?
         let publicName: String
         let callID: String?
         var completedArguments: String?
@@ -32,6 +33,7 @@ package struct OpenAIResponsesTurnAccumulator: Sendable {
 
     private let maximumTurnBytes: Int
     private let toolBindings: [String: ResponsesToolNamespaces.Binding]
+    private let resolver: ProviderToolNamespaceResolver?
     private let privateToolName: String?
     private var consumedBytes = 0
     private var phase = Phase.awaitingResponse
@@ -43,10 +45,14 @@ package struct OpenAIResponsesTurnAccumulator: Sendable {
     package init(
         maximumTurnBytes: Int,
         toolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
+        declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
         privateToolName: String? = "web_search"
     ) {
         self.maximumTurnBytes = max(0, maximumTurnBytes)
         self.toolBindings = toolBindings
+        self.resolver =
+            declaredToolBindings.isEmpty
+            ? nil : ProviderToolNamespaceResolver(declaredBindings: declaredToolBindings)
         self.privateToolName = privateToolName
     }
 
@@ -162,11 +168,12 @@ extension OpenAIResponsesTurnAccumulator {
         if type == "message", let content = item["content"], !(content is [Any]) {
             throw OpenAIResponsesWebSearch.Error.invalidResponse
         }
-        let binding = function.flatMap { toolBindings[$0.name] }
+        let binding = function.flatMap { bindingFor(name: $0.name, namespace: $0.namespace) }
         outputItems[outputIndex] = OutputItem(
             id: id,
             type: type,
             name: function?.name,
+            namespace: function?.namespace,
             publicName: binding?.name ?? function?.name ?? id,
             callID: function?.callID
         )
@@ -204,7 +211,10 @@ extension OpenAIResponsesTurnAccumulator {
         return .outputItemDone(
             outputIndex: outputIndex,
             itemJSON: try responsesStreamData(
-                restoredFunctionItem(item, binding: state.name.flatMap { toolBindings[$0] })
+                restoredFunctionItem(
+                    item,
+                    binding: state.name.flatMap { bindingFor(name: $0, namespace: state.namespace) }
+                )
             )
         )
     }
@@ -450,6 +460,23 @@ extension OpenAIResponsesTurnAccumulator {
         consumedBytes += byteCount
     }
 
+    /// The binding for an emitted call name: the exact flattened wire name
+    /// first, then a near-miss resolved among the request's declared children.
+    /// A supplied namespace (a backend that natively restores the pair) is
+    /// never fuzzed — only the exact pair resolves.
+    private func bindingFor(
+        name: String,
+        namespace: String?
+    ) -> ResponsesToolNamespaces.Binding? {
+        if let binding = toolBindings[name] {
+            return binding
+        }
+        guard let resolver, let wireName = resolver.wireName(for: name, namespace: namespace) else {
+            return nil
+        }
+        return toolBindings[wireName]
+    }
+
     /// Restores the `name` + `namespace` pair Codex resolves against when a
     /// flattened provider call matches a request binding. Incoming frames
     /// keep the wire name; only emitted item JSON is rewritten.
@@ -464,20 +491,5 @@ extension OpenAIResponsesTurnAccumulator {
         restored["name"] = binding.name
         restored["namespace"] = binding.namespace
         return restored
-    }
-}
-
-private func validateOptionalFunctionMetadata(
-    _ payload: [String: Any],
-    callID: String,
-    name: String
-) throws {
-    // vLLM argument deltas repeat call_id and name as explicit nulls —
-    // a null means unchanged, not a different id (`as? String` drops it).
-    if let value = payload["call_id"] as? String, value != callID {
-        throw OpenAIResponsesWebSearch.Error.invalidResponse
-    }
-    if let value = payload["name"] as? String, value != name {
-        throw OpenAIResponsesWebSearch.Error.invalidResponse
     }
 }

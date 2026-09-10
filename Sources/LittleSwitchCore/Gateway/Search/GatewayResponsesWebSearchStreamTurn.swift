@@ -60,6 +60,7 @@ extension GatewayResponder {
         var accumulator = OpenAIResponsesTurnAccumulator(
             maximumTurnBytes: maximumErrorBytes,
             toolBindings: session.nativeToolBindings,
+            declaredToolBindings: session.nativeDeclaredToolBindings,
             privateToolName: session.configuration.privateSearchToolName
         )
         do {
@@ -213,6 +214,7 @@ extension GatewayResponder {
             var accumulator = OpenAIResponsesTurnAccumulator(
                 maximumTurnBytes: maximumErrorBytes,
                 toolBindings: head.adapted == nil ? session.nativeToolBindings : [:],
+                declaredToolBindings: head.adapted == nil ? session.nativeDeclaredToolBindings : [:],
                 privateToolName: session.configuration.privateSearchToolName
             )
             try await publishResponsesFrames(

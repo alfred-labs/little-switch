@@ -17,12 +17,23 @@ package struct ProviderToolContract: Sendable {
 
     private let wire: Wire
     private let catalog: ProviderToolContractCatalog
+    private let resolver: ProviderToolNamespaceResolver?
     private var chat = ProviderToolContractChatStream()
     private var responseCalls: [String: ProviderToolContractCatalog.Identity] = [:]
 
-    package init(wire: Wire, requestBody: Data) throws {
+    package init(
+        wire: Wire,
+        requestBody: Data,
+        declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
+    ) throws {
         self.wire = wire
         catalog = try ProviderToolContractCatalog(wire: wire, requestBody: requestBody)
+        resolver =
+            declaredToolBindings.isEmpty
+            ? nil
+            : ProviderToolNamespaceResolver(
+                declaredBindings: declaredToolBindings
+            )
     }
 
     package func validateBuffered(_ body: Data) throws {
@@ -66,14 +77,14 @@ package struct ProviderToolContract: Sendable {
             }
             try validateResponseFrame(root, event: frame.event)
         case .chatCompletions:
-            try chat.consume(root, catalog: catalog)
+            try chat.consume(root, catalog: catalog, resolver: resolver)
         }
     }
 
     /// Call before publishing a successful terminal and at stream EOF. A viable
     /// streaming name prefix is not permission to publish an incomplete call.
     package func finish() throws {
-        try chat.finish(catalog: catalog)
+        try chat.finish(catalog: catalog, resolver: resolver)
     }
 
     private func validateBlocks(_ value: Any?) throws {
@@ -86,9 +97,9 @@ package struct ProviderToolContract: Sendable {
         let type = block["type"] as? String ?? ""
         switch (wire, type) {
         case (.anthropic, "tool_use"), (.responses, "function_call"):
-            try catalog.validate(name: block["name"], namespace: block["namespace"], kind: .function)
+            _ = try validatedIdentity(name: block["name"], namespace: block["namespace"], kind: .function)
         case (.responses, "custom_tool_call"):
-            try catalog.validate(name: block["name"], namespace: block["namespace"], kind: .custom)
+            _ = try validatedIdentity(name: block["name"], namespace: block["namespace"], kind: .custom)
         case (.responses, "message"):
             try validateBlocks(block["content"])
         default:
@@ -104,12 +115,42 @@ package struct ProviderToolContract: Sendable {
                 throw Error.providerOwnedTool
             }
             guard let function = call[type] as? [String: Any] else { throw Error.invalidResponse }
-            try catalog.validate(name: function["name"], kind: kind)
+            _ = try validatedIdentity(name: function["name"], kind: kind)
         }
         if let function = message["function_call"] {
             guard let function = function as? [String: Any] else { throw Error.invalidResponse }
-            try catalog.validate(name: function["name"], kind: .function)
+            _ = try validatedIdentity(name: function["name"], kind: .function)
         }
+    }
+
+    /// The declared identity an emitted call denotes: the exact catalog
+    /// identity first, then — only for names the request itself declared as
+    /// namespace children — the wire name a near-miss resolves to.
+    private func validatedIdentity(
+        name: Any?,
+        namespace: Any? = nil,
+        kind: ProviderToolContractCatalog.Kind
+    ) throws -> ProviderToolContractCatalog.Identity {
+        do {
+            return try catalog.validate(name: name, namespace: namespace, kind: kind)
+        } catch ProviderToolContract.Error.undeclaredTool {
+            guard let resolver,
+                let emitted = name as? String, !emitted.isEmpty,
+                let wireName = resolver.wireName(for: emitted, namespace: Self.suppliedNamespace(namespace))
+            else {
+                throw ProviderToolContract.Error.undeclaredTool
+            }
+            // The resolver only returns names built from the request's own
+            // declarations; re-validating keeps that invariant local.
+            return try catalog.validate(name: wireName, kind: kind)
+        }
+    }
+
+    private static func suppliedNamespace(_ value: Any?) -> String? {
+        guard let value, !(value is NSNull), let namespace = value as? String, !namespace.isEmpty else {
+            return nil
+        }
+        return namespace
     }
 
     private mutating func validateResponseFrame(_ root: [String: Any], event: String?) throws {
@@ -137,7 +178,7 @@ package struct ProviderToolContract: Sendable {
             // Some providers repeat unchanged metadata as explicit nulls.
             let name = root["name"] is NSNull ? nil : root["name"]
             let namespace = root["namespace"] is NSNull ? nil : root["namespace"]
-            let supplied = try catalog.validate(
+            let supplied = try validatedIdentity(
                 name: name ?? identity.name, namespace: namespace ?? identity.namespace, kind: identity.kind)
             guard supplied == identity else { throw Error.invalidResponse }
         }
@@ -148,7 +189,7 @@ package struct ProviderToolContract: Sendable {
         let type = item["type"] as? String
         if type == "function_call" || type == "custom_tool_call" {
             guard let id = item["id"] as? String, !id.isEmpty else { throw Error.invalidResponse }
-            let identity = try catalog.validate(
+            let identity = try validatedIdentity(
                 name: item["name"], namespace: item["namespace"], kind: type == "function_call" ? .function : .custom
             )
             guard responseCalls[id] == nil || responseCalls[id] == identity else { throw Error.invalidResponse }

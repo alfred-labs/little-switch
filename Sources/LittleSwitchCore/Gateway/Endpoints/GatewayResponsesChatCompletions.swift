@@ -59,7 +59,12 @@ extension GatewayResponder {
         let exchange: GatewayModelExchange
         do {
             exchange = try await executeModelRequest(
-                request, body: prepared.upstreamBody, wire: .chatCompletions, eventID: context.eventID, attempt: attempt
+                request,
+                body: prepared.upstreamBody,
+                wire: .chatCompletions,
+                eventID: context.eventID,
+                attempt: attempt,
+                declaredToolBindings: prepared.declaredToolBindings
             )
             try Task.checkCancellation()
         } catch is CancellationError {

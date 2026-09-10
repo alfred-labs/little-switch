@@ -13,12 +13,17 @@ package enum ProviderToolResponse {
         requestBody: Data,
         wire: ProviderToolContract.Wire,
         maximumBytes: Int,
+        declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
         onRejectedBytes: (@Sendable (Data) -> Void)? = nil
     ) async throws -> HTTPClientResponse {
         guard (200..<300).contains(response.status.code) else { return response }
         try Task.checkCancellation()
         guard maximumBytes > 0, maximumBytes <= Int.max - 4 else { throw ProviderToolContract.Error.invalidResponse }
-        let contract = try ProviderToolContract(wire: wire, requestBody: requestBody)
+        let contract = try ProviderToolContract(
+            wire: wire,
+            requestBody: requestBody,
+            declaredToolBindings: declaredToolBindings
+        )
         var validated = response
         if response.headers["content-type"].contains(where: { $0.lowercased().contains("text/event-stream") }) {
             validated.body = .stream(

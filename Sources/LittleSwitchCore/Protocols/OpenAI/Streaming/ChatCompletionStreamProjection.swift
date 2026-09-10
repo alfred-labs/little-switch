@@ -53,7 +53,8 @@ enum ChatCompletionStreamProjection {
             originalBody: prepared.originalBody,
             originalModel: prepared.originalModel,
             streaming: false,
-            toolBindings: prepared.toolBindings
+            toolBindings: prepared.toolBindings,
+            declaredToolBindings: prepared.declaredToolBindings
         )
         do {
             let response = try OpenAIResponsesChatCompletions.project(

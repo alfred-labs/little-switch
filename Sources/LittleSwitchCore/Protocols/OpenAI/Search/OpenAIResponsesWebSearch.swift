@@ -11,6 +11,7 @@ package struct PreparedResponsesWebSearchRequest: Equatable, Sendable {
     let maximumUses: Int
     let searchOptions: WebSearchFilterOptions
     var toolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
+    var declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
     var droppedMailCount: Int = 0
     var toolSearchContract: ResponsesClientToolSearchContract?
     var privateToolName: String?
@@ -25,6 +26,7 @@ package struct PreparedResponsesWebSearchRequest: Equatable, Sendable {
         maximumUses: Int,
         searchOptions: WebSearchFilterOptions = WebSearchFilterOptions(),
         toolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
+        declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
         droppedMailCount: Int = 0,
         toolSearchContract: ResponsesClientToolSearchContract? = nil,
         privateToolName: String? = "web_search"
@@ -38,6 +40,7 @@ package struct PreparedResponsesWebSearchRequest: Equatable, Sendable {
         self.maximumUses = maximumUses
         self.searchOptions = searchOptions
         self.toolBindings = toolBindings
+        self.declaredToolBindings = declaredToolBindings
         self.droppedMailCount = droppedMailCount
         self.toolSearchContract = toolSearchContract
         self.privateToolName = privateToolName
@@ -149,6 +152,7 @@ package enum OpenAIResponsesWebSearch {
             maximumUses: engagingSearchTool == nil ? 0 : maximumUses,
             searchOptions: resolvedSearchOptions,
             toolBindings: normalized.toolBindings,
+            declaredToolBindings: normalized.declaredToolBindings,
             droppedMailCount: normalized.droppedMailCount,
             toolSearchContract: toolSearch?.contract,
             privateToolName: privateToolName

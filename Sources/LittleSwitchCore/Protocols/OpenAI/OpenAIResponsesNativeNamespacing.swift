@@ -14,6 +14,10 @@ package enum OpenAIResponsesNativeNamespacing {
     package struct Normalized {
         package let body: Data
         package let toolBindings: [String: ResponsesToolNamespaces.Binding]
+        /// The bindings the request's own namespace declarations created —
+        /// the set an emitted call may be resolved against when a provider
+        /// near-misses the exact flattened name.
+        package let declaredToolBindings: [String: ResponsesToolNamespaces.Binding]
         package let droppedMailCount: Int
     }
 
@@ -28,6 +32,7 @@ package enum OpenAIResponsesNativeNamespacing {
         var changed = false
         var droppedMailCount = 0
         var toolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
+        var declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
 
         let history = rewritten["input"] as? [[String: Any]] ?? []
         let historicalNamespaces = history.contains { $0["namespace"] is String }
@@ -42,6 +47,7 @@ package enum OpenAIResponsesNativeNamespacing {
                 let flattened = ResponsesToolNamespaces.flatten(tools: tools, history: history)
                 rewritten["tools"] = flattened.tools
                 toolBindings = flattened.bindings
+                declaredToolBindings = flattened.declaredBindings
                 changed = true
             }
         }
@@ -92,6 +98,7 @@ package enum OpenAIResponsesNativeNamespacing {
             return Normalized(
                 body: body,
                 toolBindings: toolBindings,
+                declaredToolBindings: declaredToolBindings,
                 droppedMailCount: droppedMailCount
             )
         }
@@ -101,6 +108,7 @@ package enum OpenAIResponsesNativeNamespacing {
                 options: [.sortedKeys, .withoutEscapingSlashes]
             ),
             toolBindings: toolBindings,
+            declaredToolBindings: declaredToolBindings,
             droppedMailCount: droppedMailCount
         )
     }

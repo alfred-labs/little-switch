@@ -23,6 +23,7 @@ package enum OpenAIResponsesChatCompletions {
         targetModel: String,
         mode: ResponsesChatCompletionsMode = .buffered,
         inheritedToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
+        inheritedDeclaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
         inheritedToolSearchContract: ResponsesClientToolSearchContract? = nil,
         originalBody: Data? = nil
     ) throws -> PreparedResponsesChatCompletionsRequest {
@@ -51,6 +52,7 @@ package enum OpenAIResponsesChatCompletions {
         // The search bridge may already have flattened the declarations.
         // Retain its bindings for restored history and live output events.
         var toolBindings = inheritedToolBindings
+        var declaredToolBindings = inheritedDeclaredToolBindings
         try validateToolsForChat(root["tools"] as? [[String: Any]] ?? [])
         let flattened = ResponsesToolNamespaces.flatten(
             tools: root["tools"] as? [[String: Any]] ?? [],
@@ -58,6 +60,9 @@ package enum OpenAIResponsesChatCompletions {
         )
         for (name, binding) in flattened.bindings {
             toolBindings[name] = binding
+        }
+        for (name, binding) in flattened.declaredBindings {
+            declaredToolBindings[name] = binding
         }
         let droppedMailCount = try appendInput(
             input,
@@ -105,6 +110,7 @@ package enum OpenAIResponsesChatCompletions {
             originalModel: originalModel,
             streaming: root["stream"] as? Bool ?? false,
             toolBindings: toolBindings,
+            declaredToolBindings: declaredToolBindings,
             droppedMailCount: droppedMailCount,
             toolSearchContract: inheritedToolSearchContract ?? search?.contract
         )
@@ -146,7 +152,9 @@ extension OpenAIResponsesChatCompletions {
         let rawOutput = try responseOutput(
             message: message,
             responseID: responseID,
-            bindings: prepared.toolBindings
+            bindings: prepared.toolBindings,
+            resolver: prepared.declaredToolBindings.isEmpty
+                ? nil : ProviderToolNamespaceResolver(declaredBindings: prepared.declaredToolBindings)
         )
         let output = try rawOutput.map { item in
             try prepared.toolSearchContract?.projectItem(item) ?? item
@@ -382,76 +390,6 @@ extension OpenAIResponsesChatCompletions {
         return ["type": "function", "function": function]
     }
 
-    private static func responseOutput(
-        message: [String: Any],
-        responseID: String,
-        bindings: [String: ResponsesToolNamespaces.Binding]
-    ) throws -> [[String: Any]] {
-        var output: [[String: Any]] = []
-        if let content = message["content"] as? String {
-            output.append([
-                "id": "msg_\(responseID)",
-                "type": "message",
-                "status": "completed",
-                "role": "assistant",
-                "content": [
-                    [
-                        "type": "output_text",
-                        "text": content,
-                        "annotations": [],
-                        "logprobs": [],
-                    ]
-                ],
-            ])
-        } else if message["content"] is NSNull == false, message["content"] != nil {
-            throw Error.invalidResponse
-        }
-
-        if let toolCalls = message["tool_calls"] as? [[String: Any]] {
-            for (index, call) in toolCalls.enumerated() {
-                guard
-                    let callID = nonemptyString(call["id"]),
-                    call["type"] as? String == "function",
-                    let function = call["function"] as? [String: Any],
-                    let name = nonemptyString(function["name"]),
-                    let arguments = function["arguments"] as? String
-                else {
-                    throw Error.invalidResponse
-                }
-                var call: [String: Any] = [
-                    "id": "fc_\(responseID)_\(index)",
-                    "type": "function_call",
-                    "status": "completed",
-                    "call_id": callID,
-                    "name": name,
-                    "arguments": arguments,
-                ]
-                if let binding = bindings[name] {
-                    call["name"] = binding.name
-                    call["namespace"] = binding.namespace
-                }
-                output.append(call)
-            }
-        }
-        if output.isEmpty {
-            output.append([
-                "id": "msg_\(responseID)",
-                "type": "message",
-                "status": "completed",
-                "role": "assistant",
-                "content": [
-                    [
-                        "type": "output_text",
-                        "text": "",
-                        "annotations": [],
-                        "logprobs": [],
-                    ]
-                ],
-            ])
-        }
-        return output
-    }
-
     private static func stringFragment(_ value: Any?) throws -> String? {
         if let string = value as? String {
             return string
@@ -474,13 +412,6 @@ extension OpenAIResponsesChatCompletions {
         if let value = source[key] {
             destination[key] = value
         }
-    }
-
-    private static func nonemptyString(_ value: Any?) -> String? {
-        guard let value = value as? String, !value.isEmpty else {
-            return nil
-        }
-        return value
     }
 
     private static func object(_ data: Data) -> [String: Any]? {

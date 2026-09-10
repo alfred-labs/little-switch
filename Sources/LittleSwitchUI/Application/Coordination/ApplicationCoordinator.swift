@@ -33,6 +33,7 @@ public actor ApplicationCoordinator {
     private let gatewayTransportBuilder: any GatewayTransportBuilding
     package let providerClient: ProviderClient
     package let providerWireProber: any ProviderWireProbing
+    package let providerNamespaceProber: any ProviderNamespaceProbing
     private let gatewayListenPort: Int
     private let gatewayRequiredAuthorityPort: Int?
     private let gatewayServerOverride: (any GatewayServing)?
@@ -127,6 +128,7 @@ public actor ApplicationCoordinator {
         self.trafficRecorder = trafficRecorder
         providerClient = ProviderClient(transport: discoveryTransport)
         providerWireProber = ProviderWireProber(transport: discoveryTransport)
+        providerNamespaceProber = ProviderNamespaceProber(transport: discoveryTransport)
         configuration = AppConfiguration()
     }
 
@@ -153,7 +155,8 @@ public actor ApplicationCoordinator {
         credentialRefresher: CredentialRefresher? = nil,
         tlsProvisioner: (any GatewayTLSProvisioning)? = nil,
         monitoringExporter: MonitoringExportService? = nil,
-        providerWireProber: (any ProviderWireProbing)? = nil
+        providerWireProber: (any ProviderWireProbing)? = nil,
+        providerNamespaceProber: (any ProviderNamespaceProbing)? = nil
     ) {
         self.configurationStore = configurationStore
         self.secretStore = secretStore
@@ -186,6 +189,8 @@ public actor ApplicationCoordinator {
         self.trafficRecorder = trafficRecorder
         providerClient = ProviderClient(transport: discoveryTransport)
         self.providerWireProber = providerWireProber ?? ProviderWireProber(transport: discoveryTransport)
+        self.providerNamespaceProber =
+            providerNamespaceProber ?? ProviderNamespaceProber(transport: discoveryTransport)
         configuration = AppConfiguration()
     }
 

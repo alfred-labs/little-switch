@@ -72,19 +72,24 @@ extension ApplicationCoordinator {
         provider.lastRefresh = Date()
         provider.status = .ready
         provider.wireProbe = try await wireProbe
-
-        let routingMutationToken = await gatewayRoutingMutationGuard.begin(
-            providerID: providerID
+        // The namespace probe runs a real (tiny) generation, so it needs a
+        // discovered model and rides after discovery instead of hiding
+        // under it. A skipped probe is nil: not probed, not unknown.
+        provider.namespaceProbe = try await namespaceProbeForSave(
+            provider: provider,
+            previous: previousProvider,
+            credentialChanged: credentialChanged,
+            secret: credential.secret,
+            wireProbe: provider.wireProbe
         )
-        do {
-            try requireCurrentProviderIntent(intent, providerID: providerID)
-            _ = try providerMutationSource(input, providerID: providerID)
-            try validateProviderName(name, providerID: providerID)
-            try validateProviderCredentialReuse(input, resolvedSecret: credential.secret)
-        } catch {
-            await gatewayRoutingMutationGuard.end(routingMutationToken)
-            throw error
-        }
+
+        let routingMutationToken = try await beginValidatedRoutingMutation(
+            intent: intent,
+            providerID: providerID,
+            input: input,
+            name: name,
+            resolvedSecret: credential.secret
+        )
         try await commitProvider(
             provider,
             credential: credential,
@@ -108,6 +113,29 @@ extension ApplicationCoordinator {
             await gatewayRoutingMutationGuard.end(routingMutationToken)
         }
         return await snapshot()
+    }
+
+    /// Acquires the routing mutation token, then re-checks every save
+    /// invariant under it — intent currency, mutation source, name, and
+    /// credential reuse. Any failure releases the token before throwing.
+    private func beginValidatedRoutingMutation(
+        intent: UInt64,
+        providerID: UUID,
+        input: ProviderInput,
+        name: String,
+        resolvedSecret: String?
+    ) async throws -> UUID {
+        let routingMutationToken = await gatewayRoutingMutationGuard.begin(providerID: providerID)
+        do {
+            try requireCurrentProviderIntent(intent, providerID: providerID)
+            _ = try providerMutationSource(input, providerID: providerID)
+            try validateProviderName(name, providerID: providerID)
+            try validateProviderCredentialReuse(input, resolvedSecret: resolvedSecret)
+        } catch {
+            await gatewayRoutingMutationGuard.end(routingMutationToken)
+            throw error
+        }
+        return routingMutationToken
     }
 
     /// Swaps the provider into the configuration and persists it; any
@@ -142,17 +170,6 @@ extension ApplicationCoordinator {
         if dropsLegacyScript {
             deleteLegacyCredentialScript(providerID: provider.id)
         }
-    }
-
-    /// Context overrides ride along an edit; a fresh discovery otherwise
-    /// starts clean.
-    private func discoveredModels(
-        provider: Provider,
-        input: ProviderInput,
-        previousProvider: Provider?
-    ) throws -> [DiscoveredModel] {
-        let contextOverrides = input.contextOverrides ?? existingContextOverrides(previousProvider)
-        return try applyingContextOverrides(contextOverrides, to: provider.models)
     }
 
     /// Rolls the stored credential back after a failed save; any restore
@@ -463,37 +480,5 @@ extension ApplicationCoordinator {
         configuration.codex = configuration.codex.normalized(for: configuration.providers)
         normalizeClaudeCodeConfiguration()
         normalizeOpenCodeConfiguration()
-    }
-
-    private func existingContextOverrides(_ provider: Provider?) -> [String: Int] {
-        guard let provider else {
-            return [:]
-        }
-        return provider.models.reduce(into: [:]) { overrides, model in
-            if let value = model.contextWindowOverride {
-                overrides[model.id] = value
-            }
-        }
-    }
-
-    private func applyingContextOverrides(
-        _ overrides: [String: Int],
-        to models: [DiscoveredModel]
-    ) throws -> [DiscoveredModel] {
-        let modelIDs = Set(models.map(\.id))
-        guard overrides.allSatisfy({ modelIDs.contains($0.key) && $0.value > 0 }) else {
-            throw Error.invalidModelContext
-        }
-        return models.map { model in
-            var updated = model
-            updated.contextWindowOverride = overrides[model.id]
-            // A detected window below 1M deactivates a 1M override rather
-            // than re-exposing a variant the provider cannot serve.
-            let overrideClaims1M = updated.contextWindowOverride.map { $0 >= 1_000_000 } == true
-            if !updated.allows1MContextOverride, overrideClaims1M {
-                updated.contextWindowOverride = nil
-            }
-            return updated
-        }
     }
 }

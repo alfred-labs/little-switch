@@ -391,7 +391,8 @@ extension GatewayResponder {
                 body: requestBody,
                 wire: context.needsChatCompletionsAdapter ? .chatCompletions : .responses,
                 eventID: context.eventID,
-                attempt: turnRequest.attempt
+                attempt: turnRequest.attempt,
+                declaredToolBindings: adapted?.declaredToolBindings ?? context.prepared.declaredToolBindings
             )
             try Task.checkCancellation()
         } catch is CancellationError {

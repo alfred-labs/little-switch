@@ -6,6 +6,10 @@ package struct PreparedResponsesChatCompletionsRequest: Equatable, Sendable {
     let originalModel: String
     let streaming: Bool
     let toolBindings: [String: ResponsesToolNamespaces.Binding]
+    /// The bindings the request's own namespace declarations created — the
+    /// resolution set for provider near-misses, inherited from the search
+    /// bridge when it flattened first.
+    let declaredToolBindings: [String: ResponsesToolNamespaces.Binding]
     var droppedMailCount: Int = 0
     let toolSearchContract: ResponsesClientToolSearchContract?
 
@@ -15,6 +19,7 @@ package struct PreparedResponsesChatCompletionsRequest: Equatable, Sendable {
         originalModel: String,
         streaming: Bool,
         toolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
+        declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
         droppedMailCount: Int = 0,
         toolSearchContract: ResponsesClientToolSearchContract? = nil
     ) {
@@ -23,6 +28,7 @@ package struct PreparedResponsesChatCompletionsRequest: Equatable, Sendable {
         self.originalModel = originalModel
         self.streaming = streaming
         self.toolBindings = toolBindings
+        self.declaredToolBindings = declaredToolBindings
         self.droppedMailCount = droppedMailCount
         self.toolSearchContract = toolSearchContract
     }

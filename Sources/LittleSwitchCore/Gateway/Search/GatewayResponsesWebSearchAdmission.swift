@@ -46,6 +46,7 @@ extension GatewayResponder {
                     body: turnRequest.body,
                     targetModel: context.target.model.id,
                     inheritedToolBindings: context.prepared.toolBindings,
+                    inheritedDeclaredToolBindings: context.prepared.declaredToolBindings,
                     inheritedToolSearchContract: context.prepared.toolSearchContract
                 )
                 adapted = prepared

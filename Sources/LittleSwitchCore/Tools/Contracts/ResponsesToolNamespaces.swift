@@ -25,7 +25,23 @@ package enum ResponsesToolNamespaces {
 
     package struct Flattened {
         package let tools: [[String: Any]]
+        /// Every wire name this request can restore, including names only
+        /// replayed from retired history calls.
         package let bindings: [String: Binding]
+        /// The bindings the request's own namespace declarations created.
+        /// This is the set an emitted call may be resolved against: history
+        /// bindings restore identity but must never grant permission.
+        package let declaredBindings: [String: Binding]
+
+        package init(
+            tools: [[String: Any]],
+            bindings: [String: Binding],
+            declaredBindings: [String: Binding]
+        ) {
+            self.tools = tools
+            self.bindings = bindings
+            self.declaredBindings = declaredBindings
+        }
     }
 
     package static func flatten(
@@ -34,6 +50,7 @@ package enum ResponsesToolNamespaces {
     ) -> Flattened {
         var flattened: [[String: Any]] = []
         var bindings: [String: Binding] = [:]
+        var declaredBindings: [String: Binding] = [:]
         var used = Set(
             tools.compactMap { tool -> String? in
                 guard tool["type"] as? String == "function" else {
@@ -78,8 +95,15 @@ package enum ResponsesToolNamespaces {
                 used.insert(wireName)
                 var replacement = subTool
                 replacement["name"] = wireName
+                replacement["description"] = flattenedDescription(
+                    wireName: wireName,
+                    namespace: namespace,
+                    namespaceDescription: nonemptyName(tool["description"]),
+                    subToolDescription: subTool["description"] as? String
+                )
                 flattened.append(replacement)
                 bindings[wireName] = Binding(namespace: namespace, name: name)
+                declaredBindings[wireName] = Binding(namespace: namespace, name: name)
             }
         }
         // Retired tools remain in the transcript. Keep their identity without
@@ -97,7 +121,33 @@ package enum ResponsesToolNamespaces {
             used.insert(wireName)
             bindings[wireName] = binding
         }
-        return Flattened(tools: flattened, bindings: bindings)
+        return Flattened(
+            tools: flattened,
+            bindings: bindings,
+            declaredBindings: declaredBindings
+        )
+    }
+
+    /// A flattened name is the only spelling the provider received, yet
+    /// backends routinely emit a near-miss. The description carries the exact
+    /// wire name plus the namespace context so the model can copy the name
+    /// verbatim and knows which group the tool belongs to.
+    private static func flattenedDescription(
+        wireName: String,
+        namespace: String,
+        namespaceDescription: String?,
+        subToolDescription: String?
+    ) -> String {
+        var parts = ["Call this tool by its exact name \"\(wireName)\"."]
+        var context = "[\(namespace)]"
+        if let namespaceDescription {
+            context += " \(namespaceDescription)"
+        }
+        parts.append(context)
+        if let subToolDescription, !subToolDescription.isEmpty {
+            parts.append(subToolDescription)
+        }
+        return parts.joined(separator: " ")
     }
 
     package static func flattenedName(namespace: String, name: String) -> String {

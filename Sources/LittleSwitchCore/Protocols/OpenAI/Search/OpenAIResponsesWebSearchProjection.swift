@@ -137,14 +137,46 @@ extension OpenAIResponsesWebSearch {
         prepared: PreparedResponsesWebSearchRequest
     ) throws -> [String: Any] {
         var restored = item
-        if item["type"] as? String == "function_call", item["namespace"] as? String == nil {
-            if let flatName = item["name"] as? String, let binding = prepared.toolBindings[flatName] {
-                restored["name"] = binding.name
-                restored["namespace"] = binding.namespace
-            }
+        if let binding = restoredFunctionBinding(item, prepared: prepared) {
+            restored["name"] = binding.name
+            restored["namespace"] = binding.namespace
         }
         restored = try prepared.toolSearchContract?.projectItem(restored) ?? restored
         return try OpenAIResponsesPublicSanitizer.item(restored)
+    }
+
+    /// The restored namespace pair for a flattened provider call, or nil for
+    /// anything that is not a plain-named function call the request declared.
+    private static func restoredFunctionBinding(
+        _ item: [String: Any],
+        prepared: PreparedResponsesWebSearchRequest
+    ) -> ResponsesToolNamespaces.Binding? {
+        guard item["type"] as? String == "function_call", item["namespace"] as? String == nil else {
+            return nil
+        }
+        guard let flatName = item["name"] as? String else {
+            return nil
+        }
+        return restoredBinding(for: flatName, prepared: prepared)
+    }
+
+    /// The binding for an emitted call name: the exact flattened wire name
+    /// first, then a near-miss resolved among the request's declared children.
+    private static func restoredBinding(
+        for name: String,
+        prepared: PreparedResponsesWebSearchRequest
+    ) -> ResponsesToolNamespaces.Binding? {
+        if let binding = prepared.toolBindings[name] {
+            return binding
+        }
+        guard !prepared.declaredToolBindings.isEmpty else {
+            return nil
+        }
+        let resolver = ProviderToolNamespaceResolver(declaredBindings: prepared.declaredToolBindings)
+        guard let wireName = resolver.wireName(for: name, namespace: nil) else {
+            return nil
+        }
+        return prepared.toolBindings[wireName]
     }
 
     static func nativeSearchItem(

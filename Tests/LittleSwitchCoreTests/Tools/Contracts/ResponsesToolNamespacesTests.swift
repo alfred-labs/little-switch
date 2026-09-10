@@ -45,15 +45,44 @@ struct ResponsesToolNamespacesTests {
         )
     }
 
-    @Test("The sub-tool description and schema are preserved")
-    func preservesSubToolPayload() {
+    @Test("The flattened description carries the exact wire name and namespace context")
+    func prefixesSubToolDescription() {
         let result = ResponsesToolNamespaces.flatten(
             tools: [namespaceTool("ns", ["do_it"])]
         )
 
         let tool = result.tools.first
-        #expect(tool?["description"] as? String == "Does do_it.")
+        #expect(
+            tool?["description"] as? String
+                == "Call this tool by its exact name \"ns__do_it\". [ns] A namespace. Does do_it."
+        )
         #expect(tool?["parameters"] != nil)
+    }
+
+    @Test("The declared bindings contain only current-turn children")
+    func declaredBindingsExcludeHistory() {
+        let history: [[String: Any]] = [
+            [
+                "type": "function_call",
+                "name": "retired",
+                "namespace": "gone",
+                "call_id": "call_retired",
+                "arguments": "{}",
+            ]
+        ]
+
+        let result = ResponsesToolNamespaces.flatten(
+            tools: [namespaceTool("ns", ["do_it"])],
+            history: history
+        )
+
+        #expect(result.bindings["gone__retired"] != nil)
+        #expect(result.declaredBindings["gone__retired"] == nil)
+        #expect(
+            result.declaredBindings["ns__do_it"]
+                == ResponsesToolNamespaces.Binding(namespace: "ns", name: "do_it")
+        )
+        #expect(result.declaredBindings.count == 1)
     }
 
     @Test("Plain function tools pass through untouched and bind nothing")

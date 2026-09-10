@@ -30,6 +30,8 @@ struct OpenAIResponsesWebSearchRefusalTests {
         )
         var expectedFunction = function
         expectedFunction["name"] = "collaboration__spawn_agent"
+        expectedFunction["description"] =
+            "Call this tool by its exact name \"collaboration__spawn_agent\". [collaboration]"
 
         #expect(try responseData(upstream["tools"] as Any) == responseData([expectedFunction]))
         #expect(

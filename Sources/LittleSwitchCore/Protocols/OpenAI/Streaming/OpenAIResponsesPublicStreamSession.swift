@@ -100,4 +100,13 @@ package struct ResponsesPublicStreamSession: Sendable {
         }
         return prepared.toolBindings
     }
+
+    /// The request's own declared bindings: the resolution set for provider
+    /// near-misses on the native turn stream.
+    var nativeDeclaredToolBindings: [String: ResponsesToolNamespaces.Binding] {
+        guard case .webSearch(let prepared) = configuration else {
+            return [:]
+        }
+        return prepared.declaredToolBindings
+    }
 }
