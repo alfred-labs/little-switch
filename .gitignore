@@ -1,0 +1,13 @@
+.DS_Store
+.build/
+.cache/
+.swiftpm/
+.superpowers/
+/docs/superpowers/
+build/
+/dist/
+.env
+.signing.env
+*.profdata
+/docs-internals
+.worktrees/

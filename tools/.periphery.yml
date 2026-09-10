@@ -1,0 +1,4 @@
+# Run through mise so Periphery inherits the repository's Xcode toolchain.
+# Tests do not retain production declarations. New tooling starts without a baseline.
+index_exclude:
+  - Tests/**

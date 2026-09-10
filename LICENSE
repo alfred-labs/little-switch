@@ -1,0 +1,70 @@
+Business Source License 1.1
+
+Parameters
+
+Licensor:             Alfred Labs
+Licensed Work:        LittleSwitch
+                      The Licensed Work is (c) 2026 Alfred Labs.
+Additional Use Grant: You may use, copy, and modify the Licensed Work
+                      for personal, educational, research, or internal
+                      business use. You may not sell, sublicense, or
+                      distribute the Licensed Work (or a derivative
+                      thereof) as a paid product or paid service.
+Change License:       MIT
+Change Date:          Four years from the date the Licensed Work is
+                      published under this license.
+Change Notice:        Distributed under the terms of the MIT License.
+
+Notice
+
+The Business Source License (this document, or "BSL") is a license that
+converts to another license after a certain number of years.
+
+You may make use of the Licensed Work subject to the terms and conditions
+set forth below. The Licensor grants you a non-transferable, non-exclusive,
+worldwide, royalty-free copyright license to reproduce the Licensed Work
+for internal use only. The Licensor also grants you a non-transferable,
+non-exclusive, worldwide, royalty-free patent license under Licensed
+Patents to make, have made, use, sell, offer for sale, and import the
+Licensed Work, subject to the terms and conditions set forth below.
+
+Use and Redistribution
+
+Your use of the Licensed Work is subject to the License.
+
+You may only use, redistribute, and make changes to the Licensed Work
+pursuant to, and in compliance with, the License and the Additional Use
+Grant above.
+
+The License and any additional permissions granted under the License apply
+only to the "Licensed Work." You may not use any portion of the Licensed
+Work to create a product or service that competes with the Licensed Work.
+You may not sell, sublicense, or distribute the Licensed Work, or any
+modification or derivative work thereof, as a paid product or paid service.
+
+Notwithstanding the foregoing, you may use the Licensed Work and create
+derivatives thereof for internal use within your organization, provided
+that such derivatives are not distributed, sold, or offered for a fee
+outside your organization.
+
+Change Date
+
+The Change Date is four years from the date the Licensed Work is published
+under this license. Once the Change Date has passed, the Licensed Work is
+distributed under the Change License (MIT) instead of this BSL.
+
+Notices
+
+The BSL is not a Free Software or Open Source License. You may review the
+terms of the BSL at https://mariadb.com/bsl11/
+
+For more information on the Business Source License, please see
+https://mariadb.com/bsl-faq-versions/
+
+THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE WORK OR THE USE OR OTHER DEALINGS
+IN THE WORK.

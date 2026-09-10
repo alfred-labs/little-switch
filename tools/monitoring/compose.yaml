@@ -1,0 +1,70 @@
+name: littleswitch-monitoring-lab
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.13.3
+    platform: linux/arm64
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=1d
+      - --web.enable-otlp-receiver
+    ports:
+      - "127.0.0.1:19090:9090"
+    configs:
+      - source: prometheus
+        target: /etc/prometheus/prometheus.yml
+    tmpfs:
+      - /prometheus:mode=1777
+
+  loki:
+    image: grafana/loki:3.7.7
+    platform: linux/arm64
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    ports:
+      - "127.0.0.1:13100:3100"
+    configs:
+      - source: loki
+        target: /etc/loki/loki.yaml
+    tmpfs:
+      - /loki:mode=1777
+
+configs:
+  prometheus:
+    content: |
+      global:
+        scrape_interval: 15s
+      scrape_configs: []
+      otlp:
+        promote_resource_attributes:
+          - service.name
+          - service.instance.id
+  loki:
+    content: |
+      auth_enabled: false
+      server:
+        http_listen_port: 3100
+      common:
+        instance_addr: 127.0.0.1
+        path_prefix: /loki
+        storage:
+          filesystem:
+            chunks_directory: /loki/chunks
+            rules_directory: /loki/rules
+        replication_factor: 1
+        ring:
+          kvstore:
+            store: inmemory
+      schema_config:
+        configs:
+          - from: "2026-01-01"
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: index_
+              period: 24h
+      limits_config:
+        allow_structured_metadata: true
+      analytics:
+        reporting_enabled: false
