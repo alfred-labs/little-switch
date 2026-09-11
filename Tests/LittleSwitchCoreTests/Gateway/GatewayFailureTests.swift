@@ -437,7 +437,7 @@ extension GatewayTests {
         #expect(await transport.requests.isEmpty)
     }
 
-    private func providerFailureFixture(
+    func providerFailureFixture(
         baseURL: String,
         includeSecret: Bool
     ) throws -> GatewayFixture {

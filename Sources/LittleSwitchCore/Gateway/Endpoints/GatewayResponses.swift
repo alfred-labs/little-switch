@@ -1,5 +1,6 @@
 import AsyncHTTPClient
 import Foundation
+import HTTPTypes
 import Hummingbird
 import LittleSwitchTransport
 import NIOHTTP1
@@ -154,6 +155,12 @@ extension GatewayResponder {
         if needsChatCompletionsAdapter {
             return try await chatCompletionsResponsesResponse(context)
         }
+        // Remote compaction v2 must be answered with a structured compaction
+        // item no provider emits, so the provider's plain summary is rewrapped
+        // into the exact stream Codex's collector accepts.
+        if OpenAIResponsesRemoteCompaction.isCompactionRequest(context.body) {
+            return try await remoteCompactionResponsesResponse(context)
+        }
         let upstreamBody: Data
         do {
             let rewritten = try dependencies.serializer.rewriteResponses(
@@ -228,6 +235,104 @@ extension GatewayResponder {
         }
         return streamingResponse(
             upstreamResponse, eventID: context.eventID, attempt: 0, errorStyle: .openAI, trace: exchange.trace)
+    }
+
+    /// Serves Codex's remote compaction v2: the transcript is forwarded
+    /// buffered without the trigger, and the provider's summary message is
+    /// re-emitted as the single compaction output item.
+    package func remoteCompactionResponsesResponse(
+        _ context: TransparentResponsesContext
+    ) async throws -> Response {
+        let upstreamBody: Data
+        do {
+            let rewritten = try dependencies.serializer.rewriteResponses(
+                context.body,
+                modelID: context.target.model.id
+            )
+            let normalized = try OpenAIResponsesNativeNamespacing.normalize(rewritten).body
+            // normalize guarantees a JSON object, so buffering always
+            // reshapes; written without a fallback branch to cover.
+            upstreamBody = try OpenAIResponsesRemoteCompaction.bufferedObject(normalized)
+        } catch {
+            return openAIError(status: .badRequest, message: "Invalid Responses request")
+        }
+        let upstreamRequest: HTTPClientRequest
+        do {
+            upstreamRequest = try ProviderRequestBuilder.responses(
+                provider: context.target.provider,
+                secret: context.credential,
+                headers: context.incomingHeaders,
+                body: upstreamBody
+            )
+        } catch {
+            return openAIError(status: .serviceUnavailable, message: "Provider is not ready")
+        }
+        try Task.checkCancellation()
+        trafficRecorder.record(
+            eventID: context.eventID,
+            action: .upstreamRequest(
+                trafficUpstreamRequest(
+                    attempt: 0,
+                    route: ResponsesTrafficRoute(
+                        claudeRoute: context.model,
+                        target: context.target
+                    ),
+                    request: upstreamRequest,
+                    body: upstreamBody,
+                    streaming: false
+                )
+            )
+        )
+        let exchange: GatewayModelExchange
+        do {
+            exchange = try await executeModelRequest(
+                upstreamRequest, body: upstreamBody, wire: .responses, eventID: context.eventID, attempt: 0
+            )
+            try Task.checkCancellation()
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            return openAIError(status: .badGateway, message: "Provider request failed")
+        }
+        let upstream = exchange.response
+        let responseBody: Data
+        do {
+            responseBody = try await exchange.trace.collect(upstream.body, upTo: maximumRequestBytes)
+            try Task.checkCancellation()
+        } catch {
+            // The tracing body converts every mid-stream failure into a
+            // cancellation; nothing distinguishable remains to report.
+            throw CancellationError()
+        }
+        guard (200..<300).contains(upstream.status.code) else {
+            return bufferedResponse(upstream, body: responseBody)
+        }
+        guard
+            let summary = OpenAIResponsesRemoteCompaction.summary(
+                fromProviderBody: responseBody
+            )
+        else {
+            return openAIError(status: .badGateway, message: "Invalid provider response")
+        }
+        await recordResponsesCapability(
+            providerID: context.target.provider.id,
+            status: UInt(upstream.status.code)
+        )
+        let body = try OpenAIResponsesRemoteCompaction.streamBody(
+            responseID: "resp_compaction_\(context.eventID.uuidString.lowercased())",
+            model: context.model,
+            summary: summary,
+            createdAt: Int(Date.now.timeIntervalSince1970)
+        )
+        var headers: HTTPFields = [.contentType: "text/event-stream"]
+        if let cacheControl = HTTPField.Name("cache-control") {
+            headers[cacheControl] = "no-cache"
+        }
+        return Response(
+            status: .ok,
+            headers: headers,
+            body: ResponseBody(byteBuffer: ByteBuffer(bytes: body))
+        )
     }
 
     private enum ResponsesBodyError: Swift.Error {

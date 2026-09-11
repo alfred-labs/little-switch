@@ -34,6 +34,20 @@ package enum PortableResponsesHistory {
         return try assistantMessage(prefix: prefix, item: item)
     }
 
+    /// The gateway's own compaction payload replayed as context: the summary
+    /// stays readable for providers that never saw the structured item.
+    package static func compactionMessage(summary: String) -> [String: Any] {
+        [
+            "type": "message", "role": "assistant",
+            "content": [
+                [
+                    "type": "output_text",
+                    "text": "[Previous compaction summary]\n" + summary,
+                ]
+            ],
+        ]
+    }
+
     private static func assistantMessage(
         prefix: String,
         item: [String: Any]

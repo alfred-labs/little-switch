@@ -67,6 +67,18 @@ package enum OpenAIResponsesNativeNamespacing {
                     // An empty marker no Responses provider accepts; the
                     // compaction itself is invisible in the replayed items.
                     changed = true
+                case "compaction":
+                    // The gateway's own compaction payload expands back into
+                    // readable history; foreign payloads only their issuer
+                    // can read are omitted rather than forwarded as noise.
+                    changed = true
+                    if let summary = OpenAIResponsesRemoteCompaction.summary(
+                        fromPayload: item["encrypted_content"] as? String
+                    ) {
+                        converted.append(
+                            PortableResponsesHistory.compactionMessage(summary: summary)
+                        )
+                    }
                 case "function_call":
                     converted.append(
                         flattenedFunctionReference(item, bindings: toolBindings, changed: &changed)
