@@ -173,6 +173,13 @@ struct CodexNativeCatalogTests {
             try #require(entry["slug"] as? String)
         }
         #expect(slugs == ["local/qwen", "gpt-5.6-sol", "codex-auto-review"])
+        // Codex sorts the picker by priority with a stable sort, so the
+        // merged file must already be in display order: priorities match
+        // positions and native entries never interleave with managed ones.
+        let priorities = try models.map { entry in
+            try #require(entry["priority"] as? Int)
+        }
+        #expect(priorities == Array(priorities.indices))
         let nativeEntry = try #require(models.first { ($0["slug"] as? String) == "gpt-5.6-sol" })
         #expect(nativeEntry["supported_in_api"] as? Bool == false)
         #expect(nativeEntry["display_name"] as? String == "GPT-5.6 Sol")

@@ -323,6 +323,14 @@ public enum CodexCatalog {
         if let reviewer {
             entries.append(reviewer)
         }
+        // Codex sorts the picker by priority with a stable sort; native
+        // entries keep their upstream priorities (1, 3, 6…), which would
+        // interleave with the managed block. Renumber by position so the
+        // file order — managed first, natives, hidden reviewer last — is
+        // exactly what the sorted picker displays.
+        for index in entries.indices {
+            entries[index]["priority"] = index
+        }
         return ["models": entries]
     }
 
