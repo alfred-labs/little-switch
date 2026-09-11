@@ -46,21 +46,35 @@ package enum ResponsesToolNamespaces {
 
     package static func flatten(
         tools: [[String: Any]],
-        history: [[String: Any]] = []
+        history: [[String: Any]] = [],
+        inheritedBindings: [String: Binding] = [:],
+        inheritedDeclaredBindings: [String: Binding] = [:]
     ) -> Flattened {
         var flattened: [[String: Any]] = []
-        var bindings: [String: Binding] = [:]
-        var declaredBindings: [String: Binding] = [:]
-        var used = Set(
+        var declaredBindings = inheritedDeclaredBindings
+        let declaredFlatNames = Set(
             tools.compactMap { tool -> String? in
-                guard tool["type"] as? String == "function" else {
+                guard ["function", "custom"].contains(tool["type"] as? String ?? "") else {
                     return nil
                 }
                 return tool["name"] as? String
             }
         )
+        // An inherited active declaration is already flattened. A retired
+        // alias cannot occupy a real plain declaration's current identity;
+        // replayed namespace history receives a fresh noncolliding alias.
+        var bindings = inheritedBindings.filter {
+            inheritedDeclaredBindings[$0.key] != nil || !declaredFlatNames.contains($0.key)
+        }
+        var used = declaredFlatNames
+        // Internal turns may already declare a collision-safe wire alias.
+        // Reserve it before allocating any current or historical identity.
+        used.formUnion(inheritedBindings.keys)
+        used.formUnion(inheritedDeclaredBindings.keys)
         for item in history {
-            guard item["type"] as? String == "function_call", nonemptyName(item["namespace"]) == nil else { continue }
+            guard ["function_call", "custom_tool_call"].contains(item["type"] as? String ?? ""),
+                nonemptyName(item["namespace"]) == nil
+            else { continue }
             if let name = nonemptyName(item["name"]) {
                 used.insert(name)
             }
@@ -80,18 +94,20 @@ package enum ResponsesToolNamespaces {
             for entry in subTools {
                 guard
                     let subTool = entry as? [String: Any],
-                    subTool["type"] as? String == "function",
+                    ["function", "custom"].contains(subTool["type"] as? String ?? ""),
                     let name = nonemptyName(subTool["name"])
                 else {
                     continue
                 }
+                let binding = Binding(namespace: namespace, name: name)
                 let flatName = flattenedName(namespace: namespace, name: name)
                 // A colliding flat name must stay callable: disambiguate with a
                 // deterministic fingerprint instead of dropping the sub-tool.
                 let wireName =
-                    used.contains(flatName)
-                    ? disambiguatedName(joined: namespace + separator + name, taken: used)
-                    : flatName
+                    bindings.first { $0.value == binding }?.key
+                    ?? (used.contains(flatName)
+                        ? disambiguatedName(joined: namespace + separator + name, taken: used)
+                        : flatName)
                 used.insert(wireName)
                 var replacement = subTool
                 replacement["name"] = wireName
@@ -102,13 +118,13 @@ package enum ResponsesToolNamespaces {
                     subToolDescription: subTool["description"] as? String
                 )
                 flattened.append(replacement)
-                bindings[wireName] = Binding(namespace: namespace, name: name)
-                declaredBindings[wireName] = Binding(namespace: namespace, name: name)
+                bindings[wireName] = binding
+                declaredBindings[wireName] = binding
             }
         }
         // Retired tools remain in the transcript. Keep their identity without
         // making the tool callable again by adding a declaration.
-        for item in history where item["type"] as? String == "function_call" {
+        for item in history where ["function_call", "custom_tool_call"].contains(item["type"] as? String ?? "") {
             guard let namespace = nonemptyName(item["namespace"]),
                 let name = nonemptyName(item["name"])
             else { continue }
@@ -155,11 +171,11 @@ package enum ResponsesToolNamespaces {
         guard joined.count > maximumNameLength else {
             return joined
         }
-        return shortenedName(joined)
+        return shortenedName(joined, fingerprintSource: joined)
     }
 
-    private static func shortenedName(_ joined: String) -> String {
-        let digest = SHA256.hash(data: Data(joined.utf8))
+    private static func shortenedName(_ joined: String, fingerprintSource: String) -> String {
+        let digest = SHA256.hash(data: Data(fingerprintSource.utf8))
         let fingerprint = digest.prefix(6).map { String(format: "%02x", $0) }.joined()
         let prefixLength = maximumNameLength - fingerprint.count - separator.count
         let prefix = String(joined.prefix(prefixLength))
@@ -168,10 +184,11 @@ package enum ResponsesToolNamespaces {
 
     private static func disambiguatedName(joined: String, taken: Set<String>) -> String {
         var salt = 1
-        var candidate = shortenedName("\(joined)#\(salt)")
+        // The salt changes the fingerprint, never the visible tool name.
+        var candidate = shortenedName(joined, fingerprintSource: "\(joined)#\(salt)")
         while taken.contains(candidate) {
             salt += 1
-            candidate = shortenedName("\(joined)#\(salt)")
+            candidate = shortenedName(joined, fingerprintSource: "\(joined)#\(salt)")
         }
         return candidate
     }

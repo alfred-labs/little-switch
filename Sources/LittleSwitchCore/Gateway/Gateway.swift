@@ -135,6 +135,8 @@ public struct GatewayResponder: HTTPResponder {
     package var trafficRecorder: any TrafficRecording
     package let monitoring: GatewayMonitoring?
     package let dependencies: GatewayResponderDependencies
+    /// Set on a request-local value copy; streaming bodies capture it by value.
+    package var responsesProviderID: UUID?
 
     public init(
         state: GatewayState,

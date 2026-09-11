@@ -31,7 +31,7 @@ extension OpenAIChatCompletionsStreamingTests {
 
     @Test("Interleaved tool calls require stable IDs and names")
     func unstableToolMetadata() throws {
-        let prepared = try liveChatPrepared()
+        let prepared = try liveChatPrepared(toolNames: ["read_file"])
         for changed in [
             chatToolDelta(index: 0, id: "call_changed", arguments: "}"),
             chatToolDelta(index: 0, name: "write_file", arguments: "}"),

@@ -26,7 +26,8 @@ extension GatewayResponder {
         wire: ProviderToolContract.Wire,
         eventID: UUID,
         attempt: Int,
-        declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
+        declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
+        toolNameCatalog: ProviderToolNameCatalog? = nil
     ) async throws -> GatewayModelExchange {
         try Task.checkCancellation()
         var response = try await transport.execute(request)
@@ -40,17 +41,26 @@ extension GatewayResponder {
         // JSON validation eagerly consumes the source. Trace it there, including
         // transport failures, and close before its buffered body is read again.
         if collectsJSON { response.body = trace.observing(response.body) }
+        if streaming, wire == .responses, responsesProviderID != nil, (200..<300).contains(response.status.code) {
+            response.body = trace.observingUpstream(response.body)
+        }
         do {
-            let validated = try await ProviderToolResponse.validated(
+            var validated = try await ProviderToolResponse.validated(
                 response,
                 requestBody: body,
                 wire: wire,
                 maximumBytes: maximumErrorBytes,
-                declaredToolBindings: declaredToolBindings
+                declaredToolBindings: declaredToolBindings,
+                toolNameCatalog: toolNameCatalog
             ) { bytes in
                 if !collectsJSON { trace.append(bytes) }
             }
             if collectsJSON { trace.finish() }
+            if wire == .responses, let responsesProviderID {
+                validated = try await ResponsesProviderStateResponse.tagged(
+                    validated, providerID: responsesProviderID, maximumBytes: maximumErrorBytes
+                )
+            }
             return GatewayModelExchange(response: validated, trace: trace)
         } catch {
             trace.finish()

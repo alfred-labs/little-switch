@@ -100,6 +100,12 @@ extension ResponsesPublicStreamSession {
                 name: name,
                 arguments: arguments
             )
+        case .customInputDelta(let outputIndex, let itemID, let callID, let name, let delta):
+            return try consumeCustomInput(
+                .init(index: outputIndex, itemID: itemID, callID: callID, name: name), value: delta, completed: false)
+        case .customInputDone(let outputIndex, let itemID, let callID, let name, let input):
+            return try consumeCustomInput(
+                .init(index: outputIndex, itemID: itemID, callID: callID, name: name), value: input, completed: true)
         case .passthrough(let type, let payloadJSON):
             return try consumePassthrough(type: type, payloadJSON: payloadJSON)
         case .terminal(let status, let responseJSON):

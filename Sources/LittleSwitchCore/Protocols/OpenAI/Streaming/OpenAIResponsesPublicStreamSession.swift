@@ -109,4 +109,11 @@ package struct ResponsesPublicStreamSession: Sendable {
         }
         return prepared.declaredToolBindings
     }
+
+    var nativeToolNameCatalog: ProviderToolNameCatalog {
+        guard case .webSearch(let prepared) = configuration else {
+            return ProviderToolNameCatalog()
+        }
+        return prepared.toolNameCatalog
+    }
 }

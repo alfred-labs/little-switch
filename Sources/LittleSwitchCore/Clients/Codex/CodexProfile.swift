@@ -290,7 +290,9 @@ public struct CodexProfileManager: Sendable {
         }
         let configText = try text(from: configData, url: paths.config)
         let stateData = try fileStore.snapshot(paths.restoreState)
-        let state = try stateData.map { try CodexProfileLegacyJournal.decoded($0) }
+        let state = try stateData.map {
+            try CodexProfileLegacyJournal.decoded($0, configText: configText)
+        }
         let wasManaged = try CodexTOMLEditor.rootIsManaged(
             configText,
             catalogPath: paths.catalog.path
@@ -308,7 +310,11 @@ public struct CodexProfileManager: Sendable {
             )
         }
         if wasManaged || wasLegacyManaged {
-            let rootValues = state?.rootValues ?? Self.emptyRootValues
+            var rootValues = state?.rootValues ?? Self.emptyRootValues
+            if state == nil, wasLegacyManaged {
+                // The legacy provider profile never owned this root key.
+                rootValues.removeValue(forKey: "openai_base_url")
+            }
             restoredText = try CodexTOMLEditor.restoring(
                 restoredText,
                 states: rootValues

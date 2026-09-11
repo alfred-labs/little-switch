@@ -3,14 +3,25 @@ import Testing
 
 @testable import LittleSwitchCore
 
-@Suite("Codex native catalog")
+@Suite("Codex native catalog", .serialized)
 struct CodexNativeCatalogTests {
     private static let nativeCatalogJSON =
         #"{"models":[{"slug":"gpt-5.6-sol","display_name":"GPT-5.6 Sol","priority":10,"upgrade":"nux","unknown_future":{"x":1}}]}"#
 
-    @Test("Acquisition probes the codex binary in a seeded scratch home")
-    func probesScratchHome() throws {
+    @Test("Acquisition reads the native cache without starting an authenticated process")
+    func cachedCatalogNeverStartsProcess() throws {
         let fixture = try Fixture.make()
+        defer { fixture.remove() }
+        let runner = SpyRunner(results: [.success(Data(Self.nativeCatalogJSON.utf8))])
+
+        #expect(fixture.catalog(runner: runner).acquire() == fixture.cacheData)
+        #expect(runner.calls.isEmpty)
+        #expect(try Data(contentsOf: fixture.root.appending(path: ".codex/auth.json")) == fixture.authData)
+    }
+
+    @Test("The bundled fallback runs in an empty private home without credentials")
+    func bundledCatalogNeverCopiesAuthentication() throws {
+        let fixture = try Fixture.make(withCache: false)
         defer { fixture.remove() }
         setenv("LITTLE_SWITCH_TEST", "kept", 1)
         defer { unsetenv("LITTLE_SWITCH_TEST") }
@@ -20,17 +31,17 @@ struct CodexNativeCatalogTests {
 
         #expect(String(data: try #require(data), encoding: .utf8) == Self.nativeCatalogJSON)
         let call = try #require(runner.calls.first)
-        #expect(call.arguments == ["debug", "models"])
-        #expect(call.environment["CODEX_HOME"] == call.workingDirectory)
-        #expect(call.environment["OPENAI_API_KEY"] == nil)
-        #expect(call.environment["CODEX_API_KEY"] == nil)
-        #expect(call.environment["LITTLE_SWITCH_TEST"] == "kept")
+        #expect(call.arguments == ["debug", "models", "--bundled"])
+        #expect(call.codexHome == call.workingDirectory)
+        #expect(!call.hasAPIKey)
+        #expect(call.inheritedTestValue == "kept")
         let scratch = try #require(call.workingDirectory)
         let seeded = try #require(runner.scratchSnapshots.first)
         #expect(scratch.isEmpty == false)
-        #expect(seeded["auth.json"] == fixture.authData)
-        #expect(seeded["models_cache.json"] == fixture.cacheData)
+        #expect(seeded.isEmpty)
         #expect(runner.scratchPOSIXPermissions.first == 0o700)
+        #expect(!FileManager.default.fileExists(atPath: scratch))
+        #expect(try Data(contentsOf: fixture.root.appending(path: ".codex/auth.json")) == fixture.authData)
     }
 
     @Test("Acquisition falls back to the cached native models without a binary")
@@ -49,35 +60,46 @@ struct CodexNativeCatalogTests {
     func fallsBackToBundled() throws {
         let fixture = try Fixture.make(withCache: false)
         defer { fixture.remove() }
-        let runner = SpyRunner(results: [
-            .failure(.notFound),
-            .success(Data(Self.nativeCatalogJSON.utf8)),
-        ])
+        let runner = SpyRunner(results: [.success(Data(Self.nativeCatalogJSON.utf8))])
 
         let data = fixture.catalog(runner: runner).acquire()
 
         #expect(String(data: try #require(data), encoding: .utf8) == Self.nativeCatalogJSON)
-        #expect(runner.calls.count == 2)
+        #expect(runner.calls.count == 1)
         #expect(try #require(runner.calls.last).arguments == ["debug", "models", "--bundled"])
-        #expect(try #require(runner.calls.last).environment["CODEX_HOME"] == nil)
     }
 
     @Test("Total acquisition failure degrades to no native models")
     func degradesToEmpty() throws {
         let fixture = try Fixture.make(withCache: false)
         defer { fixture.remove() }
-        let runner = SpyRunner(results: [.failure(.notFound), .failure(.notFound)])
-
-        #expect(fixture.catalog(runner: runner).acquire() == nil)
-    }
-
-    @Test("A failed probe falls back to a valid cached catalog")
-    func fallsBackToCacheAfterProbeFailure() throws {
-        let fixture = try Fixture.make()
-        defer { fixture.remove() }
         let runner = SpyRunner(results: [.failure(.notFound)])
 
-        #expect(fixture.catalog(runner: runner).acquire() == fixture.cacheData)
+        #expect(fixture.catalog(runner: runner).acquire() == nil)
+        let scratch = try #require(runner.calls.first?.workingDirectory)
+        #expect(!FileManager.default.fileExists(atPath: scratch))
+    }
+
+    @Test("Invalid bundled output is rejected and the scratch home is removed")
+    func rejectsInvalidBundledCatalog() throws {
+        let fixture = try Fixture.make(withCache: false)
+        defer { fixture.remove() }
+        let runner = SpyRunner(results: [.success(Data(#"{"models":null}"#.utf8))])
+
+        #expect(fixture.catalog(runner: runner).acquire() == nil)
+        let scratch = try #require(runner.calls.first?.workingDirectory)
+        #expect(!FileManager.default.fileExists(atPath: scratch))
+    }
+
+    @Test("An invalid cache falls back to the bundled catalog")
+    func invalidCacheFallsBackToBundled() throws {
+        let fixture = try Fixture.make()
+        defer { fixture.remove() }
+        try Data("not-json".utf8).write(to: fixture.cache)
+        let runner = SpyRunner(results: [.success(Data(Self.nativeCatalogJSON.utf8))])
+
+        #expect(fixture.catalog(runner: runner).acquire() == Data(Self.nativeCatalogJSON.utf8))
+        #expect(try #require(runner.calls.first).arguments == ["debug", "models", "--bundled"])
     }
 
     @Test("An invalid cache is discarded instead of merged")
@@ -91,7 +113,7 @@ struct CodexNativeCatalogTests {
 
     @Test("The default locator reports no executable when PATH has no codex")
     func defaultLocatorReturnsNilWithoutExecutable() throws {
-        let fixture = try Fixture.make()
+        let fixture = try Fixture.make(withCache: false)
         defer { fixture.remove() }
         let originalPath = ProcessInfo.processInfo.environment["PATH"] ?? ""
         setenv("PATH", fixture.root.path, 1)
@@ -101,13 +123,13 @@ struct CodexNativeCatalogTests {
             CodexNativeCatalog(
                 configDirectory: fixture.root.appending(path: ".codex"),
                 runner: SpyRunner(results: [])
-            ).acquire() == fixture.cacheData
+            ).acquire() == nil
         )
     }
 
     @Test("The default locator falls back to the system search path")
     func defaultLocatorFallsBackToSystemPath() throws {
-        let fixture = try Fixture.make()
+        let fixture = try Fixture.make(withCache: false)
         defer { fixture.remove() }
         let originalPath = ProcessInfo.processInfo.environment["PATH"] ?? ""
         unsetenv("PATH")
@@ -117,33 +139,28 @@ struct CodexNativeCatalogTests {
             CodexNativeCatalog(
                 configDirectory: fixture.root.appending(path: ".codex"),
                 runner: SpyRunner(results: [])
-            ).acquire() == fixture.cacheData
+            ).acquire() == nil
         )
     }
 
-    @Test("A process exit failure is surfaced as a typed error")
-    func nonZeroProcessExitIsTyped() {
-        #expect(throws: CodexNativeCatalog.Error.nonZeroExit(1)) {
-            try CodexProcessRunner().run(
-                executablePath: "/usr/bin/false",
-                arguments: [],
-                environment: [:],
-                workingDirectory: nil
-            )
-        }
-    }
+    @Test("The default locator selects an executable Codex from PATH")
+    func defaultLocatorFindsExecutable() throws {
+        let fixture = try Fixture.make(withCache: false)
+        defer { fixture.remove() }
+        let executable = fixture.root.appending(path: "codex")
+        try Data().write(to: executable)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: executable.path)
+        let originalPath = ProcessInfo.processInfo.environment["PATH"] ?? ""
+        setenv("PATH", fixture.root.path, 1)
+        defer { setenv("PATH", originalPath, 1) }
+        let runner = SpyRunner(results: [.success(Data(Self.nativeCatalogJSON.utf8))])
 
-    @Test("A probe timeout terminates the process and reports the typed error")
-    func processTimeoutIsTyped() {
-        #expect(throws: CodexNativeCatalog.Error.timedOut) {
-            try CodexProcessRunner().run(
-                executablePath: "/bin/sleep",
-                arguments: ["1"],
-                environment: [:],
-                workingDirectory: nil,
-                timeout: 0.05
-            )
-        }
+        let data = CodexNativeCatalog(
+            configDirectory: fixture.root.appending(path: ".codex"),
+            runner: runner
+        ).acquire()
+
+        #expect(data == Data(Self.nativeCatalogJSON.utf8))
     }
 
     @Test("The combined catalog keeps LittleSwitch first and marks native models ChatGPT-only")
@@ -218,7 +235,9 @@ extension CodexNativeCatalogTests {
 
         struct Call {
             let arguments: [String]
-            let environment: [String: String]
+            let codexHome: String?
+            let hasAPIKey: Bool
+            let inheritedTestValue: String?
             let workingDirectory: String?
         }
 
@@ -287,7 +306,9 @@ extension CodexNativeCatalogTests {
                 calls.append(
                     Fixture.Call(
                         arguments: arguments,
-                        environment: environment,
+                        codexHome: environment["CODEX_HOME"],
+                        hasAPIKey: environment["OPENAI_API_KEY"] != nil || environment["CODEX_API_KEY"] != nil,
+                        inheritedTestValue: environment["LITTLE_SWITCH_TEST"],
                         workingDirectory: workingDirectory
                     )
                 )

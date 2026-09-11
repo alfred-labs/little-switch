@@ -41,11 +41,14 @@ struct ProviderToolRequestPolicyTests {
         let body = try JSONSerialization.data(withJSONObject: [
             "model": "model", "input": "Hello", "tools": [["type": "web_search"], declaration],
         ])
-        #expect(throws: ProviderToolContract.Error.invalidRequest) {
-            _ = try OpenAIResponsesWebSearch.prepare(
-                body: body, targetModel: "upstream", configuration: .firecrawlCloud
-            )
-        }
+        let prepared = try #require(
+            try OpenAIResponsesWebSearch.prepare(
+                body: body, targetModel: "upstream", configuration: .firecrawlCloud))
+        let upstream = try chatJSONObject(prepared.upstreamBody)
+        let tools = try #require(upstream["tools"] as? [[String: Any]])
+        let retained = try #require(tools.first { $0["type"] as? String == "custom" })
+        #expect(retained["name"] as? String == (namespaced ? "files__edit" : "edit"))
+        #expect(retained["format"] as? NSDictionary == ["type": "text"] as NSDictionary)
     }
 
     @Test("Native custom tools without adaptation remain protocol transparent")

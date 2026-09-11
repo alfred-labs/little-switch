@@ -218,4 +218,15 @@ struct ResponsesToolNamespacesTests {
             ) == result.tools.first?["name"] as? String
         )
     }
+
+    @Test("Collision fingerprints keep salts out of the provider tool-name alphabet")
+    func collisionNamesUseValidCharacters() {
+        let result = ResponsesToolNamespaces.flatten(tools: [
+            ["type": "function", "name": "ns__ok"], namespaceTool("ns", ["ok"]),
+        ])
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
+        let names = result.tools.compactMap { $0["name"] as? String }
+        #expect(names.count == 2)
+        #expect(names.allSatisfy { $0.unicodeScalars.allSatisfy(allowed.contains) })
+    }
 }

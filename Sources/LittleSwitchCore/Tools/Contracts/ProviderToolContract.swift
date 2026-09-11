@@ -24,15 +24,22 @@ package struct ProviderToolContract: Sendable {
     package init(
         wire: Wire,
         requestBody: Data,
-        declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
+        declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
+        toolNameCatalog: ProviderToolNameCatalog? = nil
     ) throws {
         self.wire = wire
         catalog = try ProviderToolContractCatalog(wire: wire, requestBody: requestBody)
+        let requestNames = catalog.nameCatalog
+        let reservedNames = ProviderToolNameCatalog(
+            declared: requestNames.declared.union(toolNameCatalog?.declared ?? []),
+            historical: requestNames.historical.union(toolNameCatalog?.historical ?? [])
+        )
         resolver =
             declaredToolBindings.isEmpty
             ? nil
             : ProviderToolNamespaceResolver(
-                declaredBindings: declaredToolBindings
+                declaredBindings: declaredToolBindings,
+                nameCatalog: reservedNames
             )
     }
 
@@ -115,11 +122,11 @@ package struct ProviderToolContract: Sendable {
                 throw Error.providerOwnedTool
             }
             guard let function = call[type] as? [String: Any] else { throw Error.invalidResponse }
-            _ = try validatedIdentity(name: function["name"], kind: kind)
+            _ = try validatedIdentity(name: function["name"], namespace: function["namespace"], kind: kind)
         }
         if let function = message["function_call"] {
             guard let function = function as? [String: Any] else { throw Error.invalidResponse }
-            _ = try validatedIdentity(name: function["name"], kind: .function)
+            _ = try validatedIdentity(name: function["name"], namespace: function["namespace"], kind: .function)
         }
     }
 

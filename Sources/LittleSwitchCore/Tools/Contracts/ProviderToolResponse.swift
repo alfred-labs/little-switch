@@ -14,6 +14,7 @@ package enum ProviderToolResponse {
         wire: ProviderToolContract.Wire,
         maximumBytes: Int,
         declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
+        toolNameCatalog: ProviderToolNameCatalog? = nil,
         onRejectedBytes: (@Sendable (Data) -> Void)? = nil
     ) async throws -> HTTPClientResponse {
         guard (200..<300).contains(response.status.code) else { return response }
@@ -22,7 +23,8 @@ package enum ProviderToolResponse {
         let contract = try ProviderToolContract(
             wire: wire,
             requestBody: requestBody,
-            declaredToolBindings: declaredToolBindings
+            declaredToolBindings: declaredToolBindings,
+            toolNameCatalog: toolNameCatalog
         )
         var validated = response
         if response.headers["content-type"].contains(where: { $0.lowercased().contains("text/event-stream") }) {

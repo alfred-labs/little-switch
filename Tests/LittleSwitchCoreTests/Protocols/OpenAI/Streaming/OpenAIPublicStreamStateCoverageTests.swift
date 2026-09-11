@@ -17,7 +17,7 @@ struct OpenAIPublicStreamStateCoverageTests {
             )
         }
         #expect(throws: OpenAIResponsesWebSearch.Error.invalidResponse) {
-            _ = try session.publicFunctionReference(
+            _ = try session.publicToolReference(
                 outputIndex: 0,
                 itemID: "fc",
                 callID: "call",

@@ -5,7 +5,7 @@ import Testing
 
 @Suite("Repository policy filesystem")
 struct RepositoryPolicyFileSystemTests {
-    @Test("Recursive scanning skips build trees, follows tracked symlinks and repairs binary UTF-8")
+    @Test("Recursive scanning skips build trees, follows repository-local symlinks and repairs binary UTF-8")
     func scan() throws {
         try withTemporaryDirectory { root in
             for directory in [
@@ -19,39 +19,45 @@ struct RepositoryPolicyFileSystemTests {
             try FileManager.default.createSymbolicLink(
                 at: root.appendingPathComponent("linked"),
                 withDestinationURL: root.appendingPathComponent("Sources"))
+            try FileManager.default.createSymbolicLink(
+                at: root.appendingPathComponent("linked-file"),
+                withDestinationURL: root.appendingPathComponent("Sources/Nested/file"))
             let snapshot = try RepositoryPolicyFileSystem.read(root: root)
             #expect(
                 snapshot.files == [
                     "Sources/Nested/file": "\u{FFFD}",
                     "linked/Nested/file": "\u{FFFD}",
+                    "linked-file": "\u{FFFD}",
                 ]
             )
             #expect(
                 snapshot.paths == [
                     "Sources", "Sources/Nested", "Sources/Nested/file", "tools", "linked", "linked/Nested",
-                    "linked/Nested/file",
+                    "linked/Nested/file", "linked-file",
                 ]
             )
         }
     }
 
-    @Test("Scanning follows a symlink that leaves the repository")
-    func followsEscapingSymlinks() throws {
+    @Test("External documentation links do not read sibling checkouts", arguments: [false, true])
+    func externalDocumentation(isCheckedOut: Bool) throws {
         try withTemporaryDirectory { outer in
             let root = outer.appendingPathComponent("repo", isDirectory: true)
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
             try Data("inside".utf8).write(to: root.appendingPathComponent("file"))
-            let outside = outer.appendingPathComponent("outside", isDirectory: true)
-            try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
-            try Data("outside".utf8).write(to: outside.appendingPathComponent("file"))
+            let outside = outer.appendingPathComponent("repo-internals/docs", isDirectory: true)
+            if isCheckedOut {
+                try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+                try Data("outside".utf8).write(to: outside.appendingPathComponent("file"))
+            }
             try FileManager.default.createSymbolicLink(
-                at: root.appendingPathComponent("escape"),
-                withDestinationURL: outside
+                atPath: root.appendingPathComponent("docs").path,
+                withDestinationPath: "../repo-internals/docs"
             )
 
             let snapshot = try RepositoryPolicyFileSystem.read(root: root)
-            #expect(snapshot.files == ["escape/file": "outside", "file": "inside"])
-            #expect(snapshot.paths == ["escape", "escape/file", "file"])
+            #expect(snapshot.files == ["file": "inside"])
+            #expect(snapshot.paths == ["docs", "file"])
         }
     }
 

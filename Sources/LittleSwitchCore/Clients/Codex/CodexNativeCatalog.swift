@@ -1,5 +1,4 @@
 import Foundation
-import os
 
 package protocol CodexProcessRunning: Sendable {
     func run(
@@ -11,10 +10,10 @@ package protocol CodexProcessRunning: Sendable {
 }
 
 /// Reads Codex's native model catalog so the managed catalog can coexist
-/// with it. The probe never mutates the user's Codex home: it runs
-/// `codex debug models` inside a scratch CODEX_HOME seeded with copies of
-/// the session files, and degrades through the cache and the bundled
-/// catalog before giving up (cohabitation is best-effort).
+/// with it. The user's cache is read directly, and the only process fallback
+/// dumps the binary's bundled catalog in an empty CODEX_HOME. An authenticated
+/// probe could rotate OAuth refresh tokens in a disposable copy of auth.json,
+/// leaving the original session unusable, so no credentials are ever copied.
 package struct CodexNativeCatalog: Sendable {
     package enum Error: Swift.Error, Equatable {
         case timedOut
@@ -40,60 +39,35 @@ package struct CodexNativeCatalog: Sendable {
 
     /// The raw native catalog data, or nil when every source fails.
     package func acquire() -> Data? {
-        guard let executable = executableLocator() else {
-            return cachedCatalog()
-        }
-        if let data = try? probe(executable: executable, bundled: false, scratch: true) {
-            return data
-        }
         if let cached = cachedCatalog() {
             return cached
         }
-        return try? probe(executable: executable, bundled: true, scratch: false)
+        guard let executable = executableLocator() else {
+            return nil
+        }
+        return try? probeBundled(executable: executable)
     }
 
-    private func probe(executable: String, bundled: Bool, scratch: Bool) throws -> Data {
-        var scratchDirectory: URL?
-        if scratch {
-            let home = FileManager.default.temporaryDirectory.appending(
-                path: "little-switch-codex-native-\(UUID().uuidString)",
-                directoryHint: .isDirectory
-            )
-            try FileManager.default.createDirectory(
-                at: home,
-                withIntermediateDirectories: true,
-                attributes: [.posixPermissions: 0o700]
-            )
-            for name in ["auth.json", "models_cache.json"] {
-                let source = configDirectory.appending(path: name)
-                guard FileManager.default.fileExists(atPath: source.path) else {
-                    continue
-                }
-                try FileManager.default.copyItem(at: source, to: home.appending(path: name))
-            }
-            scratchDirectory = home
-        }
-        defer {
-            if let scratchDirectory {
-                try? FileManager.default.removeItem(at: scratchDirectory)
-            }
-        }
-        var arguments = ["debug", "models"]
-        if bundled {
-            arguments.append("--bundled")
-        }
+    private func probeBundled(executable: String) throws -> Data {
+        let scratchDirectory = FileManager.default.temporaryDirectory.appending(
+            path: "little-switch-codex-native-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: scratchDirectory,
+            withIntermediateDirectories: true,
+            attributes: [.posixPermissions: 0o700]
+        )
+        defer { try? FileManager.default.removeItem(at: scratchDirectory) }
         var environment = ProcessInfo.processInfo.environment
-        environment.removeValue(forKey: "CODEX_HOME")
         environment.removeValue(forKey: "OPENAI_API_KEY")
         environment.removeValue(forKey: "CODEX_API_KEY")
-        if let scratchDirectory {
-            environment["CODEX_HOME"] = scratchDirectory.path
-        }
+        environment["CODEX_HOME"] = scratchDirectory.path
         let data = try runner.run(
             executablePath: executable,
-            arguments: arguments,
+            arguments: ["debug", "models", "--bundled"],
             environment: environment,
-            workingDirectory: scratchDirectory?.path ?? NSTemporaryDirectory()
+            workingDirectory: scratchDirectory.path
         )
         return try Self.validated(data)
     }
@@ -134,62 +108,5 @@ package struct CodexNativeCatalog: Sendable {
             }
         }
         return nil
-    }
-}
-
-struct CodexProcessRunner: CodexProcessRunning {
-    func run(
-        executablePath: String,
-        arguments: [String],
-        environment: [String: String],
-        workingDirectory: String?
-    ) throws -> Data {
-        try run(
-            executablePath: executablePath,
-            arguments: arguments,
-            environment: environment,
-            workingDirectory: workingDirectory,
-            timeout: CodexNativeCatalog.probeTimeout
-        )
-    }
-
-    func run(
-        executablePath: String,
-        arguments: [String],
-        environment: [String: String],
-        workingDirectory: String?,
-        timeout: TimeInterval
-    ) throws -> Data {
-        let process = Foundation.Process()
-        process.executableURL = URL(fileURLWithPath: executablePath)
-        process.arguments = arguments
-        process.environment = environment
-        if let workingDirectory {
-            process.currentDirectoryURL = URL(fileURLWithPath: workingDirectory)
-        }
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = FileHandle.nullDevice
-        let output = OSAllocatedUnfairLock(initialState: Data())
-        pipe.fileHandleForReading.readabilityHandler = { handle in
-            let available = handle.availableData
-            if available.isEmpty {
-                handle.readabilityHandler = nil
-            } else {
-                output.withLock { $0.append(available) }
-            }
-        }
-        try process.run()
-        let exited = DispatchSemaphore(value: 0)
-        process.terminationHandler = { _ in exited.signal() }
-        if exited.wait(timeout: .now() + timeout) == .timedOut {
-            process.terminate()
-            _ = exited.wait(timeout: .now() + 5)
-            throw CodexNativeCatalog.Error.timedOut
-        }
-        guard process.terminationStatus == 0 else {
-            throw CodexNativeCatalog.Error.nonZeroExit(process.terminationStatus)
-        }
-        return output.withLock { $0 }
     }
 }

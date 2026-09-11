@@ -151,32 +151,19 @@ extension OpenAIResponsesWebSearch {
         _ item: [String: Any],
         prepared: PreparedResponsesWebSearchRequest
     ) -> ResponsesToolNamespaces.Binding? {
-        guard item["type"] as? String == "function_call", item["namespace"] as? String == nil else {
+        guard ["function_call", "custom_tool_call"].contains(item["type"] as? String ?? ""),
+            item["namespace"] == nil || item["namespace"] is NSNull
+        else {
             return nil
         }
         guard let flatName = item["name"] as? String else {
             return nil
         }
-        return restoredBinding(for: flatName, prepared: prepared)
-    }
-
-    /// The binding for an emitted call name: the exact flattened wire name
-    /// first, then a near-miss resolved among the request's declared children.
-    private static func restoredBinding(
-        for name: String,
-        prepared: PreparedResponsesWebSearchRequest
-    ) -> ResponsesToolNamespaces.Binding? {
-        if let binding = prepared.toolBindings[name] {
-            return binding
-        }
-        guard !prepared.declaredToolBindings.isEmpty else {
-            return nil
-        }
-        let resolver = ProviderToolNamespaceResolver(declaredBindings: prepared.declaredToolBindings)
-        guard let wireName = resolver.wireName(for: name, namespace: nil) else {
-            return nil
-        }
-        return prepared.toolBindings[wireName]
+        let resolver = ProviderToolNamespaceResolver(
+            declaredBindings: prepared.declaredToolBindings,
+            nameCatalog: prepared.toolNameCatalog
+        )
+        return resolver.restoredBinding(for: flatName, bindings: prepared.toolBindings)
     }
 
     static func nativeSearchItem(

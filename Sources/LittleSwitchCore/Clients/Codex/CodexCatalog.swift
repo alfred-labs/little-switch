@@ -27,6 +27,8 @@ public struct CodexCatalogModel: Encodable, Equatable, Sendable {
     public var defaultReasoningLevel: String?
     public var supportedReasoningLevels: [CodexReasoningEffortPreset]
     public var shellType: String
+    /// Explicitly override Codex's code-mode feature default for managed models.
+    public var toolMode: String { "direct" }
     public var visibility: String
     public var supportedInAPI: Bool
     public var priority: Int
@@ -61,6 +63,7 @@ public struct CodexCatalogModel: Encodable, Equatable, Sendable {
         case defaultReasoningLevel = "default_reasoning_level"
         case supportedReasoningLevels = "supported_reasoning_levels"
         case shellType = "shell_type"
+        case toolMode = "tool_mode"
         case visibility
         case supportedInAPI = "supported_in_api"
         case priority
@@ -97,6 +100,7 @@ public struct CodexCatalogModel: Encodable, Equatable, Sendable {
         try encode(defaultReasoningLevel, in: &values, forKey: .defaultReasoningLevel)
         try values.encode(supportedReasoningLevels, forKey: .supportedReasoningLevels)
         try values.encode(shellType, forKey: .shellType)
+        try values.encode(toolMode, forKey: .toolMode)
         try values.encode(visibility, forKey: .visibility)
         try values.encode(supportedInAPI, forKey: .supportedInAPI)
         try values.encode(priority, forKey: .priority)

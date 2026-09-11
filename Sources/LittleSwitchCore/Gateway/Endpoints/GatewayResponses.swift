@@ -58,23 +58,23 @@ extension GatewayResponder {
         let incomingHeaders = nioHeaders(request.headers)
         guard let metadata = responsesRoutingMetadata(body: incomingBody, capture: capture) else {
             if CodexNativePassthrough.isNativeRequest(incomingBody) {
-                return try await nativePassthroughResponsesResponse(
-                    body: incomingBody,
-                    incomingHeaders: incomingHeaders,
-                    eventID: eventID
+                return try await nativeResponsesResponse(
+                    body: incomingBody, incomingHeaders: incomingHeaders, eventID: eventID
                 )
             }
             return openAIError(status: .badRequest, message: "Unknown or invalid model")
         }
         await GatewayMonitoringScope.current?.target(
             providerID: metadata.target.provider.id, model: metadata.target.model.id)
-        let preparedWebSearch: PreparedResponsesWebSearchRequest?
+        var prepared: PreparedGatewayResponses?
         do {
-            preparedWebSearch = try OpenAIResponsesWebSearch.prepare(
-                body: incomingBody,
-                targetModel: metadata.target.model.id,
-                configuration: capture.snapshot.webSearch
-            )
+            // Validate controls before recovery is allowed to contact OpenAI.
+            _ = try ResponsesCompactionPlan.prepare(body: incomingBody, providerID: metadata.target.provider.id)
+            if try !ResponsesProviderState.requiresNativeRecovery(incomingBody) {
+                prepared = try PreparedGatewayResponses(
+                    body: incomingBody, target: metadata.target, configuration: capture.snapshot.webSearch
+                )
+            }
         } catch {
             return openAIError(status: .badRequest, message: "Invalid Responses request")
         }
@@ -119,20 +119,7 @@ extension GatewayResponder {
             errorStyle: .openAI
         )
         try Task.checkCancellation()
-        if let response = try await dispatchResponsesWebSearch(
-            GatewayResponsesWebSearchAdmission(
-                body: incomingBody,
-                configuration: capture.snapshot.webSearch,
-                target: metadata.target,
-                providerCredential: secret,
-                incomingHeaders: incomingHeaders,
-                eventID: eventID,
-                prepared: preparedWebSearch
-            )
-        ) {
-            return response
-        }
-        return try await transparentResponsesResponse(
+        return try await admittedResponsesResponse(
             TransparentResponsesContext(
                 body: incomingBody,
                 model: metadata.model,
@@ -141,11 +128,13 @@ extension GatewayResponder {
                 incomingHeaders: incomingHeaders,
                 eventID: eventID,
                 streaming: metadata.streaming
-            )
+            ),
+            prepared: prepared,
+            configuration: capture.snapshot.webSearch
         )
     }
 
-    private func transparentResponsesResponse(
+    package func transparentResponsesResponse(
         _ context: TransparentResponsesContext
     ) async throws -> Response {
         let needsChatCompletionsAdapter = await resolvesChatCompletionsAdapter(
@@ -155,6 +144,7 @@ extension GatewayResponder {
             return try await chatCompletionsResponsesResponse(context)
         }
         let upstreamBody: Data
+        let normalized: OpenAIResponsesNativeNamespacing.Normalized
         do {
             let rewritten = try dependencies.serializer.rewriteResponses(
                 context.body,
@@ -162,7 +152,9 @@ extension GatewayResponder {
             )
             // Admission already routes owned history through its adapter.
             // Native image turns still need an explicit completion budget.
-            upstreamBody = try OpenAIResponsesNativeNamespacing.normalize(rewritten).body
+            normalized = try OpenAIResponsesNativeNamespacing.normalize(rewritten)
+            upstreamBody = try ResponsesChatCompletionsReasoning.nativeRequestBody(
+                normalized.body, providerID: context.target.provider.id)
         } catch {
             return openAIError(status: .badRequest, message: "Invalid Responses request")
         }
@@ -199,7 +191,13 @@ extension GatewayResponder {
         do {
             try Task.checkCancellation()
             exchange = try await executeModelRequest(
-                upstreamRequest, body: upstreamBody, wire: .responses, eventID: context.eventID, attempt: 0
+                upstreamRequest,
+                body: upstreamBody,
+                wire: .responses,
+                eventID: context.eventID,
+                attempt: 0,
+                declaredToolBindings: normalized.declaredToolBindings,
+                toolNameCatalog: normalized.toolNameCatalog
             )
             try Task.checkCancellation()
         } catch is CancellationError {

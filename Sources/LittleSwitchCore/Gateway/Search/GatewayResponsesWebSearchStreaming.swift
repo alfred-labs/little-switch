@@ -212,7 +212,8 @@ extension GatewayResponder {
                 eventID: context.eventID,
                 attempt: attempt,
                 declaredToolBindings: prepared.adapted?.declaredToolBindings
-                    ?? context.prepared.declaredToolBindings
+                    ?? context.prepared.declaredToolBindings,
+                toolNameCatalog: prepared.adapted?.toolNameCatalog ?? context.prepared.toolNameCatalog
             )
             try Task.checkCancellation()
         } catch is CancellationError {
@@ -253,16 +254,20 @@ extension GatewayResponder {
                 let prepared = try OpenAIResponsesChatCompletions.prepare(
                     body: body,
                     targetModel: context.target.model.id,
+                    providerID: context.target.provider.id,
                     mode: .streaming(toolStream: true),
                     inheritedToolBindings: context.prepared.toolBindings,
                     inheritedDeclaredToolBindings: context.prepared.declaredToolBindings,
+                    inheritedToolNameCatalog: context.prepared.toolNameCatalog,
                     inheritedToolSearchContract: context.prepared.toolSearchContract
                 )
                 adapted = prepared
                 requestBody = prepared.upstreamBody
             } else {
                 adapted = nil
-                requestBody = try OpenAIResponsesWebSearch.streamingRequestBody(body)
+                requestBody = try ResponsesChatCompletionsReasoning.nativeRequestBody(
+                    OpenAIResponsesWebSearch.streamingRequestBody(body), providerID: context.target.provider.id
+                )
             }
         } catch {
             throw GatewayResponsesLiveError.invalidProviderRequest(String(describing: error))

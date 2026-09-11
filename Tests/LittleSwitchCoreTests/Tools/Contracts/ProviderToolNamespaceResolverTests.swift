@@ -47,6 +47,22 @@ struct ProviderToolNamespaceResolverTests {
         #expect(resolved == nil)
     }
 
+    @Test(
+        "Ambiguous bare children cannot fall through to token or shorter suffix recovery",
+        arguments: ["a_b", "a.b", "a__b"])
+    func ambiguousChildStopsRecovery(child: String) {
+        let bindings: [String: ResponsesToolNamespaces.Binding] = [
+            "x__\(child)": .init(namespace: "x", name: child),
+            "y__\(child)": .init(namespace: "y", name: child),
+            "outer.a__b": .init(namespace: "outer.a", name: "b"),
+        ]
+        let resolver = ProviderToolNamespaceResolver(declaredBindings: bindings)
+        #expect(resolver.wireName(for: child, namespace: nil) == nil)
+        #expect(resolver.restoredBinding(for: child, bindings: bindings) == nil)
+        #expect(resolver.wireName(for: child, namespace: "x") == "x__\(child)")
+        #expect(resolver.wireName(for: "x__\(child)", namespace: nil) == "x__\(child)")
+    }
+
     @Test("A dotted path resolves by its trailing namespace segment and child")
     func dottedNearMiss() {
         let resolved = resolver().wireName(for: "functions.collaboration.spawn_agent", namespace: nil)
@@ -150,5 +166,57 @@ struct ProviderToolNamespaceResolverTests {
         #expect(resolver.wireName(for: "collaboration__spawn_agent", namespace: nil) == "collaboration__spawn_agent")
         // And the flat namespace's own child remains reachable.
         #expect(resolver.wireName(for: "flat__collaboration__spawn_agent", namespace: nil) != nil)
+    }
+
+    @Test("Plain declarations preserve exact names and veto competing token and suffix candidates")
+    func plainDeclarationCandidates() {
+        let bindings: [String: ResponsesToolNamespaces.Binding] = [
+            "workspace__read_file": .init(namespace: "workspace", name: "read_file")
+        ]
+        let resolver = ProviderToolNamespaceResolver(
+            declaredBindings: bindings,
+            nameCatalog: ProviderToolNameCatalog(declared: [
+                "read_file", "workspace__read_file", "functions.workspace.read_file", "workspace_read_file",
+                "other.ping",
+            ])
+        )
+        #expect(resolver.wireName(for: "read_file", namespace: nil) == "read_file")
+        #expect(resolver.restoredBinding(for: "read_file", bindings: bindings) == nil)
+        #expect(
+            resolver.wireName(for: "functions.workspace.read_file", namespace: nil) == "functions.workspace.read_file")
+        #expect(resolver.restoredBinding(for: "functions.workspace.read_file", bindings: bindings) == nil)
+        #expect(resolver.wireName(for: "prefix.functions.workspace.read_file", namespace: nil) == nil)
+        #expect(resolver.wireName(for: "prefix__read_file", namespace: nil) == nil)
+        #expect(resolver.wireName(for: "mcp__tools__workspace_read_file", namespace: nil) == nil)
+        #expect(resolver.wireName(for: "prefix.other.ping", namespace: nil) == nil)
+        #expect(resolver.restoredBinding(for: "read_file", namespace: "other", bindings: bindings) == nil)
+    }
+
+    @Test("Retired exact names restore their identity without resolving as current declarations")
+    func retiredNamesOnlyRestore() {
+        let declared: [String: ResponsesToolNamespaces.Binding] = [
+            "workspace__read_file": .init(namespace: "workspace", name: "read_file")
+        ]
+        let retired = ResponsesToolNamespaces.Binding(namespace: "gone", name: "read_file")
+        var bindings = declared
+        bindings["gone__read_file"] = retired
+        let resolver = ProviderToolNamespaceResolver(
+            declaredBindings: declared,
+            nameCatalog: ProviderToolNameCatalog(historical: ["gone__read_file", "read_file"])
+        )
+        #expect(resolver.wireName(for: "gone__read_file", namespace: nil) == nil)
+        #expect(resolver.wireName(for: "read_file", namespace: nil) == nil)
+        #expect(resolver.restoredBinding(for: "gone__read_file", bindings: bindings) == retired)
+        #expect(resolver.restoredBinding(for: "read_file", bindings: bindings) == nil)
+        #expect(resolver.restoredBinding(for: "read_file", namespace: "gone", bindings: bindings) == retired)
+    }
+
+    @Test("An ambiguous qualified name cannot fall through to suffix recovery")
+    func ambiguousTokensDoNotFallThrough() {
+        let resolver = ProviderToolNamespaceResolver(
+            declaredBindings: ["workspace__read_file": .init(namespace: "workspace", name: "read_file")],
+            nameCatalog: ProviderToolNameCatalog(declared: ["functions.workspace.read_file"])
+        )
+        #expect(resolver.wireName(for: "prefix__workspace__read_file", namespace: nil) == nil)
     }
 }

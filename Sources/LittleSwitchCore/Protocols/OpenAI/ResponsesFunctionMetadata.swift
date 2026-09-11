@@ -23,7 +23,7 @@ package func responsesFunctionMetadata(
     }
     guard let callID = nonemptyResponsesString(item["call_id"]),
         let name = nonemptyResponsesString(item["name"]),
-        item["arguments"] is String
+        item[item["type"] as? String == "custom_tool_call" ? "input" : "arguments"] is String
     else {
         throw OpenAIResponsesWebSearch.Error.invalidResponse
     }

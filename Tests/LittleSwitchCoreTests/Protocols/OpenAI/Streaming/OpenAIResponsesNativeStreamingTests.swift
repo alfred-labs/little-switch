@@ -76,6 +76,7 @@ struct OpenAIResponsesNativeStreamingTests {
         let session = ResponsesPublicStreamSession(chatCompletions: prepared)
         #expect(session.nativeToolBindings.isEmpty)
         #expect(session.nativeDeclaredToolBindings.isEmpty)
+        #expect(session.nativeToolNameCatalog == ProviderToolNameCatalog())
     }
 
     @Test("A flattened provider call streams back under the restored pair")

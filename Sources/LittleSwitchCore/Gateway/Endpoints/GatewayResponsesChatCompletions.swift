@@ -18,6 +18,7 @@ extension GatewayResponder {
             prepared = try OpenAIResponsesChatCompletions.prepare(
                 body: context.body,
                 targetModel: context.target.model.id,
+                providerID: context.target.provider.id,
                 mode: mode
             )
         } catch {
@@ -64,7 +65,8 @@ extension GatewayResponder {
                 wire: .chatCompletions,
                 eventID: context.eventID,
                 attempt: attempt,
-                declaredToolBindings: prepared.declaredToolBindings
+                declaredToolBindings: prepared.declaredToolBindings,
+                toolNameCatalog: prepared.toolNameCatalog
             )
             try Task.checkCancellation()
         } catch is CancellationError {

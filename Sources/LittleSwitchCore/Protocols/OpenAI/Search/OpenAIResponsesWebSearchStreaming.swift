@@ -150,17 +150,8 @@ private struct ResponsesSSEEncoder {
                 itemID: itemID,
                 outputIndex: outputIndex
             )
-        case "function_call":
-            let itemID = try requiredString("id", in: item)
-            let name = try requiredString("name", in: item)
-            let arguments = try requiredString("arguments", in: item, allowEmpty: true)
-            try appendFunctionCall(
-                try OpenAIResponsesPublicSanitizer.item(item),
-                itemID: itemID,
-                name: name,
-                arguments: arguments,
-                outputIndex: outputIndex
-            )
+        case "function_call", "custom_tool_call":
+            try appendToolCall(item, outputIndex: outputIndex)
         case .some, nil:
             throw OpenAIResponsesWebSearch.Error.invalidResponse
         }
@@ -303,31 +294,34 @@ private struct ResponsesSSEEncoder {
         )
     }
 
-    private mutating func appendFunctionCall(
-        _ item: [String: Any],
-        itemID: String,
-        name: String,
-        arguments: String,
+    private mutating func appendToolCall(
+        _ providerItem: [String: Any],
         outputIndex: Int
     ) throws {
+        let custom = providerItem["type"] as? String == "custom_tool_call"
+        let inputKey = custom ? "input" : "arguments"
+        let eventName = custom ? "response.custom_tool_call_input" : "response.function_call_arguments"
+        let itemID = try requiredString("id", in: providerItem)
+        let name = try requiredString("name", in: providerItem)
+        let input = try requiredString(inputKey, in: providerItem, allowEmpty: true)
+        let item = try OpenAIResponsesPublicSanitizer.item(providerItem)
         var pending = item
-        pending["arguments"] = ""
+        pending[inputKey] = ""
         pending["status"] = "in_progress"
         try append(
             "response.output_item.added",
             payload: ["output_index": outputIndex, "item": pending]
         )
         let reference: [String: Any] = ["item_id": itemID, "output_index": outputIndex]
-        if !arguments.isEmpty {
+        if !input.isEmpty {
             try append(
-                "response.function_call_arguments.delta",
-                payload: adding(["delta": arguments], to: reference)
+                eventName + ".delta",
+                payload: adding(["delta": input], to: reference)
             )
         }
-        try append(
-            "response.function_call_arguments.done",
-            payload: adding(["name": name, "arguments": arguments], to: reference)
-        )
+        var done = [inputKey: input]
+        if !custom { done["name"] = name }
+        try append(eventName + ".done", payload: adding(done, to: reference))
         try append(
             "response.output_item.done",
             payload: ["output_index": outputIndex, "item": item]

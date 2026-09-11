@@ -6,8 +6,9 @@ import Foundation
 /// `{"type": "namespace"}` tool specs hide their tools, and `agent_message`
 /// input items fail with a 400 (verified against a native v1 Responses
 /// provider). Normalization flattens the specs, flattens replayed
-/// `function_call` names, and converts mail into plain user messages. Bodies
-/// that contain neither shape are returned byte-identical. Mail that carries
+/// `function_call` names, converts mail into plain user messages, and lowers
+/// allowed-tool selections to explicit declaration subsets. Bodies requiring
+/// no adaptation are returned byte-identical. Mail that carries
 /// no readable text cannot be converted; it is dropped from the wire and
 /// counted so the gateway can record it.
 package enum OpenAIResponsesNativeNamespacing {
@@ -18,6 +19,9 @@ package enum OpenAIResponsesNativeNamespacing {
         /// the set an emitted call may be resolved against when a provider
         /// near-misses the exact flattened name.
         package let declaredToolBindings: [String: ResponsesToolNamespaces.Binding]
+        /// Includes declarations removed by a selection so an excluded plain
+        /// name cannot be reinterpreted as a permitted namespace alias.
+        package let toolNameCatalog: ProviderToolNameCatalog
         package let droppedMailCount: Int
     }
 
@@ -60,10 +64,7 @@ package enum OpenAIResponsesNativeNamespacing {
                 case "web_search_call":
                     converted.append(try PortableResponsesHistory.message(for: item))
                     changed = true
-                case "custom_tool_call", "custom_tool_call_output":
-                    converted.append(try PortableResponsesHistory.customToolMessage(for: item))
-                    changed = true
-                case "function_call":
+                case "function_call", "custom_tool_call":
                     converted.append(
                         flattenedFunctionReference(item, bindings: toolBindings, changed: &changed)
                     )
@@ -85,11 +86,24 @@ package enum OpenAIResponsesNativeNamespacing {
             }
         }
 
-        let choice = rewritten["tool_choice"] as? [String: Any]
-        if let choice, choice["type"] as? String == "function" {
-            rewritten["tool_choice"] = flattenedFunctionReference(
-                choice, bindings: toolBindings, changed: &changed
-            )
+        if let choice = rewritten["tool_choice"] {
+            let flattened = try ResponsesToolChoice.normalized(choice, bindings: declaredToolBindings)
+            if !NSDictionary(dictionary: ["choice": choice]).isEqual(to: ["choice": flattened]) {
+                rewritten["tool_choice"] = flattened
+                changed = true
+            }
+        }
+
+        let toolNameCatalog = try ProviderToolContractCatalog(
+            wire: .responses, requestBody: JSONSerialization.data(withJSONObject: rewritten)
+        ).nameCatalog
+        if try ResponsesAllowedToolSelection.apply(to: &rewritten) {
+            changed = true
+        }
+        let customHistory = try ResponsesCustomToolHistory.normalized(rewritten, bindings: toolBindings)
+        if !NSDictionary(dictionary: customHistory).isEqual(to: rewritten) {
+            rewritten = customHistory
+            changed = true
         }
 
         if let reshaped = ResponsesImageTurnCompatibility.rewritten(rewritten) {
@@ -102,6 +116,7 @@ package enum OpenAIResponsesNativeNamespacing {
                 body: body,
                 toolBindings: toolBindings,
                 declaredToolBindings: declaredToolBindings,
+                toolNameCatalog: toolNameCatalog,
                 droppedMailCount: droppedMailCount
             )
         }
@@ -112,6 +127,7 @@ package enum OpenAIResponsesNativeNamespacing {
             ),
             toolBindings: toolBindings,
             declaredToolBindings: declaredToolBindings,
+            toolNameCatalog: toolNameCatalog,
             droppedMailCount: droppedMailCount
         )
     }

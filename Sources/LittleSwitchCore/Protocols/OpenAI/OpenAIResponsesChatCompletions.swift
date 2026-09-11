@@ -21,9 +21,11 @@ package enum OpenAIResponsesChatCompletions {
     package static func prepare(
         body: Data,
         targetModel: String,
+        providerID: UUID? = nil,
         mode: ResponsesChatCompletionsMode = .buffered,
         inheritedToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
         inheritedDeclaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
+        inheritedToolNameCatalog: ProviderToolNameCatalog? = nil,
         inheritedToolSearchContract: ResponsesClientToolSearchContract? = nil,
         originalBody: Data? = nil
     ) throws -> PreparedResponsesChatCompletionsRequest {
@@ -36,60 +38,72 @@ package enum OpenAIResponsesChatCompletions {
             throw Error.invalidRequest
         }
         guard
-            let root = object(search?.upstreamBody ?? body),
-            !ResponsesConversationReferences.hasServerState(in: root),
-            let originalModel = nonemptyString(root["model"]),
-            !targetModel.isEmpty,
-            let input = root["input"]
+            let source = object(search?.upstreamBody ?? body),
+            !ResponsesConversationReferences.hasServerState(in: source),
+            let originalModel = nonemptyString(source["model"]),
+            !targetModel.isEmpty
         else {
             throw Error.invalidRequest
         }
 
-        var messages: [[String: Any]] = []
-        if let instructions = nonemptyString(root["instructions"]) {
-            messages.append(["role": "system", "content": instructions])
-        }
+        let root = ResponsesImageTurnCompatibility.rewritten(source) ?? source
         // The search bridge may already have flattened the declarations.
         // Retain its bindings for restored history and live output events.
-        var toolBindings = inheritedToolBindings
-        var declaredToolBindings = inheritedDeclaredToolBindings
         try validateToolsForChat(root["tools"] as? [[String: Any]] ?? [])
         let flattened = ResponsesToolNamespaces.flatten(
             tools: root["tools"] as? [[String: Any]] ?? [],
-            history: root["input"] as? [[String: Any]] ?? []
+            history: root["input"] as? [[String: Any]] ?? [],
+            inheritedBindings: inheritedToolBindings,
+            inheritedDeclaredBindings: inheritedDeclaredToolBindings
         )
-        for (name, binding) in flattened.bindings {
-            toolBindings[name] = binding
-        }
-        for (name, binding) in flattened.declaredBindings {
-            declaredToolBindings[name] = binding
-        }
-        let droppedMailCount = try appendInput(
-            input,
-            to: &messages,
-            bindings: toolBindings
-        )
-        guard !messages.isEmpty else {
-            throw Error.invalidRequest
-        }
-
-        var request: [String: Any] = [
-            "model": targetModel,
-            "messages": messages,
-        ]
-        copy("parallel_tool_calls", from: root, to: &request)
-        copy("temperature", from: root, to: &request)
-        copy("top_p", from: root, to: &request)
-        if let maximum = root["max_output_tokens"] {
-            request["max_tokens"] = maximum
-        }
+        let toolBindings = flattened.bindings
+        let declaredToolBindings = flattened.declaredBindings
+        var request: [String: Any] = ["model": targetModel]
+        try ResponsesChatCompletionsOptions.copy(from: root, to: &request)
         let converted = flattened.tools.compactMap(chatTool)
         if !converted.isEmpty {
             request["tools"] = converted
         }
-        if request["tools"] != nil, let choice = chatToolChoice(root["tool_choice"], bindings: toolBindings) {
-            request["tool_choice"] = choice
+        let requestNames = try ProviderToolContractCatalog(wire: .chatCompletions, requestBody: data(request))
+            .nameCatalog
+        if request["tools"] != nil || (root["tool_choice"] as? [String: Any])?["type"] as? String == "allowed_tools" {
+            request["tool_choice"] = try chatToolChoice(root["tool_choice"], bindings: declaredToolBindings)
         }
+        try ChatAllowedToolSelection.apply(to: &request)
+
+        // Only declarations actually sent to this provider keep custom history
+        // active. Preserve the original name catalog for excluded-name safety.
+        let selectedCustomNames = Set(
+            (request["tools"] as? [[String: Any]] ?? []).compactMap {
+                ($0["custom"] as? [String: Any])?["name"] as? String
+            })
+        var history = root
+        history["tools"] = flattened.tools.filter {
+            $0["type"] as? String == "custom"
+                && ($0["name"] as? String).map(selectedCustomNames.contains) == true
+        }
+        do {
+            history = try ResponsesCustomToolHistory.normalized(history, bindings: toolBindings)
+        } catch {
+            throw Error.invalidRequest
+        }
+        guard let input = history["input"] else { throw Error.invalidRequest }
+        var messages: [[String: Any]] = []
+        if let instructions = nonemptyString(root["instructions"]) {
+            messages.append(["role": "system", "content": instructions])
+        }
+        let droppedMailCount = try ResponsesChatCompletionsHistory.append(
+            input,
+            to: &messages,
+            bindings: toolBindings,
+            providerID: providerID
+        )
+        guard !messages.isEmpty else { throw Error.invalidRequest }
+        request["messages"] = messages
+        let toolNameCatalog = ProviderToolNameCatalog(
+            declared: requestNames.declared.union(inheritedToolNameCatalog?.declared ?? []),
+            historical: ProviderToolNameCatalog.history(in: request, wire: .chatCompletions)
+                .union(inheritedToolNameCatalog?.historical ?? []))
         switch mode {
         case .buffered:
             request["stream"] = false
@@ -104,13 +118,18 @@ package enum OpenAIResponsesChatCompletions {
             }
         }
 
+        let upstreamBody = try data(request)
         return PreparedResponsesChatCompletionsRequest(
-            upstreamBody: try data(request),
+            upstreamBody: upstreamBody,
             originalBody: originalBody ?? search?.originalBody ?? body,
             originalModel: originalModel,
+            providerID: providerID,
             streaming: root["stream"] as? Bool ?? false,
             toolBindings: toolBindings,
             declaredToolBindings: declaredToolBindings,
+            toolNameCatalog: toolNameCatalog,
+            allowedToolIdentities: try ProviderToolContractCatalog(wire: .chatCompletions, requestBody: upstreamBody)
+                .allowedIdentities,
             droppedMailCount: droppedMailCount,
             toolSearchContract: inheritedToolSearchContract ?? search?.contract
         )
@@ -153,8 +172,11 @@ extension OpenAIResponsesChatCompletions {
             message: message,
             responseID: responseID,
             bindings: prepared.toolBindings,
-            resolver: prepared.declaredToolBindings.isEmpty
-                ? nil : ProviderToolNamespaceResolver(declaredBindings: prepared.declaredToolBindings)
+            resolver: ProviderToolNamespaceResolver(
+                declaredBindings: prepared.declaredToolBindings,
+                nameCatalog: prepared.toolNameCatalog
+            ),
+            providerID: prepared.providerID
         )
         let output = try rawOutput.map { item in
             try prepared.toolSearchContract?.projectItem(item) ?? item
@@ -212,7 +234,7 @@ extension OpenAIResponsesChatCompletions {
                 incompleteReason: "max_output_tokens",
                 error: nil
             )
-        case "sensitive":
+        case "sensitive", "content_filter":
             ChatCompletionsTerminalProjection(
                 status: .incomplete,
                 incompleteReason: "content_filter",
@@ -234,180 +256,26 @@ extension OpenAIResponsesChatCompletions {
         }
     }
 
-    /// Appends the Responses input items as chat messages and reports how many
-    /// `agent_message` items carried no readable text and were dropped.
-    private static func appendInput(
-        _ input: Any,
-        to messages: inout [[String: Any]],
-        bindings: [String: ResponsesToolNamespaces.Binding]
-    ) throws -> Int {
-        if let text = input as? String {
-            messages.append(["role": "user", "content": text])
-            return 0
-        }
-        guard let items = input as? [[String: Any]] else {
-            throw Error.invalidRequest
-        }
-        var droppedMailCount = 0
-        for item in items {
-            switch item["type"] as? String {
-            case "message":
-                try appendMessage(item, to: &messages)
-            case "function_call":
-                guard
-                    let callID = nonemptyString(item["call_id"]),
-                    let name = nonemptyString(item["name"]),
-                    let arguments = item["arguments"] as? String
-                else {
-                    throw Error.invalidRequest
-                }
-                let wireName =
-                    nonemptyString(item["namespace"]).map {
-                        ResponsesToolNamespaces.replayName(
-                            bindings: bindings,
-                            namespace: $0,
-                            name: name
-                        )
-                    } ?? name
-                messages.append([
-                    "role": "assistant",
-                    "content": NSNull(),
-                    "tool_calls": [
-                        [
-                            "id": callID,
-                            "type": "function",
-                            "function": ["name": wireName, "arguments": arguments],
-                        ]
-                    ],
-                ])
-            case "function_call_output":
-                guard
-                    let callID = nonemptyString(item["call_id"]),
-                    let output = try stringFragment(item["output"])
-                else {
-                    throw Error.invalidRequest
-                }
-                messages.append([
-                    "role": "tool",
-                    "tool_call_id": callID,
-                    "content": output,
-                ])
-            case "reasoning":
-                continue
-            case "agent_message":
-                // Codex's inter-agent mail is inbound context for this model.
-                // Tool-authored mail (spawn briefs, send_message) carries its
-                // text in encrypted_content; on custom providers that field
-                // holds the model-authored plaintext verbatim.
-                if let content = ResponsesAgentMail.textContent(item["content"]) {
-                    messages.append(["role": "user", "content": content])
-                } else {
-                    droppedMailCount += 1
-                }
-                continue
-            case "web_search_call":
-                guard let message = try? PortableResponsesHistory.message(for: item) else {
-                    throw Error.invalidRequest
-                }
-                try appendMessage(message, to: &messages)
-            case "custom_tool_call", "custom_tool_call_output":
-                guard let message = try? PortableResponsesHistory.customToolMessage(for: item)
-                else {
-                    throw Error.invalidRequest
-                }
-                try appendMessage(message, to: &messages)
-            default:
-                throw Error.invalidRequest
-            }
-        }
-        return droppedMailCount
-    }
-
-    private static func appendMessage(
-        _ item: [String: Any],
-        to messages: inout [[String: Any]]
-    ) throws {
-        guard let role = nonemptyString(item["role"]) else {
-            throw Error.invalidRequest
-        }
-        let chatRole = role == "developer" ? "system" : role
-        guard ["system", "user", "assistant"].contains(chatRole) else {
-            throw Error.invalidRequest
-        }
-        if let content = textContent(item["content"]) {
-            messages.append(["role": chatRole, "content": content])
-            return
-        }
-        guard let parts = item["content"] as? [[String: Any]],
-            let multipart = multipartContent(parts)
-        else {
-            throw Error.invalidRequest
-        }
-        messages.append(["role": chatRole, "content": multipart])
-    }
-
-    private static func multipartContent(_ parts: [[String: Any]]) -> [[String: Any]]? {
-        ResponsesChatCompletionsImageContent.multipart(parts)
-    }
-
-    private static func textContent(_ value: Any?) -> String? {
-        if let text = value as? String {
-            return text
-        }
-        guard let parts = value as? [[String: Any]] else {
-            return nil
-        }
-        let text = parts.compactMap { part -> String? in
-            switch part["type"] as? String {
-            case "input_text", "output_text":
-                part["text"] as? String
-            default:
-                nil
-            }
-        }
-        guard text.count == parts.count else {
-            return nil
-        }
-        return text.joined(separator: "\n")
-    }
-
     private static func validateToolsForChat(_ tools: [[String: Any]]) throws {
-        for tool in tools {
-            guard tool["type"] as? String != "custom" else { throw Error.invalidRequest }
-            if tool["type"] as? String == "namespace", let children = tool["tools"] as? [[String: Any]] {
-                try validateToolsForChat(children)
-            }
-        }
+        do { try ProviderToolContractCatalog.validateResponsesDeclarations(tools) } catch { throw Error.invalidRequest }
     }
 
     private static func chatTool(_ tool: [String: Any]) -> [String: Any]? {
-        guard tool["type"] as? String == "function",
-            let name = nonemptyString(tool["name"]),
-            let parameters = tool["parameters"]
+        guard let type = tool["type"] as? String,
+            let kind = ProviderToolContractCatalog.Kind(rawValue: type),
+            let name = nonemptyString(tool["name"])
         else {
             return nil
         }
-        var function: [String: Any] = [
-            "name": name,
-            "parameters": parameters,
-        ]
+        var function: [String: Any] = ["name": name]
         copy("description", from: tool, to: &function)
-        copy("strict", from: tool, to: &function)
-        return ["type": "function", "function": function]
-    }
-
-    private static func stringFragment(_ value: Any?) throws -> String? {
-        if let string = value as? String {
-            return string
+        if kind == .function {
+            copy("parameters", from: tool, to: &function)
+            copy("strict", from: tool, to: &function)
+        } else {
+            copy("format", from: tool, to: &function)
         }
-        guard let value else {
-            return nil
-        }
-        let fragment = try JSONSerialization.data(
-            withJSONObject: value,
-            options: [.fragmentsAllowed, .sortedKeys, .withoutEscapingSlashes]
-        )
-        return String(data: fragment, encoding: .utf8)
+        return ["type": type, type: function]
     }
 
     private static func copy(

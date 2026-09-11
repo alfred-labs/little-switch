@@ -1,5 +1,12 @@
 import Foundation
 
+struct ResponsesToolInputReference {
+    let index: Int
+    let itemID: String
+    let callID: String
+    let name: String
+}
+
 package enum ResponsesProviderStreamEvent: Equatable, Sendable {
     case responseStarted(responseJSON: Data)
     case outputItemAdded(outputIndex: Int, itemJSON: Data)
@@ -40,6 +47,11 @@ package enum ResponsesProviderStreamEvent: Equatable, Sendable {
         name: String,
         arguments: String
     )
+    // The custom input stream carries the same exact identity boundary.
+    // swiftlint:disable:next enum_case_associated_values_count
+    case customInputDelta(outputIndex: Int, itemID: String, callID: String, name: String, delta: String)
+    // swiftlint:disable:next enum_case_associated_values_count
+    case customInputDone(outputIndex: Int, itemID: String, callID: String, name: String, input: String)
     case passthrough(type: String, payloadJSON: Data)
     case terminal(status: ResponsesStreamTerminal, responseJSON: Data)
 }

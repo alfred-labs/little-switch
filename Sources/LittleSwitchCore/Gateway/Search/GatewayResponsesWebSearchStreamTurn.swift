@@ -61,6 +61,7 @@ extension GatewayResponder {
             maximumTurnBytes: maximumErrorBytes,
             toolBindings: session.nativeToolBindings,
             declaredToolBindings: session.nativeDeclaredToolBindings,
+            toolNameCatalog: session.nativeToolNameCatalog,
             privateToolName: session.configuration.privateSearchToolName
         )
         do {
@@ -215,6 +216,7 @@ extension GatewayResponder {
                 maximumTurnBytes: maximumErrorBytes,
                 toolBindings: head.adapted == nil ? session.nativeToolBindings : [:],
                 declaredToolBindings: head.adapted == nil ? session.nativeDeclaredToolBindings : [:],
+                toolNameCatalog: head.adapted == nil ? session.nativeToolNameCatalog : .init(),
                 privateToolName: session.configuration.privateSearchToolName
             )
             try await publishResponsesFrames(

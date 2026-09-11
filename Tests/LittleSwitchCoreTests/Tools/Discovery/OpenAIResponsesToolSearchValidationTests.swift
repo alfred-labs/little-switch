@@ -13,16 +13,21 @@ struct OpenAIResponsesToolSearchValidationTests {
         #expect(try OpenAIResponsesToolSearch.prepare(body: body) == nil)
     }
 
-    @Test("Chat rejects free-form declarations before namespace flattening", arguments: [false, true])
+    @Test("Chat preserves free-form declarations through namespace flattening", arguments: [false, true])
     func chatCustomTools(_ namespaced: Bool) throws {
         let custom: [String: Any] = ["type": "custom", "name": "free_form"]
         let declaration = namespaced ? ["type": "namespace", "name": "files", "tools": [custom]] : custom
-        #expect(throws: OpenAIResponsesChatCompletions.Error.invalidRequest) {
-            try OpenAIResponsesChatCompletions.prepare(
-                body: data(["model": "route", "input": "Hello", "tools": [declaration]]),
-                targetModel: "test-model"
-            )
+        let prepared = try OpenAIResponsesChatCompletions.prepare(
+            body: data(["model": "route", "input": "Hello", "tools": [declaration]]),
+            targetModel: "test-model")
+        let root = try #require(JSONSerialization.jsonObject(with: prepared.upstreamBody) as? [String: Any])
+        let tools = try #require(root["tools"] as? [[String: Any]])
+        let name = namespaced ? "files__free_form" : "free_form"
+        var expected = ["name": name]
+        if namespaced {
+            expected["description"] = "Call this tool by its exact name \"files__free_form\". [files]"
         }
+        #expect(tools as NSArray == [["type": "custom", "custom": expected]] as NSArray)
     }
 
     @Test("The search transport name cannot collide with ordinary tools or replayed calls")

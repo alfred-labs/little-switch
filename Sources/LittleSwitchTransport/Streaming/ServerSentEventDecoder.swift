@@ -5,11 +5,19 @@ package struct ServerSentEventFrame: Equatable, Sendable {
     package let event: String?
     package let data: Data
     package let terminal: Bool
+    package var sourceData: Data?
+    /// Absolute byte range of the original record, including its separator.
+    package var sourceRange: Range<Int>?
 
     package init(event: String?, data: Data, terminal: Bool) {
         self.event = event
         self.data = data
         self.terminal = terminal
+    }
+
+    /// Equality compares the decoded event; source formatting is transport metadata.
+    package static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.event == rhs.event && lhs.data == rhs.data && lhs.terminal == rhs.terminal
     }
 }
 
@@ -36,7 +44,7 @@ package struct ServerSentEventDecoder: Sendable {
         // large frame delivered in TLS-sized records quadratic.
         let scanStart = pending.count
         pending.append(contentsOf: buffer.readableBytesView)
-        let scan = SeparatorScan(work: pending)
+        let scan = SeparatorScan(work: pending, sourceOffset: consumedBytes)
 
         var frameStart = 0
         // A deferred separator carried over from the previous append is
@@ -89,7 +97,7 @@ package struct ServerSentEventDecoder: Sendable {
             let finishingBytes = pending.count
             let frameData = Data(pending.dropLast(separatorLength))
             pending.removeAll(keepingCapacity: true)
-            let frame = try Self.decode(frameData)
+            let frame = try Self.decode(frameData, sourceRange: consumedBytes..<(consumedBytes + finishingBytes))
             consumedBytes += finishingBytes
             return frame.map { [$0] } ?? []
         }
@@ -135,7 +143,7 @@ package struct ServerSentEventDecoder: Sendable {
         return 0
     }
 
-    fileprivate static func decode(_ frameData: Data) throws -> ServerSentEventFrame? {
+    fileprivate static func decode(_ frameData: Data, sourceRange: Range<Int>) throws -> ServerSentEventFrame? {
         guard let frame = String(data: frameData, encoding: .utf8) else {
             throw Error.invalidUTF8
         }
@@ -180,13 +188,19 @@ package struct ServerSentEventDecoder: Sendable {
         }
         let data = dataValues.joined(separator: "\n")
         if data == "[DONE]" {
-            return ServerSentEventFrame(event: event, data: Data(), terminal: true)
+            var result = ServerSentEventFrame(event: event, data: Data(), terminal: true)
+            result.sourceData = frameData
+            result.sourceRange = sourceRange
+            return result
         }
-        return ServerSentEventFrame(
+        var result = ServerSentEventFrame(
             event: event,
             data: Data(data.utf8),
             terminal: false
         )
+        result.sourceData = frameData
+        result.sourceRange = sourceRange
+        return result
     }
 }
 
@@ -207,6 +221,7 @@ private func framesAppend(
 /// profile).
 private struct SeparatorScan {
     let work: Data
+    let sourceOffset: Int
 
     func byte(at position: Int) -> UInt8? {
         guard position >= 0, position < work.count else {
@@ -275,7 +290,8 @@ private struct SeparatorScan {
             throw ServerSentEventDecoder.Error.frameTooLarge
         }
         return try ServerSentEventDecoder.decode(
-            work.subdata(in: (work.startIndex + floor)..<(work.startIndex + cut))
+            work.subdata(in: (work.startIndex + floor)..<(work.startIndex + cut)),
+            sourceRange: (sourceOffset + floor)..<(sourceOffset + position + 1)
         )
     }
 

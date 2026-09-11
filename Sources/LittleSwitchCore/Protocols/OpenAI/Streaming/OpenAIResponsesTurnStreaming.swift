@@ -33,7 +33,7 @@ package struct OpenAIResponsesTurnAccumulator: Sendable {
 
     private let maximumTurnBytes: Int
     private let toolBindings: [String: ResponsesToolNamespaces.Binding]
-    private let resolver: ProviderToolNamespaceResolver?
+    private let resolver: ProviderToolNamespaceResolver
     private let privateToolName: String?
     private var consumedBytes = 0
     private var phase = Phase.awaitingResponse
@@ -46,13 +46,15 @@ package struct OpenAIResponsesTurnAccumulator: Sendable {
         maximumTurnBytes: Int,
         toolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
         declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
+        toolNameCatalog: ProviderToolNameCatalog = .init(),
         privateToolName: String? = "web_search"
     ) {
         self.maximumTurnBytes = max(0, maximumTurnBytes)
         self.toolBindings = toolBindings
-        self.resolver =
-            declaredToolBindings.isEmpty
-            ? nil : ProviderToolNamespaceResolver(declaredBindings: declaredToolBindings)
+        self.resolver = ProviderToolNamespaceResolver(
+            declaredBindings: declaredToolBindings,
+            nameCatalog: toolNameCatalog
+        )
         self.privateToolName = privateToolName
     }
 
@@ -85,6 +87,10 @@ package struct OpenAIResponsesTurnAccumulator: Sendable {
             return [try consumeFunctionArgumentsDelta(payload)]
         case "response.function_call_arguments.done":
             return [try consumeFunctionArgumentsDone(payload)]
+        case "response.custom_tool_call_input.delta":
+            return [try consumeFunctionArgumentsDelta(payload, kind: .custom)]
+        case "response.custom_tool_call_input.done":
+            return [try consumeFunctionArgumentsDone(payload, kind: .custom)]
         case "response.completed":
             return [try consumeTerminal(payload, status: .completed)]
         case "response.incomplete":
@@ -164,7 +170,8 @@ extension OpenAIResponsesTurnAccumulator {
             throw OpenAIResponsesWebSearch.Error.invalidResponse
         }
 
-        let function = try responsesFunctionMetadata(item, required: type == "function_call")
+        let function = try responsesFunctionMetadata(
+            item, required: ["function_call", "custom_tool_call"].contains(type))
         if type == "message", let content = item["content"], !(content is [Any]) {
             throw OpenAIResponsesWebSearch.Error.invalidResponse
         }
@@ -179,7 +186,7 @@ extension OpenAIResponsesTurnAccumulator {
         )
         return .outputItemAdded(
             outputIndex: outputIndex,
-            itemJSON: try responsesStreamData(restoredFunctionItem(item, binding: binding))
+            itemJSON: try responsesStreamData(restoredResponsesToolItem(item, binding: binding))
         )
     }
 
@@ -197,11 +204,12 @@ extension OpenAIResponsesTurnAccumulator {
             throw OpenAIResponsesWebSearch.Error.invalidResponse
         }
 
-        if state.type == "function_call" {
+        if ["function_call", "custom_tool_call"].contains(state.type) {
             let metadata = try responsesFunctionMetadata(item, required: true)
             guard metadata?.name == state.name,
+                metadata?.namespace == state.namespace,
                 metadata?.callID == state.callID,
-                let arguments = item["arguments"] as? String,
+                let arguments = item[state.type == "custom_tool_call" ? "input" : "arguments"] as? String,
                 state.completedArguments == arguments
             else {
                 throw OpenAIResponsesWebSearch.Error.invalidResponse
@@ -211,7 +219,7 @@ extension OpenAIResponsesTurnAccumulator {
         return .outputItemDone(
             outputIndex: outputIndex,
             itemJSON: try responsesStreamData(
-                restoredFunctionItem(
+                restoredResponsesToolItem(
                     item,
                     binding: state.name.flatMap { bindingFor(name: $0, namespace: state.namespace) }
                 )
@@ -300,7 +308,7 @@ extension OpenAIResponsesTurnAccumulator {
     }
 
     private mutating func consumeFunctionArgumentsDelta(
-        _ payload: [String: Any]
+        _ payload: [String: Any], kind: ProviderToolContractCatalog.Kind = .function
     ) throws -> ResponsesProviderStreamEvent {
         guard phase == .streaming,
             let outputIndex = nonnegativeResponsesIndex(payload["output_index"]),
@@ -308,7 +316,7 @@ extension OpenAIResponsesTurnAccumulator {
             let delta = payload["delta"] as? String,
             let item = outputItems[outputIndex],
             item.id == itemID,
-            item.type == "function_call",
+            item.type == kind.responseType,
             let callID = item.callID,
             let name = item.name,
             item.completedArguments == nil
@@ -316,6 +324,10 @@ extension OpenAIResponsesTurnAccumulator {
             throw OpenAIResponsesWebSearch.Error.invalidResponse
         }
         try validateOptionalFunctionMetadata(payload, callID: callID, name: name)
+        if kind == .custom {
+            return .customInputDelta(
+                outputIndex: outputIndex, itemID: itemID, callID: callID, name: item.publicName, delta: delta)
+        }
         return .functionArgumentsDelta(
             outputIndex: outputIndex,
             itemID: itemID,
@@ -326,15 +338,15 @@ extension OpenAIResponsesTurnAccumulator {
     }
 
     private mutating func consumeFunctionArgumentsDone(
-        _ payload: [String: Any]
+        _ payload: [String: Any], kind: ProviderToolContractCatalog.Kind = .function
     ) throws -> ResponsesProviderStreamEvent {
         guard phase == .streaming,
             let outputIndex = nonnegativeResponsesIndex(payload["output_index"]),
             let itemID = nonemptyResponsesString(payload["item_id"]),
-            let arguments = payload["arguments"] as? String,
+            let arguments = payload[kind.inputKey] as? String,
             var item = outputItems[outputIndex],
             item.id == itemID,
-            item.type == "function_call",
+            item.type == kind.responseType,
             let callID = item.callID,
             let name = item.name,
             item.completedArguments == nil
@@ -344,6 +356,10 @@ extension OpenAIResponsesTurnAccumulator {
         try validateOptionalFunctionMetadata(payload, callID: callID, name: name)
         item.completedArguments = arguments
         outputItems[outputIndex] = item
+        if kind == .custom {
+            return .customInputDone(
+                outputIndex: outputIndex, itemID: itemID, callID: callID, name: item.publicName, input: arguments)
+        }
         return .functionArgumentsDone(
             outputIndex: outputIndex,
             itemID: itemID,
@@ -468,28 +484,7 @@ extension OpenAIResponsesTurnAccumulator {
         name: String,
         namespace: String?
     ) -> ResponsesToolNamespaces.Binding? {
-        if let binding = toolBindings[name] {
-            return binding
-        }
-        guard let resolver, let wireName = resolver.wireName(for: name, namespace: namespace) else {
-            return nil
-        }
-        return toolBindings[wireName]
+        resolver.restoredBinding(for: name, namespace: namespace, bindings: toolBindings)
     }
 
-    /// Restores the `name` + `namespace` pair Codex resolves against when a
-    /// flattened provider call matches a request binding. Incoming frames
-    /// keep the wire name; only emitted item JSON is rewritten.
-    private func restoredFunctionItem(
-        _ item: [String: Any],
-        binding: ResponsesToolNamespaces.Binding?
-    ) -> [String: Any] {
-        guard let binding else {
-            return item
-        }
-        var restored = item
-        restored["name"] = binding.name
-        restored["namespace"] = binding.namespace
-        return restored
-    }
 }

@@ -123,6 +123,7 @@ struct OpenAIChatCompletionsStreamingTests {
         #expect(
             output.compactMap { $0["id"] as? String }
                 == [
+                    "rs_resp_chatcmpl_stream",
                     "msg_resp_chatcmpl_stream",
                     "fc_resp_chatcmpl_stream_0",
                     "fc_resp_chatcmpl_stream_1",
@@ -141,8 +142,8 @@ struct OpenAIChatCompletionsStreamingTests {
                 return (itemID, outputIndex)
             }
         )
-        #expect(addedToolIndices["fc_resp_chatcmpl_stream_0"] == 1)
-        #expect(addedToolIndices["fc_resp_chatcmpl_stream_1"] == 2)
+        #expect(addedToolIndices["fc_resp_chatcmpl_stream_0"] == 2)
+        #expect(addedToolIndices["fc_resp_chatcmpl_stream_1"] == 3)
         let publicPayloads = events.compactMap(\.chatPayloadJSON) + [turn.rootJSON]
         var publicData = Data()
         for payload in publicPayloads {
@@ -158,7 +159,7 @@ struct OpenAIChatCompletionsStreamingTests {
         arguments: ["stop", "tool_calls"]
     )
     func completedFinishReasons(finishReason: String) throws {
-        let prepared = try liveChatPrepared()
+        let prepared = try liveChatPrepared(toolNames: ["read_file"])
         var accumulator = OpenAIChatCompletionsAccumulator(prepared: prepared)
         let events = try simpleChatFrames(finishReason: finishReason).flatMap {
             try accumulator.consume($0)

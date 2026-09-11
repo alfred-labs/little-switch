@@ -54,46 +54,44 @@ func chatMessageStartEvents(
     ]
 }
 
-func chatMessageDoneEvents(
-    id: String,
-    outputIndex: Int,
-    text: String
-) throws -> [ResponsesProviderStreamEvent] {
-    let part: [String: Any] = [
-        "type": "output_text",
-        "text": text,
-        "annotations": [],
-        "logprobs": [],
-    ]
-    let item: [String: Any] = [
-        "id": id,
-        "type": "message",
-        "status": "completed",
-        "role": "assistant",
-        "content": [part],
-    ]
-    return [
-        .outputTextDone(
-            outputIndex: outputIndex,
-            contentIndex: 0,
-            itemID: id,
-            text: text
-        ),
-        .passthrough(
-            type: "response.content_part.done",
-            payloadJSON: try chatData([
-                "type": "response.content_part.done",
-                "output_index": outputIndex,
-                "content_index": 0,
-                "item_id": id,
-                "part": part,
-            ])
-        ),
+func chatMessageDoneEvents(_ message: ChatCompletionMessageState) throws -> [ResponsesProviderStreamEvent] {
+    var parts: [Int: [String: Any]] = [:]
+    var events: [ResponsesProviderStreamEvent] = []
+    if let text = message.completedText {
+        parts[message.textIndex] = ["type": "output_text", "text": text, "annotations": [], "logprobs": []]
+        events.append(
+            .outputTextDone(
+                outputIndex: message.outputIndex, contentIndex: message.textIndex, itemID: message.id, text: text))
+    }
+    if let index = message.refusalIndex {
+        let refusal = message.refusal.joined()
+        parts[index] = ["type": "refusal", "refusal": refusal]
+        events.append(
+            .passthrough(
+                type: "response.refusal.done",
+                payloadJSON: try chatData([
+                    "type": "response.refusal.done", "output_index": message.outputIndex, "content_index": index,
+                    "item_id": message.id, "refusal": refusal,
+                ])))
+    }
+    for (index, part) in parts.sorted(by: { $0.key < $1.key }) {
+        events.append(
+            .passthrough(
+                type: "response.content_part.done",
+                payloadJSON: try chatData([
+                    "type": "response.content_part.done", "output_index": message.outputIndex, "content_index": index,
+                    "item_id": message.id, "part": part,
+                ])))
+    }
+    let content = parts.sorted { $0.key < $1.key }.map(\.value)
+    events.append(
         .outputItemDone(
-            outputIndex: outputIndex,
-            itemJSON: try chatData(item)
-        ),
-    ]
+            outputIndex: message.outputIndex,
+            itemJSON: try chatData([
+                "id": message.id, "type": "message", "status": "completed", "role": "assistant",
+                "content": content,
+            ])))
+    return events
 }
 
 func chatFunctionItem(

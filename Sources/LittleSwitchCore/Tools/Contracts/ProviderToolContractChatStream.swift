@@ -15,6 +15,7 @@ struct ProviderToolContractChatStream: Sendable {
     private struct Call: Sendable {
         let kind: ProviderToolContractCatalog.Kind
         var name = ""
+        var namespace: String?
     }
 
     private var calls: [Key: Call] = [:]
@@ -80,11 +81,11 @@ struct ProviderToolContractChatStream: Sendable {
         resolver: ProviderToolNamespaceResolver?
     ) throws {
         do {
-            try catalog.validate(name: call.name, kind: call.kind)
+            try catalog.validate(name: call.name, namespace: call.namespace, kind: call.kind)
         } catch ProviderToolContract.Error.undeclaredTool {
             guard let resolver,
                 !call.name.isEmpty,
-                let wireName = resolver.wireName(for: call.name, namespace: nil)
+                let wireName = resolver.wireName(for: call.name, namespace: call.namespace)
             else {
                 throw ProviderToolContract.Error.undeclaredTool
             }
@@ -107,13 +108,20 @@ struct ProviderToolContractChatStream: Sendable {
         var call = previous ?? Call(kind: kind)
         if let function = delta[rawKind] {
             guard let function = function as? [String: Any] else { throw ProviderToolContract.Error.invalidResponse }
+            if let value = function["namespace"], !(value is NSNull) {
+                guard let namespace = value as? String, !namespace.isEmpty,
+                    call.namespace == nil || call.namespace == namespace
+                else { throw ProviderToolContract.Error.invalidResponse }
+                call.namespace = namespace
+            }
             if let name = function["name"], !(name is NSNull) {
                 guard let name = name as? String else { throw ProviderToolContract.Error.invalidResponse }
-                let repeatedIdentity = name == call.name && (try? catalog.validate(name: name, kind: kind)) != nil
+                let repeatedIdentity =
+                    name == call.name && (try? validateCompletedName(call, catalog: catalog, resolver: resolver)) != nil
                 if !repeatedIdentity { call.name += name }
             }
         }
-        if resolver == nil {
+        if resolver == nil, call.namespace == nil {
             try catalog.validatePrefix(call.name, kind: kind)
         }
         calls[key] = call

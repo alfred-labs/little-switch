@@ -19,7 +19,7 @@ enum CodexProfileLegacyJournal {
                 catalogPath: paths.catalog.path
             )
             if isManaged || isLegacyManaged {
-                return try decoded(data)
+                return try decoded(data, configText: configText)
             }
         }
 
@@ -38,13 +38,14 @@ enum CodexProfileLegacyJournal {
             agentConcurrency: nil
         )
 
-        // Without a journal, the only safe interpretation of a legacy
-        // LittleSwitch profile is that every managed root was not user state.
+        // Without a journal, legacy-managed roots cannot be treated as user
+        // state. That profile never owned openai_base_url, whose captured
+        // value must survive migration.
         if try CodexTOMLEditor.rootIsLegacyManaged(
             configText,
             catalogPath: paths.catalog.path
         ) {
-            for key in CodexTOMLEditor.managedRootKeys where key != "profile" {
+            for key in CodexTOMLEditor.managedRootKeys where key != "profile" && key != "openai_base_url" {
                 state.rootValues[key] = CodexRootStringState(wasPresent: false, value: "")
             }
         }
@@ -74,13 +75,16 @@ enum CodexProfileLegacyJournal {
         return state
     }
 
-    /// Journals written before native cohabitation predate
-    /// `openai_base_url`: that key restores as absent. `web_search` keeps its
-    /// nil-means-capture semantics and is never filled.
-    static func decoded(_ data: Data) throws -> CodexProfileRestoreState {
+    /// Journals written before native cohabitation never managed
+    /// `openai_base_url`, so its current value is still user state. Capture it
+    /// before activation or direct restoration can overwrite it. `web_search`
+    /// keeps its separate nil-means-capture semantics and is never filled here.
+    static func decoded(_ data: Data, configText: String) throws -> CodexProfileRestoreState {
         var state = try JSONDecoder().decode(CodexProfileRestoreState.self, from: data)
-        for key in ["openai_base_url"] where state.rootValues[key] == nil {
-            state.rootValues[key] = CodexRootStringState(wasPresent: false, value: "")
+        if state.rootValues["openai_base_url"] == nil {
+            state.rootValues["openai_base_url"] = try CodexTOMLEditor.rootState(
+                "openai_base_url", in: configText
+            )
         }
         return state
     }

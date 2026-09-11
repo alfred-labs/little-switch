@@ -5,8 +5,7 @@ import LittleSwitchTransport
 import NIOHTTP1
 
 /// Codex's native upstreams for models outside the LittleSwitch catalog.
-/// Native turns keep the user's own session: the gateway forwards them
-/// byte-identical instead of injecting a stored secret.
+/// Native turns keep the user's own session and reusable native state.
 package enum CodexNativePassthrough {
     package static let chatGPTBaseURL = "https://chatgpt.com/backend-api/codex"
     package static let openAIBaseURL = "https://api.openai.com/v1"
@@ -70,6 +69,31 @@ package enum CodexNativePassthrough {
 }
 
 extension GatewayResponder {
+    package func nativeResponsesResponse(
+        body: Data, incomingHeaders: HTTPHeaders, eventID: UUID
+    ) async throws -> Response {
+        do {
+            if let plan = try ResponsesCompactionPlan.prepare(body: body) {
+                return try await responsesCompactionResponse(
+                    plan: plan, target: .native, incomingHeaders: incomingHeaders, eventID: eventID
+                )
+            }
+            let nativeBody = try ResponsesChatCompletionsReasoning.nativeRequestBody(
+                ResponsesProviderState.normalize(body: body, providerID: nil)
+            )
+            guard nativeBody.count <= maximumRequestBytes else {
+                return openAIError(status: .contentTooLarge, message: "Expanded history is too large")
+            }
+            return try await nativePassthroughResponsesResponse(
+                body: nativeBody, incomingHeaders: incomingHeaders, eventID: eventID
+            )
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            return openAIError(status: .badRequest, message: "Invalid Responses history")
+        }
+    }
+
     package func nativePassthroughResponsesResponse(
         body: Data,
         incomingHeaders: HTTPHeaders,

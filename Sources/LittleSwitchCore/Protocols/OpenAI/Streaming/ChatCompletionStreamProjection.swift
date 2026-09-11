@@ -13,12 +13,16 @@ enum ChatCompletionStreamProjection {
                 "role": "assistant",
                 "content": choice.messageText ?? NSNull(),
             ]
+            for (key, value) in choice.reasoning { message[key] = value }
+            if let refusal = choice.refusal { message["refusal"] = refusal }
             if !choice.toolCalls.isEmpty {
                 let toolCalls: [[String: Any]] = choice.toolCalls.map { call in
-                    [
+                    var input: [String: Any] = ["name": call.name, call.kind.inputKey: call.completedArguments]
+                    if let namespace = call.namespace { input["namespace"] = namespace }
+                    return [
                         "id": call.callID,
-                        "type": "function",
-                        "function": ["name": call.name, "arguments": call.completedArguments],
+                        "type": call.kind.rawValue,
+                        call.kind.rawValue: input,
                     ] as [String: Any]
                 }
                 message["tool_calls"] = toolCalls
@@ -52,9 +56,12 @@ enum ChatCompletionStreamProjection {
             upstreamBody: prepared.upstreamBody,
             originalBody: prepared.originalBody,
             originalModel: prepared.originalModel,
+            providerID: prepared.providerID,
             streaming: false,
             toolBindings: prepared.toolBindings,
-            declaredToolBindings: prepared.declaredToolBindings
+            declaredToolBindings: prepared.declaredToolBindings,
+            toolNameCatalog: prepared.toolNameCatalog,
+            allowedToolIdentities: prepared.allowedToolIdentities
         )
         do {
             let response = try OpenAIResponsesChatCompletions.project(

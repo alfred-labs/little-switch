@@ -33,7 +33,8 @@ extension ResponsesPublicStreamSession {
             throw OpenAIResponsesWebSearch.Error.invalidResponse
         }
         var item = try OpenAIResponsesPublicSanitizer.item(providerItem)
-        let function = try responsesFunctionMetadata(item, required: type == "function_call")
+        let function = try responsesFunctionMetadata(
+            item, required: ["function_call", "custom_tool_call"].contains(type))
         let privateSearch = OpenAIResponsesWebSearch.isPrivateSearchCall(
             item, privateToolName: configuration.privateSearchToolName
         )
@@ -49,7 +50,7 @@ extension ResponsesPublicStreamSession {
             usedPublicItemIDs.insert(id)
         }
 
-        if ["message", "function_call"].contains(type) {
+        if ["message", "function_call", "custom_tool_call"].contains(type) {
             item["status"] = "in_progress"
         }
         let mapping = OutputMapping(
@@ -92,7 +93,7 @@ extension ResponsesPublicStreamSession {
         else {
             throw OpenAIResponsesWebSearch.Error.invalidResponse
         }
-        if mapping.type == "function_call" {
+        if ["function_call", "custom_tool_call"].contains(mapping.type) {
             let function = try responsesFunctionMetadata(item, required: true)
             guard function?.name == mapping.name,
                 function?.callID == mapping.callID
@@ -232,7 +233,7 @@ extension ResponsesPublicStreamSession {
         name: String,
         delta: String
     ) throws -> [Data] {
-        let mapping = try publicFunctionReference(
+        let mapping = try publicToolReference(
             outputIndex: outputIndex,
             itemID: itemID,
             callID: callID,
@@ -260,7 +261,7 @@ extension ResponsesPublicStreamSession {
         name: String,
         arguments: String
     ) throws -> [Data] {
-        let mapping = try publicFunctionReference(
+        let mapping = try publicToolReference(
             outputIndex: outputIndex,
             itemID: itemID,
             callID: callID,
@@ -279,6 +280,25 @@ extension ResponsesPublicStreamSession {
                     "arguments": arguments,
                 ]
             )
+        ]
+    }
+
+    mutating func consumeCustomInput(
+        _ reference: ResponsesToolInputReference, value: String, completed: Bool
+    ) throws -> [Data] {
+        let mapping = try publicToolReference(
+            outputIndex: reference.index,
+            itemID: reference.itemID,
+            callID: reference.callID,
+            name: reference.name,
+            requiredType: "custom_tool_call")
+        guard let publicIndex = mapping.publicIndex else { throw OpenAIResponsesWebSearch.Error.invalidResponse }
+        return [
+            try frame(
+                completed ? "response.custom_tool_call_input.done" : "response.custom_tool_call_input.delta",
+                payload: [
+                    "output_index": publicIndex, "item_id": reference.itemID, completed ? "input" : "delta": value,
+                ])
         ]
     }
 
@@ -391,6 +411,10 @@ private func publicPassthroughKeys(for type: String) throws -> Set<String>? {
         throw OpenAIResponsesWebSearch.Error.invalidResponse
     case "response.content_part.done":
         return ["output_index", "content_index", "item_id", "part"]
+    case "response.refusal.delta":
+        return ["output_index", "content_index", "item_id", "delta"]
+    case "response.refusal.done":
+        return ["output_index", "content_index", "item_id", "refusal"]
     case "response.reasoning_summary_part.added",
         "response.reasoning_summary_part.done":
         return ["output_index", "item_id", "summary_index", "part"]
@@ -419,6 +443,12 @@ private func publicContentEventPayload(
     var payload = payload
     if type == "response.content_part.done" {
         payload["part"] = try OpenAIResponsesPublicSanitizer.contentPart(payload["part"])
+        return payload
+    }
+    if ["response.refusal.delta", "response.refusal.done"].contains(type) {
+        guard content.type == "refusal", payload[type.hasSuffix(".delta") ? "delta" : "refusal"] is String else {
+            throw OpenAIResponsesWebSearch.Error.invalidResponse
+        }
         return payload
     }
     guard content.type == "output_text",

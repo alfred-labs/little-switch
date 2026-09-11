@@ -11,6 +11,20 @@ struct BrandAssetPolicyTests {
         #expect(BrandAssetPolicy.rules.flatMap { $0.violations(in: files) }.isEmpty)
     }
 
+    @Test("Public repository brand contracts do not require privately owned documentation")
+    func privateDocumentation() throws {
+        let publicRules = BrandAssetPolicy.rules.filter { !$0.path.hasPrefix("docs/") }
+        let files = try RepositoryFixture.policyFiles(publicRules)
+        #expect(BrandAssetPolicy.rules.flatMap { $0.violations(in: files) }.isEmpty)
+    }
+
+    @Test("Public README documentation remains required")
+    func missingReadme() throws {
+        let publicRules = BrandAssetPolicy.rules.filter { !$0.path.hasPrefix("docs/") && $0.path != "README.md" }
+        let files = try RepositoryFixture.policyFiles(publicRules)
+        #expect(BrandAssetPolicy.rules.flatMap { $0.violations(in: files) } == ["Missing policy file: README.md"])
+    }
+
     @Test("A changed source revision or missing license notice is detected")
     func provenanceAndLicense() throws {
         var files = try RepositoryFixture.policyFiles(BrandAssetPolicy.rules)

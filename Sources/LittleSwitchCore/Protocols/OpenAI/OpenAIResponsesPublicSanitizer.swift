@@ -71,7 +71,7 @@ enum OpenAIResponsesPublicSanitizer {
             return try message(item)
         case "reasoning":
             return try reasoning(item)
-        case "function_call":
+        case "function_call", "custom_tool_call":
             return try functionCall(item)
         case "web_search_call":
             return try webSearchCall(item)
@@ -221,19 +221,21 @@ extension OpenAIResponsesPublicSanitizer {
     }
 
     private static func functionCall(_ item: [String: Any]) throws -> [String: Any] {
+        let custom = item["type"] as? String == "custom_tool_call"
+        let inputKey = custom ? "input" : "arguments"
         guard let id = nonemptyResponsesString(item["id"]),
             let callID = nonemptyResponsesString(item["call_id"]),
             let name = nonemptyResponsesString(item["name"]),
-            let arguments = item["arguments"] as? String
+            let arguments = item[inputKey] as? String
         else {
             throw OpenAIResponsesWebSearch.Error.invalidResponse
         }
         var result: [String: Any] = [
             "id": id,
-            "type": "function_call",
+            "type": custom ? "custom_tool_call" : "function_call",
             "call_id": callID,
             "name": name,
-            "arguments": arguments,
+            inputKey: arguments,
         ]
         // vLLM echoes namespace as an explicit null on function_call
         // items: null means absent; a non-string value stays malformed.

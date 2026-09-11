@@ -12,6 +12,7 @@ package struct PreparedResponsesWebSearchRequest: Equatable, Sendable {
     let searchOptions: WebSearchFilterOptions
     var toolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
     var declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
+    let toolNameCatalog: ProviderToolNameCatalog
     var droppedMailCount: Int = 0
     var toolSearchContract: ResponsesClientToolSearchContract?
     var privateToolName: String?
@@ -27,6 +28,7 @@ package struct PreparedResponsesWebSearchRequest: Equatable, Sendable {
         searchOptions: WebSearchFilterOptions = WebSearchFilterOptions(),
         toolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
         declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:],
+        toolNameCatalog: ProviderToolNameCatalog = .init(),
         droppedMailCount: Int = 0,
         toolSearchContract: ResponsesClientToolSearchContract? = nil,
         privateToolName: String? = "web_search"
@@ -41,6 +43,7 @@ package struct PreparedResponsesWebSearchRequest: Equatable, Sendable {
         self.searchOptions = searchOptions
         self.toolBindings = toolBindings
         self.declaredToolBindings = declaredToolBindings
+        self.toolNameCatalog = toolNameCatalog
         self.droppedMailCount = droppedMailCount
         self.toolSearchContract = toolSearchContract
         self.privateToolName = privateToolName
@@ -84,7 +87,6 @@ package enum OpenAIResponsesWebSearch {
         guard searchTool != nil || needsAdaptation else {
             return nil
         }
-        try ProviderToolRequestPolicy.responses(object, allowingWebSearch: true, allowingCustom: false)
         guard
             !ResponsesConversationReferences.hasServerState(in: object),
             let originalModel = object["model"] as? String,
@@ -153,6 +155,7 @@ package enum OpenAIResponsesWebSearch {
             searchOptions: resolvedSearchOptions,
             toolBindings: normalized.toolBindings,
             declaredToolBindings: normalized.declaredToolBindings,
+            toolNameCatalog: normalized.toolNameCatalog,
             droppedMailCount: normalized.droppedMailCount,
             toolSearchContract: toolSearch?.contract,
             privateToolName: privateToolName

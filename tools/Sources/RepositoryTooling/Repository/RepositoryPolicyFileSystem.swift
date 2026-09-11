@@ -22,18 +22,24 @@ package enum RepositoryPolicyFileSystem {
     }
 
     static func read(root: URL) throws -> Snapshot {
-        var visitor = Visitor()
+        let root = root.standardizedFileURL.resolvingSymlinksInPath()
+        var visitor = Visitor(root: root)
         try visitor.visit(root, relative: "")
         return Snapshot(files: visitor.files, paths: visitor.paths)
     }
 
     private struct Visitor {
+        private let rootComponents: [String]
         private let skipped: Set<String> = [
             ".build", ".claude", ".git", ".superpowers", ".swiftpm", "build", "dist", "node_modules",
         ]
         private var activeDirectories: Set<String> = []
         private(set) var files: [String: String] = [:]
         private(set) var paths = Set<String>()
+
+        init(root: URL) {
+            rootComponents = root.pathComponents
+        }
 
         mutating func visit(_ directory: URL, relative: String) throws {
             let currentPath = directory.standardizedFileURL.resolvingSymlinksInPath().path
@@ -50,14 +56,10 @@ package enum RepositoryPolicyFileSystem {
                     relative.isEmpty
                     ? entry.lastPathComponent
                     : relative + "/" + entry.lastPathComponent
-                let type =
-                    try FileManager.default.attributesOfItem(
-                        atPath: entry.path
-                    )[.type] as? FileAttributeType
-                let resolved =
-                    type == .typeSymbolicLink
-                    ? entry.resolvingSymlinksInPath() : entry
+                let resolved = entry.standardizedFileURL.resolvingSymlinksInPath()
                 paths.insert(path)
+                // Links are repository entries, but another checkout owns their external targets.
+                guard resolved.pathComponents.starts(with: rootComponents) else { continue }
                 let resolvedType =
                     try FileManager.default.attributesOfItem(
                         atPath: resolved.path

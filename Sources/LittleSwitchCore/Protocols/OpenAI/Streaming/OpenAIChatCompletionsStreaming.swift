@@ -6,7 +6,7 @@ package struct OpenAIChatCompletionsAccumulator: Sendable {
 
     private let prepared: PreparedResponsesChatCompletionsRequest
     private let maximumTurnBytes: Int
-    private let resolver: ProviderToolNamespaceResolver?
+    private let resolver: ProviderToolNamespaceResolver
     private var phase: ChatCompletionAccumulatorPhase = .open
     private var consumedBytes = 0
     private var metadata: ChatCompletionStreamMetadata?
@@ -21,9 +21,10 @@ package struct OpenAIChatCompletionsAccumulator: Sendable {
     ) {
         self.prepared = prepared
         self.maximumTurnBytes = max(0, maximumTurnBytes)
-        self.resolver =
-            prepared.declaredToolBindings.isEmpty
-            ? nil : ProviderToolNamespaceResolver(declaredBindings: prepared.declaredToolBindings)
+        self.resolver = ProviderToolNamespaceResolver(
+            declaredBindings: prepared.declaredToolBindings,
+            nameCatalog: prepared.toolNameCatalog
+        )
     }
 
     package mutating func consume(
@@ -86,7 +87,10 @@ package struct OpenAIChatCompletionsAccumulator: Sendable {
 extension OpenAIChatCompletionsAccumulator {
     private mutating func consumeMetadata(
         _ chunk: [String: Any]
-    ) throws -> (started: Bool, metadata: ChatCompletionStreamMetadata) {
+    ) throws -> (
+        started: Bool,
+        metadata: ChatCompletionStreamMetadata
+    ) {
         guard let chatID = nonemptyChatString(chunk["id"]),
             chunk["object"] as? String == "chat.completion.chunk",
             let created = nonnegativeChatIndex(chunk["created"]),
@@ -135,18 +139,55 @@ extension OpenAIChatCompletionsAccumulator {
         }
 
         var events: [ResponsesProviderStreamEvent] = []
+        let reasoning = try ResponsesChatCompletionsReasoning.fields(in: delta)
+        if !reasoning.isEmpty {
+            if state.reasoningIndex == nil {
+                guard state.message == nil, state.toolOutputOffset == nil else {
+                    throw OpenAIResponsesChatCompletions.Error.invalidResponse
+                }
+                state.reasoningIndex = 0
+                let item = try ResponsesChatCompletionsReasoning.item(
+                    message: reasoning,
+                    responseID: metadata.responseID,
+                    providerID: prepared.providerID)
+                if let item {
+                    events.append(
+                        .outputItemAdded(
+                            outputIndex: 0,
+                            itemJSON: try chatData(item)))
+                }
+            }
+            for (key, value) in reasoning {
+                state.reasoning[key, default: []].append(value)
+            }
+        }
         if let content = delta["content"], !(content is NSNull) {
             guard let fragment = content as? String else {
                 throw OpenAIResponsesChatCompletions.Error.invalidResponse
             }
-            events += try consumeContent(fragment, state: &state, metadata: metadata)
+            if !fragment.isEmpty {
+                events += try consumeContent(
+                    fragment,
+                    state: &state,
+                    metadata: metadata)
+            }
+        }
+        if let refusal = delta["refusal"], !(refusal is NSNull) {
+            guard let refusal = refusal as? String else { throw OpenAIResponsesChatCompletions.Error.invalidResponse }
+            events += try consumeRefusal(
+                refusal,
+                state: &state,
+                metadata: metadata)
         }
         if let toolCalls = delta["tool_calls"], !(toolCalls is NSNull) {
             guard let toolCalls = toolCalls as? [[String: Any]] else {
                 throw OpenAIResponsesChatCompletions.Error.invalidResponse
             }
             for toolCall in toolCalls {
-                events += try consumeToolCall(toolCall, state: &state, metadata: metadata)
+                events += try consumeToolCall(
+                    toolCall,
+                    state: &state,
+                    metadata: metadata)
             }
         }
 
@@ -167,35 +208,45 @@ extension OpenAIChatCompletionsAccumulator {
         state: inout ChatCompletionChoiceState,
         metadata: ChatCompletionStreamMetadata
     ) throws -> [ResponsesProviderStreamEvent] {
-        if state.message == nil, state.toolOutputOffset != nil {
-            guard fragment.isEmpty else {
-                throw OpenAIResponsesChatCompletions.Error.invalidResponse
-            }
-            return []
+        guard state.message != nil || state.toolOutputOffset == nil else {
+            throw OpenAIResponsesChatCompletions.Error.invalidResponse
         }
         var events: [ResponsesProviderStreamEvent] = []
-        let message: ChatCompletionMessageState
+        var message: ChatCompletionMessageState
         if let existing = state.message {
             message = existing
+            if !message.textStarted {
+                // Only a refusal can start the message before its text.
+                message.textIndex = 1
+                events.append(
+                    .contentPartAdded(
+                        outputIndex: message.outputIndex,
+                        contentIndex: message.textIndex,
+                        itemID: message.id,
+                        partJSON: try chatData(["type": "output_text", "text": "", "annotations": [], "logprobs": []])))
+            }
         } else {
             let started = ChatCompletionMessageState(
                 id: "msg_\(metadata.responseID)",
-                outputIndex: 0,
+                outputIndex: state.leadingOutputCount,
                 completedText: nil
             )
-            state.message = started
             events += try chatMessageStartEvents(
                 id: started.id,
                 outputIndex: started.outputIndex
             )
             message = started
         }
+        message.textStarted = true
+        state.message = message
         if !fragment.isEmpty {
-            fragments.appendText(fragment, choiceIndex: state.index)
+            fragments.appendText(
+                fragment,
+                choiceIndex: state.index)
             events.append(
                 .outputTextDelta(
                     outputIndex: message.outputIndex,
-                    contentIndex: 0,
+                    contentIndex: message.textIndex,
                     itemID: message.id,
                     delta: fragment
                 )
@@ -204,107 +255,65 @@ extension OpenAIChatCompletionsAccumulator {
         return events
     }
 
+    private func consumeRefusal(
+        _ fragment: String,
+        state: inout ChatCompletionChoiceState,
+        metadata: ChatCompletionStreamMetadata
+    ) throws -> [ResponsesProviderStreamEvent] {
+        var events: [ResponsesProviderStreamEvent] = []
+        var message: ChatCompletionMessageState
+        if let existing = state.message {
+            message = existing
+        } else {
+            guard state.toolOutputOffset == nil else { throw OpenAIResponsesChatCompletions.Error.invalidResponse }
+            message = ChatCompletionMessageState(
+                id: "msg_\(metadata.responseID)",
+                outputIndex: state.leadingOutputCount,
+                completedText: nil)
+            events.append(
+                .outputItemAdded(
+                    outputIndex: state.leadingOutputCount,
+                    itemJSON: try chatData([
+                        "id": "msg_\(metadata.responseID)", "type": "message", "status": "in_progress",
+                        "role": "assistant", "content": [],
+                    ])))
+        }
+        let refusalIndex = message.refusalIndex ?? (message.textStarted ? 1 : 0)
+        if message.refusalIndex == nil {
+            message.refusalIndex = refusalIndex
+            events.append(
+                .contentPartAdded(
+                    outputIndex: message.outputIndex,
+                    contentIndex: refusalIndex,
+                    itemID: message.id,
+                    partJSON: try chatData(["type": "refusal", "refusal": ""])))
+        }
+        message.refusal.append(fragment)
+        events.append(
+            .passthrough(
+                type: "response.refusal.delta",
+                payloadJSON: try chatData([
+                    "type": "response.refusal.delta", "output_index": message.outputIndex,
+                    "content_index": refusalIndex, "item_id": message.id, "delta": fragment,
+                ])))
+        state.message = message
+        return events
+    }
+
     private mutating func consumeToolCall(
         _ rawCall: [String: Any],
         state: inout ChatCompletionChoiceState,
         metadata: ChatCompletionStreamMetadata
     ) throws -> [ResponsesProviderStreamEvent] {
-        guard let toolIndex = nonnegativeChatIndex(rawCall["index"]) else {
-            throw OpenAIResponsesChatCompletions.Error.invalidResponse
-        }
-        if let type = rawCall["type"], type as? String != "function" {
-            throw OpenAIResponsesChatCompletions.Error.invalidResponse
-        }
-        let function = rawCall["function"] as? [String: Any]
-        if rawCall["function"] != nil, function == nil {
-            throw OpenAIResponsesChatCompletions.Error.invalidResponse
-        }
-
-        var events: [ResponsesProviderStreamEvent] = []
-        let call: ChatCompletionToolCallState
-        if let existing = state.toolCalls[toolIndex] {
-            // Continuation nulls mean "unchanged", not "a different id".
-            if let id = rawCall["id"] as? String, id != existing.callID {
-                throw OpenAIResponsesChatCompletions.Error.invalidResponse
-            }
-            if let name = function?["name"] as? String, name != existing.name {
-                throw OpenAIResponsesChatCompletions.Error.invalidResponse
-            }
-            call = existing
-        } else {
-            guard let callID = nonemptyChatString(rawCall["id"]),
-                let name = nonemptyChatString(function?["name"])
-            else {
-                throw OpenAIResponsesChatCompletions.Error.invalidResponse
-            }
-            let toolOutputOffset = state.toolOutputOffset ?? (state.message == nil ? 0 : 1)
-            let outputIndex = toolOutputOffset.addingReportingOverflow(toolIndex)
-            guard !outputIndex.overflow else {
-                throw OpenAIResponsesChatCompletions.Error.invalidResponse
-            }
-            state.toolOutputOffset = toolOutputOffset
-            call = ChatCompletionToolCallState(
-                itemID: "fc_\(metadata.responseID)_\(toolIndex)",
-                callID: callID,
-                name: name,
-                outputIndex: outputIndex.partialValue,
-                completedArguments: ""
-            )
-            state.toolCalls[toolIndex] = call
-            events.append(
-                .outputItemAdded(
-                    outputIndex: call.outputIndex,
-                    itemJSON: try chatData(
-                        chatFunctionItem(
-                            itemID: call.itemID,
-                            callID: call.callID,
-                            name: call.name,
-                            arguments: "",
-                            status: "in_progress",
-                            binding: restoredBinding(for: call.name)
-                        )
-                    )
-                )
-            )
-        }
-        if let value = function?["arguments"] {
-            guard let fragment = value as? String else {
-                throw OpenAIResponsesChatCompletions.Error.invalidResponse
-            }
-            if !fragment.isEmpty {
-                fragments.appendArguments(
-                    fragment,
-                    choiceIndex: state.index,
-                    toolIndex: toolIndex
-                )
-                events.append(
-                    .functionArgumentsDelta(
-                        outputIndex: call.outputIndex,
-                        itemID: call.itemID,
-                        callID: call.callID,
-                        name: restoredToolName(call.name),
-                        delta: fragment
-                    )
-                )
-            }
-        }
-        return events
-    }
-
-    /// The binding for an emitted call name: the exact flattened wire name
-    /// first, then a near-miss resolved among the request's declared children.
-    private func restoredBinding(for name: String) -> ResponsesToolNamespaces.Binding? {
-        if let binding = prepared.toolBindings[name] {
-            return binding
-        }
-        guard let resolver, let wireName = resolver.wireName(for: name, namespace: nil) else {
-            return nil
-        }
-        return prepared.toolBindings[wireName]
-    }
-
-    private func restoredToolName(_ wireName: String) -> String {
-        restoredBinding(for: wireName)?.name ?? wireName
+        try ChatCompletionToolStream(
+            prepared: prepared,
+            resolver: resolver,
+            metadata: metadata
+        )
+        .consume(
+            rawCall,
+            state: &state,
+            fragments: &fragments)
     }
 }
 
@@ -315,7 +324,7 @@ extension OpenAIChatCompletionsAccumulator {
         metadata: ChatCompletionStreamMetadata
     ) throws -> [ResponsesProviderStreamEvent] {
         switch finishReason {
-        case "length", "sensitive", "stop":
+        case "length", "sensitive", "content_filter", "stop":
             break
         case "tool_calls":
             guard !state.toolCalls.isEmpty else {
@@ -332,52 +341,38 @@ extension OpenAIChatCompletionsAccumulator {
             throw OpenAIResponsesChatCompletions.Error.invalidResponse
         }
         var events: [ResponsesProviderStreamEvent] = []
-        if state.message == nil, state.toolCalls.isEmpty {
-            events += try consumeContent("", state: &state, metadata: metadata)
+        if let index = state.reasoningIndex {
+            let item = try ResponsesChatCompletionsReasoning.item(
+                message: state.reasoning.mapValues { $0.joined() },
+                responseID: metadata.responseID,
+                providerID: prepared.providerID)
+            if let item {
+                events.append(
+                    .outputItemDone(
+                        outputIndex: index,
+                        itemJSON: try chatData(item)))
+            }
+        }
+        if state.message == nil, state.toolCalls.isEmpty, state.reasoning.isEmpty {
+            events += try consumeContent(
+                "",
+                state: &state,
+                metadata: metadata)
         }
         if var message = state.message {
             let text = fragments.finalizeText(choiceIndex: state.index)
-            message.completedText = text
+            message.completedText = message.textStarted ? text : nil
             state.message = message
-            events += try chatMessageDoneEvents(
-                id: message.id,
-                outputIndex: message.outputIndex,
-                text: text
-            )
+            events += try chatMessageDoneEvents(message)
         }
-        for (index, value) in state.toolCalls.sorted(by: { $0.key < $1.key }) {
-            var call = value
-            let arguments = fragments.finalizeArguments(
-                choiceIndex: state.index,
-                toolIndex: index
-            )
-            call.completedArguments = arguments
-            state.toolCalls[index] = call
-            events.append(
-                .functionArgumentsDone(
-                    outputIndex: call.outputIndex,
-                    itemID: call.itemID,
-                    callID: call.callID,
-                    name: restoredToolName(call.name),
-                    arguments: arguments
-                )
-            )
-            events.append(
-                .outputItemDone(
-                    outputIndex: call.outputIndex,
-                    itemJSON: try chatData(
-                        chatFunctionItem(
-                            itemID: call.itemID,
-                            callID: call.callID,
-                            name: call.name,
-                            arguments: arguments,
-                            status: "completed",
-                            binding: restoredBinding(for: call.name)
-                        )
-                    )
-                )
-            )
-        }
+        events += try ChatCompletionToolStream(
+            prepared: prepared,
+            resolver: resolver,
+            metadata: metadata
+        )
+        .complete(
+            &state,
+            fragments: &fragments)
         state.finishReason = finishReason
         return events
     }
@@ -421,7 +416,9 @@ extension OpenAIChatCompletionsAccumulator {
                 index: state.index,
                 finishReason: finishReason,
                 messageText: state.message?.completedText,
-                toolCalls: sortedToolCalls.map(\.value)
+                toolCalls: sortedToolCalls.map(\.value),
+                reasoning: state.reasoning.mapValues { $0.joined() },
+                refusal: state.message.flatMap { $0.refusalIndex == nil ? nil : $0.refusal.joined() }
             )
         ]
         guard let usage else {
@@ -435,11 +432,15 @@ extension OpenAIChatCompletionsAccumulator {
         )
         let status: ResponsesStreamTerminal =
             completedChoices.contains {
-                ["length", "sensitive"].contains($0.finishReason)
+                ["length", "sensitive", "content_filter"].contains($0.finishReason)
             } ? .incomplete : .completed
         completedTurn = turn
         phase = .terminal
-        return [.terminal(status: status, responseJSON: turn.rootJSON)]
+        return [
+            .terminal(
+                status: status,
+                responseJSON: turn.rootJSON)
+        ]
     }
 
 }

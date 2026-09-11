@@ -82,7 +82,17 @@ extension GatewayTests {
                 body: ByteBuffer(bytes: openAIBridgeIncoming)
             )
             #expect(result.status == .ok)
-            #expect(data(result.body) == nativeResponse)
+            var received = try responsesStreamObject(data(result.body))
+            let original = try responsesStreamObject(nativeResponse)
+            var output = try #require(received["output"] as? [[String: Any]])
+            let encrypted = try #require(output.first?["encrypted_content"] as? String)
+            let provenance = try responsesStreamObject(Data(encrypted.utf8))
+            #expect(provenance["type"] as? String == "little_switch_reasoning")
+            #expect(provenance["version"] as? Int == 1)
+            #expect(provenance["provider_id"] as? String == openAIBridgeProviderID.uuidString)
+            output[0] = try #require(provenance["item"] as? [String: Any])
+            received["output"] = output
+            #expect(NSDictionary(dictionary: received) == NSDictionary(dictionary: original))
         }
 
         let request = try #require(await transport.requests.first)

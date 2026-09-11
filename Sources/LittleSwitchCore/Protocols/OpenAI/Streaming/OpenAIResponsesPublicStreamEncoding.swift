@@ -20,16 +20,17 @@ extension ResponsesPublicStreamSession {
         return (output, content)
     }
 
-    func publicFunctionReference(
+    func publicToolReference(
         outputIndex: Int,
         itemID: String,
         callID: String,
-        name: String
+        name: String,
+        requiredType: String = "function_call"
     ) throws -> OutputMapping {
         guard providerTurnActive,
             outputIndex >= 0,
             let output = providerOutput[outputIndex],
-            output.type == "function_call",
+            output.type == requiredType,
             output.id == itemID,
             output.callID == callID,
             output.name == name

@@ -9,14 +9,22 @@ struct ChatCompletionMessageState: Sendable {
     let id: String
     let outputIndex: Int
     var completedText: String?
+    var refusal: [String] = []
+    var textStarted = false
+    var textIndex = 0
+    var refusalIndex: Int?
 }
 
 struct ChatCompletionToolCallState: Sendable {
     let itemID: String
     let callID: String
-    let name: String
+    let kind: ProviderToolContractCatalog.Kind
+    var name: String
+    var namespace: String?
     let outputIndex: Int
     var completedArguments: String
+    var published = false
+    var pendingArguments: [String] = []
 }
 
 struct ChatCompletionChoiceState: Sendable {
@@ -25,6 +33,10 @@ struct ChatCompletionChoiceState: Sendable {
     var toolCalls: [Int: ChatCompletionToolCallState] = [:]
     var toolOutputOffset: Int?
     var finishReason: String?
+    var reasoning: [String: [String]] = [:]
+    var reasoningIndex: Int?
+
+    var leadingOutputCount: Int { reasoningIndex == nil ? 0 : 1 }
 }
 
 struct ChatCompletionUsage: Sendable {
@@ -41,4 +53,6 @@ struct CompletedChatCompletionChoice: Sendable {
     let finishReason: String
     let messageText: String?
     let toolCalls: [ChatCompletionToolCallState]
+    let reasoning: [String: String]
+    var refusal: String?
 }

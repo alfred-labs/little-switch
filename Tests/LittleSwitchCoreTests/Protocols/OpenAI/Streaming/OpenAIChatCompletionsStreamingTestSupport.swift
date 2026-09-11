@@ -7,7 +7,8 @@ import Testing
 func liveChatPrepared(
     targetModel: String = "glm-5.2",
     includeTools: Bool = true,
-    toolStream: Bool = true
+    toolStream: Bool = true,
+    toolNames: [String] = ["web_search", "weather"]
 ) throws -> PreparedResponsesChatCompletionsRequest {
     var body: [String: Any] = [
         "model": "little-switch-route",
@@ -15,18 +16,13 @@ func liveChatPrepared(
         "stream": true,
     ]
     if includeTools {
-        body["tools"] = [
+        body["tools"] = toolNames.map { name in
             [
                 "type": "function",
-                "name": "web_search",
+                "name": name,
                 "parameters": ["type": "object"],
-            ],
-            [
-                "type": "function",
-                "name": "weather",
-                "parameters": ["type": "object"],
-            ],
-        ]
+            ]
+        }
     }
     return try OpenAIResponsesChatCompletions.prepare(
         body: try chatJSONData(body),

@@ -52,6 +52,15 @@ enum BrandAssetPolicy {
                 required: [#"THIRD_PARTY_NOTICES\.md"#],
                 forbidden: ["packaging/licenses", #"\$licenses/ollama"#]),
             RepositoryTextRule("tools/ci/verify-bundle.sh", forbidden: ["Licenses/ollama"]),
+            // Internal design documentation is owned by little-switch-internals; the public README stays here.
+            RepositoryTextRule(
+                "README.md",
+                required: [
+                    #"~/\.config/opencode/opencode\.json"#, "@ai-sdk/openai", "/v1/responses",
+                    "(?i)OpenCode has its own default model.*independent of Codex",
+                    "(?i)catalog shared by Codex and OpenCode",
+                    "(?i)Restore settings reverts transactionally while preserving other keys",
+                ]),
         ]
             + mono.map { mark in
                 RepositoryTextRule(
@@ -62,40 +71,6 @@ enum BrandAssetPolicy {
                         mark.geometry,
                         #"fill-rule="evenodd""#, "isTemplate = true", #"accessibilityHidden\(true\)"#,
                     ])
-            } + documentationRules
-    }
-
-    private static var documentationRules: [RepositoryTextRule] {
-        [
-            RepositoryTextRule(
-                "docs/styleguide.md",
-                required: [
-                    "https://lobehub\\.com/icons", "lobehub/lobe-icons", "SF Symbols", "native SwiftUI",
-                    "(?i)pinned commit", "(?i)MIT", "(?i)runtime", "(?i)accessibility", "(?i)trademark",
-                    #"settingsMenuPicker\(width:"#, "(?i)regular control size", "(?i)segmented controls remain compact",
-                    "(?i)menu selectors on one screen share the same width", #"packaging/AppIcon\.svg"#,
-                    #"tools/generate-app-icon\.sh"#, "(?i)light monochrome",
-                    #"Sources/LittleSwitchUI/MenuBar/StatusItemIcon\.swift"#,
-                    "(?i)18.point canvas", "(?i)1.point stroke", "(?i)template image", "`idle`", "`active`",
-                    "(?i)the fill travels", #"(?i)no\s+connector"#, "(?i)provider marks",
-                    "https://lobehub\\.com/icons/opencode", "OpenCode mono mark",
-                ], forbidden: [#"arrow\.triangle\.swap"#]),
-            RepositoryTextRule(
-                "docs/product-design.md",
-                required: [
-                    #"\[`styleguide\.md`\]\(styleguide\.md\)"#,
-                    #"four(?: uninterrupted)? 40 pt (?:application )?rows"#,
-                    "Claude Desktop", "Claude Code", "Codex", "OpenCode",
-                    "OpenCode is its own destination beneath Codex",
-                ]),
-            RepositoryTextRule(
-                "README.md",
-                required: [
-                    #"~/\.config/opencode/opencode\.json"#, "@ai-sdk/openai", "/v1/responses",
-                    "(?i)OpenCode has its own default model.*independent of Codex",
-                    "(?i)catalog shared by Codex and OpenCode",
-                    "(?i)Restore settings reverts transactionally while preserving other keys",
-                ]),
-        ]
+            }
     }
 }

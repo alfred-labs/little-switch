@@ -157,7 +157,7 @@ struct OpenAIResponsesNativeNamespacingTests {
         #expect(normalized.body != original)
     }
 
-    @Test("Native custom tool history converts to portable messages")
+    @Test("Active native custom tool history retains structured exchanges")
     func convertsCustomToolHistory() throws {
         let normalized = try OpenAIResponsesNativeNamespacing.normalize(
             try requestBody(
@@ -179,7 +179,7 @@ struct OpenAIResponsesNativeNamespacingTests {
                         "output": "hi",
                     ],
                 ],
-                tools: [["type": "web_search"]]
+                tools: [["type": "web_search"], ["type": "custom", "name": "node_repl"]]
             )
         )
 
@@ -188,17 +188,13 @@ struct OpenAIResponsesNativeNamespacingTests {
         )
         let items = try #require(object["input"] as? [[String: Any]])
         let types = items.compactMap { $0["type"] as? String }
-        // A conversation switched away from a native model carries custom
-        // tool items no Responses provider accepts; they become plain
-        // assistant messages so the history stays readable context.
-        #expect(types == ["message", "message", "message"])
-        let texts = items.compactMap { item in
-            (item["content"] as? [[String: Any]])?.first?["text"] as? String
-        }
-        #expect(texts[1].contains("[Previous custom tool call]"))
-        #expect(texts[1].contains("node_repl"))
-        #expect(texts[2].contains("[Previous custom tool output]"))
-        #expect(texts[2].contains("hi"))
+        #expect(types == ["message", "custom_tool_call", "custom_tool_call_output"])
+        #expect(
+            items[1] as? [String: String] == [
+                "type": "custom_tool_call", "call_id": "call_9", "name": "node_repl", "input": "console.log('hi')",
+            ])
+        #expect(
+            items[2] as? [String: String] == ["type": "custom_tool_call_output", "call_id": "call_9", "output": "hi"])
     }
 
     @Test("Bodies without namespaces or mail stay byte-identical")

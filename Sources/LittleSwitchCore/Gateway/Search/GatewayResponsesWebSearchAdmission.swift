@@ -45,8 +45,10 @@ extension GatewayResponder {
                 let prepared = try OpenAIResponsesChatCompletions.prepare(
                     body: turnRequest.body,
                     targetModel: context.target.model.id,
+                    providerID: context.target.provider.id,
                     inheritedToolBindings: context.prepared.toolBindings,
                     inheritedDeclaredToolBindings: context.prepared.declaredToolBindings,
+                    inheritedToolNameCatalog: context.prepared.toolNameCatalog,
                     inheritedToolSearchContract: context.prepared.toolSearchContract
                 )
                 adapted = prepared
@@ -58,7 +60,9 @@ extension GatewayResponder {
             }
         } else {
             adapted = nil
-            requestBody = turnRequest.body
+            requestBody = try ResponsesChatCompletionsReasoning.nativeRequestBody(
+                turnRequest.body, providerID: context.target.provider.id
+            )
         }
         do {
             request = try responsesProviderRequest(

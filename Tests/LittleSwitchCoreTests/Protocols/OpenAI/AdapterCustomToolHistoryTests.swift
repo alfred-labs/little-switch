@@ -4,7 +4,7 @@ import Testing
 @testable import LittleSwitchCore
 
 extension OpenAIResponsesChatCompletionsTests {
-    @Test("Native custom tool history becomes readable Chat context")
+    @Test("Native custom tool history remains structured Chat tool context")
     func preparesCustomToolHistory() throws {
         let body = Data(
             #"""
@@ -15,6 +15,7 @@ extension OpenAIResponsesChatCompletionsTests {
                 {"type":"custom_tool_call","call_id":"call_9","name":"node_repl","input":"console.log('hi')"},
                 {"type":"custom_tool_call_output","call_id":"call_9","output":"hi"}
               ],
+              "tools":[{"type":"custom","name":"node_repl","format":{"type":"text"}}],
               "stream":true
             }
             """#.utf8
@@ -28,9 +29,20 @@ extension OpenAIResponsesChatCompletionsTests {
             JSONSerialization.jsonObject(with: prepared.upstreamBody) as? [String: Any]
         )
         let messages = try #require(request["messages"] as? [[String: Any]])
-        #expect(messages.compactMap { $0["role"] as? String } == ["user", "assistant", "assistant"])
-        #expect((messages[1]["content"] as? String)?.contains("node_repl") == true)
-        #expect((messages[2]["content"] as? String)?.contains("hi") == true)
+        let expected: [[String: Any]] = [
+            ["role": "user", "content": "Run it."],
+            [
+                "role": "assistant", "content": NSNull(),
+                "tool_calls": [
+                    [
+                        "id": "call_9", "type": "custom",
+                        "custom": ["name": "node_repl", "input": "console.log('hi')"],
+                    ]
+                ],
+            ],
+            ["role": "tool", "tool_call_id": "call_9", "content": "hi"],
+        ]
+        #expect(messages as NSArray == expected as NSArray)
     }
 
     @Test("Custom tool history without a call id is rejected")

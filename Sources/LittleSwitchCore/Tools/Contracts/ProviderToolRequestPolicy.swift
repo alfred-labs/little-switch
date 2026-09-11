@@ -18,10 +18,11 @@ package enum ProviderToolRequestPolicy {
     }
 
     package static func responses(
-        _ root: [String: Any], allowingWebSearch: Bool = false, allowingCustom: Bool = true
+        _ root: [String: Any], allowingWebSearch: Bool = false
     ) throws {
+        try ProviderToolContractCatalog.validateResponsesDeclarations(tools(in: root))
         try validateResponsesTools(
-            tools(in: root), allowingWebSearch: allowingWebSearch, allowingCustom: allowingCustom)
+            tools(in: root), allowingWebSearch: allowingWebSearch)
         for item in root["input"] as? [[String: Any]] ?? []
         where ["tool_search_call", "tool_search_output"].contains(item["type"] as? String ?? "") {
             throw ProviderToolContract.Error.invalidRequest
@@ -29,16 +30,15 @@ package enum ProviderToolRequestPolicy {
     }
 
     private static func validateResponsesTools(
-        _ tools: [[String: Any]], allowingWebSearch: Bool, allowingCustom: Bool
+        _ tools: [[String: Any]], allowingWebSearch: Bool
     ) throws {
         for tool in tools {
             if allowingWebSearch, OpenAIResponsesWebSearch.isBuiltInSearchTool(tool) { continue }
             switch tool["type"] as? String {
-            case "function": break
-            case "custom" where allowingCustom: break
+            case "function", "custom": break
             case "namespace":
                 try validateResponsesTools(
-                    self.tools(in: tool), allowingWebSearch: false, allowingCustom: allowingCustom)
+                    self.tools(in: tool), allowingWebSearch: false)
             default:
                 throw ProviderToolContract.Error.invalidRequest
             }

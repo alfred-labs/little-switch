@@ -16,24 +16,6 @@ package enum PortableResponsesHistory {
         )
     }
 
-    /// A conversation switched away from a native model carries freeform tool
-    /// exchanges (`custom_tool_call` / `custom_tool_call_output`) that no
-    /// Responses provider accepts; the readable exchange remains context.
-    package static func customToolMessage(for item: [String: Any]) throws -> [String: Any] {
-        let type = item["type"] as? String
-        guard type == "custom_tool_call" || type == "custom_tool_call_output",
-            let callID = item["call_id"] as? String, !callID.isEmpty,
-            JSONSerialization.isValidJSONObject(item)
-        else {
-            throw OpenAIResponsesWebSearch.Error.invalidResponse
-        }
-        let prefix =
-            type == "custom_tool_call"
-            ? "[Previous custom tool call]"
-            : "[Previous custom tool output]"
-        return try assistantMessage(prefix: prefix, item: item)
-    }
-
     private static func assistantMessage(
         prefix: String,
         item: [String: Any]
