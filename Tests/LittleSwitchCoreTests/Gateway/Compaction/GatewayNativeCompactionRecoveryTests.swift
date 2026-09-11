@@ -254,7 +254,7 @@ struct GatewayNativeCompactionRecoveryTests {
         #expect(await transport.requests.count == 1)
     }
 
-    private static let nativeCatalog = #"""
+    static let nativeCatalog = #"""
         {"models":[
             {"slug":"native-lower","visibility":"list","priority":3},
             {"slug":"native-hidden","visibility":"hide","priority":0},
@@ -262,7 +262,7 @@ struct GatewayNativeCompactionRecoveryTests {
         ]}
         """#
 
-    private func makeResponder(
+    func makeResponder(
         transport: any UpstreamTransport,
         maximumRequestBytes: Int = 64 * 1_024 * 1_024,
         maximumErrorBytes: Int = 8 * 1_024 * 1_024,
@@ -280,7 +280,7 @@ struct GatewayNativeCompactionRecoveryTests {
         )
     }
 
-    private func request(hasTrigger: Bool = false) throws -> Data {
+    func request(hasTrigger: Bool = false) throws -> Data {
         let input: [[String: Any]] =
             [
                 ["type": "compaction", "encrypted_content": "opaque-native-checkpoint"],

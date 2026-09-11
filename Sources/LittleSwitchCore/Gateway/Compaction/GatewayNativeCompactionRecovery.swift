@@ -90,7 +90,7 @@ private enum NativeCompactionDiscovery {
     /// Provider keys, cookies, and arbitrary custom headers never cross over.
     private static let headerNames: Set<String> = [
         "authorization", "chatgpt-account-id", "user-agent", "openai-organization", "openai-project", "openai-beta",
-        "originator", "session_id", "conversation_id", "x-codex-turn-metadata", "x-codex-parent-thread-id",
+        "originator", "session_id", "conversation_id", "x-codex-turn-metadata", "x-codex-parent-thread-id", "version",
     ]
 
     static func authenticatedHeaders(_ incoming: HTTPHeaders) throws -> HTTPHeaders {
@@ -109,21 +109,37 @@ private enum NativeCompactionDiscovery {
     }
 
     static func clientVersion(_ headers: HTTPHeaders) -> String? {
+        // The CLI agent carries `codex-cli/0.154.0`, but the Desktop agent
+        // spells it `Codex Desktop/0.153.4 (…)`: the bare word carries no
+        // version and the number rides on the `Desktop` token. The `version`
+        // header Codex itself sends on every request covers both shapes.
+        let versionHeader = headers["version"].compactMap { validClientVersion(String($0)) }
+        if let version = versionHeader.first {
+            return version
+        }
         for value in headers["user-agent"] {
             for token in value.split(whereSeparator: \.isWhitespace) {
                 let parts = token.split(separator: "/", omittingEmptySubsequences: false)
-                guard parts.count == 2, parts[0].lowercased().hasPrefix("codex") else { continue }
-                let version = parts[1].prefix { $0.isNumber || $0 == "." }
-                let components = version.split(separator: ".", omittingEmptySubsequences: false)
-                let valid =
-                    components.count == 3
-                    && components.allSatisfy { component in
-                        !component.isEmpty && component.utf8.allSatisfy { (48...57).contains($0) }
-                    }
-                if valid { return String(version) }
+                guard parts.count == 2 else { continue }
+                let name = parts[0].lowercased()
+                guard name.hasPrefix("codex") || name == "desktop" else { continue }
+                if let version = validClientVersion(String(parts[1])) {
+                    return version
+                }
             }
         }
         return nil
+    }
+
+    private static func validClientVersion(_ raw: String) -> String? {
+        let version = raw.prefix { $0.isNumber || $0 == "." }
+        let components = version.split(separator: ".", omittingEmptySubsequences: false)
+        let valid =
+            components.count == 3
+            && components.allSatisfy { component in
+                !component.isEmpty && component.utf8.allSatisfy { (48...57).contains($0) }
+            }
+        return valid ? String(version) : nil
     }
 
     static func model(in data: Data, accountSession: Bool) throws -> String {
