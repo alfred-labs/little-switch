@@ -72,6 +72,40 @@ struct CoordinatorCodexFailureCoverageTests {
         await fixture.coordinator.shutdown(mode: .handoff)
     }
 
+    @Test("A failed connect hands the running app back on the rolled-back profile")
+    func connectFailureWhileRunning() async throws {
+        let fixture = try await CodexCoverageFixture.make(codexRunning: true)
+        fixture.store.failFutureSaves(at: [1])
+
+        await #expect(throws: ScriptedConfigurationStore.Error.saveInjected) {
+            _ = try await fixture.coordinator.connectCodex()
+        }
+
+        #expect(!(await fixture.coordinator.snapshot()).configuration.codex.connected)
+        #expect(fixture.profile.restoreCount == 1)
+        // The quit already happened before the failure, so the rollback
+        // must reopen the app instead of leaving it stopped.
+        #expect(fixture.controller.quitAttempts == 1)
+        #expect(fixture.controller.openAttempts == 1)
+        await fixture.coordinator.shutdown(mode: .handoff)
+    }
+
+    @Test("A failed disconnect hands the running app back on the rolled-back profile")
+    func disconnectFailureWhileRunning() async throws {
+        let fixture = try await CodexCoverageFixture.make(connected: true, codexRunning: true)
+        fixture.store.failFutureSaves(at: [1])
+
+        await #expect(throws: ScriptedConfigurationStore.Error.saveInjected) {
+            _ = try await fixture.coordinator.disconnectCodex()
+        }
+
+        // The rollback re-applies the previous managed profile.
+        #expect((await fixture.coordinator.snapshot()).configuration.codex.connected)
+        #expect(fixture.controller.quitAttempts == 1)
+        #expect(fixture.controller.openAttempts == 1)
+        await fixture.coordinator.shutdown(mode: .handoff)
+    }
+
     @Test("Codex applies pending settings without controlling the client")
     func applyWithoutProcessControl() async throws {
         let fixture = try await CodexCoverageFixture.make(connected: true)

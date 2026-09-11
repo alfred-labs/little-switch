@@ -5,6 +5,38 @@ import Testing
 
 @Suite("Codex managed profile signature")
 struct CodexManagedProfileSignatureTests {
+    @Test("Resolution merges the native catalog behind the managed entries")
+    func resolvesWithNativeCatalog() throws {
+        let providerID = UUID()
+        let provider = Provider(
+            id: providerID,
+            name: "Local",
+            baseURL: "http://127.0.0.1:11434",
+            authMode: .none,
+            models: [DiscoveredModel(id: "qwen")]
+        )
+        let native = Data(
+            #"{"models":[{"slug":"gpt-5.6-sol","display_name":"GPT-5.6 Sol"}]}"#.utf8
+        )
+
+        let signature = try CodexManagedProfileSignature.resolve(
+            providers: [provider],
+            configuration: CodexConfiguration(
+                defaultModel: ModelMapping(providerID: providerID, modelID: "qwen")
+            ),
+            nativeCatalogData: native
+        )
+
+        let root = try #require(
+            JSONSerialization.jsonObject(with: signature.catalogData) as? [String: Any]
+        )
+        let models = try #require(root["models"] as? [[String: Any]])
+        let slugs = models.compactMap { $0["slug"] as? String }
+        #expect(slugs == ["local/qwen", "gpt-5.6-sol", "codex-auto-review"])
+        let nativeEntry = try #require(models.first { ($0["slug"] as? String) == "gpt-5.6-sol" })
+        #expect(nativeEntry["supported_in_api"] as? Bool == false)
+    }
+
     @Test("Resolution uses the selected default provider and exact catalog")
     func selectedProviderAndCatalog() throws {
         let fixture = makeFixture(selectedLimit: 7, unrelatedLimit: 32)

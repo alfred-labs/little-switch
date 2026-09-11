@@ -4,6 +4,9 @@ package struct CodexProfileRestoreState: Codable, Equatable, Sendable {
     var configExisted: Bool
     var rootValues: [String: CodexRootStringState]
     var agentConcurrency: CodexAgentConcurrencyState?
+    /// The native catalog bytes merged into the managed catalog at activation
+    /// time; status comparisons reuse them instead of re-probing Codex.
+    var nativeCatalogData: Data?
 
     /// Capture a newly managed key before changing it. A legacy signature is
     /// also used by the coordinator to undo an upgrade after a save failure.

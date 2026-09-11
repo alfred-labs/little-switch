@@ -51,6 +51,10 @@ extension ApplicationCoordinator {
 
         let previous = configuration
         try await startGateway(snapshot: routingSnapshot(for: candidate))
+        // Quit before writing: a live Codex Desktop rewrites config.toml
+        // from memory on model switches and at quit, which races the
+        // activation and stomps the managed profile.
+        let shouldRelaunchCodex = await quitCodexForProfileChange()
         do {
             try profileManager.activate(
                 providers: candidate.providers,
@@ -69,7 +73,9 @@ extension ApplicationCoordinator {
                 )
             )
             reconcileOpenCodeDraft()
-            await relaunchCodexApplyingDesktopState()
+            if shouldRelaunchCodex {
+                await openCodexApplyingDesktopState()
+            }
             return await snapshot()
         } catch {
             let rollbackSucceeded = await rollbackCodexApply(
@@ -77,6 +83,11 @@ extension ApplicationCoordinator {
                 appliedState: .disconnected,
                 profileManager: profileManager
             )
+            // The quit already happened; hand the user back a running app
+            // reading the rolled-back profile whatever the rollback did.
+            if shouldRelaunchCodex {
+                await openCodexApplyingDesktopState()
+            }
             guard rollbackSucceeded else {
                 throw Error.rollbackFailed
             }
@@ -102,6 +113,8 @@ extension ApplicationCoordinator {
 
         let previous = configuration
         let previousAppliedState = appliedCodexState
+        // Same race as connectCodex: quit before the activation write.
+        let shouldRelaunchCodex = await quitCodexForProfileChange()
 
         do {
             try profileManager.activate(
@@ -121,7 +134,9 @@ extension ApplicationCoordinator {
                 )
             )
             reconcileOpenCodeDraft()
-            await relaunchCodexApplyingDesktopState()
+            if shouldRelaunchCodex {
+                await openCodexApplyingDesktopState()
+            }
             return await snapshot()
         } catch {
             let rollbackSucceeded = await rollbackCodexApply(
@@ -129,6 +144,11 @@ extension ApplicationCoordinator {
                 appliedState: previousAppliedState,
                 profileManager: profileManager
             )
+            // The quit already happened; hand the user back a running app
+            // reading the rolled-back profile whatever the rollback did.
+            if shouldRelaunchCodex {
+                await openCodexApplyingDesktopState()
+            }
             guard rollbackSucceeded else {
                 throw Error.rollbackFailed
             }
@@ -141,6 +161,9 @@ extension ApplicationCoordinator {
 
         let previous = configuration
         let previousAppliedState = appliedCodexState
+        // Quit before restoring: the app's quit-time config flush would
+        // otherwise rewrite the managed profile over the restored one.
+        let shouldRelaunchCodex = await quitCodexForProfileChange()
         do {
             try profileManager.restore()
             configuration.codex.connected = false
@@ -148,7 +171,9 @@ extension ApplicationCoordinator {
             await replaceGatewayRoutingIfNeeded()
             pendingCodexSettings = nil
             appliedCodexState = .disconnected
-            await relaunchCodexApplyingDesktopState()
+            if shouldRelaunchCodex {
+                await openCodexApplyingDesktopState()
+            }
             return await snapshot()
         } catch {
             let rollbackSucceeded = await rollbackCodexApply(
@@ -156,6 +181,11 @@ extension ApplicationCoordinator {
                 appliedState: previousAppliedState,
                 profileManager: profileManager
             )
+            // The quit already happened; hand the user back a running app
+            // reading the rolled-back profile whatever the rollback did.
+            if shouldRelaunchCodex {
+                await openCodexApplyingDesktopState()
+            }
             guard rollbackSucceeded else {
                 throw Error.rollbackFailed
             }
@@ -170,14 +200,24 @@ extension ApplicationCoordinator {
         return codexProfileManager
     }
 
-    private func relaunchCodexApplyingDesktopState() async {
-        guard let controller = codexController else { return }
-        guard await controller.isRunning() else { return }
+    /// Quits a running Codex Desktop before a profile write. A live app
+    /// rewrites config.toml from memory on model switches and at quit, so
+    /// writing while it runs lets it stomp the managed or restored profile.
+    /// Returns whether the app should be reopened afterwards — true only
+    /// when it was running and quit cleanly.
+    private func quitCodexForProfileChange() async -> Bool {
+        guard let controller = codexController else { return false }
+        guard await controller.isRunning() else { return false }
         do {
             try await controller.quitAndWait()
+            return true
         } catch {
-            return
+            return false
         }
+    }
+
+    private func openCodexApplyingDesktopState() async {
+        guard let controller = codexController else { return }
         try? codexProfileManager?.enableDesktopMaximumEffort()
         _ = try? await controller.open()
     }

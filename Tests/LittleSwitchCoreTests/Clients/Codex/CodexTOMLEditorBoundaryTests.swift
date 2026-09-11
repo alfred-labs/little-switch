@@ -48,15 +48,10 @@ struct CodexTOMLEditorBoundaryTests {
     private func activatedDocument(followedBy following: String) -> String {
         """
         model = "managed"
-        model_provider = "little-switch"
+        openai_base_url = "http://127.0.0.1:11436/v1"
         model_catalog_json = "/tmp/catalog.json"
         model_reasoning_effort = "max"
         web_search = "live"
-
-        [model_providers.little-switch]
-        name = "LittleSwitch"
-        base_url = "http://127.0.0.1:11436/v1/"
-        wire_api = "responses"
 
         \(following)
         """

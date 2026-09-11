@@ -205,6 +205,21 @@ public struct GatewayResponder: HTTPResponder {
             return anthropicError(status: .notFound, message: "Unknown endpoint")
         }
         guard path == .metrics || path == .logs || path.accepts(method: request.method) else {
+            // Codex's native provider streams each turn over a websocket
+            // first and only falls back to HTTP SSE when the upgrade fails
+            // with 426 Upgrade Required. Any other status — including the
+            // router's default 405 — reads as a retryable stream error, so
+            // the turn exhausts its retries on the websocket and dies.
+            if path == .responses, requestsWebsocketUpgrade(request) {
+                var headers = HTTPFields()
+                headers[.upgrade] = "websocket"
+                return errorResponse(
+                    style: errorStyle,
+                    status: .upgradeRequired,
+                    message: "WebSockets are not supported; stream over HTTP",
+                    headers: headers
+                )
+            }
             var headers = HTTPFields()
             headers[.allow] = path.method.rawValue
             return errorResponse(
@@ -240,6 +255,17 @@ public struct GatewayResponder: HTTPResponder {
         case .metrics, .logs:
             return try await monitoringResponse(request, route: path)
         }
+    }
+
+    /// A websocket handshake the gateway cannot satisfy: the client asked
+    /// to switch protocols rather than merely using the wrong method. The
+    /// transport layer keeps the Connection header consistent with the
+    /// Upgrade token, so the token alone identifies the handshake.
+    private func requestsWebsocketUpgrade(_ request: Request) -> Bool {
+        guard let upgrade = request.headers[.upgrade] else {
+            return false
+        }
+        return upgrade.caseInsensitiveCompare("websocket") == .orderedSame
     }
 
     private func countTokensResponse(_ request: Request, eventID: UUID) async throws -> Response {

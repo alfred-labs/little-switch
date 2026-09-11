@@ -39,7 +39,10 @@ struct CodexWebSearchCoordinatorTests {
         #expect(fixture.claudeController.openCount == 0)
     }
 
-    @Test("A failed search-mode upgrade reapplies the original signature without a relaunch", arguments: [false, true])
+    @Test(
+        "A failed search-mode upgrade reapplies the original signature and restores the running app",
+        arguments: [false, true]
+    )
     func legacyApplyRollback(missingConcurrency: Bool) async throws {
         let fixture = try await CodexCoordinatorFixture.make(
             codexRunning: true,
@@ -66,7 +69,9 @@ struct CodexWebSearchCoordinatorTests {
         #expect(rolledBack.configuration == startup.configuration)
         #expect(rolledBack.hasPendingCodexChanges)
         #expect(fixture.codexProfile.signatures == [expected, previous])
-        #expect(fixture.codexController.quitCount == 0)
-        #expect(fixture.codexController.openCount == 0)
+        // The app is quit before the write so it cannot race the profile;
+        // a failed apply must then reopen it on the rolled-back profile.
+        #expect(fixture.codexController.quitCount == 1)
+        #expect(fixture.codexController.openCount == 1)
     }
 }

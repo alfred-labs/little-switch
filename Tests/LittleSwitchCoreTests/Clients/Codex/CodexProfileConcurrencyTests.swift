@@ -102,8 +102,8 @@ struct CodexProfileConcurrencyTests {
         )
         var drifted = try String(contentsOf: fixture.paths.config, encoding: .utf8)
         drifted = drifted.replacingOccurrences(
-            of: #"model_provider = "little-switch""#,
-            with: #"model_provider = "manual""#
+            of: "openai_base_url = \"http://127.0.0.1:11436/v1\"",
+            with: "openai_base_url = \"http://127.0.0.1:1/v1\""
         )
         try install(Data(drifted.utf8), at: fixture.paths.config)
 
@@ -111,7 +111,10 @@ struct CodexProfileConcurrencyTests {
 
         let restored = try String(contentsOf: fixture.paths.config, encoding: .utf8)
         #expect(restored.contains(original.trimmingCharacters(in: .newlines)))
-        #expect(try CodexTOMLEditor.rootString("model_provider", in: restored) == "manual")
+        #expect(
+            try CodexTOMLEditor.rootString("openai_base_url", in: restored)
+                == "http://127.0.0.1:1/v1"
+        )
         #expect(!FileManager.default.fileExists(atPath: fixture.paths.restoreState.path))
     }
 
@@ -288,6 +291,7 @@ struct CodexProfileConcurrencyTests {
             uniqueKeysWithValues: [
                 "profile",
                 "model",
+                "openai_base_url",
                 "model_provider",
                 "model_catalog_json",
             ].map { key in

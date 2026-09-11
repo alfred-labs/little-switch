@@ -207,7 +207,8 @@ private struct LegacyCodexSearchProfile {
         }
         let originalRootValues = try Dictionary(
             uniqueKeysWithValues: [
-                "profile", "model", "model_provider", "model_catalog_json", "model_reasoning_effort",
+                "profile", "model", "openai_base_url", "model_provider", "model_catalog_json",
+                "model_reasoning_effort",
             ].map { key in
                 (key, try CodexTOMLEditor.rootState(key, in: original))
             }

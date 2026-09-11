@@ -5,6 +5,47 @@ import Testing
 
 @Suite("Codex profile")
 struct CodexProfileTests {
+    @Test("Activation merges the acquired native catalog and status accepts it")
+    func activationWithNativeCatalog() throws {
+        let fixture = try CodexProfileFixture.make()
+        defer { fixture.remove() }
+        let native = Data(
+            #"{"models":[{"slug":"gpt-5.6-sol","display_name":"GPT-5.6 Sol"}]}"#.utf8
+        )
+        let manager = CodexProfileManager(
+            paths: fixture.paths,
+            fileStore: nil,
+            nativeCatalog: CodexNativeCatalog(
+                configDirectory: fixture.paths.config.deletingLastPathComponent(),
+                runner: StubNativeRunner(output: native)
+            ) {
+                "/usr/local/bin/little-switch-test-codex"
+            }
+        )
+
+        try manager.activate(
+            providers: fixture.providers,
+            configuration: fixture.configuration
+        )
+
+        let catalog = try Data(contentsOf: fixture.paths.catalog)
+        let root = try #require(JSONSerialization.jsonObject(with: catalog) as? [String: Any])
+        let models = try #require(root["models"] as? [[String: Any]])
+        let slugs = models.compactMap { $0["slug"] as? String }
+        #expect(slugs == ["local/qwen", "gpt-5.6-sol", "codex-auto-review"])
+        let expected = try CodexManagedProfileSignature.resolve(
+            providers: fixture.providers,
+            configuration: fixture.configuration
+        )
+        #expect(
+            try manager.status(providers: fixture.providers, configuration: fixture.configuration, expected: expected)
+                == .active(expected)
+        )
+
+        try manager.restore()
+        #expect(!FileManager.default.fileExists(atPath: fixture.paths.config.path))
+    }
+
     @Test("Explicit and live paths use the documented Codex locations")
     func profilePaths() throws {
         let root = URL(fileURLWithPath: "/tmp/little-switch-codex-paths")
@@ -65,7 +106,11 @@ struct CodexProfileTests {
             try CodexTOMLEditor.rootString("model", in: managed)
                 == CodexCatalog.slug(for: defaultModel, in: fixture.providers)
         )
-        #expect(try CodexTOMLEditor.rootString("model_provider", in: managed) == "little-switch")
+        #expect(try CodexTOMLEditor.rootString("model_provider", in: managed) == nil)
+        #expect(
+            try CodexTOMLEditor.rootString("openai_base_url", in: managed)
+                == "http://127.0.0.1:11436/v1"
+        )
         #expect(
             try CodexTOMLEditor.rootString("model_catalog_json", in: managed)
                 == fixture.paths.catalog.path
@@ -148,15 +193,18 @@ struct CodexProfileTests {
         )
         var managed = try String(contentsOf: fixture.paths.config, encoding: .utf8)
         managed = managed.replacingOccurrences(
-            of: #"model_provider = "little-switch""#,
-            with: #"model_provider = "manual""#
+            of: "openai_base_url = \"http://127.0.0.1:11436/v1\"",
+            with: "openai_base_url = \"http://127.0.0.1:1/v1\""
         )
         try Data(managed.utf8).write(to: fixture.paths.config)
 
         try fixture.manager.restore()
 
         let restored = try String(contentsOf: fixture.paths.config, encoding: .utf8)
-        #expect(try CodexTOMLEditor.rootString("model_provider", in: restored) == "manual")
+        #expect(
+            try CodexTOMLEditor.rootString("openai_base_url", in: restored)
+                == "http://127.0.0.1:1/v1"
+        )
         #expect(!restored.contains("[model_providers.little-switch]"))
         #expect(FileManager.default.fileExists(atPath: fixture.paths.catalog.path))
         #expect(!FileManager.default.fileExists(atPath: fixture.paths.restoreState.path))
@@ -268,19 +316,13 @@ extension CodexProfileTests {
             "profile = \"work\"\n\(activeText)",
             activeText.replacingOccurrences(of: "model = \"\(slug)\"", with: "model = \"stale\""),
             activeText.replacingOccurrences(
-                of: "model_provider = \"little-switch\"",
-                with: "model_provider = \"openai\""
+                of: "openai_base_url = \"http://127.0.0.1:11436/v1\"",
+                with: "openai_base_url = \"http://127.0.0.1:1/v1\""
             ),
             activeText.replacingOccurrences(
                 of: "model_catalog_json = \"\(fixture.paths.catalog.path)\"",
                 with: "model_catalog_json = \"/tmp/stale.json\""
             ),
-            activeText.replacingOccurrences(of: "name = \"LittleSwitch\"", with: "name = \"Stale\""),
-            activeText.replacingOccurrences(
-                of: "base_url = \"http://127.0.0.1:11436/v1/\"",
-                with: "base_url = \"http://127.0.0.1:1/v1/\""
-            ),
-            activeText.replacingOccurrences(of: "wire_api = \"responses\"", with: "wire_api = \"chat\""),
         ]
         for variant in variants {
             try Data(variant.utf8).write(to: fixture.paths.config)
@@ -389,99 +431,16 @@ extension CodexProfileTests {
     }
 }
 
-struct CodexProfileFixture {
-    let root: URL
-    let paths: CodexProfilePaths
-    let manager: CodexProfileManager
-    let providers: [Provider]
-    let configuration: CodexConfiguration
+/// canned `codex debug models` output for native-catalog acquisition tests.
+private struct StubNativeRunner: CodexProcessRunning {
+    let output: Data
 
-    static func make(maximumParallelRequests: Int = 4) throws -> Self {
-        let root = FileManager.default.temporaryDirectory.appending(
-            path: "little-switch-codex-profile-\(UUID().uuidString)",
-            directoryHint: .isDirectory
-        )
-        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        let paths = CodexProfilePaths(
-            config: root.appending(path: ".codex/config.toml"),
-            catalog: root.appending(path: "support/model-catalog.json"),
-            restoreState: root.appending(path: "support/restore.json"),
-            backupDirectory: root.appending(path: "backups")
-        )
-        try FileManager.default.createDirectory(
-            at: paths.config.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
-        let providerID = UUID()
-        let mapping = ModelMapping(providerID: providerID, modelID: "qwen")
-        return Self(
-            root: root,
-            paths: paths,
-            manager: CodexProfileManager(paths: paths),
-            providers: [
-                Provider(
-                    id: providerID,
-                    name: "Local",
-                    baseURL: "http://127.0.0.1:11434",
-                    authMode: .none,
-                    models: [DiscoveredModel(id: "qwen", detectedContextWindow: 262_144)],
-                    maximumParallelRequests: maximumParallelRequests
-                )
-            ],
-            configuration: CodexConfiguration(defaultModel: mapping)
-        )
-    }
-
-    func remove() {
-        try? FileManager.default.removeItem(at: root)
-    }
-}
-
-final class FaultingCodexProfileFileStore: CodexProfileFileStore, @unchecked Sendable {
-    enum Error: Swift.Error, Equatable {
-        case injected
-    }
-
-    private let lock = NSLock()
-    private let disk: DiskCodexProfileFileStore
-    private let failingWrite: Int?
-    private let failingRestore: Int?
-    private var writeCount = 0
-    private var restoreCount = 0
-
-    init(
-        backupDirectory: URL,
-        failingWrite: Int? = nil,
-        failingRestore: Int? = nil
-    ) {
-        disk = DiskCodexProfileFileStore(backupDirectory: backupDirectory)
-        self.failingWrite = failingWrite
-        self.failingRestore = failingRestore
-    }
-
-    func snapshot(_ url: URL) throws -> Data? {
-        try disk.snapshot(url)
-    }
-
-    func write(_ data: Data, to url: URL) throws {
-        let shouldFail = lock.withLock { () -> Bool in
-            writeCount += 1
-            return writeCount == failingWrite
-        }
-        if shouldFail {
-            throw Error.injected
-        }
-        try disk.write(data, to: url)
-    }
-
-    func restore(_ data: Data?, to url: URL) throws {
-        let shouldFail = lock.withLock { () -> Bool in
-            restoreCount += 1
-            return restoreCount == failingRestore
-        }
-        if shouldFail {
-            throw Error.injected
-        }
-        try disk.restore(data, to: url)
+    func run(
+        executablePath: String,
+        arguments: [String],
+        environment: [String: String],
+        workingDirectory: String?
+    ) throws -> Data {
+        output
     }
 }

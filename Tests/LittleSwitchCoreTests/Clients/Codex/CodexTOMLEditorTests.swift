@@ -30,25 +30,73 @@ struct CodexTOMLEditorTests {
 
         #expect(try CodexTOMLEditor.rootString("profile", in: edited) == nil)
         #expect(try CodexTOMLEditor.rootString("model", in: edited) == "little-switch-slug")
-        #expect(try CodexTOMLEditor.rootString("model_provider", in: edited) == "little-switch")
+        #expect(try CodexTOMLEditor.rootString("model_provider", in: edited) == nil)
+        #expect(
+            try CodexTOMLEditor.rootString("openai_base_url", in: edited)
+                == "http://127.0.0.1:11436/v1"
+        )
         #expect(
             try CodexTOMLEditor.rootString("model_catalog_json", in: edited)
                 == "/tmp/model catalog.json"
         )
         #expect(
-            try CodexTOMLEditor.string(at: ["model_providers", "little-switch", "name"], in: edited) == "LittleSwitch")
-        #expect(
-            try CodexTOMLEditor.string(
-                at: ["model_providers", "little-switch", "base_url"],
-                in: edited
-            ) == "http://127.0.0.1:11436/v1/"
+            try CodexTOMLEditor.string(at: ["model_providers", "little-switch", "name"], in: edited)
+                == nil
         )
-        #expect(
-            try CodexTOMLEditor.string(at: ["model_providers", "little-switch", "wire_api"], in: edited) == "responses")
         #expect(edited.contains("# Root comment"))
         #expect(edited.contains("approval_policy = \"on-request\""))
         #expect(edited.contains("[model_providers.other]"))
         #expect(edited.contains("[projects.\"/tmp/example\"]"))
+    }
+
+    @Test("Activation migrates a legacy managed profile to the native endpoint shape")
+    func migratesLegacyManagedProfile() throws {
+        let legacy = #"""
+            model = "little-switch/local/qwen"
+            model_provider = "little-switch"
+
+            [model_providers.little-switch]
+            name = "LittleSwitch"
+            base_url = "http://127.0.0.1:11436/v1/"
+            wire_api = "responses"
+            """#
+
+        let edited = try CodexTOMLEditor.activating(
+            legacy,
+            model: "little-switch/local/qwen",
+            catalogPath: "/tmp/catalog.json"
+        )
+
+        #expect(try CodexTOMLEditor.rootString("model_provider", in: edited) == nil)
+        #expect(
+            try CodexTOMLEditor.rootString("openai_base_url", in: edited)
+                == "http://127.0.0.1:11436/v1"
+        )
+        #expect(!edited.contains("[model_providers.little-switch]"))
+    }
+
+    @Test("Managed detection requires the native endpoint shape")
+    func rootIsManagedShape() throws {
+        let native = #"""
+            model = "little-switch/local/qwen"
+            openai_base_url = "http://127.0.0.1:11436/v1"
+            model_catalog_json = "/tmp/catalog.json"
+            """#
+        #expect(try CodexTOMLEditor.rootIsManaged(native, catalogPath: "/tmp/catalog.json"))
+
+        let legacy = #"""
+            model = "little-switch/local/qwen"
+            model_provider = "little-switch"
+            model_catalog_json = "/tmp/catalog.json"
+            """#
+        #expect(try !CodexTOMLEditor.rootIsManaged(legacy, catalogPath: "/tmp/catalog.json"))
+
+        let foreign = #"""
+            model = "little-switch/local/qwen"
+            openai_base_url = "http://127.0.0.1:9999/v1"
+            model_catalog_json = "/tmp/catalog.json"
+            """#
+        #expect(try !CodexTOMLEditor.rootIsManaged(foreign, catalogPath: "/tmp/catalog.json"))
     }
 
     @Test("Signature activation owns the resolved model slug")
@@ -103,8 +151,9 @@ struct CodexTOMLEditorTests {
         )
 
         #expect(second == first)
-        #expect(second.components(separatedBy: "[model_providers.little-switch]").count == 2)
-        #expect(!second.contains("[model_providers.\"little-switch\"]"))
+        // The owned provider table belongs to the pre-native shape: a stale
+        // quoted table is removed and no canonical table is written anymore.
+        #expect(!second.contains("model_providers"))
         #expect(second.contains("[features]"))
     }
 
@@ -165,32 +214,24 @@ struct CodexTOMLEditorTests {
 
     @Test("Missing roots and table paths return absent states")
     func missingValues() throws {
-        let text = "[features]\nshell_snapshot = true"
+        let text = """
+            [features]
+            shell_snapshot = true
+
+            [projects.example]
+            path = "/tmp/example"
+            """
 
         #expect(try CodexTOMLEditor.rootString("model", in: text) == nil)
         #expect(try CodexTOMLEditor.string(at: [], in: text) == nil)
         #expect(try CodexTOMLEditor.string(at: ["missing", "value"], in: text) == nil)
         #expect(
+            try CodexTOMLEditor.string(at: ["projects", "example", "path"], in: text) == "/tmp/example"
+        )
+        #expect(
             try CodexTOMLEditor.rootState("model", in: text)
                 == CodexRootStringState(wasPresent: false, value: "")
         )
-    }
-
-    @Test("Activation sets the managed default reasoning effort")
-    func defaultReasoningEffort() throws {
-        let activated = try CodexTOMLEditor.activating(
-            "",
-            model: "managed",
-            catalogPath: "/tmp/catalog.json"
-        )
-        #expect(try CodexTOMLEditor.rootString("model_reasoning_effort", in: activated) == "max")
-
-        let replaced = try CodexTOMLEditor.activating(
-            "model_reasoning_effort = \"high\"",
-            model: "managed",
-            catalogPath: "/tmp/catalog.json"
-        )
-        #expect(try CodexTOMLEditor.rootString("model_reasoning_effort", in: replaced) == "max")
     }
 
     @Test("Restoration replaces present roots and skips unspecified roots")
@@ -297,6 +338,23 @@ struct CodexTOMLEditorTests {
 }
 
 extension CodexTOMLEditorTests {
+    @Test("Activation sets the managed default reasoning effort")
+    func defaultReasoningEffort() throws {
+        let activated = try CodexTOMLEditor.activating(
+            "",
+            model: "managed",
+            catalogPath: "/tmp/catalog.json"
+        )
+        #expect(try CodexTOMLEditor.rootString("model_reasoning_effort", in: activated) == "max")
+
+        let replaced = try CodexTOMLEditor.activating(
+            "model_reasoning_effort = \"high\"",
+            model: "managed",
+            catalogPath: "/tmp/catalog.json"
+        )
+        #expect(try CodexTOMLEditor.rootString("model_reasoning_effort", in: replaced) == "max")
+    }
+
     @Test("Bracket-leading multiline string content never delimits a TOML section")
     func multilineStringContentIsNotAHeader() throws {
         let rootString = #"""
@@ -356,7 +414,7 @@ extension CodexTOMLEditorTests {
             try CodexTOMLEditor.string(
                 at: ["model_providers", "little-switch", "name"],
                 in: activated
-            ) == "LittleSwitch"
+            ) == nil
         )
     }
 

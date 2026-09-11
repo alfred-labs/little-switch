@@ -58,7 +58,7 @@ public struct CodexProfilePaths: Equatable, Sendable {
     }
 }
 
-public protocol CodexProfileFileStore: Sendable {
+package protocol CodexProfileFileStore: Sendable {
     func snapshot(_ url: URL) throws -> Data?
     func write(_ data: Data, to url: URL) throws
     func restore(_ data: Data?, to url: URL) throws
@@ -172,15 +172,29 @@ public struct CodexProfileManager: Sendable {
 
     public let paths: CodexProfilePaths
     private let fileStore: any CodexProfileFileStore
+    private let nativeCatalog: CodexNativeCatalog?
 
-    public init(
+    private var sentinel: CodexSentinelAuth {
+        CodexSentinelAuth(
+            configURL: paths.config,
+            fileStore: DiskCodexProfileFileStore(backupDirectory: paths.backupDirectory)
+        )
+    }
+
+    package init(
         paths: CodexProfilePaths,
-        fileStore: (any CodexProfileFileStore)? = nil
+        fileStore: (any CodexProfileFileStore)? = nil,
+        nativeCatalog: CodexNativeCatalog? = nil
     ) {
         self.paths = paths
         self.fileStore =
             fileStore
             ?? DiskCodexProfileFileStore(backupDirectory: paths.backupDirectory)
+        self.nativeCatalog =
+            nativeCatalog
+            ?? CodexNativeCatalog(
+                configDirectory: paths.config.deletingLastPathComponent()
+            )
     }
 
     public func activate(
@@ -205,12 +219,20 @@ public struct CodexProfileManager: Sendable {
     ) throws {
         _ = providers
         _ = configuration
+        let nativeCatalogData = nativeCatalog?.acquire()
+        let catalogData = try CodexCatalog.mergedData(
+            managedData: signature.catalogData,
+            nativeCatalogData: nativeCatalogData
+        )
         let configData = try fileStore.snapshot(paths.config)
         var configText = try text(from: configData, url: paths.config)
-        var restoreState = try restoreState(
+        var restoreState = try CodexProfileLegacyJournal.state(
             configText: configText,
-            configExisted: configData != nil
+            configExisted: configData != nil,
+            paths: paths,
+            fileStore: fileStore
         )
+        restoreState.nativeCatalogData = nativeCatalogData
         configText = try restoreState.preparingWebSearch(in: configText, mode: signature.webSearchMode)
         var managedText = try CodexTOMLEditor.activating(
             configText,
@@ -236,9 +258,10 @@ public struct CodexProfileManager: Sendable {
 
         try transaction {
             try fileStore.write(stateData, to: paths.restoreState)
-            try fileStore.write(signature.catalogData, to: paths.catalog)
+            try fileStore.write(catalogData, to: paths.catalog)
             try fileStore.write(Data(managedText.utf8), to: paths.config)
         }
+        try sentinel.installIfAbsent()
         try? enableDesktopMaximumEffort()
     }
 
@@ -262,12 +285,17 @@ public struct CodexProfileManager: Sendable {
                 try fileStore.restore(nil, to: paths.catalog)
                 try fileStore.restore(nil, to: paths.restoreState)
             }
+            try sentinel.removeIfManaged()
             return
         }
         let configText = try text(from: configData, url: paths.config)
         let stateData = try fileStore.snapshot(paths.restoreState)
-        let state = try stateData.map { try JSONDecoder().decode(RestoreState.self, from: $0) }
+        let state = try stateData.map { try CodexProfileLegacyJournal.decoded($0) }
         let wasManaged = try CodexTOMLEditor.rootIsManaged(
+            configText,
+            catalogPath: paths.catalog.path
+        )
+        let wasLegacyManaged = try CodexTOMLEditor.rootIsLegacyManaged(
             configText,
             catalogPath: paths.catalog.path
         )
@@ -279,7 +307,7 @@ public struct CodexProfileManager: Sendable {
                 state: agentConcurrency
             )
         }
-        if wasManaged {
+        if wasManaged || wasLegacyManaged {
             let rootValues = state?.rootValues ?? Self.emptyRootValues
             restoredText = try CodexTOMLEditor.restoring(
                 restoredText,
@@ -296,7 +324,7 @@ public struct CodexProfileManager: Sendable {
             try CodexTOMLEditor.rootString("model_catalog_json", in: restoredText)
             == paths.catalog.path
         let shouldRemoveConfig =
-            wasManaged
+            (wasManaged || wasLegacyManaged)
             && state?.configExisted == false
             && restoredText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
@@ -311,6 +339,7 @@ public struct CodexProfileManager: Sendable {
             }
             try fileStore.restore(nil, to: paths.restoreState)
         }
+        try sentinel.removeIfManaged()
     }
 
     public func isActive(
@@ -353,60 +382,22 @@ public struct CodexProfileManager: Sendable {
         let profile = try CodexTOMLEditor.rootString("profile", in: configText)
         let model = try CodexTOMLEditor.rootString("model", in: configText)
         let provider = try CodexTOMLEditor.rootString("model_provider", in: configText)
+        let openAIBaseURL = try CodexTOMLEditor.rootString("openai_base_url", in: configText)
         let catalog = try CodexTOMLEditor.rootString("model_catalog_json", in: configText)
-        let providerName = try CodexTOMLEditor.string(
-            at: ["model_providers", CodexTOMLEditor.providerID, "name"],
-            in: configText
-        )
-        let baseURL = try CodexTOMLEditor.string(
-            at: ["model_providers", CodexTOMLEditor.providerID, "base_url"],
-            in: configText
-        )
-        let wireAPI = try CodexTOMLEditor.string(
-            at: ["model_providers", CodexTOMLEditor.providerID, "wire_api"],
-            in: configText
+        let expectedCatalog = try CodexCatalog.mergedData(
+            managedData: expected.catalogData,
+            nativeCatalogData: state.nativeCatalogData
         )
         guard profile == nil,
             model == expected.modelSlug,
-            provider == CodexTOMLEditor.providerID,
+            provider == nil,
+            openAIBaseURL == CodexTOMLEditor.baseURL,
             catalog == paths.catalog.path,
-            providerName == CodexTOMLEditor.providerName,
-            baseURL == CodexTOMLEditor.baseURL,
-            wireAPI == "responses",
-            catalogData == expected.catalogData
+            catalogData == expectedCatalog
         else {
             return .inactive
         }
         return state.status(in: configText, expected: expected)
-    }
-
-    private func restoreState(
-        configText: String,
-        configExisted: Bool
-    ) throws -> RestoreState {
-        if let data = try fileStore.snapshot(paths.restoreState) {
-            let isManaged = try CodexTOMLEditor.rootIsManaged(
-                configText,
-                catalogPath: paths.catalog.path
-            )
-            if isManaged {
-                return try JSONDecoder().decode(RestoreState.self, from: data)
-            }
-        }
-        return RestoreState(
-            configExisted: configExisted,
-            rootValues: try Dictionary(
-                uniqueKeysWithValues: Self.rootKeys.map { key in
-                    (
-                        key,
-                        try CodexTOMLEditor.rootState(
-                            key, in: configText, preservingAssignment: key == "web_search"
-                        )
-                    )
-                }
-            ),
-            agentConcurrency: nil
-        )
     }
 
     private func transaction(_ operation: () throws -> Void) throws {
@@ -443,7 +434,7 @@ public struct CodexProfileManager: Sendable {
         return try encoder.encode(state)
     }
 
-    private static let rootKeys = CodexTOMLEditor.managedRootKeys
+    private static let rootKeys = CodexTOMLEditor.journaledRootKeys
 
     private static let emptyRootValues = Dictionary(
         // A missing journal cannot prove that an older profile owned search.

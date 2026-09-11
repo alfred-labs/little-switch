@@ -55,7 +55,15 @@ extension GatewayResponder {
         }
 
         trafficRecorder.record(eventID: eventID, action: .claudeRequestBody(incomingBody))
+        let incomingHeaders = nioHeaders(request.headers)
         guard let metadata = responsesRoutingMetadata(body: incomingBody, capture: capture) else {
+            if CodexNativePassthrough.isNativeRequest(incomingBody) {
+                return try await nativePassthroughResponsesResponse(
+                    body: incomingBody,
+                    incomingHeaders: incomingHeaders,
+                    eventID: eventID
+                )
+            }
             return openAIError(status: .badRequest, message: "Unknown or invalid model")
         }
         await GatewayMonitoringScope.current?.target(
@@ -87,7 +95,6 @@ extension GatewayResponder {
             )
         }
 
-        let incomingHeaders = nioHeaders(request.headers)
         trafficRecorder.record(
             eventID: eventID,
             action: .routed(

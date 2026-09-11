@@ -142,6 +142,13 @@ public struct CodexCatalogModel: Encodable, Equatable, Sendable {
     }
 }
 
+extension String {
+    /// Case-insensitive slug identity shared by managed and native entries.
+    fileprivate var trimmedSlugKey: String {
+        trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+}
+
 public struct CodexModelCatalog: Encodable, Equatable, Sendable {
     public var models: [CodexCatalogModel]
 
@@ -235,7 +242,7 @@ public enum CodexCatalog {
         return CodexModelCatalog(models: models)
     }
 
-    public static func encode(
+    package static func encode(
         providers: [Provider],
         configuration: CodexConfiguration
     ) throws -> Data {
@@ -244,6 +251,79 @@ public enum CodexCatalog {
         var data = try encoder.encode(make(providers: providers, configuration: configuration))
         data.append(UInt8(ascii: "\n"))
         return data
+    }
+
+    /// Encodes the managed catalog merged with Codex's native entries. The
+    /// LittleSwitch entries win slug collisions and keep their API support;
+    /// native entries are marked ChatGPT-only and preserved field-for-field.
+    package static func encode(
+        providers: [Provider],
+        configuration: CodexConfiguration,
+        nativeCatalogData: Data?
+    ) throws -> Data {
+        try mergedData(
+            managedData: encode(providers: providers, configuration: configuration),
+            nativeCatalogData: nativeCatalogData
+        )
+    }
+
+    /// Merges an encoded managed catalog with raw native entries. Pure so
+    /// status comparisons can rebuild the exact merged bytes from the stored
+    /// native snapshot without re-probing Codex.
+    package static func mergedData(
+        managedData: Data,
+        nativeCatalogData: Data?
+    ) throws -> Data {
+        guard
+            let root = try? JSONSerialization.jsonObject(with: managedData) as? [String: Any],
+            let managed = root["models"] as? [[String: Any]]
+        else {
+            throw Error.empty
+        }
+        var data = try JSONSerialization.data(
+            withJSONObject: try mergedRoot(managed: managed, nativeCatalogData: nativeCatalogData),
+            options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        )
+        data.append(UInt8(ascii: "\n"))
+        return data
+    }
+
+    private static func mergedRoot(
+        managed: [[String: Any]],
+        nativeCatalogData: Data?
+    ) throws -> [String: Any] {
+        var managedEntries = managed
+        // The hidden reviewer always trails the managed list; native models
+        // slot in before it so the visible picker order is managed, native.
+        var reviewer: [String: Any]?
+        if let last = managedEntries.last, (last["slug"] as? String) == CodexCatalog.autoReviewModel {
+            reviewer = managedEntries.removeLast()
+        }
+        var entries = managedEntries
+        var seen = Set(entries.compactMap { ($0["slug"] as? String)?.trimmedSlugKey })
+        if let reviewer, let slug = reviewer["slug"] as? String {
+            seen.insert(slug.trimmedSlugKey)
+        }
+        let nativeRoot = nativeCatalogData.flatMap {
+            try? JSONSerialization.jsonObject(with: $0) as? [String: Any]
+        }
+        if let nativeModels = nativeRoot?["models"] as? [[String: Any]] {
+            for var entry in nativeModels {
+                guard let slug = entry["slug"] as? String else {
+                    continue
+                }
+                let key = slug.trimmedSlugKey
+                guard !key.isEmpty, seen.insert(key).inserted else {
+                    continue
+                }
+                entry["supported_in_api"] = false
+                entries.append(entry)
+            }
+        }
+        if let reviewer {
+            entries.append(reviewer)
+        }
+        return ["models": entries]
     }
 
     private static func makeModel(

@@ -267,7 +267,9 @@ struct GatewayTests {
             for (encoding, body) in [
                 ("gzip", Data(#"{"model":"\#(slug)"}"#.utf8)),
                 ("zstd", Data("not-zstd".utf8)),
-                ("identity", Data(#"{"model":"unknown"}"#.utf8)),
+                // Unresolvable slugs now pass through natively, so the
+                // pre-admission rejection case drops the model slug entirely.
+                ("identity", Data(#"{"input":"hello"}"#.utf8)),
             ] {
                 let rejected = try await client.execute(
                     uri: "/v1/responses",

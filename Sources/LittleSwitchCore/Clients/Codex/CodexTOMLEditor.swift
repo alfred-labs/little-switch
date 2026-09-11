@@ -16,7 +16,9 @@ public enum CodexTOMLEditor {
 
     public static let providerID = "little-switch"
     public static let providerName = "LittleSwitch"
-    public static let baseURL = "http://127.0.0.1:11436/v1/"
+    /// The gateway as Codex's native OpenAI endpoint: Codex appends
+    /// `/responses` to this base URL, landing on the gateway's `/v1/responses`.
+    public static let baseURL = "http://127.0.0.1:11436/v1"
     public static let defaultReasoningEffort = "max"
     /// LittleSwitch's external search services require Codex's live mode.
     /// https://learn.chatgpt.com/docs/config-file/config-basic#web-search-mode
@@ -24,11 +26,16 @@ public enum CodexTOMLEditor {
     package static let managedRootKeys = [
         "profile",
         "model",
-        "model_provider",
+        "openai_base_url",
         "model_catalog_json",
         "model_reasoning_effort",
         "web_search",
     ]
+
+    /// `model_provider` is no longer managed, but activation still replaces
+    /// any legacy managed value. Its original state must therefore survive in
+    /// the restore journal even though it is not part of the managed shape.
+    package static let journaledRootKeys = managedRootKeys + ["model_provider"]
 
     static func activating(
         _ text: String,
@@ -38,14 +45,18 @@ public enum CodexTOMLEditor {
     ) throws -> String {
         _ = try table(from: text)
         var result = try removeRootString("profile", from: text)
+        // Migration: the provider root and table belong to the pre-native
+        // shape. The table removal keeps restorations clean for profiles that
+        // never journaled a pre-LittleSwitch state.
         result = try setRootString("model", value: model, in: result)
-        result = try setRootString("model_provider", value: providerID, in: result)
+        result = try removeRootString("model_provider", from: result)
+        result = try setRootString("openai_base_url", value: baseURL, in: result)
         result = try setRootString("model_catalog_json", value: catalogPath, in: result)
         result = try setRootString("model_reasoning_effort", value: defaultReasoningEffort, in: result)
         if let webSearchMode {
             result = try setRootString("web_search", value: webSearchMode, in: result)
         }
-        result = try upsertProvider(in: result)
+        result = try removingOwnedProvider(from: result)
         _ = try table(from: result)
         return result
     }
@@ -116,10 +127,9 @@ public enum CodexTOMLEditor {
         states: [String: CodexRootStringState]
     ) throws -> String {
         var result = text
-        for key in managedRootKeys {
-            guard let state = states[key] else {
-                continue
-            }
+        // Key order is irrelevant: every edit targets the root region and is
+        // position-independent. Sorting keeps the transformation deterministic.
+        for (key, state) in states.sorted(by: { $0.key < $1.key }) {
             if state.wasPresent {
                 result = try setRootString(
                     key, value: state.value, in: result, originalAssignment: state.originalAssignment
@@ -150,8 +160,21 @@ public enum CodexTOMLEditor {
     }
 
     package static func rootIsManaged(_ text: String, catalogPath: String) throws -> Bool {
-        try rootString("model_provider", in: text) == providerID
+        try rootString("openai_base_url", in: text) == baseURL
             && rootString("model_catalog_json", in: text) == catalogPath
+    }
+
+    /// The pre-native LittleSwitch profile wrote a custom provider root and
+    /// table. Treat it as LittleSwitch-owned too so an upgrade reuses the
+    /// existing restore journal instead of journaling managed values.
+    package static func rootIsLegacyManaged(_ text: String, catalogPath: String) throws -> Bool {
+        _ = catalogPath
+        let legacyBaseURL = try string(
+            at: ["model_providers", providerID, "base_url"], in: text
+        )
+        return try rootString("model_provider", in: text) == providerID
+            && (legacyBaseURL == baseURL || legacyBaseURL == baseURL + "/")
+            && string(at: ["model_providers", providerID, "wire_api"], in: text) == "responses"
     }
 
     private static func setRootString(
@@ -213,32 +236,6 @@ public enum CodexTOMLEditor {
             throw Error.unsupportedRootSyntax(key)
         }
         lines.remove(at: index)
-        return lines.joined(separator: "\n")
-    }
-
-    private static func upsertProvider(in text: String) throws -> String {
-        let block = [
-            "[model_providers.\(providerID)]",
-            "name = \(try quoted(providerName))",
-            "base_url = \(try quoted(baseURL))",
-            "wire_api = \"responses\"",
-            "",
-        ]
-        var lines = splitLines(text)
-        if let range = sectionRange(
-            in: text,
-            matching: ["model_providers", providerID]
-        ) {
-            lines.replaceSubrange(range, with: block)
-        } else {
-            while lines.last?.isEmpty == true {
-                lines.removeLast()
-            }
-            if !lines.isEmpty {
-                lines.append("")
-            }
-            lines.append(contentsOf: block)
-        }
         return lines.joined(separator: "\n")
     }
 

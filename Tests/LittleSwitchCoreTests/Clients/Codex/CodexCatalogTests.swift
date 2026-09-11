@@ -98,6 +98,50 @@ struct CodexCatalogTests {
         #expect(first.multiAgentVersion == "v2")
     }
 
+    @Test("A mixed OpenAI and local catalog keeps both families exposed")
+    func mixedProviderCohabitation() throws {
+        let openAIID = try #require(UUID(uuidString: "11111111-2222-3333-4444-555555555555"))
+        let localID = try #require(UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"))
+        let providers = [
+            Provider(
+                id: openAIID,
+                name: "OpenAI",
+                baseURL: "https://api.openai.com",
+                authMode: .bearer,
+                models: [
+                    DiscoveredModel(id: "gpt-5.5"),
+                    DiscoveredModel(id: "gpt-5.4-mini"),
+                ]
+            ),
+            Provider(
+                id: localID,
+                name: "z.ai",
+                baseURL: "https://api.z.ai/api/coding/paas/v4",
+                authMode: .bearer,
+                models: [DiscoveredModel(id: "glm-5.3")]
+            ),
+        ]
+        let configuration = CodexConfiguration(
+            defaultModel: ModelMapping(providerID: openAIID, modelID: "gpt-5.5"),
+            excludedModels: [ModelMapping(providerID: openAIID, modelID: "gpt-5.4-mini")]
+        )
+
+        let catalog = try CodexCatalog.make(
+            providers: providers,
+            configuration: configuration
+        )
+
+        let exposed = catalog.models.filter { $0.slug != CodexCatalog.autoReviewModel }
+        #expect(exposed.map(\.slug) == ["openai/gpt-5.5", "z.ai/glm-5.3"])
+        #expect(exposed.map(\.displayName) == ["OpenAI/gpt-5.5", "z.ai/glm-5.3"])
+        #expect(
+            Set(exposed.map { $0.slug.lowercased() }).count == exposed.count,
+            "slugs stay unique case-insensitively across provider families"
+        )
+        #expect(catalog.models.last?.slug == CodexCatalog.autoReviewModel)
+        #expect(catalog.models.last?.description == "Approval reviews via OpenAI/gpt-5.5")
+    }
+
     @Test("Image modalities follow provider overrides and detected capabilities")
     func imageModalitiesResolution() throws {
         let providerID = try #require(UUID(uuidString: "11111111-2222-3333-4444-555555555555"))
@@ -174,6 +218,13 @@ struct CodexCatalogTests {
     func rejectsEmptyCatalog() {
         #expect(throws: CodexCatalog.Error.empty) {
             try CodexCatalog.make(providers: [], configuration: .disconnected)
+        }
+    }
+
+    @Test("An unparseable managed catalog is rejected before native merging")
+    func rejectsUnparseableManagedCatalog() {
+        #expect(throws: CodexCatalog.Error.empty) {
+            try CodexCatalog.mergedData(managedData: Data("not-json".utf8), nativeCatalogData: nil)
         }
     }
 
