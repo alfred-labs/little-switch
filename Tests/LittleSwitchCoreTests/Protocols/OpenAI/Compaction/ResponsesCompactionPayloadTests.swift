@@ -41,7 +41,7 @@ struct ResponsesCompactionPayloadTests {
             #"{"type":"little_switch_compaction","summary":"s","retained":[]}"#,
             #"{"type":"little_switch_compaction","version":1,"summary":" ","retained":[]}"#,
             #"{"type":"little_switch_compaction","version":1,"summary":null,"retained":[]}"#,
-            #"{"type":"little_switch_compaction","version":1,"summary":"s"}"#,
+            #"{"type":"little_switch_compaction","version":1,"summary":"s","retained":null}"#,
             #"{"type":"little_switch_compaction","version":1,"summary":"s","retained":[null]}"#,
             #"{"type":"little_switch_compaction","version":1,"summary":"s","retained":[{}]}"#,
             #"{"type":"little_switch_compaction","version":1,"summary":"s","retained":[{"type":"compaction"}]}"#,

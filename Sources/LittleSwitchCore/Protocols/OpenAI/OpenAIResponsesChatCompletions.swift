@@ -46,7 +46,8 @@ package enum OpenAIResponsesChatCompletions {
             throw Error.invalidRequest
         }
 
-        let root = ResponsesImageTurnCompatibility.rewritten(source) ?? source
+        let deduplicated = ResponsesHistoryDeduplication.rewritten(source) ?? source
+        let root = ResponsesImageTurnCompatibility.rewritten(deduplicated) ?? deduplicated
         // The search bridge may already have flattened the declarations.
         // Retain its bindings for restored history and live output events.
         try validateToolsForChat(root["tools"] as? [[String: Any]] ?? [])

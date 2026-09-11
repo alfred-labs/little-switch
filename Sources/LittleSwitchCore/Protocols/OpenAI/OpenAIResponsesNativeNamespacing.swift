@@ -38,6 +38,11 @@ package enum OpenAIResponsesNativeNamespacing {
         var toolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
         var declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
 
+        if let collapsed = ResponsesHistoryDeduplication.rewritten(rewritten) {
+            rewritten = collapsed
+            changed = true
+        }
+
         let history = rewritten["input"] as? [[String: Any]] ?? []
         let historicalNamespaces = history.contains { $0["namespace"] is String }
         if let tools = rewritten["tools"] as? [[String: Any]] ?? (historicalNamespaces ? [] : nil) {
@@ -63,6 +68,8 @@ package enum OpenAIResponsesNativeNamespacing {
                 switch item["type"] as? String {
                 case "web_search_call":
                     converted.append(try PortableResponsesHistory.message(for: item))
+                    changed = true
+                case "compaction_trigger":
                     changed = true
                 case "function_call", "custom_tool_call":
                     converted.append(

@@ -42,6 +42,8 @@ enum ResponsesChatCompletionsHistory {
                     for (key, value) in fields { message[key] = value }
                     messages.append(message)
                 }
+            case "compaction_trigger":
+                continue
             case "agent_message":
                 if let content = ResponsesAgentMail.textContent(item["content"]) {
                     messages.append(["role": "user", "content": content])
