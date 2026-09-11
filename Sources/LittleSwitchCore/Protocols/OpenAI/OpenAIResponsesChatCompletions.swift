@@ -310,6 +310,12 @@ extension OpenAIResponsesChatCompletions {
                     throw Error.invalidRequest
                 }
                 try appendMessage(message, to: &messages)
+            case "custom_tool_call", "custom_tool_call_output":
+                guard let message = try? PortableResponsesHistory.customToolMessage(for: item)
+                else {
+                    throw Error.invalidRequest
+                }
+                try appendMessage(message, to: &messages)
             default:
                 throw Error.invalidRequest
             }

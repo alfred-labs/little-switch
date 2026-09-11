@@ -157,6 +157,50 @@ struct OpenAIResponsesNativeNamespacingTests {
         #expect(normalized.body != original)
     }
 
+    @Test("Native custom tool history converts to portable messages")
+    func convertsCustomToolHistory() throws {
+        let normalized = try OpenAIResponsesNativeNamespacing.normalize(
+            try requestBody(
+                input: [
+                    [
+                        "type": "message",
+                        "role": "user",
+                        "content": [["type": "input_text", "text": "Run it."]],
+                    ],
+                    [
+                        "type": "custom_tool_call",
+                        "call_id": "call_9",
+                        "name": "node_repl",
+                        "input": "console.log('hi')",
+                    ],
+                    [
+                        "type": "custom_tool_call_output",
+                        "call_id": "call_9",
+                        "output": "hi",
+                    ],
+                ],
+                tools: [["type": "web_search"]]
+            )
+        )
+
+        let object = try #require(
+            try JSONSerialization.jsonObject(with: normalized.body) as? [String: Any]
+        )
+        let items = try #require(object["input"] as? [[String: Any]])
+        let types = items.compactMap { $0["type"] as? String }
+        // A conversation switched away from a native model carries custom
+        // tool items no Responses provider accepts; they become plain
+        // assistant messages so the history stays readable context.
+        #expect(types == ["message", "message", "message"])
+        let texts = items.compactMap { item in
+            (item["content"] as? [[String: Any]])?.first?["text"] as? String
+        }
+        #expect(texts[1].contains("[Previous custom tool call]"))
+        #expect(texts[1].contains("node_repl"))
+        #expect(texts[2].contains("[Previous custom tool output]"))
+        #expect(texts[2].contains("hi"))
+    }
+
     @Test("Bodies without namespaces or mail stay byte-identical")
     func leavesPlainBodiesUntouched() throws {
         let body = try requestBody(

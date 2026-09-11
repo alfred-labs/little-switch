@@ -10,6 +10,34 @@ package enum PortableResponsesHistory {
         else {
             throw OpenAIResponsesWebSearch.Error.invalidResponse
         }
+        return try assistantMessage(
+            prefix: "[Previous web search]",
+            item: item
+        )
+    }
+
+    /// A conversation switched away from a native model carries freeform tool
+    /// exchanges (`custom_tool_call` / `custom_tool_call_output`) that no
+    /// Responses provider accepts; the readable exchange remains context.
+    package static func customToolMessage(for item: [String: Any]) throws -> [String: Any] {
+        let type = item["type"] as? String
+        guard type == "custom_tool_call" || type == "custom_tool_call_output",
+            let callID = item["call_id"] as? String, !callID.isEmpty,
+            JSONSerialization.isValidJSONObject(item)
+        else {
+            throw OpenAIResponsesWebSearch.Error.invalidResponse
+        }
+        let prefix =
+            type == "custom_tool_call"
+            ? "[Previous custom tool call]"
+            : "[Previous custom tool output]"
+        return try assistantMessage(prefix: prefix, item: item)
+    }
+
+    private static func assistantMessage(
+        prefix: String,
+        item: [String: Any]
+    ) throws -> [String: Any] {
         let data = try JSONSerialization.data(
             withJSONObject: item, options: [.sortedKeys, .withoutEscapingSlashes]
         )
@@ -21,7 +49,7 @@ package enum PortableResponsesHistory {
             "content": [
                 [
                     "type": "output_text",
-                    "text": "[Previous web search]\n" + text,
+                    "text": prefix + "\n" + text,
                 ]
             ],
         ]

@@ -60,6 +60,9 @@ package enum OpenAIResponsesNativeNamespacing {
                 case "web_search_call":
                     converted.append(try PortableResponsesHistory.message(for: item))
                     changed = true
+                case "custom_tool_call", "custom_tool_call_output":
+                    converted.append(try PortableResponsesHistory.customToolMessage(for: item))
+                    changed = true
                 case "function_call":
                     converted.append(
                         flattenedFunctionReference(item, bindings: toolBindings, changed: &changed)
