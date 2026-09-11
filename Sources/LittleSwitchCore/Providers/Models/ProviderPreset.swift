@@ -19,6 +19,15 @@ public struct ProviderPreset: Equatable, Sendable {
         authMode: .bearer,
         maximumParallelRequests: 4
     )
+    /// The hosted OpenAI catalog. The base URL stays free of a `/v1`
+    /// suffix because `ProviderEndpoint.forwarding` appends `/v1/...` by
+    /// plain concatenation.
+    public static let openAI = ProviderPreset(
+        name: "OpenAI",
+        baseURL: "https://api.openai.com",
+        authMode: .bearer,
+        maximumParallelRequests: 4
+    )
     /// oMLX and LM Studio both serve OpenAI-compatible endpoints from a single
     /// local model, so their capacity is deliberately small: extra parallel
     /// requests only queue inside the server and slow every one of them.

@@ -21,7 +21,10 @@ public struct ProviderClient: Sendable {
     public func discover(provider: Provider, secret: String?) async throws -> [DiscoveredModel] {
         let request = try ProviderRequestBuilder.discovery(provider: provider, secret: secret)
         let data = try await requiredData(for: request)
-        let models = try ProviderCatalog.parse(data)
+        let models = OpenAIModelDiscoveryFilter.filtered(
+            try ProviderCatalog.parse(data),
+            baseURL: provider.baseURL
+        )
         guard models.contains(where: { $0.detectedContextWindow == nil }) else {
             return models
         }

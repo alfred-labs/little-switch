@@ -46,4 +46,26 @@ struct ProviderEndpointTests {
                 .absoluteString == "http://127.0.0.1:11434/v1/messages"
         )
     }
+
+    @Test("The hosted OpenAI preset endpoints avoid a duplicated /v1 segment")
+    func openAIEndpoints() throws {
+        let provider = Provider(
+            name: "OpenAI",
+            baseURL: "https://api.openai.com",
+            authMode: .bearer
+        )
+
+        #expect(
+            try ProviderEndpoint.forwarding(.responses, for: provider).absoluteString
+                == "https://api.openai.com/v1/responses"
+        )
+        #expect(
+            try ProviderEndpoint.forwarding(.chatCompletions, for: provider).absoluteString
+                == "https://api.openai.com/v1/chat/completions"
+        )
+        #expect(
+            try ProviderRequestBuilder.discovery(provider: provider, secret: nil).url
+                == "https://api.openai.com/v1/models"
+        )
+    }
 }

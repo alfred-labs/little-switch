@@ -54,6 +54,20 @@ struct ProviderDraftTests {
         #expect(draft.wireProbe == nil)
     }
 
+    @Test("Applying the OpenAI preset seeds the hosted endpoint without an Anthropic surface")
+    func openAIPresetApplies() {
+        var draft = ProviderDraft()
+
+        draft.apply(.openAI)
+
+        #expect(draft.name == "openai")
+        #expect(draft.baseURL == "https://api.openai.com")
+        #expect(draft.authMode == .bearer)
+        #expect(draft.anthropicBaseURL.isEmpty)
+        #expect(draft.credentialSource == .manual)
+        #expect(draft.wireProbe == nil)
+    }
+
     @Test("New providers do not submit context overrides")
     func newProviderOmitsContextOverrides() {
         let draft = ProviderDraft()

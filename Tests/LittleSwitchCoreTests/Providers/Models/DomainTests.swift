@@ -43,6 +43,15 @@ struct DomainTests {
                 )
         )
         #expect(
+            ProviderPreset.openAI
+                == ProviderPreset(
+                    name: "OpenAI",
+                    baseURL: "https://api.openai.com",
+                    authMode: .bearer,
+                    maximumParallelRequests: 4
+                )
+        )
+        #expect(
             ProviderPreset.omlx
                 == ProviderPreset(
                     name: "oMLX",

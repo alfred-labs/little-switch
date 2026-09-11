@@ -99,6 +99,7 @@ struct ProviderEditorCredentials: View {
 
 enum ProviderEditorPreset: String, CaseIterable, Identifiable {
     case ollama = "Ollama"
+    case openAI = "OpenAI"
     case omlx = "oMLX"
     case lmStudio = "LM Studio"
     case zai = "z.ai"
@@ -111,6 +112,7 @@ enum ProviderEditorPreset: String, CaseIterable, Identifiable {
     var providerPreset: ProviderPreset {
         switch self {
         case .ollama: .ollama
+        case .openAI: .openAI
         case .omlx: .omlx
         case .lmStudio: .lmStudio
         case .zai: .zai
