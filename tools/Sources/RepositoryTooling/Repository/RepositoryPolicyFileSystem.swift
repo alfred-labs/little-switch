@@ -22,30 +22,55 @@ package enum RepositoryPolicyFileSystem {
     }
 
     static func read(root: URL) throws -> Snapshot {
-        var files: [String: String] = [:]
-        var paths = Set<String>()
-        try visit(root, relative: "", files: &files, paths: &paths)
-        return Snapshot(files: files, paths: paths)
+        var visitor = Visitor()
+        try visitor.visit(root, relative: "")
+        return Snapshot(files: visitor.files, paths: visitor.paths)
     }
 
-    private static func visit(
-        _ directory: URL, relative: String, files: inout [String: String], paths: inout Set<String>
-    ) throws {
-        let skipped: Set<String> = [
+    private struct Visitor {
+        private let skipped: Set<String> = [
             ".build", ".claude", ".git", ".superpowers", ".swiftpm", "build", "dist", "node_modules",
         ]
-        for entry in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) {
-            guard !skipped.contains(entry.lastPathComponent) else { continue }
-            let path = relative.isEmpty ? entry.lastPathComponent : relative + "/" + entry.lastPathComponent
-            paths.insert(path)
-            let type = try FileManager.default.attributesOfItem(atPath: entry.path)[.type] as? FileAttributeType
-            if type == .typeDirectory {
-                try visit(entry, relative: path, files: &files, paths: &paths)
-            } else if type == .typeRegular {
-                // Node's former text scan repaired invalid UTF-8, including binary resources.
-                // swiftlint:disable:next optional_data_string_conversion
-                files[path] = String(decoding: try Data(contentsOf: entry), as: UTF8.self)
+        private var activeDirectories: Set<String> = []
+        private(set) var files: [String: String] = [:]
+        private(set) var paths = Set<String>()
+
+        mutating func visit(_ directory: URL, relative: String) throws {
+            let currentPath = directory.standardizedFileURL.resolvingSymlinksInPath().path
+            guard activeDirectories.insert(currentPath).inserted else {
+                return
+            }
+            defer { activeDirectories.remove(currentPath) }
+            for entry in try FileManager.default.contentsOfDirectory(
+                at: directory,
+                includingPropertiesForKeys: nil
+            ) {
+                guard !skipped.contains(entry.lastPathComponent) else { continue }
+                let path =
+                    relative.isEmpty
+                    ? entry.lastPathComponent
+                    : relative + "/" + entry.lastPathComponent
+                let type =
+                    try FileManager.default.attributesOfItem(
+                        atPath: entry.path
+                    )[.type] as? FileAttributeType
+                let resolved =
+                    type == .typeSymbolicLink
+                    ? entry.resolvingSymlinksInPath() : entry
+                paths.insert(path)
+                let resolvedType =
+                    try FileManager.default.attributesOfItem(
+                        atPath: resolved.path
+                    )[.type] as? FileAttributeType
+                if resolvedType == .typeDirectory {
+                    try visit(resolved, relative: path)
+                } else if resolvedType == .typeRegular {
+                    // Node's former text scan repaired invalid UTF-8, including binary resources.
+                    // swiftlint:disable:next optional_data_string_conversion
+                    files[path] = String(decoding: try Data(contentsOf: resolved), as: UTF8.self)
+                }
             }
         }
+
     }
 }
