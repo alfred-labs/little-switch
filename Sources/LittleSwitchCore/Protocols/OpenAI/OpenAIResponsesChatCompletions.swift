@@ -249,7 +249,7 @@ extension OpenAIResponsesChatCompletions {
             throw Error.invalidRequest
         }
         var droppedMailCount = 0
-        for item in items {
+        for item in ResponsesHistoryDeduplication.collapsed(items) {
             switch item["type"] as? String {
             case "message":
                 try appendMessage(item, to: &messages)
@@ -293,6 +293,9 @@ extension OpenAIResponsesChatCompletions {
                     "content": output,
                 ])
             case "reasoning":
+                continue
+            case "compaction_trigger":
+                // An empty marker with no Chat representation.
                 continue
             case "agent_message":
                 // Codex's inter-agent mail is inbound context for this model.

@@ -63,6 +63,10 @@ package enum OpenAIResponsesNativeNamespacing {
                 case "custom_tool_call", "custom_tool_call_output":
                     converted.append(try PortableResponsesHistory.customToolMessage(for: item))
                     changed = true
+                case "compaction_trigger":
+                    // An empty marker no Responses provider accepts; the
+                    // compaction itself is invisible in the replayed items.
+                    changed = true
                 case "function_call":
                     converted.append(
                         flattenedFunctionReference(item, bindings: toolBindings, changed: &changed)
@@ -79,6 +83,11 @@ package enum OpenAIResponsesNativeNamespacing {
                 default:
                     converted.append(item)
                 }
+            }
+            let deduplicated = ResponsesHistoryDeduplication.collapsed(converted)
+            if deduplicated.count != converted.count {
+                converted = deduplicated
+                changed = true
             }
             if changed {
                 rewritten["input"] = converted
