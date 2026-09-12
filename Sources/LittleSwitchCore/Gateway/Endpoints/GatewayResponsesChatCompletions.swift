@@ -87,6 +87,7 @@ extension GatewayResponder {
             return liveChatCompletionsResponse(
                 upstream,
                 prepared: prepared,
+                eventID: context.eventID,
                 traffic: exchange.trace
             )
         }
@@ -146,6 +147,7 @@ extension GatewayResponder {
     private func liveChatCompletionsResponse(
         _ upstream: HTTPClientResponse,
         prepared: PreparedResponsesChatCompletionsRequest,
+        eventID: UUID,
         traffic: GatewayUpstreamResponseTrace
     ) -> Response {
         var headers: HTTPFields = [.contentType: "text/event-stream"]
@@ -162,6 +164,7 @@ extension GatewayResponder {
                 )
                 var committedFailure = false
                 var failureReason: String?
+                var toolError: ProviderToolContract.Error?
                 do {
                     try await responder.consumeLiveChatCompletions(
                         upstream,
@@ -188,7 +191,11 @@ extension GatewayResponder {
                     committedFailure = true
                 } catch {
                     failureReason = String(describing: error)
-                    let frames = try session.fail(message: "Internal server error")
+                    toolError = error as? ProviderToolContract.Error
+                    let frames = try session.fail(
+                        message: String(describing: error),
+                        wording: .init(error: error, eventID: eventID)
+                    )
                     try await responder.writeLiveChatCompletionsFrames(
                         frames,
                         to: &writer
@@ -197,7 +204,7 @@ extension GatewayResponder {
                 }
                 try await writer.finish(nil)
                 if committedFailure {
-                    throw GatewayCommittedStreamFailure(reason: failureReason)
+                    throw GatewayCommittedStreamFailure(reason: failureReason, toolError: toolError)
                 }
             }
         )

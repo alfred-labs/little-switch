@@ -82,14 +82,19 @@ struct ProviderToolContractChatStream: Sendable {
     ) throws {
         do {
             try catalog.validate(name: call.name, namespace: call.namespace, kind: call.kind)
-        } catch ProviderToolContract.Error.undeclaredTool {
+        } catch let original as ProviderToolContract.Error {
+            guard case .undeclaredTool = original else { throw original }
             guard let resolver,
                 !call.name.isEmpty,
                 let wireName = resolver.wireName(for: call.name, namespace: call.namespace)
             else {
-                throw ProviderToolContract.Error.undeclaredTool
+                throw original
             }
-            try catalog.validate(name: wireName, kind: call.kind)
+            do {
+                try catalog.validate(name: wireName, kind: call.kind)
+            } catch ProviderToolContract.Error.undeclaredTool {
+                throw original
+            }
         }
     }
 

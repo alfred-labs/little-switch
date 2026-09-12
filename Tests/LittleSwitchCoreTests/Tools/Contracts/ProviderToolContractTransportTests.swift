@@ -82,7 +82,7 @@ struct ProviderToolContractTransportTests {
         let validated = try await ProviderToolResponse.validated(
             response(raw, sse: true), requestBody: request, wire: .chatCompletions, maximumBytes: 1_024)
         var iterator = validated.body.makeAsyncIterator()
-        await #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        await #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "rea")) {
             _ = try await iterator.next()
         }
         #expect(try await iterator.next() == nil)

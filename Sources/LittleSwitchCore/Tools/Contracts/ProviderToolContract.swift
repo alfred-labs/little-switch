@@ -11,7 +11,7 @@ package struct ProviderToolContract: Sendable {
     package enum Error: Swift.Error, Equatable, Sendable {
         case invalidRequest
         case invalidResponse
-        case undeclaredTool
+        case undeclaredTool(name: String, namespace: String? = nil)
         case providerOwnedTool
     }
 
@@ -140,16 +140,21 @@ package struct ProviderToolContract: Sendable {
     ) throws -> ProviderToolContractCatalog.Identity {
         do {
             return try catalog.validate(name: name, namespace: namespace, kind: kind)
-        } catch ProviderToolContract.Error.undeclaredTool {
+        } catch let original as ProviderToolContract.Error {
+            guard case .undeclaredTool = original else { throw original }
             guard let resolver,
                 let emitted = name as? String, !emitted.isEmpty,
                 let wireName = resolver.wireName(for: emitted, namespace: Self.suppliedNamespace(namespace))
             else {
-                throw ProviderToolContract.Error.undeclaredTool
+                throw original
             }
             // The resolver only returns names built from the request's own
             // declarations; re-validating keeps that invariant local.
-            return try catalog.validate(name: wireName, kind: kind)
+            do {
+                return try catalog.validate(name: wireName, kind: kind)
+            } catch ProviderToolContract.Error.undeclaredTool {
+                throw original
+            }
         }
     }
 

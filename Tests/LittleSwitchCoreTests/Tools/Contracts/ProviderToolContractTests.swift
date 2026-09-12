@@ -37,7 +37,7 @@ struct ProviderToolContractTests {
                 ]
             ])
         )
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "previous")) {
             try contract.validateBuffered(
                 jsonData([
                     "content": [
@@ -57,7 +57,7 @@ struct ProviderToolContractTests {
         )
         try declared.validateBuffered(body)
         let absent = try ProviderToolContract(wire: .responses, requestBody: jsonData([:]))
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: name)) {
             try absent.validateBuffered(body)
         }
     }
@@ -106,7 +106,10 @@ struct ProviderToolContractTests {
             ["type": "function_call", "name": "patch"],
             ["type": "custom_tool_call", "name": "read"],
         ] {
-            #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+            #expect(
+                throws: ProviderToolContract.Error.undeclaredTool(
+                    name: item["name"] as? String ?? "", namespace: item["namespace"] as? String)
+            ) {
                 try contract.validateBuffered(jsonData(["output": [item]]))
             }
         }
@@ -121,7 +124,7 @@ struct ProviderToolContractTests {
         let good = ["type": "function", "function": ["name": "read", "arguments": "{}"]] as [String: Any]
         try contract.validateBuffered(
             jsonData(["choices": [["message": ["content": "before", "tool_calls": [good]]]]]))
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "unknown")) {
             try contract.validateBuffered(
                 jsonData([
                     "choices": [

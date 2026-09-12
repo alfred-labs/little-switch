@@ -1,15 +1,26 @@
 import AsyncHTTPClient
 import Foundation
 
-package func providerToolFailureFrame(style: GatewayResponder.ErrorStyle) -> Data {
-    switch style {
+package func providerToolFailureFrame(
+    style: GatewayResponder.ErrorStyle,
+    error: ProviderToolContract.Error,
+    eventID: UUID
+) -> Data {
+    // Only gateway-authored text and a UUID are interpolated, never provider data.
+    let message: String
+    if case .undeclaredTool = error {
+        message = ResponsesPublicStreamSession.FailureWording.undeclaredTool(eventID).text
+    } else {
+        message = "Invalid provider tool response"
+    }
+    return switch style {
     case .anthropic:
         Data(
-            "event: error\ndata: {\"type\":\"error\",\"error\":{\"type\":\"api_error\",\"message\":\"Invalid provider tool response\"}}\n\n"
+            "event: error\ndata: {\"type\":\"error\",\"error\":{\"type\":\"api_error\",\"message\":\"\(message)\"}}\n\n"
                 .utf8)
     case .openAI:
         Data(
-            "event: error\ndata: {\"type\":\"error\",\"code\":\"server_error\",\"message\":\"Invalid provider tool response\",\"param\":null}\n\n"
+            "event: error\ndata: {\"type\":\"error\",\"code\":\"server_error\",\"message\":\"\(message)\",\"param\":null}\n\n"
                 .utf8)
     }
 }

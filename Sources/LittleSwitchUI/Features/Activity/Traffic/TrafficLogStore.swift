@@ -10,6 +10,7 @@ actor TrafficLogStore: TrafficRecording {
     private let ioHooks: TrafficLogIOHooks
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
+    private var errorLog: TrafficErrorLog
 
     private var consumerTask: Task<Void, Never>?
     private var events: [UUID: TrafficEvent] = [:]
@@ -39,6 +40,7 @@ actor TrafficLogStore: TrafficRecording {
         encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         decoder = JSONDecoder()
+        errorLog = TrafficErrorLog(directory: configuration.directory, maxAge: configuration.maxAge)
     }
 
     deinit {
@@ -104,6 +106,7 @@ extension TrafficLogStore {
             try prepareDirectory()
             _ = try pruneSegments()
             try rebuildFromSegments()
+            try errorLog.persist(now: clock.now(), beforeWrite: ioHooks.beforeWrite)
             recoverPersistenceIfNeeded()
         } catch {
             reportPersistenceFailure(error)
@@ -120,6 +123,8 @@ extension TrafficLogStore {
             action: action
         )
         apply(record, retainedBytes: 0)
+        let errorRecord = TrafficErrorRecord(record: record, event: events[eventID])
+        var writeFailure: (any Error)?
 
         do {
             var line = try encoder.encode(record)
@@ -132,9 +137,19 @@ extension TrafficLogStore {
             if pruned {
                 try rebuildFromSegments()
             }
-            recoverPersistenceIfNeeded()
         } catch {
-            reportPersistenceFailure(error)
+            writeFailure = error
+        }
+        do {
+            try errorLog.append(errorRecord)
+            try errorLog.persist(now: timestamp, beforeWrite: ioHooks.beforeWrite)
+        } catch {
+            writeFailure = error
+        }
+        if let writeFailure {
+            reportPersistenceFailure(writeFailure)
+        } else {
+            recoverPersistenceIfNeeded()
         }
 
         if action.isTerminal, let event = events[eventID] {

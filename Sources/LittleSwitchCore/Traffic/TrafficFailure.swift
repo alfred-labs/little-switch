@@ -3,10 +3,14 @@ import Foundation
 public struct TrafficFailure: Codable, Equatable, Sendable {
     public var kind: String
     public var message: String
+    public var toolName: String?
+    public var toolNamespace: String?
 
-    public init(kind: String, message: String) {
+    public init(kind: String, message: String, toolName: String? = nil, toolNamespace: String? = nil) {
         self.kind = kind
         self.message = message
+        self.toolName = toolName.map { TrafficDiagnosticText.bounded($0) }
+        self.toolNamespace = toolNamespace.map { TrafficDiagnosticText.bounded($0) }
     }
 }
 

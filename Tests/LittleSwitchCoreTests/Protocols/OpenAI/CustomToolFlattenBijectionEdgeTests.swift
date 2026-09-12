@@ -45,7 +45,7 @@ extension CustomToolFlattenBijectionTests {
         } else {
             response = try nativeProviderResponse(name: replayAlias)
         }
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: replayAlias)) {
             try contract.validateBuffered(response)
         }
     }

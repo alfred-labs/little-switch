@@ -23,7 +23,7 @@ struct ProviderToolContractStreamingTests {
                     try contract.validateFrame(frame(payload))
                 } else {
                     let expected: ProviderToolContract.Error =
-                        block["type"] as? String == "tool_use" ? .undeclaredTool : .providerOwnedTool
+                        block["type"] as? String == "tool_use" ? .undeclaredTool(name: "unknown") : .providerOwnedTool
                     #expect(throws: expected) { try contract.validateFrame(frame(payload)) }
                 }
             }
@@ -45,7 +45,7 @@ struct ProviderToolContractStreamingTests {
                 if name == "read" {
                     try contract.validateFrame(frame(payload))
                 } else {
-                    #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+                    #expect(throws: ProviderToolContract.Error.undeclaredTool(name: name)) {
                         try contract.validateFrame(frame(payload))
                     }
                 }
@@ -82,7 +82,7 @@ struct ProviderToolContractStreamingTests {
                 "item": ["type": "function_call", "name": "read", "id": "call", "arguments": ""],
             ]))
         try contract.validateFrame(frame(delta))
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "unknown")) {
             try contract.validateFrame(
                 frame([
                     "type": "response.function_call_arguments.done", "item_id": "call", "output_index": 0,
@@ -175,7 +175,7 @@ struct ProviderToolContractStreamingTests {
     func unknownChatName() throws {
         var contract = try chatContract()
         try contract.validateFrame(chatChunk(["index": 0, "function": ["name": "re"]]))
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "remove")) {
             try contract.validateFrame(chatChunk(["index": 0, "function": ["name": "move"]]))
         }
     }
@@ -187,12 +187,12 @@ struct ProviderToolContractStreamingTests {
             try contract.validateFrame(chatChunk(["index": 0, "function": ["name": name, "arguments": " "]]))
         }
         try contract.finish()
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "readwrite")) {
             try contract.validateFrame(chatChunk(["index": 0, "function": ["name": "write"]]))
         }
         var incomplete = try chatContract()
         try incomplete.validateFrame(chatChunk(["index": 0, "function": ["name": "re"]]))
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "rere")) {
             try incomplete.validateFrame(chatChunk(["index": 0, "function": ["name": "re"]]))
         }
     }
@@ -224,13 +224,13 @@ struct ProviderToolContractStreamingTests {
             "function": ["name": NSNull(), "arguments": "{}"],
         ]
         var empty = try ProviderToolContract(wire: .chatCompletions, requestBody: jsonData([:]))
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "")) {
             try empty.validateFrame(chatChunk(unknown))
         }
         var declared = try chatContract()
         try declared.validateFrame(chatChunk(unknown))
         #expect(throws: ProviderToolContract.Error.invalidResponse) { try declared.finish() }
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "unknown")) {
             try declared.validateFrame(chatChunk(["index": 0, "function": ["name": "unknown"]]))
         }
     }
@@ -240,7 +240,7 @@ struct ProviderToolContractStreamingTests {
         for terminal in 0..<3 {
             var contract = try chatContract()
             try contract.validateFrame(chatChunk(["index": 0, "function": ["name": "rea"]]))
-            #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+            #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "rea")) {
                 switch terminal {
                 case 0:
                     try contract.finish()
@@ -257,7 +257,7 @@ struct ProviderToolContractStreamingTests {
     @Test("Chat cannot introduce a tool when no current declaration exists")
     func undeclaredChatStart() throws {
         var contract = try ProviderToolContract(wire: .chatCompletions, requestBody: jsonData([:]))
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "")) {
             try contract.validateFrame(chatChunk(["index": 0, "function": ["arguments": ""]]))
         }
     }

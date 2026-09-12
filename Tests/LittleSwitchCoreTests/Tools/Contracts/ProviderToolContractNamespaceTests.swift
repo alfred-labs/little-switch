@@ -58,7 +58,7 @@ struct ProviderToolContractNamespaceTests {
     @Test("Without declared bindings the same near-miss still fails closed")
     func nearMissWithoutBindingsFailsClosed() throws {
         let contract = try ProviderToolContract(wire: .responses, requestBody: requestBody())
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "spawn_agent")) {
             try contract.validateBuffered(
                 jsonData([
                     "output": [["type": "function_call", "id": "call_1", "name": "spawn_agent", "arguments": "{}"]]
@@ -74,7 +74,7 @@ struct ProviderToolContractNamespaceTests {
             requestBody: requestBody(),
             declaredToolBindings: bindings()
         )
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "totally_unknown")) {
             try contract.validateBuffered(
                 jsonData([
                     "output": [
@@ -149,7 +149,7 @@ struct ProviderToolContractNamespaceTests {
             requestBody: requestBody(),
             declaredToolBindings: bindings()
         )
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "spawn_agent", namespace: "other")) {
             try contract.validateBuffered(
                 jsonData([
                     "output": [
@@ -273,7 +273,7 @@ struct ProviderToolContractNamespaceTests {
                 ]
             ])
         )
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "spawn_agent")) {
             try strict.validateFrame(
                 ServerSentEventFrame(
                     event: nil,

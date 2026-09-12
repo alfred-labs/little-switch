@@ -40,7 +40,7 @@ struct ChatAllowedToolSelectionTests {
                 ]
             ]
         ])
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "excluded")) {
             try contract.validateBuffered(response)
         }
     }

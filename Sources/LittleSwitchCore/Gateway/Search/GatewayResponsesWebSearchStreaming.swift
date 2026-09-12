@@ -165,8 +165,12 @@ extension GatewayResponder {
                 default:
                     return .fail(
                         .init(
-                            frames: try session.fail(message: "Internal server error"),
-                            reason: String(describing: error)
+                            frames: try session.fail(
+                                message: String(describing: error),
+                                wording: .init(error: error, eventID: context.eventID)
+                            ),
+                            reason: String(describing: error),
+                            toolError: error as? ProviderToolContract.Error
                         )
                     )
                 }

@@ -44,7 +44,7 @@ struct ProviderToolContractValidationTests {
             try contract.validateBuffered(jsonData(["content": [["type": "tool_use", "name": "client"]]]))
         }
         let native = try make(.anthropic, tools: [["type": "web_search_20250305", "name": "web_search"]])
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "web_search")) {
             try native.validateBuffered(jsonData(["content": [["type": "tool_use", "name": "web_search"]]]))
         }
         for type in [
@@ -52,7 +52,7 @@ struct ProviderToolContractValidationTests {
             "tool_search_tool_bm25_20251119",
         ] {
             let hosted = try make(.anthropic, tools: [["type": type, "name": "hosted"]])
-            #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+            #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "hosted")) {
                 try hosted.validateBuffered(jsonData(["content": [["type": "tool_use", "name": "hosted"]]]))
             }
         }
@@ -92,7 +92,7 @@ struct ProviderToolContractValidationTests {
         }
         let hosted = try make(
             .responses, tools: [["type": "namespace", "name": "ns", "tools": [["type": "web_search"]]]])
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "web_search", namespace: "ns")) {
             try hosted.validateBuffered(
                 jsonData(["output": [["type": "function_call", "name": "web_search", "namespace": "ns"]]]))
         }

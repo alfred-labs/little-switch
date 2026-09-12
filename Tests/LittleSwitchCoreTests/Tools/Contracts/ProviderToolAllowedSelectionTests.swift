@@ -6,6 +6,36 @@ import Testing
 
 @Suite("Provider tool allowed selections")
 struct ProviderToolAllowedSelectionTests {
+    @Test("A rejected namespace alias reports the observed identity", arguments: [false, true])
+    func rejectedAliasDiagnostic(streaming: Bool) throws {
+        for wire in [ProviderToolContract.Wire.responses, .chatCompletions] {
+            let tool: [String: Any] =
+                wire == .responses
+                ? ["type": "function", "name": "workspace__run"]
+                : ["type": "function", "function": ["name": "workspace__run"]]
+            let selection: [String: Any] = ["mode": "auto", "tools": []]
+            let choice: [String: Any] =
+                wire == .responses
+                ? ["type": "allowed_tools", "mode": "auto", "tools": []]
+                : ["type": "allowed_tools", "allowed_tools": selection]
+            var contract = try ProviderToolContract(
+                wire: wire,
+                requestBody: chatJSONData(["tools": [tool], "tool_choice": choice]),
+                declaredToolBindings: ["workspace__run": .init(namespace: "workspace", name: "run")]
+            )
+            #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "run", namespace: "workspace")) {
+                try validate(
+                    name: "run",
+                    namespace: "workspace",
+                    kind: "function",
+                    wire: wire,
+                    streaming: streaming,
+                    contract: &contract
+                )
+            }
+        }
+    }
+
     @Test(
         "Only the allowed function or custom identity may be emitted", arguments: ["function", "custom"], [false, true])
     func restrictedOutputs(kind: String, streaming: Bool) throws {
@@ -16,7 +46,7 @@ struct ProviderToolAllowedSelectionTests {
             var contract = try ProviderToolContract(wire: wire, requestBody: body)
             try validate(name: "selected", kind: kind, wire: wire, streaming: streaming, contract: &contract)
             var excluded = try ProviderToolContract(wire: wire, requestBody: body)
-            #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+            #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "excluded")) {
                 try validate(name: "excluded", kind: kind, wire: wire, streaming: streaming, contract: &excluded)
             }
         }
@@ -40,7 +70,7 @@ struct ProviderToolAllowedSelectionTests {
             name: "run", namespace: "selected", kind: kind, wire: .responses, streaming: streaming, contract: &selected)
         for namespace: String? in [nil, "excluded"] {
             var excluded = try ProviderToolContract(wire: .responses, requestBody: body)
-            #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+            #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "run", namespace: namespace)) {
                 try validate(
                     name: "run",
                     namespace: namespace,
@@ -67,7 +97,7 @@ struct ProviderToolAllowedSelectionTests {
         try validate(name: "workspace__run", kind: "function", wire: .responses, streaming: false, contract: &allowed)
         for streaming in [false, true] {
             var excluded = try ProviderToolContract(wire: .responses, requestBody: body, declaredToolBindings: bindings)
-            #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+            #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "run")) {
                 try validate(name: "run", kind: "function", wire: .responses, streaming: streaming, contract: &excluded)
             }
         }
@@ -81,7 +111,7 @@ struct ProviderToolAllowedSelectionTests {
             try contract.validateBuffered(chatJSONData(wire == .responses ? ["output": []] : ["choices": []]))
             for streaming in [false, true] {
                 var excluded = try ProviderToolContract(wire: wire, requestBody: body)
-                #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+                #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "selected")) {
                     try validate(
                         name: "selected", kind: "function", wire: wire, streaming: streaming, contract: &excluded)
                 }

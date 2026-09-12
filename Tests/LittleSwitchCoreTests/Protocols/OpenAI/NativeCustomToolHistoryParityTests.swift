@@ -66,7 +66,7 @@ struct NativeCustomToolHistoryParityTests {
         expectedOutput["type"] = "function_call_output"
         #expect(input as NSArray == [expectedCall, expectedOutput] as NSArray)
         let contract = try ProviderToolContract(wire: .responses, requestBody: normalized.body)
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: name)) {
             try contract.validateBuffered(
                 chatJSONData(["output": [["type": "function_call", "name": name, "arguments": #"{"input":"new"}"#]]]))
         }

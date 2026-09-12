@@ -43,7 +43,9 @@ struct ChatInheritedToolNameCatalogTests {
             requestBody: prepared.upstreamBody,
             declaredToolBindings: prepared.declaredToolBindings,
             toolNameCatalog: prepared.toolNameCatalog)
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) { try contract.validateBuffered(response) }
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: name)) {
+            try contract.validateBuffered(response)
+        }
         let projected = try OpenAIResponsesChatCompletions.project(responseBody: response, prepared: prepared)
         let output = try #require(chatJSONObject(projected)["output"] as? [[String: Any]])
         #expect(output.first?["name"] as? String == name)

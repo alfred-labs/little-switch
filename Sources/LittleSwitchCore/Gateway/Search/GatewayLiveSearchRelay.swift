@@ -15,10 +15,12 @@ package enum LiveSearchRecovery: Sendable {
 package struct LiveSearchFail: Sendable {
     let frames: [Data]
     let reason: String?
+    let toolError: ProviderToolContract.Error?
 
-    package init(frames: [Data], reason: String?) {
+    package init(frames: [Data], reason: String?, toolError: ProviderToolContract.Error? = nil) {
         self.frames = frames
         self.reason = reason
+        self.toolError = toolError
     }
 }
 
@@ -44,6 +46,7 @@ extension GatewayResponder {
                 var session = makeSession()
                 var committedFailure = false
                 var failureReason: String?
+                var toolError: ProviderToolContract.Error?
                 do {
                     try await run(&session, &writer)
                 } catch {
@@ -56,11 +59,12 @@ extension GatewayResponder {
                         try await writeFrames(&writer, fail.frames)
                         committedFailure = true
                         failureReason = fail.reason
+                        toolError = fail.toolError
                     }
                 }
                 try await writer.finish(nil)
                 if committedFailure {
-                    throw GatewayCommittedStreamFailure(reason: failureReason)
+                    throw GatewayCommittedStreamFailure(reason: failureReason, toolError: toolError)
                 }
             }
         )

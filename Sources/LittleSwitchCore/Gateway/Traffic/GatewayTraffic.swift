@@ -274,10 +274,7 @@ extension GatewayResponder {
                         TrafficFailureCompletion(
                             status: status,
                             finishedAt: Date(),
-                            failure: TrafficFailure(
-                                kind: "stream",
-                                message: committed.trafficMessage
-                            )
+                            failure: committed.trafficFailure
                         )
                     )
                 )
@@ -335,9 +332,10 @@ extension GatewayResponder {
                     try await writer.finish(nil)
                 } catch let error as ProviderToolContract.Error {
                     guard let errorStyle else { throw error }
-                    try await writer.write(ByteBuffer(bytes: providerToolFailureFrame(style: errorStyle)))
+                    let frame = providerToolFailureFrame(style: errorStyle, error: error, eventID: eventID)
+                    try await writer.write(ByteBuffer(bytes: frame))
                     try await writer.finish(nil)
-                    throw GatewayCommittedStreamFailure(reason: "Provider tool contract rejected")
+                    throw GatewayCommittedStreamFailure(reason: "Provider tool contract rejected", toolError: error)
                 }
             }
         )

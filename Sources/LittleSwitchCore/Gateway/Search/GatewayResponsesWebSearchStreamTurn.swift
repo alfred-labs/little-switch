@@ -91,6 +91,8 @@ extension GatewayResponder {
             throw GatewayResponsesLiveError.clientWriteFailed
         } catch GatewayResponsesLiveError.providerTerminalFailed {
             throw GatewayResponsesLiveError.providerTerminalFailed
+        } catch let error as ProviderToolContract.Error {
+            throw error
         } catch {
             throw GatewayResponsesLiveError.invalidProviderStream(String(describing: error))
         }
@@ -135,6 +137,8 @@ extension GatewayResponder {
             throw GatewayResponsesLiveError.clientWriteFailed
         } catch OpenAIResponsesChatCompletions.Error.contextLengthExceeded {
             throw OpenAIResponsesChatCompletions.Error.contextLengthExceeded
+        } catch let error as ProviderToolContract.Error {
+            throw error
         } catch {
             throw GatewayResponsesLiveError.invalidProviderStream(String(describing: error))
         }

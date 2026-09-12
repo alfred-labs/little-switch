@@ -83,10 +83,11 @@ extension GatewayResponder {
                     try await writeAnthropicInitialUsage(normalizer.finish(), to: &writer)
                     try Task.checkCancellation()
                     try await writer.finish(nil)
-                } catch is ProviderToolContract.Error {
-                    try await writer.write(ByteBuffer(bytes: providerToolFailureFrame(style: .anthropic)))
+                } catch let error as ProviderToolContract.Error {
+                    let frame = providerToolFailureFrame(style: .anthropic, error: error, eventID: context.eventID)
+                    try await writer.write(ByteBuffer(bytes: frame))
                     try await writer.finish(nil)
-                    throw GatewayCommittedStreamFailure(reason: "Provider tool contract rejected")
+                    throw GatewayCommittedStreamFailure(reason: "Provider tool contract rejected", toolError: error)
                 }
             }
         )

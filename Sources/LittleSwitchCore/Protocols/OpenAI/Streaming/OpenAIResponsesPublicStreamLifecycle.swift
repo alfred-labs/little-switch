@@ -279,26 +279,4 @@ extension ResponsesPublicStreamSession {
         return "context_length_exceeded"
     }
 
-    /// Client-visible failure wording this gateway authors. Providers may
-    /// fail a response while leaving the error object null, and an
-    /// upstream stream may end before a terminal event arrives — both
-    /// observed native-provider behaviors. Naming those cases beats the blanket "Internal
-    /// server error" that hid the cause for hours, without echoing provider
-    /// text.
-    package enum FailureWording: Sendable {
-        case internalServerError
-        case withoutProviderPayload
-        case upstreamEndedBeforeCompletion
-
-        var text: String {
-            switch self {
-            case .internalServerError:
-                "Internal server error"
-            case .withoutProviderPayload:
-                "The provider failed the response without an error payload."
-            case .upstreamEndedBeforeCompletion:
-                "Upstream stream ended before completion"
-            }
-        }
-    }
 }

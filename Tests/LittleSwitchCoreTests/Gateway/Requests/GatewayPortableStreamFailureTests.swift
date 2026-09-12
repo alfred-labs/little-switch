@@ -5,6 +5,36 @@ import Testing
 
 @Suite("Portable stream failure protocols")
 struct GatewayPortableStreamFailureTests {
+    @Test("Transparent tool rejections expose the same UUID as their local diagnostic", arguments: [true, false])
+    func rejectionReference(openAI: Bool) async throws {
+        let fixture = try GatewayTests().makeFixture()
+        let traffic = TrafficTestRecorder()
+        let responder = GatewayResponder(
+            state: fixture.state,
+            transport: RecordingGatewayTransport(responses: []),
+            secretStore: fixture.secrets,
+            requiredAuthorityPort: nil,
+            trafficRecorder: traffic
+        )
+        let eventID = UUID()
+        let response = responder.streamingResponse(
+            failingResponse(error: ProviderToolContract.Error.undeclaredTool(name: "private_tool", namespace: "tools")),
+            eventID: eventID,
+            attempt: 0,
+            errorStyle: openAI ? .openAI : .anthropic
+        )
+        let recorder = StreamingStageRecorder()
+        try await responder.recordingClientResponse(response, eventID: eventID).body.write(
+            ObservingResponseBodyWriter(recorder: recorder)
+        )
+        let text = await recorder.bodyString
+        #expect(text.contains("Error ID: \(eventID.uuidString)"))
+        #expect(!text.contains("private_tool"))
+        let failure = try #require(traffic.events.first?.failure)
+        #expect(failure.toolName == "private_tool")
+        #expect(failure.toolNamespace == "tools")
+    }
+
     @Test("Transparent streams publish the appropriate terminal error", arguments: [true, false])
     func terminalFailure(openAI: Bool) async throws {
         let fixture = try GatewayTests().makeFixture()
@@ -39,9 +69,11 @@ struct GatewayPortableStreamFailureTests {
             requiredAuthorityPort: nil
         )
         let response = responder.streamingResponse(
-            failingResponse(error: ProviderToolContract.Error.undeclaredTool), eventID: UUID(), attempt: 0
+            failingResponse(error: ProviderToolContract.Error.undeclaredTool(name: "unknown")),
+            eventID: UUID(),
+            attempt: 0
         )
-        await #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        await #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "unknown")) {
             _ = try await responseBodyData(response.body)
         }
     }

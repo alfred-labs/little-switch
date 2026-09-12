@@ -70,7 +70,7 @@ struct ChatExplicitToolNamespaceTests {
             wire: .chatCompletions,
             requestBody: prepared.upstreamBody,
             declaredToolBindings: prepared.declaredToolBindings)
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "run", namespace: "unknown")) {
             try contract.validateFrame(
                 chatChunkFrame(choices: [
                     chatChoice(delta: ["tool_calls": [call(namespace: "unknown")]], finishReason: "tool_calls")

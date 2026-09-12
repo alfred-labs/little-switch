@@ -57,7 +57,7 @@ struct NamespaceCollisionHistoryTests {
                 let retiredCall = functionCallItem(
                     id: "fc_retired", callID: "call_retired", name: retiredWire, arguments: "{}", status: "completed"
                 )
-                #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+                #expect(throws: ProviderToolContract.Error.undeclaredTool(name: retiredWire)) {
                     try contract.validateBuffered(providerResponse([retiredCall], wire: wire))
                 }
             }

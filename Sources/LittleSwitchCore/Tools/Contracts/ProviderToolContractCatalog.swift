@@ -70,7 +70,7 @@ struct ProviderToolContractCatalog: Sendable {
         let namespace = try namespaceString(namespace, failure: .invalidResponse)
         let identity = Identity(name: name, namespace: namespace, kind: kind)
         guard allowedIdentities.contains(identity) else {
-            throw ProviderToolContract.Error.undeclaredTool
+            throw ProviderToolContract.Error.undeclaredTool(name: name, namespace: namespace)
         }
         return identity
     }
@@ -78,7 +78,7 @@ struct ProviderToolContractCatalog: Sendable {
     func validatePrefix(_ prefix: String, kind: Kind) throws {
         guard allowedIdentities.contains(where: { $0.kind == kind && $0.namespace == nil && $0.name.hasPrefix(prefix) })
         else {
-            throw ProviderToolContract.Error.undeclaredTool
+            throw ProviderToolContract.Error.undeclaredTool(name: prefix)
         }
     }
 

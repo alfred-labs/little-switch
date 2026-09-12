@@ -21,7 +21,7 @@ struct NamespaceIdentityContractTests {
             wire: wire,
             requestBody: chatJSONData(["tools": tools]),
             declaredToolBindings: bindings)
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "a_b")) {
             try contract.validateBuffered(response(wire: wire, name: "a_b"))
         }
         for name in bindings.keys { try contract.validateBuffered(response(wire: wire, name: name)) }
@@ -42,7 +42,7 @@ struct NamespaceIdentityContractTests {
             try contract.validateBuffered(response(wire: wire, name: name))
         }
         for name in ["functions.collaboration.spawn_agent", "mcp__tools__collaboration_spawn_agent"] {
-            #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+            #expect(throws: ProviderToolContract.Error.undeclaredTool(name: name)) {
                 try contract.validateBuffered(response(wire: wire, name: name))
             }
         }
@@ -60,7 +60,7 @@ struct NamespaceIdentityContractTests {
             declaredToolBindings: bindings
         )
         for name in ["spawn_agent", "gone__spawn_agent"] {
-            #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+            #expect(throws: ProviderToolContract.Error.undeclaredTool(name: name)) {
                 try contract.validateBuffered(response(wire: wire, name: name))
             }
         }
@@ -74,7 +74,7 @@ struct NamespaceIdentityContractTests {
         let contract = try ProviderToolContract(
             wire: .chatCompletions, requestBody: chatJSONData(body), declaredToolBindings: bindings
         )
-        #expect(throws: ProviderToolContract.Error.undeclaredTool) {
+        #expect(throws: ProviderToolContract.Error.undeclaredTool(name: "gone__spawn_agent")) {
             try contract.validateBuffered(response(wire: .chatCompletions, name: "gone__spawn_agent"))
         }
     }
