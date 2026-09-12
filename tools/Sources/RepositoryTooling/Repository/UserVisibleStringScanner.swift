@@ -25,7 +25,7 @@ package enum UserVisibleStringScanner {
 
     package static func scan(source: String, filePath: String) -> [Finding] {
         let parsed = Parser.parse(source: source)
-        let folded = (try? OperatorTable.standardOperators.foldAll(parsed).cast(SourceFileSyntax.self)) ?? nil
+        let folded = try? OperatorTable.standardOperators.foldAll(parsed).cast(SourceFileSyntax.self)
         let tree = folded ?? parsed
         let converter = SourceLocationConverter(fileName: filePath, tree: tree)
         let visitor = UserVisibleStringVisitor(filePath: filePath, converter: converter)
@@ -90,23 +90,8 @@ private final class UserVisibleStringVisitor: SyntaxVisitor {
     }
 
     private func recordAppKitArguments(in node: FunctionCallExprSyntax) {
-        if let calledName = node.calledExpression.as(DeclReferenceExprSyntax.self)?.baseName.text,
-            Self.firstArgumentAPIs.contains(calledName),
-            let argument = node.arguments.first,
-            argument.label == nil
-        {
-            recordDisplayLiterals(in: argument.expression, api: calledName)
-        }
-
-        if let member = node.calledExpression.as(MemberAccessExprSyntax.self) {
-            let memberName = member.declName.baseName.text
-            if Self.modifierAPIs.contains(memberName),
-                let argument = node.arguments.first,
-                argument.label == nil
-            {
-                recordDisplayLiterals(in: argument.expression, api: memberName)
-            }
-        }
+        recordPlainSwiftUICall(in: node)
+        recordModifierCall(in: node)
 
         for (type, api) in Self.labeledTitleInitializers {
             recordLabeledAppKitArgument(in: node, label: "title", type: type, api: api)
@@ -120,6 +105,21 @@ private final class UserVisibleStringVisitor: SyntaxVisitor {
             let api = label == "prompt" ? "prompt" : label
             recordDisplayLiterals(in: argument.expression, api: api)
         }
+    }
+
+    private func recordPlainSwiftUICall(in node: FunctionCallExprSyntax) {
+        guard let calledName = node.calledExpression.as(DeclReferenceExprSyntax.self)?.baseName.text else { return }
+        guard Self.firstArgumentAPIs.contains(calledName) else { return }
+        guard let argument = node.arguments.first, argument.label == nil else { return }
+        recordDisplayLiterals(in: argument.expression, api: calledName)
+    }
+
+    private func recordModifierCall(in node: FunctionCallExprSyntax) {
+        guard let member = node.calledExpression.as(MemberAccessExprSyntax.self) else { return }
+        let memberName = member.declName.baseName.text
+        guard Self.modifierAPIs.contains(memberName) else { return }
+        guard let argument = node.arguments.first, argument.label == nil else { return }
+        recordDisplayLiterals(in: argument.expression, api: memberName)
     }
 
     override func visitPost(_ node: InfixOperatorExprSyntax) {
@@ -136,12 +136,8 @@ private final class UserVisibleStringVisitor: SyntaxVisitor {
         // Unfolded assignments (if the folder is skipped) still reach this
         // visitor as a three-element sequence.
         let elements = Array(node.elements)
-        if elements.count == 3,
-            elements[1].as(AssignmentExprSyntax.self) != nil,
-            let member = elements[0].as(MemberAccessExprSyntax.self),
-            Self.titleAssignments.contains(member.declName.baseName.text)
-        {
-            recordDisplayLiterals(in: elements[2], api: member.declName.baseName.text)
+        if let api = assignmentTitleAPI(elements) {
+            recordDisplayLiterals(in: elements[2], api: api)
             return
         }
         for (index, element) in elements.enumerated() {
@@ -151,6 +147,14 @@ private final class UserVisibleStringVisitor: SyntaxVisitor {
             else { continue }
             recordDisplayLiterals(in: elements[index + 2], api: member.declName.baseName.text)
         }
+    }
+
+    /// The title-assignment API when a three-element sequence assigns to a title property.
+    private func assignmentTitleAPI(_ elements: [ExprSyntax]) -> String? {
+        guard elements.count == 3, elements[1].as(AssignmentExprSyntax.self) != nil else { return nil }
+        guard let member = elements[0].as(MemberAccessExprSyntax.self) else { return nil }
+        let name = member.declName.baseName.text
+        return Self.titleAssignments.contains(name) ? name : nil
     }
 
     private func recordLabeledAppKitArgument(

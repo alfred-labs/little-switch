@@ -8,9 +8,9 @@ struct MagicKeyScannerTests {
     @Test("Subscripts and dictionary literals report positioned raw keys")
     func reportsViolationsWithPositions() {
         let source = """
-        let value = headers["x-api-key"]
-        let map = ["type": 1, other: 2]
-        """
+            let value = headers["x-api-key"]
+            let map = ["type": 1, other: 2]
+            """
 
         let violations = MagicKeyScanner.scan(source: source, filePath: "Protocols/Example.swift")
 
