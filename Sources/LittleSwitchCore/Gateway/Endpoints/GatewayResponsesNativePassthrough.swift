@@ -73,11 +73,9 @@ extension GatewayResponder {
         body: Data, incomingHeaders: HTTPHeaders, eventID: UUID
     ) async throws -> Response {
         do {
-            if let plan = try ResponsesCompactionPlan.prepare(body: body) {
-                return try await responsesCompactionResponse(
-                    plan: plan, target: .native, incomingHeaders: incomingHeaders, eventID: eventID
-                )
-            }
+            // Native compaction is an upstream protocol operation. Preserve
+            // its trigger, reasoning settings and opaque checkpoints just as
+            // on ordinary native turns; only portable provider state expands.
             let nativeBody = try ResponsesChatCompletionsReasoning.nativeRequestBody(
                 ResponsesProviderState.normalize(body: body, providerID: nil)
             )

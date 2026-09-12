@@ -35,30 +35,6 @@ extension GatewayTests {
         #expect(!input.contains { $0["type"] as? String == "compaction_trigger" })
     }
 
-    @Test("Native OpenAI compaction also produces portable continuation")
-    func nativeCompactionContinuation() async throws {
-        let fixture = try makeFixture()
-        let transport = RecordingGatewayTransport(responses: [
-            response(status: .ok, body: compactionSummaryResponse())
-        ])
-        let app = makeApplication(fixture: fixture, transport: transport)
-        let account = try #require(HTTPField.Name("ChatGPT-Account-ID"))
-        try await app.test(.router) { client in
-            let result = try await client.execute(
-                uri: "/v1/responses",
-                method: .post,
-                headers: [.authorization: "Bearer synthetic", account: "synthetic-account"],
-                body: ByteBuffer(bytes: compactionRequest(model: "gpt-5.6-sol"))
-            )
-            #expect(result.status == .ok)
-            let text = try #require(String(bytes: data(result.body), encoding: .utf8))
-            #expect(text.contains("little_switch_compaction"))
-        }
-        let upstream = try #require(await transport.requests.first)
-        #expect(upstream.url == "https://chatgpt.com/backend-api/codex/responses")
-        #expect(upstream.headers["authorization"] == ["Bearer synthetic"])
-    }
-
     @Test(
         "Compaction trigger must be unique, final and streaming",
         arguments: [

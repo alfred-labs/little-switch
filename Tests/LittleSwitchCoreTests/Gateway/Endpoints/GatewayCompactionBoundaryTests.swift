@@ -26,6 +26,7 @@ extension GatewayTests {
     @Test("Compaction bounds the summary request and portable response", arguments: [false, true])
     func compactionSizeBoundaries(responseLimit: Bool) async throws {
         let fixture = try makeFixture()
+        let target = try #require(fixture.snapshot.resolveCodex(model: "z.ai/glm-5.2"))
         let largeSummary = compactionSummaryResponse().replacingOccurrences(
             of: "Continue the implementation; the file was read.", with: String(repeating: "summary ", count: 400))
         let transport = RecordingGatewayTransport(responses: [response(status: .ok, body: largeSummary)])
@@ -35,9 +36,12 @@ extension GatewayTests {
             secretStore: fixture.secrets,
             maximumRequestBytes: responseLimit ? 4_096 : 64,
             requiredAuthorityPort: nil)
-        let plan = try #require(try ResponsesCompactionPlan.prepare(body: compactionRequest(model: "gpt-native")))
+        let plan = try #require(try ResponsesCompactionPlan.prepare(body: compactionRequest(model: "z.ai/glm-5.2")))
         let result = try await responder.responsesCompactionResponse(
-            plan: plan, target: .native, incomingHeaders: [:], eventID: UUID())
+            plan: plan,
+            target: GatewayCompactionTarget(route: target, credential: nil),
+            incomingHeaders: [:],
+            eventID: UUID())
         #expect(result.status == (responseLimit ? .contentTooLarge : .badRequest))
         #expect(await transport.requests.count == (responseLimit ? 1 : 0))
     }
@@ -54,7 +58,10 @@ extension GatewayTests {
                 .utf8)
         let plan = try #require(try ResponsesCompactionPlan.prepare(body: body, providerID: target.provider.id))
         let result = try await responder.responsesCompactionResponse(
-            plan: plan, target: .managed(target, credential: nil), incomingHeaders: [:], eventID: UUID())
+            plan: plan,
+            target: GatewayCompactionTarget(route: target, credential: nil),
+            incomingHeaders: [:],
+            eventID: UUID())
         #expect(result.status == .badRequest)
         #expect(await transport.requests.isEmpty)
     }
@@ -62,14 +69,19 @@ extension GatewayTests {
     @Test("Cancellation while collecting an upstream compaction error remains cancellation")
     func compactionErrorBodyCancellation() async throws {
         let fixture = try makeFixture()
+        let target = try #require(fixture.snapshot.resolveCodex(model: "z.ai/glm-5.2"))
         let transport = RecordingGatewayTransport(responses: [
             failingResponse(status: .tooManyRequests, error: CancellationError())
         ])
         let responder = GatewayResponder(
             state: fixture.state, transport: transport, secretStore: fixture.secrets, requiredAuthorityPort: nil)
+        let plan = try #require(try ResponsesCompactionPlan.prepare(body: compactionRequest(model: "z.ai/glm-5.2")))
         await #expect(throws: CancellationError.self) {
-            try await responder.nativeResponsesResponse(
-                body: compactionRequest(model: "gpt-native"), incomingHeaders: [:], eventID: UUID())
+            try await responder.responsesCompactionResponse(
+                plan: plan,
+                target: GatewayCompactionTarget(route: target, credential: nil),
+                incomingHeaders: [:],
+                eventID: UUID())
         }
         #expect(await transport.requests.count == 1)
     }

@@ -16,7 +16,7 @@ extension GatewayResponder {
         if let compactionPlan = prepared.compaction {
             return try await responder.responsesCompactionResponse(
                 plan: compactionPlan,
-                target: .managed(context.target, credential: context.credential),
+                target: GatewayCompactionTarget(route: context.target, credential: context.credential),
                 incomingHeaders: context.incomingHeaders,
                 eventID: context.eventID
             )

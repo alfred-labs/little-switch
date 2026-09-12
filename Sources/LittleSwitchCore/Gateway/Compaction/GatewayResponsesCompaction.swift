@@ -5,11 +5,11 @@ import Hummingbird
 import NIOCore
 import NIOHTTP1
 
-package enum GatewayCompactionTarget: Sendable {
-    /// A native model's own compaction: only the chatgpt.com backend can read
-    /// native state, so the summary turn runs against it directly.
-    case native
-    case managed(CodexModelTarget, credential: String?)
+/// Only catalog-managed models use the gateway's summary adapter. Native
+/// compaction belongs to the upstream Responses protocol and bypasses it.
+package struct GatewayCompactionTarget: Sendable {
+    let route: CodexModelTarget
+    let credential: String?
 }
 
 extension GatewayResponder {
@@ -21,10 +21,6 @@ extension GatewayResponder {
         incomingHeaders: HTTPHeaders,
         eventID: UUID
     ) async throws -> Response {
-        let usesSentinel = CodexNativePassthrough.isSentinelAuthorization(incomingHeaders)
-        if case .native = target, usesSentinel {
-            return openAIError(status: .unauthorized, message: CodexNativePassthrough.sentinelRejectionMessage)
-        }
         do {
             let result = try await compactResponses(
                 plan: plan, target: target, incomingHeaders: incomingHeaders, eventID: eventID
@@ -98,9 +94,8 @@ extension GatewayResponder {
         var usage = attempt.usage
         var plan = attempt.plan
         let body = try plan.summaryRequest(
-            model: Self.compactionModel(target, plan: plan),
-            stream: Self.compactionStreams(target),
-            mode: Self.compactionMode(target),
+            model: target.route.model.id,
+            stream: false,
             repair: attempt.repair
         )
         do {
@@ -144,29 +139,6 @@ extension GatewayResponder {
             )
             return try await compactResponses(
                 target: target, incomingHeaders: incomingHeaders, eventID: eventID, attempt: next)
-        }
-    }
-
-    private static func compactionModel(
-        _ target: GatewayCompactionTarget, plan: ResponsesCompactionPlan
-    ) -> String {
-        switch target {
-        case .native: plan.originalModel
-        case .managed(let target, _): target.model.id
-        }
-    }
-
-    private static func compactionStreams(_ target: GatewayCompactionTarget) -> Bool {
-        switch target {
-        case .native: true
-        case .managed: false
-        }
-    }
-
-    private static func compactionMode(_ target: GatewayCompactionTarget) -> ResponsesCompactionInputMode {
-        switch target {
-        case .native: .nativeContinuation
-        case .managed: .transcript
         }
     }
 

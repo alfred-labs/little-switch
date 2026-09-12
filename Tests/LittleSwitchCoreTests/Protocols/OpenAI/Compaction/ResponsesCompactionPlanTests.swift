@@ -99,14 +99,8 @@ struct ResponsesCompactionPlanTests {
         #expect(throws: ResponsesCompactionError.invalidRequest) { try plan.summaryRequest(model: " ", stream: false) }
     }
 
-    @Test("Summary turns carry their own bounded output budget and compactness contract")
+    @Test("Managed summary turns keep their output budget and compactness contract")
     func summaryOutputBudget() throws {
-        // The summary is an internal turn, not the conversation: a compacting
-        // model without its own budget streamed 20k-character summaries whose
-        // exchange died mid-flight, so the budget never inherits the
-        // conversation's setting and always stays bounded. The native
-        // chatgpt.com backend rejects the parameter outright, so only managed
-        // providers receive it.
         let plans = try [
             ResponsesCompactionFixture.plan(fields: [:]),
             ResponsesCompactionFixture.plan(fields: ["max_output_tokens": 100_000]),
@@ -114,13 +108,8 @@ struct ResponsesCompactionPlanTests {
         for plan in plans {
             let managed = try ResponsesCompactionFixture.object(plan.summaryRequest(model: "m", stream: false))
             #expect(managed["max_output_tokens"] as? Int == 4_000)
-            let native = try ResponsesCompactionFixture.object(
-                plan.summaryRequest(model: "m", stream: true, mode: .nativeContinuation))
-            #expect(native["max_output_tokens"] == nil)
-            for request in [managed, native] {
-                let instructions = try #require(request["instructions"] as? String)
-                #expect(instructions.contains("800 words"))
-            }
+            let instructions = try #require(managed["instructions"] as? String)
+            #expect(instructions.contains("800 words"))
         }
     }
 
@@ -219,17 +208,13 @@ struct ResponsesCompactionPlanTests {
         #expect(!text.contains("little_switch_compaction"))
     }
 
-    @Test("Opaque checkpoints are degraded on custom models but continue natively")
+    @Test("The summary adapter cannot quote or retain opaque checkpoints")
     func rejectsOpaqueContinuations() throws {
         let foreign: [String: Any] = ["type": "compaction", "encrypted_content": "opaque-provider-ciphertext"]
         let plan = try ResponsesCompactionFixture.plan(items: [foreign, ResponsesCompactionFixture.message])
         #expect(throws: ResponsesCompactionError.unsupportedCompaction) {
             try plan.summaryRequest(model: "m", stream: false)
         }
-        let native = try ResponsesCompactionFixture.object(
-            plan.summaryRequest(model: "m", stream: true, mode: .nativeContinuation))
-        let items = try #require(native["input"] as? [[String: Any]])
-        #expect(try ResponsesCompactionFixture.data(items[0]) == ResponsesCompactionFixture.data(foreign))
         do {
             _ = try plan.complete(responseBody: ResponsesCompactionFixture.response(refs: ["item_000001"]))
             Issue.record("Retaining an opaque checkpoint unexpectedly completed")

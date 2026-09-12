@@ -4,14 +4,13 @@ extension ResponsesCompactionPlan {
     package func summaryRequest(
         model: String,
         stream: Bool,
-        mode: ResponsesCompactionInputMode = .transcript,
         repair: String? = nil
     ) throws -> Data {
         guard let model = ResponsesCompactionJSON.nonempty(model) else {
             throw ResponsesCompactionError.invalidRequest
         }
         let original = try ResponsesCompactionJSON.object(requestJSON, error: .invalidRequest)
-        var input = try transcript(original: original, mode: mode)
+        var input = try transcript(original: original)
         if let repair {
             input.append([
                 "type": "message", "role": "user",
@@ -56,18 +55,14 @@ extension ResponsesCompactionPlan {
         for key in ["temperature", "top_p"] {
             if let value = original[key], !(value is NSNull) { request[key] = value }
         }
-        // The summary is an internal turn, not the conversation: it carries no
-        // reasoning configuration (reasoning tokens count against any budget,
-        // and an inherited maximal effort would spend it before the summary)
-        // and, for managed providers, its own bounded output budget. The
-        // native chatgpt.com backend rejects `max_output_tokens` outright, so
-        // native continuation turns rely on the compactness contract alone.
-        if mode == .transcript { request["max_output_tokens"] = 4_000 }
+        // Managed summaries keep their own output budget instead of inheriting
+        // the conversation's reasoning settings or completion limit.
+        request["max_output_tokens"] = 4_000
         return try ResponsesCompactionJSON.data(request)
     }
 
     private func transcript(
-        original: [String: Any], mode: ResponsesCompactionInputMode
+        original: [String: Any]
     ) throws -> [[String: Any]] {
         var messages: [[String: Any]] = []
         var context: [String: Any] = [:]
@@ -80,12 +75,9 @@ extension ResponsesCompactionPlan {
             var item = try ResponsesCompactionJSON.object(data, error: .invalidRequest)
             let kind = try ResponsesCompactionJSON.kind(item, error: .invalidRequest)
             if kind == "compaction" {
-                // Foreign checkpoints on custom-model requests are degraded
-                // before admission; this branch only serves a native model's
-                // own compaction, whose backend reads the state directly.
-                guard mode == .nativeContinuation else { throw ResponsesCompactionError.unsupportedCompaction }
-                messages.append(item)
-                continue
+                // Admission must expand or degrade foreign checkpoints before
+                // a managed model can summarize their readable history.
+                throw ResponsesCompactionError.unsupportedCompaction
             }
             // The quoted transcript can summarize readable reasoning, not decode provider state.
             if kind == "reasoning" { item.removeValue(forKey: "encrypted_content") }

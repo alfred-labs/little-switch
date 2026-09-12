@@ -35,15 +35,15 @@ extension GatewayTests {
         #expect(requests.last?.url.hasSuffix("/chat/completions") == true)
     }
 
-    @Test("Native compaction consumes a fragmented Responses stream", arguments: [false, true])
-    func compactionNativeStream(deferredSeparator: Bool) async throws {
+    @Test("Managed compaction consumes a fragmented Responses stream", arguments: [false, true])
+    func compactionResponsesStream(deferredSeparator: Bool) async throws {
         let fixture = try makeFixture()
         let summary = try responsesStreamObject(Data(compactionSummaryResponse().utf8))
         let item = try #require((summary["output"] as? [[String: Any]])?.first)
         let bytes = try ResponsesCompactionStream.encode(
             ResponsesCompactionResult(
                 itemJSON: responsesStreamData(item), usage: ResponsesUsage(inputTokens: 20, outputTokens: 5)),
-            model: "gpt-native",
+            model: "glm-5.2",
             id: "resp_summary",
             createdAt: 1
         )
@@ -69,7 +69,7 @@ extension GatewayTests {
             let result = try await client.execute(
                 uri: "/v1/responses",
                 method: .post,
-                body: ByteBuffer(bytes: compactionRequest(model: "gpt-native"))
+                body: ByteBuffer(bytes: compactionRequest(model: "z.ai/glm-5.2"))
             )
             #expect(result.status == .ok)
             var decoder = ServerSentEventDecoder(maximumFrameBytes: 32_768)
@@ -227,6 +227,7 @@ extension GatewayTests {
     @Test("Compaction retains the upstream failure status when its error body exceeds the limit")
     func compactionOversizedErrorBody() async throws {
         let fixture = try makeFixture()
+        let target = try #require(fixture.snapshot.resolveCodex(model: "z.ai/glm-5.2"))
         let responder = GatewayResponder(
             state: fixture.state,
             transport: RecordingGatewayTransport(responses: [
@@ -236,9 +237,12 @@ extension GatewayTests {
             maximumErrorBytes: 8,
             requiredAuthorityPort: nil
         )
-        let plan = try #require(try ResponsesCompactionPlan.prepare(body: compactionRequest(model: "gpt-native")))
+        let plan = try #require(try ResponsesCompactionPlan.prepare(body: compactionRequest(model: "z.ai/glm-5.2")))
         let result = try await responder.responsesCompactionResponse(
-            plan: plan, target: .native, incomingHeaders: [:], eventID: UUID()
+            plan: plan,
+            target: GatewayCompactionTarget(route: target, credential: nil),
+            incomingHeaders: [:],
+            eventID: UUID()
         )
         #expect(result.status == .tooManyRequests)
     }

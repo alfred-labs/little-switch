@@ -10,11 +10,6 @@ package enum ResponsesCompactionError: Error, Equatable {
     case unsupportedCompaction
 }
 
-package enum ResponsesCompactionInputMode: Equatable, Sendable {
-    case transcript
-    case nativeContinuation
-}
-
 package struct ResponsesCompactionResult: Sendable {
     package let itemJSON: Data
     package let usage: ResponsesUsage

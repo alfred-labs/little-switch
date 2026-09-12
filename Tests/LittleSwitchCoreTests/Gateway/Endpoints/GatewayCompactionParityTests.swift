@@ -33,13 +33,14 @@ extension GatewayTests {
         #expect(requests.last?.url.hasSuffix("/responses") == true)
     }
 
-    @Test("Managed image compaction receives the ordinary Responses image compatibility", arguments: [false, true])
+    @Test("Image compaction preserves native requests and adapts managed summaries", arguments: [false, true])
     func compactionImageCompatibility(native: Bool) async throws {
         let fixture = try makeFixture()
         let transport = RecordingGatewayTransport(responses: [response(status: .ok, body: compactionSummaryResponse())])
         let body = try responsesStreamData([
             "model": native ? "gpt-native" : "z.ai/glm-5.2", "stream": true,
-            "reasoning": ["effort": "max", "summary": "detailed"],
+            "reasoning": ["context": "all_turns", "effort": "max", "summary": "detailed"],
+            "max_output_tokens": 100_000,
             "input": [
                 [
                     "type": "message", "role": "user",
@@ -58,11 +59,13 @@ extension GatewayTests {
         let requests = await transport.requests
         #expect(requests.count == 1)
         let sent = try responsesStreamObject(try #require(requests.first).body)
-        // The internal summary turn never carries reasoning configuration and
-        // names its own bounded budget only where providers accept it: the
-        // native chatgpt.com backend rejects the parameter outright.
-        #expect(sent["reasoning"] == nil)
-        #expect(sent["max_output_tokens"] as? Int == (native ? nil : 4_000))
+        #expect(
+            sent["reasoning"] as? [String: String]
+                == (native ? ["context": "all_turns", "effort": "max", "summary": "detailed"] : nil))
+        // Managed summaries retain their existing bound. Native request
+        // fields pass through without a gateway-imposed output limit.
+        #expect(sent["max_output_tokens"] as? Int == (native ? 100_000 : 4_000))
+        if native { #expect(requests.first?.body == body) }
         let input = try #require(sent["input"] as? [[String: Any]])
         let parts = input.compactMap { $0["content"] as? [[String: Any]] }.joined()
         #expect(parts.contains { $0["type"] as? String == "input_image" })

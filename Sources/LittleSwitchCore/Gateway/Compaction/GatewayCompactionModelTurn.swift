@@ -16,56 +16,40 @@ extension GatewayResponder {
         let request: HTTPClientRequest
         let wire: ProviderToolContract.Wire
         let upstreamBody: Data
-        switch target {
-        case .native:
-            adapted = nil
-            upstreamBody = try ResponsesChatCompletionsReasoning.nativeRequestBody(body)
-            wire = .responses
-            var native = HTTPClientRequest(
-                url: CodexNativePassthrough.upstreamURL(accountSession: !incomingHeaders["chatgpt-account-id"].isEmpty)
+        let route = target.route
+        let usesChat =
+            preferredWire == .chatCompletions ? true : await resolvesChatCompletionsAdapter(route.provider)
+        if usesChat {
+            let prepared = try OpenAIResponsesChatCompletions.prepare(
+                body: body, targetModel: route.model.id, providerID: route.provider.id)
+            adapted = prepared
+            upstreamBody = prepared.upstreamBody
+            wire = .chatCompletions
+            request = try ProviderRequestBuilder.chatCompletions(
+                provider: route.provider, secret: target.credential, headers: incomingHeaders, body: upstreamBody
             )
-            native.method = .POST
-            native.headers = CodexNativePassthrough.forwardedHeaders(incomingHeaders)
-            native.headers.replaceOrAdd(name: "content-type", value: "application/json")
-            native.body = .bytes(upstreamBody)
-            request = native
-        // swift-format keeps bindings inside enum payloads.
-        // swiftlint:disable:next pattern_matching_keywords
-        case .managed(let target, let credential):
-            let usesChat =
-                preferredWire == .chatCompletions ? true : await resolvesChatCompletionsAdapter(target.provider)
-            if usesChat {
-                let prepared = try OpenAIResponsesChatCompletions.prepare(
-                    body: body, targetModel: target.model.id, providerID: target.provider.id)
-                adapted = prepared
-                upstreamBody = prepared.upstreamBody
-                wire = .chatCompletions
-                request = try ProviderRequestBuilder.chatCompletions(
-                    provider: target.provider, secret: credential, headers: incomingHeaders, body: upstreamBody
-                )
-            } else {
-                adapted = nil
-                upstreamBody = try ResponsesChatCompletionsReasoning.nativeRequestBody(
-                    OpenAIResponsesNativeNamespacing.normalize(body).body, providerID: target.provider.id)
-                wire = .responses
-                request = try ProviderRequestBuilder.responses(
-                    provider: target.provider, secret: credential, headers: incomingHeaders, body: upstreamBody
-                )
-            }
-            trafficRecorder.record(
-                eventID: eventID,
-                action: .upstreamRequest(
-                    trafficUpstreamRequest(
-                        attempt: attempt,
-                        route: ResponsesTrafficRoute(
-                            claudeRoute: target.provider.reference(to: target.model.id), target: target),
-                        request: request,
-                        body: upstreamBody,
-                        streaming: false
-                    )
-                )
+        } else {
+            adapted = nil
+            upstreamBody = try ResponsesChatCompletionsReasoning.nativeRequestBody(
+                OpenAIResponsesNativeNamespacing.normalize(body).body, providerID: route.provider.id)
+            wire = .responses
+            request = try ProviderRequestBuilder.responses(
+                provider: route.provider, secret: target.credential, headers: incomingHeaders, body: upstreamBody
             )
         }
+        trafficRecorder.record(
+            eventID: eventID,
+            action: .upstreamRequest(
+                trafficUpstreamRequest(
+                    attempt: attempt,
+                    route: ResponsesTrafficRoute(
+                        claudeRoute: route.provider.reference(to: route.model.id), target: route),
+                    request: request,
+                    body: upstreamBody,
+                    streaming: false
+                )
+            )
+        )
         guard upstreamBody.count <= maximumRequestBytes else { throw ResponsesCompactionError.invalidRequest }
         let exchange = try await executeModelRequest(
             request,
@@ -76,23 +60,21 @@ extension GatewayResponder {
             declaredToolBindings: adapted?.declaredToolBindings ?? [:],
             toolNameCatalog: adapted?.toolNameCatalog
         )
-        if case .managed(let modelTarget, _) = target {
-            let status = UInt(exchange.response.status.code)
-            if adapted != nil {
-                await recordChatCompletionsRouteAbsent(providerID: modelTarget.provider.id, status: status)
-            } else {
-                await recordResponsesCapability(providerID: modelTarget.provider.id, status: status)
-                if responsesAdapterFallbackApplies(status: status, provider: modelTarget.provider) {
-                    _ = try? await exchange.trace.collect(exchange.response.body, upTo: maximumErrorBytes)
-                    return try await compactionModelTurn(
-                        body: body,
-                        target: target,
-                        incomingHeaders: incomingHeaders,
-                        eventID: eventID,
-                        attempt: attempt + 1,
-                        preferredWire: .chatCompletions
-                    )
-                }
+        let status = UInt(exchange.response.status.code)
+        if adapted != nil {
+            await recordChatCompletionsRouteAbsent(providerID: route.provider.id, status: status)
+        } else {
+            await recordResponsesCapability(providerID: route.provider.id, status: status)
+            if responsesAdapterFallbackApplies(status: status, provider: route.provider) {
+                _ = try? await exchange.trace.collect(exchange.response.body, upTo: maximumErrorBytes)
+                return try await compactionModelTurn(
+                    body: body,
+                    target: target,
+                    incomingHeaders: incomingHeaders,
+                    eventID: eventID,
+                    attempt: attempt + 1,
+                    preferredWire: .chatCompletions
+                )
             }
         }
         let turn = try await collectCompactionTurn(exchange, adapted: adapted)

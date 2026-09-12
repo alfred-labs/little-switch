@@ -5,12 +5,8 @@ import Testing
 
 @Suite("Compaction reasoning rendering")
 struct ResponsesCompactionRenderingTests {
-    @Test(
-        "Readable reasoning is quoted without opaque state",
-        arguments: [
-            ResponsesCompactionInputMode.transcript, ResponsesCompactionInputMode.nativeContinuation,
-        ])
-    func reasoningRendering(mode: ResponsesCompactionInputMode) throws {
+    @Test("Readable reasoning is quoted without opaque state")
+    func reasoningRendering() throws {
         let provider = try #require(UUID(uuidString: "11111111-1111-1111-1111-111111111111"))
         let original: [String: Any] = [
             "type": "reasoning", "id": "rs_native", "encrypted_content": "opaque-provider-state",
@@ -26,7 +22,7 @@ struct ResponsesCompactionRenderingTests {
             let plan = try #require(
                 try ResponsesCompactionPlan.prepare(
                     body: ResponsesCompactionFixture.request(items: [item]), providerID: providerID))
-            let request = try plan.summaryRequest(model: "owner", stream: false, mode: mode)
+            let request = try plan.summaryRequest(model: "owner", stream: false)
             let text = try #require(String(bytes: request, encoding: .utf8))
             #expect(text.contains("Visible reasoning summary"))
             #expect(text.contains("Visible reasoning content"))
