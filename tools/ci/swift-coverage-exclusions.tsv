@@ -60,11 +60,13 @@ Sources/LittleSwitchUI/Features/Monitoring/MonitoringSettingsView.swift	SwiftUI 
 Sources/LittleSwitchUI/Features/Providers/LittleSwitchApplicationDelegateProviderTest.swift	AppKit application delegate test-to-outcome mapping boundary.
 Sources/LittleSwitchUI/Features/Providers/ProviderEditor.swift	SwiftUI provider editor presentation boundary.
 Sources/LittleSwitchUI/Features/Providers/ProviderEditorAdvanced.swift	SwiftUI advanced provider form presentation boundary.
+Sources/LittleSwitchUI/Features/Providers/ProviderEditorCompatibility.swift	SwiftUI editable provider compatibility controls presentation boundary.
+Sources/LittleSwitchUI/Features/Providers/ProviderEditorConnectionDetails.swift	SwiftUI read-only provider connection diagnostics presentation boundary.
 Sources/LittleSwitchUI/Features/Providers/ProviderEditorCredentials.swift	SwiftUI secure credential controls and script chooser presentation boundary.
 Sources/LittleSwitchUI/Features/Providers/ProviderEditorNotice.swift	SwiftUI provider connection-test feedback presentation boundary.
+Sources/LittleSwitchUI/Features/Providers/ProviderModelContextTable.swift	SwiftUI model capacity grid and native context switch presentation boundary; draft values remain measured separately.
 Sources/LittleSwitchUI/Features/Providers/ProviderSettingsRow.swift	SwiftUI provider identity and aligned status presentation boundary.
 Sources/LittleSwitchUI/Features/Providers/ProviderTestOutcome.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
-Sources/LittleSwitchUI/Features/Providers/ProviderWireRows.swift	SwiftUI provider Responses-wire rows presentation boundary.
 Sources/LittleSwitchUI/Features/Providers/ProvidersSettingsView.swift	SwiftUI provider list, native menus, sheets and confirmation presentation boundary.
 Sources/LittleSwitchUI/Features/Search/WebSearchSettingsView.swift	SwiftUI web-search settings presentation boundary.
 Sources/LittleSwitchUI/MenuBar/MenuClaudeTabView.swift	SwiftUI menu Claude tab presentation boundary.

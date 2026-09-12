@@ -93,7 +93,14 @@ struct ProviderEditor: View {
             footer
         }
         .controlSize(.regular)
-        .frame(width: 620, height: 660)
+        .frame(
+            minWidth: SettingsLayout.ProviderEditor.minimumWidth,
+            idealWidth: SettingsLayout.ProviderEditor.idealWidth,
+            maxWidth: .infinity,
+            minHeight: SettingsLayout.ProviderEditor.minimumHeight,
+            idealHeight: SettingsLayout.ProviderEditor.idealHeight,
+            maxHeight: .infinity
+        )
         .onAppear {
             if case .duplicate = draft.intent { nameIsFocused = true }
         }

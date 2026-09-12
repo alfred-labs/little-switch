@@ -31,6 +31,16 @@ enum SettingsLayout {
     static let monitoringControlWidth: CGFloat = 110
     static let menuPickerControlSize: ControlSize = .regular
 
+    enum ProviderEditor {
+        static let minimumWidth: CGFloat = 720
+        static let minimumHeight: CGFloat = 660
+        static let idealWidth: CGFloat = 800
+        static let idealHeight: CGFloat = 760
+        static let controlWidth: CGFloat = 216
+        static let contextCapacityWidth: CGFloat = 104
+        static let contextToggleWidth: CGFloat = 88
+    }
+
     enum Palette {
         static let sidebarBackground = NSColor(name: nil) { appearance in
             if appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua {

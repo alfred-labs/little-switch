@@ -3,14 +3,14 @@ import LittleSwitchCore
 import SwiftUI
 
 enum AboutLayout {
-    static let windowWidth: CGFloat = 300
-    static let windowHeight: CGFloat = 240
+    static let windowWidth: CGFloat = 420
+    static let windowHeight: CGFloat = 320
     static let iconEdge: CGFloat = 96
     static let glyphInset: CGFloat = 24
     static let nameFontSize: CGFloat = 15
     static let detailFontSize: CGFloat = 11
-    static let verticalSpacing: CGFloat = 8
-    static let contentPadding: CGFloat = 20
+    static let verticalSpacing: CGFloat = 12
+    static let contentPadding: CGFloat = 24
 }
 
 struct AboutWindowContent: View {

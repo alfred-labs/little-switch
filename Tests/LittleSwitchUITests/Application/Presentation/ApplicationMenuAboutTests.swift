@@ -7,18 +7,19 @@ import Testing
 
 @Suite("Application About surface")
 struct ApplicationMenuAboutTests {
-    @Test("The app menu fronts the standard About panel")
+    @Test("The app menu opens the same enlarged About window as the status menu")
     func aboutPanelCommand() throws {
         let menu = ApplicationMenuFactory.make()
         let appItem = try #require(menu.items.first { $0.title == "LittleSwitch" })
         let appSubmenu = try #require(appItem.submenu)
         let about = try #require(
             appSubmenu.items.first {
-                $0.action == NSSelectorFromString("orderFrontStandardAboutPanel:")
+                $0.title == "About LittleSwitch"
             }
         )
 
         #expect(about.title == "About LittleSwitch")
+        #expect(about.action == #selector(LittleSwitchApplicationDelegate.showAbout))
         #expect(about.target == nil)
         #expect(appSubmenu.title == "LittleSwitch")
     }

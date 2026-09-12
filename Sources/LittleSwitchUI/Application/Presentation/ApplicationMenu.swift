@@ -22,7 +22,7 @@ enum ApplicationMenuFactory {
         menu.addItem(
             command(
                 "About \(ProductIdentity.displayName)",
-                action: "orderFrontStandardAboutPanel:",
+                action: "showAbout",
                 key: ""
             )
         )

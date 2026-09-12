@@ -48,6 +48,17 @@ public struct ModelContextDraft: Equatable, Identifiable, Sendable {
         return "Detected \(detected) · Effective \(effective) · Claude \(claude)"
     }
 
+    var capacityText: String {
+        guard isValid else { return "Invalid override" }
+        return ((try? parsedOverride()) ?? detectedContextWindow).map(Self.format) ?? "Unknown"
+    }
+
+    /// Only a differing manual value needs a second line in the compact table.
+    var capacityNote: String? {
+        guard isValid, let override = try? parsedOverride(), override != detectedContextWindow else { return nil }
+        return detectedContextWindow.map { "Detected \(Self.format($0))" } ?? "Manual override"
+    }
+
     public static func contextOverrides(from drafts: [ModelContextDraft]) throws -> [String: Int] {
         try drafts.reduce(into: [:]) { result, draft in
             if let value = try draft.parsedOverride() {

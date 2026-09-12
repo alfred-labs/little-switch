@@ -102,7 +102,7 @@ struct SoftwareUpdateTests {
         let appSubmenu = try #require(appItem.submenu)
         let about = try #require(
             appSubmenu.items.first {
-                $0.action == NSSelectorFromString("orderFrontStandardAboutPanel:")
+                $0.action == #selector(LittleSwitchApplicationDelegate.showAbout)
             }
         )
         let checkForUpdates = try #require(
