@@ -24,7 +24,7 @@ struct ResponsesLegacyCompactionTests {
             ],
         ]
         #expect(normalized == (try ResponsesCompactionFixture.data(expected)))
-        #expect(try !ResponsesProviderState.requiresNativeRecovery(body))
+        #expect(try ResponsesProviderState.degradedBody(body) == body)
     }
 
     @Test("Compacting a legacy checkpoint retains foreign reasoning for the native return")

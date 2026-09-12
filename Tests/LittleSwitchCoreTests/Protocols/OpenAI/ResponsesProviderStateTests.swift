@@ -85,6 +85,21 @@ struct ResponsesProviderStateTests {
             try ResponsesProviderState.isForeignReasoning(["type": "reasoning", "id": id], providerID: nil) == foreign)
     }
 
+    @Test("A portable checkpoint keeps foreign state only for its native return")
+    func normalizeDropsNestedForeignCheckpoint() throws {
+        let foreign: [String: Any] = ["type": "compaction", "encrypted_content": "nested-foreign"]
+        let owned = try ResponsesCompactionFixture.owned(
+            summary: "Earlier work.", retained: [foreign, ResponsesCompactionFixture.message])
+        let body = try ResponsesCompactionFixture.data(["model": "route", "input": [owned]])
+        let normalized = try responsesStreamObject(
+            ResponsesProviderState.normalize(body: body, providerID: providerID))
+        let input = try #require(normalized["input"] as? [[String: Any]])
+        let text = try ResponsesCompactionJSON.text(input)
+        #expect(text.contains("Earlier work."))
+        #expect(text.contains("Keep working."))
+        #expect(!text.contains("nested-foreign"))
+    }
+
     @Test("Native configuration controls are scoped to the native request")
     func configurationAndPlainInput() throws {
         let plain = Data(#"{"input":"Hello"}"#.utf8)
@@ -95,9 +110,11 @@ struct ResponsesProviderStateTests {
             ResponsesProviderState.normalize(body: control, providerID: providerID))
         #expect((filtered["input"] as? [[String: Any]])?.isEmpty == true)
         #expect(try !ResponsesProviderState.isForeignReasoning(["type": "message"], providerID: providerID))
-        #expect(try !ResponsesProviderState.requiresNativeRecovery(plain))
+        #expect(try ResponsesProviderState.degradedBody(plain) == plain)
+        let foreign = Data(#"{"input":[{"type":"compaction","encrypted_content":"opaque"}]}"#.utf8)
+        let degraded = try responsesStreamObject(try ResponsesProviderState.degradedBody(foreign))
         #expect(
-            try ResponsesProviderState.requiresNativeRecovery(
-                Data(#"{"input":[{"type":"compaction","encrypted_content":"opaque"}]}"#.utf8)))
+            try ResponsesCompactionJSON.text(try #require(degraded["input"] as? [[String: Any]])).contains(
+                ResponsesProviderState.degradationNotice))
     }
 }

@@ -58,10 +58,11 @@ extension GatewayTests {
         let requests = await transport.requests
         #expect(requests.count == 1)
         let sent = try responsesStreamObject(try #require(requests.first).body)
-        let reasoning = try #require(sent["reasoning"] as? [String: String])
-        #expect(reasoning["summary"] == "detailed")
-        #expect(reasoning["effort"] == (native ? "max" : nil))
-        #expect(sent["max_output_tokens"] as? Int == (native ? nil : 32_768))
+        // The internal summary turn never carries reasoning configuration and
+        // names its own bounded budget only where providers accept it: the
+        // native chatgpt.com backend rejects the parameter outright.
+        #expect(sent["reasoning"] == nil)
+        #expect(sent["max_output_tokens"] as? Int == (native ? nil : 4_000))
         let input = try #require(sent["input"] as? [[String: Any]])
         let parts = input.compactMap { $0["content"] as? [[String: Any]] }.joined()
         #expect(parts.contains { $0["type"] as? String == "input_image" })

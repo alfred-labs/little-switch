@@ -66,15 +66,14 @@ extension GatewayResponder {
         }
         await GatewayMonitoringScope.current?.target(
             providerID: metadata.target.provider.id, model: metadata.target.model.id)
-        var prepared: PreparedGatewayResponses?
+        let prepared: PreparedGatewayResponses
         do {
-            // Validate controls before recovery is allowed to contact OpenAI.
-            _ = try ResponsesCompactionPlan.prepare(body: incomingBody, providerID: metadata.target.provider.id)
-            if try !ResponsesProviderState.requiresNativeRecovery(incomingBody) {
-                prepared = try PreparedGatewayResponses(
-                    body: incomingBody, target: metadata.target, configuration: capture.snapshot.webSearch
-                )
-            }
+            // Foreign checkpoints cannot be read by any provider: degrade them
+            // the way Ollama's proxy omits foreign compaction state on
+            // provider switches, then admit the readable history.
+            let degraded = try ResponsesProviderState.degradedBody(incomingBody)
+            prepared = try PreparedGatewayResponses(
+                body: degraded, target: metadata.target, configuration: capture.snapshot.webSearch)
         } catch {
             return openAIError(status: .badRequest, message: "Invalid Responses request")
         }

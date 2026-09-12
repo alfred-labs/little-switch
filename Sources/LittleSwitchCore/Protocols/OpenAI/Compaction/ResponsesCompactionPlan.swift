@@ -4,6 +4,8 @@ import Foundation
 package enum ResponsesCompactionError: Error, Equatable {
     case invalidRequest
     case invalidResponse
+    /// A model selection the summary turn can retry once with the reason.
+    case invalidSelection(String)
     case invalidPayload
     case unsupportedCompaction
 }
@@ -25,14 +27,67 @@ package struct ResponsesCompactionPlan: Sendable {
     let items: [Data]
     let retention: ResponsesCompactionRetention
     let preservedStateIndices: Set<Int>
-    private let providerStateIndices: Set<Int>
     private(set) var retainedStateIndices: Set<Int>
+    /// Items dropped after a provider context overflow; they stay unquoted and
+    /// unretained while their references keep their original positions.
+    private(set) var omittedIndices: Set<Int> = []
 
-    /// Recovery preserves source positions without changing what the summary model can read.
-    package func retainingProviderState() -> Self {
-        var result = self
-        result.retainedStateIndices.formUnion(providerStateIndices)
-        return result
+    /// Same wording as Ollama's `compactionOmissionNotice`.
+    package static func omissionNotice(count: Int) -> String {
+        "Compaction warning: \(count) older transcript items were omitted before summarization "
+            + "because the model's context limit was exceeded."
+    }
+
+    /// Removes the oldest removable items, targeting 20 percent of serialized
+    /// transcript bytes — a fallback estimate, not a token budget. User
+    /// messages, preserved state, the latest item, and half-finished tool
+    /// exchanges stay; completed tool calls leave with their results. Returns
+    /// the number of removed items, or zero when no progress is possible.
+    /// Ported from Ollama's `TrimForContextLimit`.
+    package mutating func trimForContextLimit() throws -> Int {
+        var protected = preservedStateIndices
+        if let latest = items.indices.last { protected.insert(latest) }
+        var callByID: [String: Int] = [:]
+        var outputByID: [String: Int] = [:]
+        var kinds: [Int: String] = [:]
+        var roles: [Int: String] = [:]
+        for (index, data) in items.enumerated() {
+            let item = try ResponsesCompactionJSON.object(data, error: .invalidRequest)
+            kinds[index] = item["type"] as? String
+            roles[index] = item["role"] as? String
+            guard let call = item["call_id"] as? String else { continue }
+            if kinds[index] == "function_call" { callByID[call] = index }
+            if kinds[index] == "function_call_output" { outputByID[call] = index }
+        }
+        var peers: [Int: Int] = [:]
+        for (call, output) in outputByID {
+            guard let input = callByID[call] else { continue }
+            peers[input] = output
+            peers[output] = input
+        }
+        let sizes = items.map(\.count)
+        let total = sizes.reduce(0, +)
+        var omitted: Set<Int> = []
+        var removedBytes = 0
+        for index in items.indices {
+            if removedBytes >= (total + 4) / 5 { break }
+            if protected.contains(index) || omitted.contains(index) { continue }
+            let kind = kinds[index] ?? ""
+            if kind == "function_call" || kind == "function_call_output" {
+                // Half-finished tool state is never shed.
+                guard let peer = peers[index], !protected.contains(peer) else { continue }
+                omitted.insert(index)
+                removedBytes += sizes[index]
+                omitted.insert(peer)
+                removedBytes += sizes[peer]
+            } else if roles[index] == "assistant" {
+                omitted.insert(index)
+                removedBytes += sizes[index]
+            }
+        }
+        guard !omitted.isEmpty else { return 0 }
+        omittedIndices.formUnion(omitted)
+        return omitted.count
     }
 
     package static func prepare(body: Data, providerID: UUID? = nil) throws -> Self? {
@@ -51,7 +106,6 @@ package struct ResponsesCompactionPlan: Sendable {
 
         var expanded: [[String: Any]] = []
         var preservedStateIndices = Set<Int>()
-        var providerStateIndices = Set<Int>()
         for item in input.dropLast() {
             let kind = try ResponsesCompactionJSON.kind(item, error: .invalidRequest)
             guard kind != "item_reference" else { throw ResponsesCompactionError.invalidRequest }
@@ -67,9 +121,6 @@ package struct ResponsesCompactionPlan: Sendable {
                 if restoredForeignCheckpoint || nativeConfiguration || foreignReasoning {
                     preservedStateIndices.insert(expanded.count)
                 }
-                if ["reasoning", "compaction", "configuration_update"].contains(entry["type"] as? String ?? "") {
-                    providerStateIndices.insert(expanded.count)
-                }
                 expanded.append(entry)
             }
         }
@@ -82,8 +133,8 @@ package struct ResponsesCompactionPlan: Sendable {
                 preservedStateIndices: preservedStateIndices
             ),
             preservedStateIndices: preservedStateIndices,
-            providerStateIndices: providerStateIndices,
-            retainedStateIndices: preservedStateIndices
+            retainedStateIndices: preservedStateIndices,
+            omittedIndices: []
         )
     }
 }

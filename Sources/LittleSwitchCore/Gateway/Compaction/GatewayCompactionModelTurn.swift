@@ -46,8 +46,7 @@ extension GatewayResponder {
             } else {
                 adapted = nil
                 upstreamBody = try ResponsesChatCompletionsReasoning.nativeRequestBody(
-                    OpenAIResponsesNativeNamespacing.normalize(body).body, providerID: target.provider.id
-                )
+                    OpenAIResponsesNativeNamespacing.normalize(body).body, providerID: target.provider.id)
                 wire = .responses
                 request = try ProviderRequestBuilder.responses(
                     provider: target.provider, secret: credential, headers: incomingHeaders, body: upstreamBody

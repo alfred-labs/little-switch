@@ -5,6 +5,21 @@ import Testing
 
 @Suite("Responses compaction model selection")
 struct ResponsesCompactionCompletionTests {
+    /// Selection rejections carry a reason for the one repair retry.
+    private func expectInvalidSelection(_ body: () throws -> ResponsesCompactionResult) {
+        do {
+            _ = try body()
+            Issue.record("An invalid selection unexpectedly completed")
+        } catch let error as ResponsesCompactionError {
+            guard case .invalidSelection = error else {
+                Issue.record("Expected an invalid selection, got \(error)")
+                return
+            }
+        } catch {
+            Issue.record("Unexpected error type \(error)")
+        }
+    }
+
     @Test(
         "Empty, repeated and unknown item selections are rejected",
         arguments: [
@@ -21,7 +36,7 @@ struct ResponsesCompactionCompletionTests {
         let response = try ResponsesCompactionFixture.response(fields: [
             "output": [["type": "function_call", "name": "create_summary", "arguments": arguments]]
         ])
-        #expect(throws: ResponsesCompactionError.invalidResponse) { try plan.complete(responseBody: response) }
+        expectInvalidSelection { try plan.complete(responseBody: response) }
     }
 
     @Test(
@@ -37,7 +52,7 @@ struct ResponsesCompactionCompletionTests {
         let output = try JSONSerialization.jsonObject(with: Data(text.utf8))
         let plan = try ResponsesCompactionFixture.plan()
         let response = try ResponsesCompactionFixture.response(fields: ["output": output])
-        #expect(throws: ResponsesCompactionError.invalidResponse) { try plan.complete(responseBody: response) }
+        expectInvalidSelection { try plan.complete(responseBody: response) }
     }
 
     @Test(

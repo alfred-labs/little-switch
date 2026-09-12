@@ -11,17 +11,24 @@ extension ResponsesCompactionPlan {
             call["name"] as? String == "create_summary",
             call["namespace"] == nil || call["namespace"] is NSNull || (call["namespace"] as? String)?.isEmpty == true,
             let arguments = call["arguments"] as? String
-        else { throw ResponsesCompactionError.invalidResponse }
-        let selection = try ResponsesCompactionJSON.object(Data(arguments.utf8), error: .invalidResponse)
+        else { throw ResponsesCompactionError.invalidSelection("expected exactly one create_summary function call") }
+        guard let selection = try? ResponsesCompactionJSON.object(Data(arguments.utf8), error: .invalidResponse)
+        else {
+            throw ResponsesCompactionError.invalidSelection("the create_summary arguments are not a JSON object")
+        }
         guard Set(selection.keys) == ["summary", "retain_item_ids"],
             let summary = ResponsesCompactionJSON.nonempty(selection["summary"]),
             let references = selection["retain_item_ids"] as? [String]
-        else { throw ResponsesCompactionError.invalidResponse }
+        else {
+            throw ResponsesCompactionError.invalidSelection(
+                "the selection needs a nonempty summary and a retain_item_ids array")
+        }
         let known = Dictionary(uniqueKeysWithValues: items.indices.map { (ResponsesCompactionJSON.reference($0), $0) })
         var selected = Set<Int>()
         for reference in references {
-            guard let index = known[reference], selected.insert(index).inserted else {
-                throw ResponsesCompactionError.invalidResponse
+            guard let index = known[reference], !omittedIndices.contains(index), selected.insert(index).inserted else {
+                throw ResponsesCompactionError.invalidSelection(
+                    "retain_item_ids must name distinct, still-present transcript items")
             }
         }
         let indices = retention.retaining(selected.union(retainedStateIndices))
@@ -29,12 +36,15 @@ extension ResponsesCompactionPlan {
         for index in items.indices where indices.contains(index) {
             let item = try ResponsesCompactionJSON.object(items[index], error: .invalidResponse)
             guard item["type"] as? String != "compaction" || retainedStateIndices.contains(index) else {
-                throw ResponsesCompactionError.invalidResponse
+                throw ResponsesCompactionError.invalidSelection("opaque compaction state cannot be retained")
             }
             retained.append(item)
         }
         let payload: [String: Any] = [
-            "type": "little_switch_compaction", "version": 1, "summary": summary, "retained": retained,
+            "type": "little_switch_compaction", "version": 1,
+            "summary": omittedIndices.isEmpty
+                ? summary : ResponsesCompactionPlan.omissionNotice(count: omittedIndices.count) + "\n\n" + summary,
+            "retained": retained,
         ]
         let usage: ResponsesUsage
         do {

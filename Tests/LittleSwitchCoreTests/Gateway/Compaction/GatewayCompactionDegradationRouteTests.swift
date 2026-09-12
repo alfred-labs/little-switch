@@ -9,22 +9,19 @@ import Testing
 
 @testable import LittleSwitchCore
 
-@Suite("Native compaction recovery routing")
-struct NativeCompactionRecoveryRouteTests {
-    @Test("Opaque recovery completes before the admitted custom turn", arguments: [false, true])
-    func recoversBeforeCustomTurn(hasTrigger: Bool) async throws {
+@Suite("Compaction degradation routing")
+struct GatewayCompactionDegradationRouteTests {
+    @Test("Foreign checkpoints degrade before the admitted turn without native exchanges", arguments: [false, true])
+    func degradesBeforeAdmittedTurn(hasTrigger: Bool) async throws {
         let fixture = try GatewayTests().makeFixture()
         await fixture.state.responsesCapabilities.record(
             providerID: fixture.snapshot.providers[0].id, supportsNative: true)
         let transport = RecordingGatewayTransport(responses: [
-            response(status: .ok, body: Self.catalog),
-            response(status: .ok, body: compactionSummaryResponse()),
             response(
                 status: hasTrigger ? .ok : .accepted,
-                body: hasTrigger ? compactionSummaryResponse() : Self.continuation),
+                body: hasTrigger ? compactionSummaryResponse() : Self.continuation)
         ])
-        let app = GatewayTests().makeApplication(fixture: fixture, transport: transport)
-        try await app.test(.router) { client in
+        try await GatewayTests().makeApplication(fixture: fixture, transport: transport).test(.router) { client in
             let result = try await client.execute(
                 uri: "/v1/responses",
                 method: .post,
@@ -35,88 +32,67 @@ struct NativeCompactionRecoveryRouteTests {
             let text = String(buffer: result.body)
             if hasTrigger {
                 #expect(text.contains("little_switch_compaction"))
-                #expect(text.contains("opaque-native-checkpoint"))
-                #expect(text.contains("native-setting-marker"))
             } else {
                 #expect(text == Self.continuation)
             }
         }
+        // The Ollama posture: no discovery, no native summary turn — the only
+        // upstream exchange is the admitted provider turn itself.
         let requests = await transport.requests
-        #expect(requests.count == 3)
-        let discovery = try #require(requests.first)
-        #expect(discovery.url == "https://api.openai.com/v1/models")
-        #expect(discovery.headers["authorization"] == ["Bearer synthetic-openai"])
-        let native = try #require(requests.dropFirst().first)
-        #expect(native.url == "https://api.openai.com/v1/responses")
-        #expect(native.headers["authorization"] == ["Bearer synthetic-openai"])
-        let nativeBody = try responsesStreamObject(native.body)
-        let nativeInput = try #require(nativeBody["input"] as? [[String: Any]])
-        #expect(nativeInput.contains { $0["encrypted_content"] as? String == "opaque-native-checkpoint" })
-        let custom = try #require(requests.last)
+        #expect(requests.count == 1)
+        let custom = try #require(requests.first)
         #expect(custom.url.hasPrefix(fixture.snapshot.providers[0].baseURL))
         #expect(custom.headers["authorization"] == ["Bearer selected-secret"])
         let customBody = try responsesStreamObject(custom.body)
         #expect(customBody["model"] as? String == "glm-5.2")
-        let customInput = try #require(customBody["input"] as? [[String: Any]])
-        let inputText = try ResponsesCompactionJSON.text(customInput)
-        #expect(inputText.contains("Continue the implementation; the file was read."))
-        #expect(!inputText.contains("opaque-native-checkpoint"))
-        #expect(!inputText.contains("native-setting-marker"))
-        #expect(!inputText.contains("opaque-native-reasoning"))
-        #expect(await fixture.state.codexSessionRequestCount == 1)
+        let input = try #require(customBody["input"] as? [[String: Any]])
+        let text = try ResponsesCompactionJSON.text(input)
+        #expect(text.contains("Continue the implementation."))
+        #expect(text.contains(ResponsesProviderState.degradationNotice))
+        #expect(!text.contains("opaque-native-checkpoint"))
+        #expect(!text.contains("native-setting-marker"))
+        #expect(!text.contains("opaque-native-reasoning"))
     }
 
-    @Test("An opaque checkpoint without native authentication returns 401 before transport")
-    func requiresAuthentication() async throws {
+    @Test("A history even degradation cannot admit returns 400")
+    func rejectsUnadmittableDegradation() async throws {
         let fixture = try GatewayTests().makeFixture()
         let transport = RecordingGatewayTransport(responses: [])
         try await GatewayTests().makeApplication(fixture: fixture, transport: transport).test(.router) { client in
             let result = try await client.execute(
-                uri: "/v1/responses", method: .post, body: ByteBuffer(bytes: request()))
-            #expect(result.status == .unauthorized)
-            #expect(String(buffer: result.body).contains(CodexNativePassthrough.sentinelRejectionMessage))
+                uri: "/v1/responses",
+                method: .post,
+                headers: [.authorization: "Bearer synthetic-openai"],
+                body: ByteBuffer(bytes: try request(corruptTaggedReasoning: true))
+            )
+            #expect(result.status == .badRequest)
+            #expect(String(buffer: result.body).contains("Invalid Responses request"))
         }
         #expect(await transport.requests.isEmpty)
     }
 
-    @Test("Discovery and native summary errors retain their upstream status", arguments: [false, true])
-    func preservesUpstreamFailure(duringSummary: Bool) async throws {
-        let fixture = try GatewayTests().makeFixture()
-        let responses =
-            (duringSummary ? [response(status: .ok, body: Self.catalog)] : [])
-            + [response(status: .tooManyRequests, body: "native rate limit")]
-        let transport = RecordingGatewayTransport(responses: responses)
-        try await GatewayTests().makeApplication(fixture: fixture, transport: transport).test(.router) { client in
-            let result = try await client.execute(
-                uri: "/v1/responses",
-                method: .post,
-                headers: [.authorization: "Bearer synthetic-openai"],
-                body: ByteBuffer(bytes: request())
-            )
-            #expect(result.status == .tooManyRequests)
-            #expect(String(buffer: result.body) == "native rate limit")
-        }
-        #expect(await transport.requests.count == (duringSummary ? 2 : 1))
+    @Test("Degradation replaces only checkpoints no adapter can expand")
+    func degradedBodyOnlyReplacesForeignCheckpoints() throws {
+        let owned = try ResponsesCompactionFixture.owned(summary: "Portable.")
+        let portable = try ResponsesCompactionJSON.data([
+            "model": "z.ai/glm-5.2", "stream": false,
+            "input": [owned, ["type": "message", "role": "user", "content": "Continue."]],
+        ])
+        #expect(try ResponsesProviderState.degradedBody(portable) == portable)
+        let foreign = try ResponsesCompactionJSON.data([
+            "model": "z.ai/glm-5.2", "stream": false,
+            "input": [
+                ["type": "compaction", "encrypted_content": "opaque-provider-ciphertext"],
+                ["type": "message", "role": "user", "content": "Continue."],
+            ],
+        ])
+        let degraded = try ResponsesProviderState.degradedBody(foreign)
+        let input = try #require(try responsesStreamObject(degraded)["input"] as? [[String: Any]])
+        #expect(try ResponsesCompactionJSON.text(input).contains(ResponsesProviderState.degradationNotice))
+        #expect(input.allSatisfy { $0["type"] as? String != "compaction" })
     }
 
-    @Test("An unusable native catalog returns 502 without a custom request")
-    func rejectsInvalidDiscovery() async throws {
-        let fixture = try GatewayTests().makeFixture()
-        let transport = RecordingGatewayTransport(responses: [response(status: .ok, body: #"{"data":[]}"#)])
-        try await GatewayTests().makeApplication(fixture: fixture, transport: transport).test(.router) { client in
-            let result = try await client.execute(
-                uri: "/v1/responses",
-                method: .post,
-                headers: [.authorization: "Bearer synthetic-openai"],
-                body: ByteBuffer(bytes: request())
-            )
-            #expect(result.status == .badGateway)
-            #expect(String(buffer: result.body).contains("Could not recover the OpenAI conversation checkpoint"))
-        }
-        #expect(await transport.requests.count == 1)
-    }
-
-    @Test("Recovery cancellation propagates through the routed responder")
+    @Test("Degradation cancellation propagates through the routed responder")
     func propagatesCancellation() async throws {
         let fixture = try GatewayTests().makeFixture()
         let transport = SteppingGatewayTransport(steps: [.cancellation])
@@ -150,11 +126,25 @@ struct NativeCompactionRecoveryRouteTests {
         #expect(recorder.events.allSatisfy { $0.finalStatus == nil })
     }
 
-    private static let catalog = #"{"data":[{"id":"gpt-5.6-sol"}]}"#
     private static let continuation =
         #"{"id":"resp_custom","status":"completed","output":[],"usage":{"input_tokens":1,"output_tokens":1}}"#
 
-    private func request(hasTrigger: Bool = false) throws -> Data {
+    private func request(hasTrigger: Bool = false, corruptTaggedReasoning: Bool = false) throws -> Data {
+        let reasoning: [String: Any]
+        if corruptTaggedReasoning {
+            reasoning = [
+                "type": "reasoning", "id": "rs_corrupt", "summary": [],
+                "encrypted_content": try ResponsesCompactionJSON.text([
+                    "type": "little_switch_reasoning", "version": 2,
+                    "provider_id": "not-a-uuid", "item": ["type": "reasoning"],
+                ]),
+            ]
+        } else {
+            reasoning = [
+                "type": "reasoning", "id": "rs_original", "summary": [],
+                "encrypted_content": "opaque-native-reasoning",
+            ]
+        }
         let input: [[String: Any]] =
             [
                 ["type": "compaction", "encrypted_content": "opaque-native-checkpoint"],
@@ -162,10 +152,7 @@ struct NativeCompactionRecoveryRouteTests {
                     "type": "configuration_update", "model": "native-setting-marker",
                     "reasoning_effort": "high",
                 ],
-                [
-                    "type": "reasoning", "id": "rs_original", "summary": [],
-                    "encrypted_content": "opaque-native-reasoning",
-                ],
+                reasoning,
                 ["type": "message", "role": "user", "content": "Continue the implementation."],
             ] + (hasTrigger ? [["type": "compaction_trigger"]] : [])
         return try ResponsesCompactionJSON.data([

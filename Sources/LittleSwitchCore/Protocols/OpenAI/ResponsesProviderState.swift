@@ -41,12 +41,40 @@ package enum ResponsesProviderState {
         return try responsesStreamData(root)
     }
 
-    package static func requiresNativeRecovery(_ body: Data) throws -> Bool {
-        let root = try responsesStreamObject(body)
-        for item in root["input"] as? [[String: Any]] ?? [] where item["type"] as? String == "compaction" {
-            if try ResponsesCompactionPayload.expand(item: item) == nil { return true }
+    /// The notice left in place of an opaque checkpoint when no provider can
+    /// read it, so the continuing model knows earlier context exists but
+    /// cannot be recovered.
+    package static let degradationNotice =
+        "Earlier context in this conversation was compacted by its original provider, "
+        + "and the compacted state could not be recovered for this model. "
+        + "Continue from the retained history that follows."
+
+    /// Replaces checkpoints no adapter can expand with the degradation notice,
+    /// mirroring how Ollama's proxy omits foreign compaction state on provider
+    /// switches. Owned payloads stay untouched.
+    package static func degradedBody(_ body: Data) throws -> Data {
+        var root = try responsesStreamObject(body)
+        guard let input = root["input"] as? [[String: Any]] else { return body }
+        var changed = false
+        var degraded: [[String: Any]] = []
+        for item in input {
+            if item["type"] as? String == "compaction", try isForeignCheckpoint(item) {
+                degraded.append([
+                    "type": "message", "role": "user",
+                    "content": [["type": "input_text", "text": degradationNotice]],
+                ])
+                changed = true
+            } else {
+                degraded.append(item)
+            }
         }
-        return false
+        guard changed else { return body }
+        root["input"] = degraded
+        return try responsesStreamData(root)
+    }
+
+    private static func isForeignCheckpoint(_ item: [String: Any]) throws -> Bool {
+        try ResponsesCompactionPayload.expand(item: item) == nil
     }
 
     package static func isForeignReasoning(_ item: [String: Any], providerID: UUID?) throws -> Bool {

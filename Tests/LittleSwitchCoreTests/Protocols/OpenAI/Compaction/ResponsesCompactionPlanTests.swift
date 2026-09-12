@@ -75,10 +75,10 @@ struct ResponsesCompactionPlanTests {
         #expect(request["store"] as? Bool == false)
         #expect(request["parallel_tool_calls"] as? Bool == false)
         #expect(request["text"] == nil)
-        #expect((request["reasoning"] as? [String: String]) == ["effort": "high"])
+        #expect((request["reasoning"] as? [String: String]) == nil)
         #expect(request["temperature"] as? Double == 0.2)
         #expect(request["top_p"] as? Double == 0.9)
-        #expect(request["max_output_tokens"] as? Int == 500)
+        #expect(request["max_output_tokens"] as? Int == 4_000)
         #expect((request["tool_choice"] as? [String: String]) == ["type": "function", "name": "create_summary"])
         let tools = try #require(request["tools"] as? [[String: Any]])
         #expect(tools.count == 1)
@@ -97,6 +97,63 @@ struct ResponsesCompactionPlanTests {
             try ResponsesCompactionFixture.object(plan.summaryRequest(model: "m", stream: true))["stream"] as? Bool
                 == true)
         #expect(throws: ResponsesCompactionError.invalidRequest) { try plan.summaryRequest(model: " ", stream: false) }
+    }
+
+    @Test("Summary turns carry their own bounded output budget and compactness contract")
+    func summaryOutputBudget() throws {
+        // The summary is an internal turn, not the conversation: a compacting
+        // model without its own budget streamed 20k-character summaries whose
+        // exchange died mid-flight, so the budget never inherits the
+        // conversation's setting and always stays bounded. The native
+        // chatgpt.com backend rejects the parameter outright, so only managed
+        // providers receive it.
+        let plans = try [
+            ResponsesCompactionFixture.plan(fields: [:]),
+            ResponsesCompactionFixture.plan(fields: ["max_output_tokens": 100_000]),
+        ]
+        for plan in plans {
+            let managed = try ResponsesCompactionFixture.object(plan.summaryRequest(model: "m", stream: false))
+            #expect(managed["max_output_tokens"] as? Int == 4_000)
+            let native = try ResponsesCompactionFixture.object(
+                plan.summaryRequest(model: "m", stream: true, mode: .nativeContinuation))
+            #expect(native["max_output_tokens"] == nil)
+            for request in [managed, native] {
+                let instructions = try #require(request["instructions"] as? String)
+                #expect(instructions.contains("800 words"))
+            }
+        }
+    }
+
+    @Test("Context overflow trims the oldest removable items and marks the summary")
+    func contextTrim() throws {
+        var history: [[String: Any]] = (0..<10).map { index in
+            [
+                "type": "message", "role": "assistant",
+                "content": [["type": "output_text", "text": "Step \(index) detail."]],
+            ]
+        }
+        history.append(ResponsesCompactionFixture.message)
+        var plan = try ResponsesCompactionFixture.plan(items: history)
+        #expect(try plan.trimForContextLimit() > 0)
+        let request = try ResponsesCompactionFixture.object(plan.summaryRequest(model: "m", stream: false))
+        let text = try ResponsesCompactionFixture.text(request["input"] as Any)
+        #expect(!text.contains("Step 0"))
+        #expect(text.contains("Step 9"))
+        #expect(text.contains("Keep working."))
+        #expect(
+            (request["instructions"] as? String ?? "").contains("Compaction warning:"))
+        let result = try plan.complete(responseBody: ResponsesCompactionFixture.response(refs: ["item_000010"]))
+        let payload = try ResponsesCompactionFixture.payload(result)
+        #expect((payload["summary"] as? String)?.hasPrefix("Compaction warning:") == true)
+        do {
+            _ = try plan.complete(responseBody: ResponsesCompactionFixture.response(refs: ["item_000000"]))
+            Issue.record("An omitted reference was accepted")
+        } catch let error as ResponsesCompactionError {
+            guard case .invalidSelection = error else {
+                Issue.record("Unexpected error \(error)")
+                return
+            }
+        }
     }
 
     @Test("Images remain image input blocks and do not inflate the JSON transcript")
@@ -152,19 +209,25 @@ struct ResponsesCompactionPlanTests {
         #expect(!text.contains("little_switch_compaction"))
     }
 
-    @Test("Opaque continuations require the model that can read their native state")
-    func nativeContinuation() throws {
+    @Test("Opaque checkpoints are degraded on custom models but continue natively")
+    func rejectsOpaqueContinuations() throws {
         let foreign: [String: Any] = ["type": "compaction", "encrypted_content": "opaque-provider-ciphertext"]
         let plan = try ResponsesCompactionFixture.plan(items: [foreign, ResponsesCompactionFixture.message])
         #expect(throws: ResponsesCompactionError.unsupportedCompaction) {
             try plan.summaryRequest(model: "m", stream: false)
         }
-        let request = try ResponsesCompactionFixture.object(
+        let native = try ResponsesCompactionFixture.object(
             plan.summaryRequest(model: "m", stream: true, mode: .nativeContinuation))
-        let items = try #require(request["input"] as? [[String: Any]])
+        let items = try #require(native["input"] as? [[String: Any]])
         #expect(try ResponsesCompactionFixture.data(items[0]) == ResponsesCompactionFixture.data(foreign))
-        #expect(throws: ResponsesCompactionError.invalidResponse) {
-            try plan.complete(responseBody: ResponsesCompactionFixture.response(refs: ["item_000001"]))
+        do {
+            _ = try plan.complete(responseBody: ResponsesCompactionFixture.response(refs: ["item_000001"]))
+            Issue.record("Retaining an opaque checkpoint unexpectedly completed")
+        } catch let error as ResponsesCompactionError {
+            guard case .invalidSelection = error else {
+                Issue.record("Unexpected error \(error)")
+                return
+            }
         }
     }
 }

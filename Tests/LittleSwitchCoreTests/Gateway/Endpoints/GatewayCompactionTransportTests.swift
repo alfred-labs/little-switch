@@ -85,7 +85,7 @@ extension GatewayTests {
         }
     }
 
-    @Test("Invalid compaction selections get one bounded repair with aggregate usage", arguments: [false, true])
+    @Test("Invalid compaction selections get one bounded repair carrying the reason", arguments: [false, true])
     func compactionRepair(failsAgain: Bool) async throws {
         let fixture = try makeFixture()
         let invalid = compactionSummaryResponse().replacingOccurrences(
@@ -105,9 +105,95 @@ extension GatewayTests {
         let requests = await transport.requests
         #expect(requests.count == 2)
         let retried = try responsesStreamObject(try #require(requests.last).body)
+        let repair = ((retried["input"] as? [[String: Any]])?.last?["content"] as? String) ?? ""
+        #expect(repair.contains("Your previous create_summary call was invalid:"))
+        #expect(repair.contains("summary"))
+    }
+
+    @Test("A context overflow trims the oldest removable transcript and retries once")
+    func compactionOverflowTrim() async throws {
+        let fixture = try makeFixture()
+        var history: [[String: Any]] = []
+        for index in 0..<24 {
+            history.append([
+                "type": "message", "role": "assistant",
+                "content": [
+                    ["type": "output_text", "text": "Step \(index): " + String(repeating: "detail ", count: 40)]
+                ],
+            ])
+        }
+        history.append(["type": "message", "role": "user", "content": "Finish the work."])
+        var body = try responsesStreamObject(compactionRequest(model: "z.ai/glm-5.2"))
+        body["input"] = history + [["type": "compaction_trigger"]]
+        let requestBody = try responsesStreamData(body)
+        let overflow = response(
+            status: .badRequest,
+            body:
+                #"{"error":{"code":"context_length_exceeded","message":"The prompt is too long: 90000, model maximum context length: 80000"}}"#
+        )
+        let transport = RecordingGatewayTransport(responses: [
+            overflow, response(status: .ok, body: compactionSummaryResponse()),
+        ])
+        try await makeApplication(fixture: fixture, transport: transport).test(.router) { client in
+            let result = try await client.execute(
+                uri: "/v1/responses", method: .post, body: ByteBuffer(bytes: requestBody)
+            )
+            #expect(result.status == .ok)
+            #expect(String(buffer: result.body).contains("Compaction warning:"))
+        }
+        let requests = await transport.requests
+        #expect(requests.count == 2)
+        let first = try responsesStreamObject(try #require(requests.first).body)
+        let trimmed = try responsesStreamObject(try #require(requests.last).body)
+        let firstText = try ResponsesCompactionJSON.text(try #require(first["input"] as? [[String: Any]]))
+        let trimmedText = try ResponsesCompactionJSON.text(try #require(trimmed["input"] as? [[String: Any]]))
+        #expect(firstText.contains("Step 0:"))
+        #expect(!trimmedText.contains("Step 0:"))
+        #expect(trimmedText.contains("Step 23:"))
+        #expect(trimmedText.contains("Finish the work."))
         #expect(
-            ((retried["input"] as? [[String: Any]])?.last?["content"] as? String)?.contains(
-                "previous selection was invalid") == true)
+            (trimmed["instructions"] as? String ?? "").contains("Compaction warning:"))
+    }
+
+    @Test("A context overflow without removable history relays the failure")
+    func compactionOverflowWithoutRemovableItems() async throws {
+        let fixture = try makeFixture()
+        let overflow = response(
+            status: .payloadTooLarge,
+            body: #"{"error":{"message":"The prompt is too long: 90000, model maximum context length: 80000"}}"#
+        )
+        let transport = RecordingGatewayTransport(responses: [overflow])
+        try await makeApplication(fixture: fixture, transport: transport).test(.router) { client in
+            let result = try await client.execute(
+                uri: "/v1/responses", method: .post, body: ByteBuffer(bytes: compactionRequest(model: "z.ai/glm-5.2"))
+            )
+            #expect(result.status == .contentTooLarge)
+            #expect(
+                String(buffer: result.body).contains("context_length_exceeded")
+                    || String(buffer: result.body).contains("too long"))
+        }
+        #expect(await transport.requests.count == 1)
+    }
+
+    @Test("An ordinary bad request never triggers the overflow trim")
+    func compactionUnrelatedBadRequest() async throws {
+        let fixture = try makeFixture()
+        let transport = RecordingGatewayTransport(responses: [
+            response(status: .badRequest, body: #"{"error":{"message":"unrelated"}}"#),
+            response(status: .badRequest, body: "not even json"),
+        ])
+        for _ in 0..<2 {
+            let application = GatewayTests().makeApplication(fixture: fixture, transport: transport)
+            try await application.test(.router) { client in
+                let result = try await client.execute(
+                    uri: "/v1/responses",
+                    method: .post,
+                    body: ByteBuffer(bytes: compactionRequest(model: "z.ai/glm-5.2"))
+                )
+                #expect(result.status == .badRequest)
+            }
+        }
+        #expect(await transport.requests.count == 2)
     }
 
     @Test("A failed compaction preserves upstream errors and rejects malformed responses", arguments: [false, true])

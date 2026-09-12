@@ -73,18 +73,4 @@ struct ResponsesCompactionRenderingTests {
         let customText = try #require(String(bytes: custom, encoding: .utf8))
         #expect(!customText.contains("native-setting"))
     }
-
-    @Test("Native recovery preserves repeated configuration occurrences from earlier checkpoints")
-    func recoveredConfiguration() throws {
-        let configuration: [String: Any] = [
-            "type": "configuration_update", "reasoning": ["effort": "high"],
-        ]
-        let nested = try ResponsesCompactionFixture.owned(retained: [configuration])
-        let plan = try ResponsesCompactionFixture.plan(items: [configuration, nested]).retainingProviderState()
-        let payload = try ResponsesCompactionFixture.payload(
-            plan.complete(responseBody: ResponsesCompactionFixture.response()))
-        #expect(
-            try ResponsesCompactionFixture.data(payload["retained"] as Any)
-                == ResponsesCompactionFixture.data([configuration, configuration]))
-    }
 }

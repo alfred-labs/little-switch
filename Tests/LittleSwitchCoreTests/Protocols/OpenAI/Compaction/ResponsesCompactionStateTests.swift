@@ -104,20 +104,4 @@ struct ResponsesCompactionStateTests {
             try ResponsesCompactionPayload.expand(item: ResponsesCompactionFixture.owned(retained: [nested]))
         }
     }
-
-    @Test("Recovery preserves distinct state occurrences even when their IDs match")
-    func stateOccurrences() throws {
-        let reasoning: [String: Any] = ["type": "reasoning", "id": "rs_native", "encrypted_content": "first"]
-        let other: [String: Any] = ["type": "reasoning", "id": "rs_native", "encrypted_content": "second"]
-        let opaque: [String: Any] = ["type": "compaction", "encrypted_content": "native-checkpoint"]
-        let nested = try ResponsesCompactionFixture.owned(retained: [opaque, other])
-        let source = [reasoning, opaque, ResponsesCompactionFixture.message, nested]
-        let plan = try ResponsesCompactionFixture.plan(items: source).retainingProviderState()
-        let payload = try ResponsesCompactionFixture.payload(
-            plan.complete(responseBody: ResponsesCompactionFixture.response(refs: ["item_000003"])))
-        let expected = [reasoning, opaque, ResponsesCompactionFixture.message, opaque, other]
-        #expect(
-            try ResponsesCompactionFixture.data(payload["retained"] as Any) == ResponsesCompactionFixture.data(expected)
-        )
-    }
 }
