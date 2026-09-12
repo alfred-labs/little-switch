@@ -47,10 +47,30 @@ struct MagicKeyScannerTests {
         try Data(
             #"let blocked = payload["status"]"#.utf8
         ).write(to: second)
+        try Data(#"let zoned = payload["zone"]"#.utf8).write(to: root.appendingPathComponent("C.swift"))
 
         let violations = try MagicKeyScanner.scan(directory: root, allowlist: ["kind"])
 
-        #expect(violations.map(\.description) == ["sub/B.swift:1:23: raw key \"status\" (subscript)"])
+        // C.swift sorts before sub/B.swift, and the comparator only runs with
+        // more than one violation.
+        #expect(
+            violations.map(\.description) == [
+                "C.swift:1:21: raw key \"zone\" (subscript)",
+                "sub/B.swift:1:23: raw key \"status\" (subscript)",
+            ])
         #expect(try MagicKeyScanner.scan(directory: root.appendingPathComponent("missing")).isEmpty)
     }
+}
+
+@Test("Allowlist loading skips blanks and comments and tolerates a missing file")
+func allowlist() throws {
+    let root = FileManager.default.temporaryDirectory.resolvingSymlinksInPath()
+        .appendingPathComponent("magic-key-allowlist-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+    let file = root.appendingPathComponent("allowlist.txt")
+    try Data("kind\n# comment\n\n  status  \n".utf8).write(to: file)
+
+    #expect(MagicKeyScanner.loadAllowlist(from: file) == ["kind", "status"])
+    #expect(MagicKeyScanner.loadAllowlist(from: root.appendingPathComponent("missing.txt")).isEmpty)
 }

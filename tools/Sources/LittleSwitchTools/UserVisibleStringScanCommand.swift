@@ -21,7 +21,9 @@ struct UserVisibleStringScanCommand: ParsableCommand {
             return
         }
         for finding in findings {
-            print(finding.description)
+            // Interpolated literals localize through their static segments.
+            let segments = finding.staticSegments.joined(separator: " ⟦…⟧ ")
+            print(finding.description + (segments.isEmpty ? "" : " segments: \(segments)"))
         }
         print("\n\(findings.count) finding(s).")
     }

@@ -30,7 +30,7 @@ package struct ResponsesCompactionPlan: Sendable {
     private(set) var retainedStateIndices: Set<Int>
     /// Items dropped after a provider context overflow; they stay unquoted and
     /// unretained while their references keep their original positions.
-    private(set) var omittedIndices: Set<Int> = []
+    private(set) var omittedIndices: Set<Int>
 
     /// Same wording as Ollama's `compactionOmissionNotice`.
     package static func omissionNotice(count: Int) -> String {
@@ -72,8 +72,7 @@ package struct ResponsesCompactionPlan: Sendable {
         for index in items.indices {
             if removedBytes >= (total + 4) / 5 { break }
             if protected.contains(index) || omitted.contains(index) { continue }
-            let kind = kinds[index] ?? ""
-            if kind == "function_call" || kind == "function_call_output" {
+            if kinds[index] == "function_call" || kinds[index] == "function_call_output" {
                 // Half-finished tool state is never shed.
                 guard let peer = peers[index], !protected.contains(peer) else { continue }
                 omitted.insert(index)

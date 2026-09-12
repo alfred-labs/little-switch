@@ -236,10 +236,8 @@ private final class UserVisibleStringVisitor: SyntaxVisitor {
     }
 
     private func rawInterpolatedText(of literal: StringLiteralExprSyntax) -> String {
-        let description = literal.trimmedDescription
-        guard description.count >= 2, description.hasPrefix("\""), description.hasSuffix("\"") else {
-            return description
-        }
-        return String(description.dropFirst().dropLast())
+        // Only interpolated literals lack `representedLiteralValue`, and their
+        // trimmed description is always double-quoted.
+        String(literal.trimmedDescription.dropFirst().dropLast())
     }
 }

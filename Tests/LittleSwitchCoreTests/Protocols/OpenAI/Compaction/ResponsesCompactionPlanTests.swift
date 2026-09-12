@@ -126,7 +126,15 @@ struct ResponsesCompactionPlanTests {
 
     @Test("Context overflow trims the oldest removable items and marks the summary")
     func contextTrim() throws {
-        var history: [[String: Any]] = (0..<10).map { index in
+        var history: [[String: Any]] = [
+            [
+                "type": "function_call", "call_id": "call_active", "name": "read", "arguments": "{}",
+            ],
+            [
+                "type": "function_call_output", "call_id": "call_active", "output": "Stale result.",
+            ],
+        ]
+        history += (0..<10).map { index in
             [
                 "type": "message", "role": "assistant",
                 "content": [["type": "output_text", "text": "Step \(index) detail."]],
@@ -134,10 +142,12 @@ struct ResponsesCompactionPlanTests {
         }
         history.append(ResponsesCompactionFixture.message)
         var plan = try ResponsesCompactionFixture.plan(items: history)
-        #expect(try plan.trimForContextLimit() > 0)
+        #expect(try plan.trimForContextLimit() > 1)
         let request = try ResponsesCompactionFixture.object(plan.summaryRequest(model: "m", stream: false))
         let text = try ResponsesCompactionFixture.text(request["input"] as Any)
         #expect(!text.contains("Step 0"))
+        #expect(!text.contains("call_active"))
+        #expect(!text.contains("Stale result."))
         #expect(text.contains("Step 9"))
         #expect(text.contains("Keep working."))
         #expect(

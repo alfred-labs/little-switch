@@ -198,3 +198,85 @@ func userVisibleStringScannerExcludesEmptySeparators() {
 
     #expect(findings.isEmpty)
 }
+
+@Test("User-visible findings render a positioned description")
+func userVisibleFindingsRenderDescription() {
+    let findings = UserVisibleStringScanner.scan(
+        source: #"func display() { Text("Settings") }"#, filePath: "Presentation.swift")
+
+    #expect(findings.map(\.description) == [#"Presentation.swift:1:23: Text: "Settings""#])
+}
+
+@Test("User-visible scanner falls back to the unfolded tree when folding fails")
+func userVisibleScannerFallsBackWhenFoldingFails() {
+    let source = """
+        func display(value: Int, label: String) {
+            Text("Settings")
+            let folded = 1 -*- 2
+        }
+        """
+
+    let findings = UserVisibleStringScanner.scan(source: source, filePath: "Folded.swift")
+
+    #expect(findings.map(\.text) == ["Settings"])
+}
+
+@Test("User-visible scanner walks a directory of Swift sources in order")
+func userVisibleScannerWalksDirectories() throws {
+    // The enumerator resolves the symlinked temporary root (/var →
+    // /private/var), so the scan root must resolve before children are
+    // appended or the relative prefix never strips.
+    let temporary = FileManager.default.temporaryDirectory.resolvingSymlinksInPath()
+    let root = temporary.appendingPathComponent("user-visible-scan-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+    try Data(#"func a() { Text("Alpha") }"#.utf8).write(to: root.appendingPathComponent("A.swift"))
+    let nested = root.appendingPathComponent("sub", isDirectory: true)
+    try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+    try Data(#"func b() { Text("Beta") }"#.utf8).write(to: nested.appendingPathComponent("B.swift"))
+    try Data("not swift".utf8).write(to: root.appendingPathComponent("notes.txt"))
+
+    let findings = try UserVisibleStringScanner.scan(directory: root)
+
+    #expect(
+        findings.map(\.description) == [
+            #"A.swift:1:17: Text: "Alpha""#, #"sub/B.swift:1:17: Text: "Beta""#,
+        ])
+    #expect(try UserVisibleStringScanner.scan(directory: root.appendingPathComponent("missing")).isEmpty)
+}
+
+@Test("Unfolded title assignments still report through the sequence visitor")
+func userVisibleScannerHandlesUnfoldedSequences() {
+    let source = """
+        func render(flag: Bool, panel: Panel, alert: Alert) {
+            let broken = 1 -*- 2
+            let plain = 5
+            panel.name = "Not a title"
+            alert.title = "Plain"
+            alert.messageText = "A" + "B"
+            let typed = [Int]("42")
+        }
+        """
+
+    let findings = UserVisibleStringScanner.scan(source: source, filePath: "Unfolded.swift")
+
+    // Unfolded, the sequence visitor only reports the value adjacent to the
+    // assignment; the labeled path covers the remaining positions.
+    #expect(findings.map(\.api) == ["title", "messageText"])
+    #expect(findings.map(\.text) == ["Plain", "A"])
+}
+
+@Test("Empty and raw string literals never enter findings")
+func userVisibleScannerSkipsEmptyAndRawLiterals() {
+    let source = """
+        func render(flag: Bool) {
+            Text("")
+            Text(flag ? "" : "Fallback")
+            Text(#"Raw \\(flag) label"#)
+        }
+        """
+
+    let findings = UserVisibleStringScanner.scan(source: source, filePath: "Literals.swift")
+
+    #expect(findings.map(\.text) == ["Fallback", "Raw \\(flag) label"])
+}

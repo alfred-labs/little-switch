@@ -57,46 +57,93 @@ extension GatewayResponder {
         incomingHeaders: HTTPHeaders,
         eventID: UUID
     ) async throws -> ResponsesCompactionResult {
-        var plan = plan
-        var repair: String?
-        var overflowTrimmed = false
-        var usage = ResponsesUsage(inputTokens: 0, outputTokens: 0)
-        var attempt = 0
-        while true {
-            attempt += 1
-            let body = try plan.summaryRequest(
-                model: Self.compactionModel(target, plan: plan),
-                stream: Self.compactionStreams(target),
-                mode: Self.compactionMode(target),
-                repair: repair
+        try await compactResponses(
+            target: target,
+            incomingHeaders: incomingHeaders,
+            eventID: eventID,
+            attempt: CompactionAttempt(plan: plan)
+        )
+    }
+
+    /// Bounded recursion state: one selection repair and one context-overflow
+    /// trim, so at most three model turns serve a single compaction.
+    private struct CompactionAttempt {
+        let plan: ResponsesCompactionPlan
+        let number: Int
+        let repair: String?
+        let overflowTrimmed: Bool
+        let usage: ResponsesUsage
+
+        init(
+            plan: ResponsesCompactionPlan,
+            number: Int = 1,
+            repair: String? = nil,
+            overflowTrimmed: Bool = false,
+            usage: ResponsesUsage = ResponsesUsage(inputTokens: 0, outputTokens: 0)
+        ) {
+            self.plan = plan
+            self.number = number
+            self.repair = repair
+            self.overflowTrimmed = overflowTrimmed
+            self.usage = usage
+        }
+    }
+
+    private func compactResponses(
+        target: GatewayCompactionTarget,
+        incomingHeaders: HTTPHeaders,
+        eventID: UUID,
+        attempt: CompactionAttempt
+    ) async throws -> ResponsesCompactionResult {
+        var usage = attempt.usage
+        var plan = attempt.plan
+        let body = try plan.summaryRequest(
+            model: Self.compactionModel(target, plan: plan),
+            stream: Self.compactionStreams(target),
+            mode: Self.compactionMode(target),
+            repair: attempt.repair
+        )
+        do {
+            let turn = try await compactionModelTurn(
+                body: body,
+                target: target,
+                incomingHeaders: incomingHeaders,
+                eventID: eventID,
+                attempt: attempt.number
             )
+            usage.add(turn.usage)
             do {
-                let turn = try await compactionModelTurn(
-                    body: body,
-                    target: target,
-                    incomingHeaders: incomingHeaders,
-                    eventID: eventID,
-                    attempt: attempt
+                let result = try plan.complete(responseBody: turn.rootJSON)
+                return ResponsesCompactionResult(itemJSON: result.itemJSON, usage: usage)
+            } catch let error as ResponsesCompactionError {
+                guard case .invalidSelection(let reason) = error, attempt.repair == nil else {
+                    throw ResponsesCompactionError.invalidResponse
+                }
+                let next = CompactionAttempt(
+                    plan: plan,
+                    number: attempt.number + 1,
+                    repair: reason,
+                    overflowTrimmed: attempt.overflowTrimmed,
+                    usage: usage
                 )
-                usage.add(turn.usage)
-                do {
-                    let result = try plan.complete(responseBody: turn.rootJSON)
-                    return ResponsesCompactionResult(itemJSON: result.itemJSON, usage: usage)
-                } catch let error as ResponsesCompactionError {
-                    guard case .invalidSelection(let reason) = error, repair == nil else {
-                        throw ResponsesCompactionError.invalidResponse
-                    }
-                    repair = reason
-                }
-            } catch let failure as CompactionUpstreamFailure {
-                // A context overflow retries once after shedding the oldest
-                // removable transcript items, mirroring Ollama's trim.
-                if !overflowTrimmed, Self.isContextLimit(failure), try plan.trimForContextLimit() > 0 {
-                    overflowTrimmed = true
-                    continue
-                }
-                throw failure
+                return try await compactResponses(
+                    target: target, incomingHeaders: incomingHeaders, eventID: eventID, attempt: next)
             }
+        } catch let failure as CompactionUpstreamFailure {
+            // A context overflow retries once after shedding the oldest
+            // removable transcript items, mirroring Ollama's trim.
+            guard !attempt.overflowTrimmed, Self.isContextLimit(failure),
+                try plan.trimForContextLimit() > 0
+            else { throw failure }
+            let next = CompactionAttempt(
+                plan: plan,
+                number: attempt.number + 1,
+                repair: attempt.repair,
+                overflowTrimmed: true,
+                usage: usage
+            )
+            return try await compactResponses(
+                target: target, incomingHeaders: incomingHeaders, eventID: eventID, attempt: next)
         }
     }
 
