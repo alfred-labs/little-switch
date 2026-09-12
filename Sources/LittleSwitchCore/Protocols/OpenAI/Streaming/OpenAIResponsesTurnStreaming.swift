@@ -39,6 +39,7 @@ package struct OpenAIResponsesTurnAccumulator: Sendable {
     private var phase = Phase.awaitingResponse
     private var responseID: String?
     private var outputItems: [Int: OutputItem] = [:]
+    private var completedOutput = ResponsesCompletedTurnOutput()
     private var terminalStatus: ResponsesStreamTerminal?
     private var terminalResponseJSON: Data?
 
@@ -215,6 +216,7 @@ extension OpenAIResponsesTurnAccumulator {
                 throw OpenAIResponsesWebSearch.Error.invalidResponse
             }
         }
+        try completedOutput.record(item, at: outputIndex)
         outputItems.removeValue(forKey: outputIndex)
         return .outputItemDone(
             outputIndex: outputIndex,
@@ -418,7 +420,8 @@ extension OpenAIResponsesTurnAccumulator {
         }
         let data = try responsesStreamData(response)
         terminalStatus = status
-        terminalResponseJSON = status == .failed ? nil : data
+        terminalResponseJSON =
+            status == .failed ? nil : try completedOutput.restoringEmptyOutput(in: response, originalJSON: data)
         phase = .terminal
         return .terminal(status: status, responseJSON: data)
     }
