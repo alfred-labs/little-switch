@@ -3,6 +3,7 @@ Sources/LittleSwitchTools/CommitMessageReadError.swift	Filesystem diagnostic ada
 Sources/LittleSwitchTools/CoverageCommand.swift	ArgumentParser and filesystem entry points; CoverageCLITests and CoverageGateTests exercise command parsing, reports and scope output.
 Sources/LittleSwitchTools/DiagnosticsCommand.swift	ArgumentParser and streaming filesystem adapter; DiagnosticsCLITests cover ordered segments, partial and long lines, empty directories, root resolution and failures. Aggregation remains measured.
 Sources/LittleSwitchTools/LittleSwitchTools.swift	ArgumentParser executable entry point exercised through tooling CLI integration tests.
+Sources/LittleSwitchTools/MagicStringScanCommand.swift	ArgumentParser and filesystem entry point; RepositoryCheckCLITests exercises the same MagicKeyScanner through the repository check gate.
 Sources/LittleSwitchTools/MonitoringCommand.swift	ArgumentParser and live clock/UUID/sleep composition; MonitoringCLITests exercise command registration, help and invalid arguments without contacting the lab. Readiness, OTLP payloads and query evidence remain measured.
 Sources/LittleSwitchTools/ReleaseAppcastCommand.swift	ArgumentParser and appcast filesystem entry point; ReleaseCLITests covers XML output, root resolution, history, notes, invalid arguments and I/O errors.
 Sources/LittleSwitchTools/ReleaseBumpCommand.swift	ArgumentParser and guarded version-file entry point; ReleaseCLITests and ReleaseVersionIntegrationTests cover validation, forwarding and unchanged files on errors.

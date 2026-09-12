@@ -36,12 +36,19 @@ package enum MagicKeyScanner {
         let enumerator = fileManager.enumerator(at: directory, includingPropertiesForKeys: nil)
         while let element = enumerator?.nextObject() {
             guard let url = element as? URL, url.pathExtension == "swift" else { continue }
+            // Node's former text scan repaired invalid UTF-8; decoding keeps that tolerance.
+            // swiftlint:disable:next optional_data_string_conversion
             let source = String(decoding: try Data(contentsOf: url), as: UTF8.self)
-            let relative = url.path.replacingOccurrences(of: directory.path + "/", with: "")
+            let resolvedDirectory = directory.standardizedFileURL.resolvingSymlinksInPath().path
+            let resolvedURL = url.standardizedFileURL.resolvingSymlinksInPath()
+            let relative =
+                resolvedURL.path
+                .replacingOccurrences(of: resolvedDirectory + "/", with: "")
             let fileViolations = scan(source: source, filePath: relative)
             violations.append(contentsOf: fileViolations)
         }
-        return violations
+        return
+            violations
             .filter { !allowlist.contains($0.key) }
             .sorted { ($0.file, $0.line, $0.column) < ($1.file, $1.line, $1.column) }
     }
@@ -95,12 +102,13 @@ private final class MagicKeyVisitor: SyntaxVisitor {
     private func record(_ literal: StringLiteralExprSyntax, kind: String) {
         let key = literal.representedLiteralValue ?? "<interpolated>"
         let location = converter.location(for: literal.positionAfterSkippingLeadingTrivia)
-        violations.append(MagicKeyScanner.Violation(
-            file: filePath,
-            line: location.line,
-            column: location.column,
-            key: key,
-            kind: kind
-        ))
+        violations.append(
+            MagicKeyScanner.Violation(
+                file: filePath,
+                line: location.line,
+                column: location.column,
+                key: key,
+                kind: kind
+            ))
     }
 }
