@@ -65,7 +65,7 @@ struct CodexCatalogTests {
             )
         )
 
-        #expect(catalog.models.map(\.displayName) == ["Local/zeta", "Remote/alpha", "codex-auto-review"])
+        #expect(catalog.models.map(\.displayName) == ["Local/zeta", "Remote/alpha", "little-switch-auto-review"])
         #expect(catalog.models.map(\.priority) == [0, 1, 2])
         #expect(catalog.models.map(\.contextWindow) == [128_000, 400_000, 128_000])
         let first = try #require(catalog.models.first)
@@ -131,14 +131,14 @@ struct CodexCatalogTests {
             configuration: configuration
         )
 
-        let exposed = catalog.models.filter { $0.slug != CodexCatalog.autoReviewModel }
+        let exposed = catalog.models.filter { $0.slug != CodexCatalog.managedAutoReviewModel }
         #expect(exposed.map(\.slug) == ["openai/gpt-5.5", "z.ai/glm-5.3"])
         #expect(exposed.map(\.displayName) == ["OpenAI/gpt-5.5", "z.ai/glm-5.3"])
         #expect(
             Set(exposed.map { $0.slug.lowercased() }).count == exposed.count,
             "slugs stay unique case-insensitively across provider families"
         )
-        #expect(catalog.models.last?.slug == CodexCatalog.autoReviewModel)
+        #expect(catalog.models.last?.slug == CodexCatalog.managedAutoReviewModel)
         #expect(catalog.models.last?.description == "Approval reviews via OpenAI/gpt-5.5")
     }
 

@@ -32,7 +32,7 @@ extension CodexAutoReviewTests {
                     eventID: reviewerID,
                     capture: capture,
                     client: .codex,
-                    modelIdentifier: "codex-auto-review",
+                    modelIdentifier: "little-switch-auto-review",
                     providerID: provider.id,
                     targetModelID: "xlarge",
                     retainedBodyBytes: 1))
@@ -51,7 +51,7 @@ extension CodexAutoReviewTests {
             snapshot.codex.autoReviewModel = ModelMapping(providerID: provider.id, modelID: "small")
             let replacement = await state.replace(
                 providers: snapshot.providers, mappings: snapshot.mappings, codex: snapshot.codex)
-            #expect(replacement.resolveCodex(model: "codex-auto-review")?.model.id == "small")
+            #expect(replacement.resolveCodex(model: "little-switch-auto-review")?.model.id == "small")
             await #expect(throws: GatewayAdmissionError.invalidated) {
                 try await reviewer.value
             }

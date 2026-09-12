@@ -8,7 +8,7 @@ import Testing
 
 extension CodexAutoReviewTests {
     @Test(
-        "Native reviewer requests preserve instructions, schema, and approval or denial output",
+        "Custom Responses reviewer requests preserve instructions, schema, and approval or denial output",
         arguments: ["allow", "deny"], [false, true])
     func nativeForwarding(decision: String, streaming: Bool) async throws {
         let fixture = makeGatewayFixture(wire: .native)
@@ -59,14 +59,14 @@ extension CodexAutoReviewTests {
         expected["model"] = "xlarge"
         #expect(try responsesGatewayObject(upstream.body) as NSDictionary == expected as NSDictionary)
         let event = try #require(recorder.events.first)
-        #expect(event.claudeRoute == "codex-auto-review")
+        #expect(event.claudeRoute == "little-switch-auto-review")
         #expect(event.modelID == "xlarge")
         #expect(await fixture.state.codexSessionRequestCount == 1)
         #expect((await fixture.state.requestPoolSnapshot()).totalRunning == 0)
     }
 
     @Test(
-        "Native reviewer provider errors remain errors without a model fallback",
+        "Custom Responses reviewer provider errors remain errors without a model fallback",
         arguments: [HTTPResponseStatus.notFound, .tooManyRequests, .internalServerError])
     func upstreamFailure(status: HTTPResponseStatus) async throws {
         let fixture = makeGatewayFixture(wire: .native)
@@ -126,7 +126,7 @@ extension CodexAutoReviewTests {
                 body: ByteBuffer(bytes: try reviewRequest(streaming: false)))
             #expect(result.status == .ok)
             let object = try responsesGatewayObject(data(result.body))
-            #expect(object["model"] as? String == "codex-auto-review")
+            #expect(object["model"] as? String == "little-switch-auto-review")
             let output = try #require(object["output"] as? [[String: Any]])
             let content = try #require(output.first?["content"] as? [[String: Any]])
             #expect(content.first?["text"] as? String == decisionText)
@@ -153,7 +153,7 @@ extension CodexAutoReviewTests {
 
     private func reviewRequest(streaming: Bool) throws -> Data {
         try JSONSerialization.data(withJSONObject: [
-            "model": "codex-auto-review",
+            "model": "little-switch-auto-review",
             "input": "Synthetic approval review fixture.",
             "instructions": "Review this synthetic action against the supplied policy.",
             "stream": streaming,

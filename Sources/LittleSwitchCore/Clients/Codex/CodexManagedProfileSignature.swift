@@ -43,6 +43,15 @@ public struct CodexManagedProfileSignature: Equatable, Sendable {
         )
     }
 
+    package func withLegacyAutoReview() throws -> CodexManagedProfileSignature {
+        CodexManagedProfileSignature(
+            modelSlug: modelSlug,
+            catalogData: try CodexCatalog.legacyAutoReviewData(catalogData),
+            maximumConcurrentThreadsPerSession: maximumConcurrentThreadsPerSession,
+            webSearchMode: webSearchMode
+        )
+    }
+
     public func withoutManagedWebSearch() -> CodexManagedProfileSignature {
         CodexManagedProfileSignature(
             modelSlug: modelSlug,

@@ -8,7 +8,7 @@ import Testing
 @MainActor
 @Suite("Codex menu approval review model")
 struct MenuCodexReviewModelTests {
-    @Test("Codex exposes the approval reviewer beside its default model")
+    @Test("Codex scopes the approval reviewer to custom models beside its default model")
     func reviewerIsAccessible() async throws {
         let model = makeModel().model
         model.configuration.codex.connected = false
@@ -19,7 +19,8 @@ struct MenuCodexReviewModelTests {
         defer { host.close() }
         try await host.activateAccessibility()
 
-        _ = try host.element(label: "Model for Approval review model")
+        _ = try host.element(label: "Model for Custom approval review model")
+        #expect(host.textContent.contains("Custom review"))
         #expect(host.textContent.contains("Same as default"))
         let apply = try host.element(label: "Apply changes")
         #expect(!apply.isAccessibilityEnabled())
@@ -52,7 +53,7 @@ struct MenuCodexReviewModelTests {
         #expect(try !host.element(label: "Apply changes").isAccessibilityEnabled())
 
         for expectedCount in 1...3 {
-            #expect(try host.element(label: "Next model for Approval review model").accessibilityPerformPress())
+            #expect(try host.element(label: "Next model for Custom approval review model").accessibilityPerformPress())
             for _ in 0..<20 where selections.count < expectedCount { await Task.yield() }
             host.render()
         }
@@ -93,7 +94,7 @@ struct MenuCodexReviewModelTests {
         #expect(try !host.element(label: "Apply changes").isAccessibilityEnabled())
         #expect(host.hosting.fittingSize.height == MenuCodexTabView.height)
 
-        #expect(try host.element(label: "Next model for Approval review model").accessibilityPerformPress())
+        #expect(try host.element(label: "Next model for Custom approval review model").accessibilityPerformPress())
         for _ in 0..<20 where selections.isEmpty { await Task.yield() }
         host.render()
         #expect(selections == [nil])
@@ -119,7 +120,9 @@ struct MenuCodexReviewModelTests {
             )
             defer { host.close() }
             try await host.activateAccessibility()
-            for label in ["Previous model for Approval review model", "Next model for Approval review model"] {
+            for label in [
+                "Previous model for Custom approval review model", "Next model for Custom approval review model",
+            ] {
                 let button = try host.element(label: label)
                 #expect(!button.isAccessibilityEnabled())
                 _ = button.accessibilityPerformPress()

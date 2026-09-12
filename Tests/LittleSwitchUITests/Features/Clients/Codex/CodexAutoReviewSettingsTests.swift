@@ -54,7 +54,8 @@ struct CodexAutoReviewSettingsTests {
         #expect(selected.configuration.codex.autoReviewModel == fixture.replacement)
         #expect(try fixture.store.load().codex.autoReviewModel == nil)
         #expect(
-            await gateway.routingCapture().snapshot.resolveCodex(model: "codex-auto-review")?.mapping == fixture.applied
+            await gateway.routingCapture().snapshot.resolveCodex(model: "little-switch-auto-review")?.mapping
+                == fixture.applied
         )
 
         let applied = try await fixture.coordinator.applyCodexSettings()
@@ -63,7 +64,7 @@ struct CodexAutoReviewSettingsTests {
         #expect(applied.configuration.codex.autoReviewModel == fixture.replacement)
         #expect(try fixture.store.load().codex == applied.configuration.codex)
         #expect(
-            await gateway.routingCapture().snapshot.resolveCodex(model: "codex-auto-review")?.mapping
+            await gateway.routingCapture().snapshot.resolveCodex(model: "little-switch-auto-review")?.mapping
                 == fixture.replacement)
         #expect(fixture.profile.activations.last?.autoReviewModel == fixture.replacement)
         await fixture.coordinator.shutdown(mode: .handoff)

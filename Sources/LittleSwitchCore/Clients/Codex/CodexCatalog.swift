@@ -167,7 +167,10 @@ public enum CodexCatalog {
         case unavailableAutoReviewModel
     }
 
-    package static let autoReviewModel = "codex-auto-review"
+    /// Separate from Codex's native reviewer so custom routing cannot capture
+    /// approval requests made by native OpenAI models.
+    package static let managedAutoReviewModel = "little-switch-auto-review"
+    package static let legacyManagedAutoReviewModel = "codex-auto-review"
 
     public static let baseInstructions =
         "You are Codex, a coding agent. You and the user share the same workspace and collaborate to achieve the user's goals."
@@ -238,8 +241,8 @@ public enum CodexCatalog {
         // carries the actual review model's capabilities and identity so profile
         // signatures also detect reviewer changes between equal-capacity models.
         var reviewer = makeModel(target: reviewerTarget, priority: models.count)
-        reviewer.slug = autoReviewModel
-        reviewer.displayName = autoReviewModel
+        reviewer.slug = managedAutoReviewModel
+        reviewer.displayName = managedAutoReviewModel
         reviewer.description = "Approval reviews via \(reviewerTarget.displayName)"
         reviewer.visibility = "hide"
         models.append(reviewer)
@@ -300,7 +303,8 @@ public enum CodexCatalog {
         // The hidden reviewer always trails the managed list; native models
         // slot in before it so the visible picker order is managed, native.
         var reviewer: [String: Any]?
-        if let last = managedEntries.last, (last["slug"] as? String) == CodexCatalog.autoReviewModel {
+        let reviewerSlugs = [managedAutoReviewModel, legacyManagedAutoReviewModel]
+        if let slug = managedEntries.last?["slug"] as? String, reviewerSlugs.contains(slug) {
             reviewer = managedEntries.removeLast()
         }
         var entries = managedEntries
@@ -377,7 +381,7 @@ public enum CodexCatalog {
                 : ["text"],
             supportsSearchTool: false,
             multiAgentVersion: "v2",
-            autoReviewModelOverride: autoReviewModel
+            autoReviewModelOverride: managedAutoReviewModel
         )
     }
 }

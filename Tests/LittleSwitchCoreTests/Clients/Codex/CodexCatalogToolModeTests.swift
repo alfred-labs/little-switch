@@ -31,7 +31,7 @@ struct CodexCatalogToolModeTests {
         let entries = try #require(chatJSONObject(data)["models"] as? [[String: Any]])
         let managed = entries.filter { $0["slug"] as? String != "native-model" }
         #expect(managed.count == 2)
-        #expect(managed.contains { $0["slug"] as? String == CodexCatalog.autoReviewModel })
+        #expect(managed.contains { $0["slug"] as? String == CodexCatalog.managedAutoReviewModel })
         for entry in managed {
             #expect(entry["tool_mode"] as? String == "direct")
             #expect(entry["apply_patch_tool_type"] is NSNull)

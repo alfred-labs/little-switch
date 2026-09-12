@@ -69,9 +69,9 @@ struct CodexSettingsView: View {
                         }
                         .disabled(model.isBusy || model.codexExposedModelOptions.isEmpty)
                     }
-                    SettingsMappingRow("Approval review model") {
+                    SettingsMappingRow("Custom approval review") {
                         Picker(
-                            "Approval review model",
+                            "Custom approval review model",
                             selection: Binding<ModelMapping?>(
                                 get: { model.configuration.codex.autoReviewModel },
                                 set: { mapping in Task { await onAutoReview(mapping) } }
@@ -88,10 +88,13 @@ struct CodexSettingsView: View {
                             }
                         }
                         .disabled(model.isBusy || model.modelOptions.isEmpty)
-                        .help("Reviews requests for permissions outside the sandbox.")
+                        .help("Reviews requests from custom models for permissions outside the sandbox.")
                     }
                 }
             }
+            Text("Native OpenAI models keep Codex's own approval reviewer.")
+                .font(SettingsLayout.Typography.supporting)
+                .foregroundStyle(.secondary)
             if model.hasUnavailableCodexAutoReviewModel {
                 Label("Choose an available approval review model.", systemImage: "exclamationmark.triangle")
                     .font(SettingsLayout.Typography.supporting)

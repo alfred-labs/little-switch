@@ -19,7 +19,7 @@ struct CodexAutoReviewTests {
                 "excludedModels": [["providerID": provider.id.uuidString, "modelID": "small"]],
             ]))
 
-        #expect(snapshot.resolveCodex(model: "codex-auto-review")?.mapping == reviewer)
+        #expect(snapshot.resolveCodex(model: "little-switch-auto-review")?.mapping == reviewer)
         #expect(snapshot.resolveCodex(model: "example/small") == nil)
         let catalog = try CodexCatalog.make(providers: snapshot.providers, configuration: snapshot.codex)
         #expect(catalog.models.last?.contextWindow == 128_000)
@@ -29,7 +29,7 @@ struct CodexAutoReviewTests {
                 == ["providerID": provider.id.uuidString, "modelID": "small"])
 
         snapshot.providers[0].models.removeAll { $0.id == "small" }
-        #expect(snapshot.resolveCodex(model: "codex-auto-review") == nil)
+        #expect(snapshot.resolveCodex(model: "little-switch-auto-review") == nil)
         #expect(throws: CodexCatalog.Error.unavailableAutoReviewModel) {
             try CodexCatalog.make(providers: snapshot.providers, configuration: snapshot.codex)
         }
@@ -53,31 +53,31 @@ struct CodexAutoReviewTests {
 
         #expect(before.modelSlug == after.modelSlug)
         #expect(before.catalogData != after.catalogData)
-        #expect(snapshot.resolveCodex(model: "codex-auto-review")?.mapping == mapping)
+        #expect(snapshot.resolveCodex(model: "little-switch-auto-review")?.mapping == mapping)
         snapshot.codex.defaultModel = ModelMapping(providerID: snapshot.providers[0].id, modelID: "small")
-        #expect(snapshot.resolveCodex(model: "codex-auto-review")?.mapping == mapping)
+        #expect(snapshot.resolveCodex(model: "little-switch-auto-review")?.mapping == mapping)
         #expect(
             snapshot.providerRequestPoolConfiguration(providerRevisions: [:]).routes[
-                ProviderRequestRouteKey(client: .codex, modelIdentifier: "codex-auto-review")]
+                ProviderRequestRouteKey(client: .codex, modelIdentifier: "little-switch-auto-review")]
                 == ProviderRequestRouteTarget(providerID: provider.id, modelID: "reviewer"))
     }
 
-    @Test("The flat reviewer alias resolves to the exposed Codex default")
+    @Test("The managed reviewer alias resolves to the exposed Codex default")
     func defaultRouting() throws {
         let snapshot = makeSnapshot()
         let target = try #require(snapshot.resolveCodex(model: "example/xlarge"))
 
-        #expect(snapshot.resolveCodex(model: "codex-auto-review") == target)
+        #expect(snapshot.resolveCodex(model: "little-switch-auto-review") == target)
         #expect(
             snapshot.validCodexTargets == [
                 "example/small": CodexModelTarget(
                     provider: target.provider, model: DiscoveredModel(id: "small")),
                 "example/xlarge": target,
-                "codex-auto-review": target,
+                "little-switch-auto-review": target,
             ])
-        #expect(snapshot.resolveCodex(model: "Codex-auto-review") == nil)
-        #expect(snapshot.resolveCodex(model: "codex-auto-review[1m]") == nil)
-        #expect(snapshot.resolve(model: "codex-auto-review") == nil)
+        #expect(snapshot.resolveCodex(model: "Little-switch-auto-review") == nil)
+        #expect(snapshot.resolveCodex(model: "little-switch-auto-review[1m]") == nil)
+        #expect(snapshot.resolve(model: "little-switch-auto-review") == nil)
     }
 
     @Test("The reviewer uses the same normalized default and respects exclusions")
@@ -88,18 +88,18 @@ struct CodexAutoReviewTests {
         let fallback = snapshot.resolveCodex(model: "example/small")
 
         #expect(fallback != nil)
-        #expect(snapshot.resolveCodex(model: "codex-auto-review") == fallback)
+        #expect(snapshot.resolveCodex(model: "little-switch-auto-review") == fallback)
 
         snapshot.codex.defaultModel = nil
-        #expect(snapshot.resolveCodex(model: "codex-auto-review") == fallback)
+        #expect(snapshot.resolveCodex(model: "little-switch-auto-review") == fallback)
 
         snapshot.codex.excludedModels.append(
             ModelMapping(providerID: defaultMapping.providerID, modelID: "small"))
-        #expect(snapshot.resolveCodex(model: "codex-auto-review") == nil)
+        #expect(snapshot.resolveCodex(model: "little-switch-auto-review") == nil)
         #expect(snapshot.validCodexTargets.isEmpty)
 
         snapshot.providers = []
-        #expect(snapshot.resolveCodex(model: "codex-auto-review") == nil)
+        #expect(snapshot.resolveCodex(model: "little-switch-auto-review") == nil)
     }
 
     @Test("The reviewer enters the existing provider pool without a new capacity bucket")
@@ -124,7 +124,7 @@ struct CodexAutoReviewTests {
                             ProviderRequestRouteTarget(providerID: provider.id, modelID: "small"),
                         ProviderRequestRouteKey(client: .codex, modelIdentifier: "example/xlarge"):
                             ProviderRequestRouteTarget(providerID: provider.id, modelID: "xlarge"),
-                        ProviderRequestRouteKey(client: .codex, modelIdentifier: "codex-auto-review"):
+                        ProviderRequestRouteKey(client: .codex, modelIdentifier: "little-switch-auto-review"):
                             ProviderRequestRouteTarget(providerID: provider.id, modelID: "xlarge"),
                     ]))
     }
@@ -135,14 +135,14 @@ struct CodexAutoReviewTests {
         let catalog = try CodexCatalog.make(
             providers: snapshot.providers, configuration: snapshot.codex)
         var expected = try #require(catalog.models.first)
-        expected.slug = "codex-auto-review"
-        expected.displayName = "codex-auto-review"
+        expected.slug = "little-switch-auto-review"
+        expected.displayName = "little-switch-auto-review"
         expected.description = "Approval reviews via Example/xlarge"
         expected.visibility = "hide"
         expected.priority = 2
 
         #expect(catalog.models.last == expected)
-        #expect(catalog.models.map(\.slug) == ["example/xlarge", "example/small", "codex-auto-review"])
+        #expect(catalog.models.map(\.slug) == ["example/xlarge", "example/small", "little-switch-auto-review"])
         #expect(catalog.models.filter { $0.visibility == "list" }.count == 2)
         for model in catalog.models {
             #expect(snapshot.resolveCodex(model: model.slug) != nil)
@@ -154,7 +154,7 @@ struct CodexAutoReviewTests {
         let models = try #require(object["models"] as? [[String: Any]])
         #expect(
             models.compactMap { $0["auto_review_model_override"] as? String }
-                == ["codex-auto-review", "codex-auto-review", "codex-auto-review"])
+                == ["little-switch-auto-review", "little-switch-auto-review", "little-switch-auto-review"])
     }
 
     func makeSnapshot() -> RoutingSnapshot {

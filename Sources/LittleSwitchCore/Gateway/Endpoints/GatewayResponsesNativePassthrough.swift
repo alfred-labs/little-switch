@@ -18,14 +18,14 @@ package enum CodexNativePassthrough {
 
     /// Whether the request carries a Responses model slug at all. Bodies
     /// without one keep the existing unknown-model rejection. LittleSwitch
-    /// reserved slugs never pass through natively: an unresolved reviewer is
-    /// a configuration error, not a ChatGPT model.
+    /// reserved slugs never pass through natively: an unresolved custom reviewer
+    /// is a configuration error. Codex's own `codex-auto-review` stays native.
     static func isNativeRequest(_ body: Data) -> Bool {
         guard
             let root = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
             let model = root["model"] as? String,
             !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-            model != CodexCatalog.autoReviewModel,
+            model != CodexCatalog.managedAutoReviewModel,
             !model.contains("/")
         else {
             return false

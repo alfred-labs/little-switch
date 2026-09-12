@@ -25,8 +25,12 @@ package struct CodexProfileRestoreState: Codable, Equatable, Sendable {
         return try CodexTOMLEditor.restoring(text, states: ["web_search": original])
     }
 
-    func status(in text: String, expected: CodexManagedProfileSignature) -> CodexProfileStatus {
-        var applied = expected
+    func status(
+        in text: String,
+        expected: CodexManagedProfileSignature,
+        catalogSignature: CodexManagedProfileSignature
+    ) -> CodexProfileStatus {
+        var applied = catalogSignature
         if rootValues["web_search"] != nil {
             guard let mode = expected.webSearchMode,
                 (try? CodexTOMLEditor.rootString("web_search", in: text)) == mode

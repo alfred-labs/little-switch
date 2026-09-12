@@ -172,7 +172,8 @@ struct CodexNativeCatalogTests {
             {"models":[
               {"slug":"gpt-5.6-sol","display_name":"GPT-5.6 Sol","priority":10,"upgrade":"nux","unknown_future":{"x":1}},
               {"slug":"local/qwen","display_name":"collision"},
-              {"slug":"codex-auto-review","display_name":"native review"}
+              {"slug":"codex-auto-review","display_name":"native review"},
+              {"slug":"little-switch-auto-review","display_name":"managed reviewer collision"}
             ]}
             """#.utf8
         )
@@ -189,7 +190,7 @@ struct CodexNativeCatalogTests {
         let slugs = try models.map { entry in
             try #require(entry["slug"] as? String)
         }
-        #expect(slugs == ["local/qwen", "gpt-5.6-sol", "codex-auto-review"])
+        #expect(slugs == ["local/qwen", "gpt-5.6-sol", "codex-auto-review", "little-switch-auto-review"])
         // Codex sorts the picker by priority with a stable sort, so the
         // merged file must already be in display order: priorities match
         // positions and native entries never interleave with managed ones.
@@ -223,7 +224,7 @@ struct CodexNativeCatalogTests {
             try #require($0["slug"] as? String)
         }
 
-        #expect(slugs == ["local/qwen", "native/gpt", "codex-auto-review"])
+        #expect(slugs == ["local/qwen", "native/gpt", "little-switch-auto-review"])
     }
 }
 

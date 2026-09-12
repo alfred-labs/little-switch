@@ -8,15 +8,15 @@ struct MenuCodexReviewModelRow: View {
 
     var body: some View {
         GridRow {
-            Text("Auto-review")
+            Text("Custom review")
                 .font(.system(size: 12, weight: .medium))
                 .fixedSize()
                 .frame(height: MenuTabContentLayout.rowHeight)
                 .gridColumnAlignment(.leading)
-                .help("Approval review model")
+                .help("Reviews permission requests for custom models. Native OpenAI models keep Codex's own reviewer.")
             MenuMappingArrow()
             MenuModelStepper(
-                name: "Approval review model",
+                name: "Custom approval review model",
                 options: options,
                 selection: Binding(
                     get: { selection },
@@ -25,7 +25,8 @@ struct MenuCodexReviewModelRow: View {
                 width: MenuTabContentLayout.mappingPickerWidth
             )
             .disabled(model.isBusy || model.modelOptions.isEmpty)
-            .accessibilityHint("Reviews requests for permissions outside the sandbox")
+            .accessibilityHint(
+                "Reviews permission requests for custom models. Native OpenAI models keep Codex's own reviewer.")
         }
     }
 

@@ -398,12 +398,23 @@ public struct CodexProfileManager: Sendable {
             model == expected.modelSlug,
             provider == nil,
             openAIBaseURL == CodexTOMLEditor.baseURL,
-            catalog == paths.catalog.path,
-            catalogData == expectedCatalog
+            catalog == paths.catalog.path
         else {
             return .inactive
         }
-        return state.status(in: configText, expected: expected)
+        let catalogSignature: CodexManagedProfileSignature
+        if catalogData == expectedCatalog {
+            catalogSignature = expected
+        } else {
+            let legacy = try expected.withLegacyAutoReview()
+            let legacyCatalog = try CodexCatalog.mergedData(
+                managedData: legacy.catalogData, nativeCatalogData: state.nativeCatalogData)
+            guard catalogData == legacyCatalog else {
+                return .inactive
+            }
+            catalogSignature = legacy
+        }
+        return state.status(in: configText, expected: expected, catalogSignature: catalogSignature)
     }
 
     private func transaction(_ operation: () throws -> Void) throws {

@@ -57,7 +57,7 @@ public struct RoutingSnapshot: Equatable, Sendable {
             }
         )
         if let target = codex.resolvedAutoReviewTarget(in: providers) {
-            targets[CodexCatalog.autoReviewModel] = target
+            targets[CodexCatalog.managedAutoReviewModel] = target
         }
         return targets
     }

@@ -12,6 +12,43 @@ extension GatewayTests {
     private static let nativeBody =
         #"{"model":"gpt-5.6-sol","stream":true,"input":[{"type":"message","role":"developer","content":[{"type":"input_text","text":"native instructions"}]}]}"#
 
+    @Test("Codex's native reviewer reaches ChatGPT independently of the custom reviewer", arguments: [false, true])
+    func nativeReviewerPassthrough(explicitReviewer: Bool) async throws {
+        let fixture = try makeFixture()
+        var snapshot = fixture.snapshot
+        if explicitReviewer {
+            snapshot.codex.autoReviewModel = snapshot.codex.resolvedDefaultModel(in: snapshot.providers)
+        }
+        let reviewFixture = GatewayFixture(
+            snapshot: snapshot, state: GatewayState(snapshot: snapshot), secrets: fixture.secrets)
+        let decision = #"{"outcome":"allow"}"#
+        let body = Data(
+            #"""
+            {"model":"codex-auto-review","input":"Synthetic approval request.","instructions":"Review the action.",
+            "reasoning":{"effort":"low"},"text":{"format":{"type":"json_schema","name":"review","schema":{"type":"object"}}}}
+            """#.utf8)
+        let transport = RecordingGatewayTransport(responses: [response(status: .ok, body: decision)])
+        let app = makeApplication(fixture: reviewFixture, transport: transport)
+        let accountID = try #require(HTTPField.Name("ChatGPT-Account-ID"))
+
+        try await app.test(.router) { client in
+            let result = try await client.execute(
+                uri: "/v1/responses",
+                method: .post,
+                headers: [.authorization: "Bearer synthetic-session", accountID: "synthetic-account"],
+                body: ByteBuffer(bytes: body))
+            #expect(result.status == .ok)
+            #expect(String(buffer: result.body) == decision)
+        }
+        let requests = await transport.requests
+        #expect(requests.count == 1)
+        let upstream = try #require(requests.first)
+        #expect(upstream.url == "https://chatgpt.com/backend-api/codex/responses")
+        #expect(upstream.body == body)
+        #expect(upstream.headers["authorization"] == ["Bearer synthetic-session"])
+        #expect(upstream.headers["chatgpt-account-id"] == ["synthetic-account"])
+    }
+
     @Test("A native model reaches the ChatGPT backend with the session preserved")
     func nativeChatGPTPassthrough() async throws {
         let fixture = try makeFixture()

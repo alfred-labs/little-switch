@@ -32,7 +32,7 @@ struct CodexProfileTests {
         let root = try #require(JSONSerialization.jsonObject(with: catalog) as? [String: Any])
         let models = try #require(root["models"] as? [[String: Any]])
         let slugs = models.compactMap { $0["slug"] as? String }
-        #expect(slugs == ["local/qwen", "gpt-5.6-sol", "codex-auto-review"])
+        #expect(slugs == ["local/qwen", "gpt-5.6-sol", "little-switch-auto-review"])
         let expected = try CodexManagedProfileSignature.resolve(
             providers: fixture.providers,
             configuration: fixture.configuration
