@@ -78,7 +78,7 @@ struct ResponsesCompactionPlanTests {
         #expect((request["reasoning"] as? [String: String]) == nil)
         #expect(request["temperature"] as? Double == 0.2)
         #expect(request["top_p"] as? Double == 0.9)
-        #expect(request["max_output_tokens"] as? Int == 4_000)
+        #expect(request["max_output_tokens"] == nil)
         #expect((request["tool_choice"] as? [String: String]) == ["type": "function", "name": "create_summary"])
         let tools = try #require(request["tools"] as? [[String: Any]])
         #expect(tools.count == 1)
@@ -97,20 +97,6 @@ struct ResponsesCompactionPlanTests {
             try ResponsesCompactionFixture.object(plan.summaryRequest(model: "m", stream: true))["stream"] as? Bool
                 == true)
         #expect(throws: ResponsesCompactionError.invalidRequest) { try plan.summaryRequest(model: " ", stream: false) }
-    }
-
-    @Test("Managed summary turns keep their output budget and compactness contract")
-    func summaryOutputBudget() throws {
-        let plans = try [
-            ResponsesCompactionFixture.plan(fields: [:]),
-            ResponsesCompactionFixture.plan(fields: ["max_output_tokens": 100_000]),
-        ]
-        for plan in plans {
-            let managed = try ResponsesCompactionFixture.object(plan.summaryRequest(model: "m", stream: false))
-            #expect(managed["max_output_tokens"] as? Int == 4_000)
-            let instructions = try #require(managed["instructions"] as? String)
-            #expect(instructions.contains("800 words"))
-        }
     }
 
     @Test("Context overflow trims the oldest removable items and marks the summary")

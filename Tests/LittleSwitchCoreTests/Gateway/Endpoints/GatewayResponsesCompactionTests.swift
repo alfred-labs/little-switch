@@ -29,6 +29,7 @@ extension GatewayTests {
         }
         let upstream = try #require(await transport.requests.first)
         let body = try #require(JSONSerialization.jsonObject(with: upstream.body) as? [String: Any])
+        #expect(body["max_output_tokens"] == nil)
         let tools = try #require(body["tools"] as? [[String: Any]])
         #expect(tools.first?["name"] as? String == "create_summary")
         let input = try #require(body["input"] as? [[String: Any]])

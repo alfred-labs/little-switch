@@ -132,6 +132,8 @@ public enum ProviderRequestBuilder {
         let endpoint = try ProviderEndpoint.forwarding(api, for: provider)
         var request = HTTPClientRequest(url: endpoint.absoluteString)
         request.method = .POST
+        // Application headers pass through unchanged. Replace client credentials
+        // for the selected provider and reframe the rewritten body for this hop.
         request.headers = incomingHeaders
         let connectionHeaders = request.headers["connection"].flatMap { value in
             value.split(separator: ",").map {
@@ -154,11 +156,6 @@ public enum ProviderRequestBuilder {
                 "trailer",
                 "transfer-encoding",
                 "upgrade",
-                // OpenAI-attested provenance and turn metadata describe a
-                // first-party ChatGPT session; third-party providers have no
-                // use for them and should not receive them.
-                "x-oai-attestation",
-                "x-codex-turn-metadata",
             ] + connectionHeaders
         )
         for name in strippedHeaderNames {

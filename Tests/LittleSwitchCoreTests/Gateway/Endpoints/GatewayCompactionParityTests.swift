@@ -62,9 +62,9 @@ extension GatewayTests {
         #expect(
             sent["reasoning"] as? [String: String]
                 == (native ? ["context": "all_turns", "effort": "max", "summary": "detailed"] : nil))
-        // Managed summaries retain their existing bound. Native request
-        // fields pass through without a gateway-imposed output limit.
-        #expect(sent["max_output_tokens"] as? Int == (native ? 100_000 : 4_000))
+        // Managed image requests still need their provider compatibility reserve;
+        // the summary itself no longer imposes or inherits an output limit.
+        #expect(sent["max_output_tokens"] as? Int == (native ? 100_000 : 32_768))
         if native { #expect(requests.first?.body == body) }
         let input = try #require(sent["input"] as? [[String: Any]])
         let parts = input.compactMap { $0["content"] as? [[String: Any]] }.joined()

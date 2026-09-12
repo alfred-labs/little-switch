@@ -38,7 +38,7 @@ struct ProviderRequestBuilderTests {
         #expect(anonymousMessage.headers["authorization"].isEmpty)
     }
 
-    @Test("Message requests strip ambient credentials and preserve safe headers")
+    @Test("Message requests replace ambient credentials and preserve application headers")
     func messageHeaders() throws {
         let provider = Provider(
             name: "Local",
@@ -74,8 +74,8 @@ struct ProviderRequestBuilderTests {
         #expect(request.headers["host"].isEmpty)
         #expect(request.headers["connection"].isEmpty)
         #expect(request.headers["x-private-hop"].isEmpty)
-        #expect(request.headers["x-oai-attestation"].isEmpty)
-        #expect(request.headers["x-codex-turn-metadata"].isEmpty)
+        #expect(request.headers["x-oai-attestation"] == ["openai-proof"])
+        #expect(request.headers["x-codex-turn-metadata"] == ["turn-blob"])
         #expect(request.headers["anthropic-beta"] == ["tools-2025"])
         #expect(request.headers["x-request-id"] == ["abc"])
     }
@@ -100,6 +100,9 @@ struct ProviderRequestBuilderTests {
             "X-Tenant-ID": "tenant-123",
             "X-Provider-Route": "coding",
             "openai-organization": "org-123",
+            "X-OAI-Attestation": "synthetic-proof",
+            "X-Codex-Turn-Metadata": "synthetic-turn-metadata",
+            "X-OpenAI-Internal-Codex-Responses-Lite": "true",
         ]
         incoming.add(name: "X-Provider-Route", value: "fallback")
         let request = try ProviderRequestBuilder.forwarding(
@@ -115,7 +118,7 @@ struct ProviderRequestBuilderTests {
     }
 
     @Test(
-        "Forwarding strips client credentials, private metadata, and connection-specific headers",
+        "Forwarding replaces client credentials and removes only transport-specific headers",
         arguments: [ProviderEndpoint.ForwardingAPI.messages, .countTokens, .responses, .chatCompletions]
     )
     func strippedHeaders(api: ProviderEndpoint.ForwardingAPI) throws {
@@ -155,6 +158,8 @@ struct ProviderRequestBuilderTests {
             body: Data("{}".utf8)
         )
         let expected: HTTPHeaders = [
+            "X-OAI-Attestation": "openai-proof",
+            "X-Codex-Turn-Metadata": "turn-blob",
             "content-type": "application/json",
             "X-Tenant-ID": "tenant-123",
             "authorization": "Bearer selected",
