@@ -1,5 +1,6 @@
 import Foundation
 import LittleSwitchSearch
+import LittleSwitchWire
 
 extension AnthropicWebSearch {
     /// Validates the caller policy the client declared on its built-in tool.
@@ -16,27 +17,27 @@ extension AnthropicWebSearch {
     /// Refusing the tool version cost it the whole conversation: a client
     /// that upgraded answered HTTP 400 on every turn that declared the newer
     /// tool, search or no search. Only a malformed list is still rejected.
-    static func requireBridgeableCallers(for tool: [String: Any]) throws {
-        guard let rawCallers = tool["allowed_callers"] else {
+    static func requireBridgeableCallers(for tool: [String: JSONValue]) throws {
+        guard let rawCallers = tool[AnthropicSearchToolConfiguration.Key.allowedCallers.rawValue] else {
             return
         }
-        guard rawCallers is [String] else {
+        guard let callers = rawCallers.array, callers.allSatisfy({ $0.string != nil }) else {
             throw Error.invalidMessage
         }
     }
 
     static func searchOptions(
-        from tool: [String: Any]
+        from tool: [String: JSONValue]
     ) throws -> WebSearchFilterOptions {
-        let hasAllowedDomains = tool["allowed_domains"] != nil
-        let hasBlockedDomains = tool["blocked_domains"] != nil
+        let hasAllowedDomains = tool[AnthropicSearchToolConfiguration.Key.allowedDomains.rawValue] != nil
+        let hasBlockedDomains = tool[AnthropicSearchToolConfiguration.Key.blockedDomains.rawValue] != nil
         guard !(hasAllowedDomains && hasBlockedDomains) else {
             throw Error.invalidMessage
         }
 
-        let includeDomains = try domainList(tool["allowed_domains"])
-        let excludeDomains = try domainList(tool["blocked_domains"])
-        let location = try approximateLocation(tool["user_location"])
+        let includeDomains = try domainList(tool[AnthropicSearchToolConfiguration.Key.allowedDomains.rawValue])
+        let excludeDomains = try domainList(tool[AnthropicSearchToolConfiguration.Key.blockedDomains.rawValue])
+        let location = try approximateLocation(tool[AnthropicSearchToolConfiguration.Key.userLocation.rawValue])
         return WebSearchFilterOptions(
             includeDomains: includeDomains,
             excludeDomains: excludeDomains,
@@ -45,13 +46,14 @@ extension AnthropicWebSearch {
         )
     }
 
-    private static func domainList(_ value: Any?) throws -> [String]? {
+    private static func domainList(_ value: JSONValue?) throws -> [String]? {
         guard let value else {
             return nil
         }
-        guard let domains = value as? [String] else {
+        guard let values = value.array, values.allSatisfy({ $0.string != nil }) else {
             throw Error.invalidMessage
         }
+        let domains = values.compactMap(\.string)
         return try domains.map { domain in
             let normalized = domain.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !normalized.isEmpty else {
@@ -62,28 +64,30 @@ extension AnthropicWebSearch {
     }
 
     private static func approximateLocation(
-        _ value: Any?
+        _ value: JSONValue?
     ) throws -> (location: String?, country: String?) {
         guard let value else {
             return (nil, nil)
         }
-        guard let object = value as? [String: Any], object["type"] as? String == "approximate"
+        guard let object = value.anthropicObject,
+            object[AnthropicSearchUserLocation.Key.type.rawValue]?.string
+                == AnthropicSearchLocationType.approximate.rawValue
         else {
             throw Error.invalidMessage
         }
-        let city = try optionalNonemptyString(object["city"])
-        let region = try optionalNonemptyString(object["region"])
-        let country = try optionalNonemptyString(object["country"])
-        _ = try optionalNonemptyString(object["timezone"])
+        let city = try optionalNonemptyString(object[AnthropicSearchUserLocation.Key.city.rawValue])
+        let region = try optionalNonemptyString(object[AnthropicSearchUserLocation.Key.region.rawValue])
+        let country = try optionalNonemptyString(object[AnthropicSearchUserLocation.Key.country.rawValue])
+        _ = try optionalNonemptyString(object[AnthropicSearchUserLocation.Key.timezone.rawValue])
         let joinedLocation = [city, region].compactMap(\.self).joined(separator: ", ")
         return (joinedLocation.isEmpty ? nil : joinedLocation, country)
     }
 
-    private static func optionalNonemptyString(_ value: Any?) throws -> String? {
+    private static func optionalNonemptyString(_ value: JSONValue?) throws -> String? {
         guard let value else {
             return nil
         }
-        guard let string = value as? String else {
+        guard let string = value.string else {
             throw Error.invalidMessage
         }
         let normalized = string.trimmingCharacters(in: .whitespacesAndNewlines)

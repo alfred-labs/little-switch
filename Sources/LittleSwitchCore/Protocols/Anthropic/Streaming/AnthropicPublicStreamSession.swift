@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 package struct AnthropicPublicStreamSession: Sendable {
     enum TerminalState: Sendable {
@@ -51,33 +52,29 @@ package struct AnthropicPublicStreamSession: Sendable {
             throw AnthropicWebSearch.Error.invalidMessage
         }
         let providerMessage = try publicStreamObject(messageJSON)
-        guard let messageID = providerMessage["id"] as? String,
+        guard let messageID = providerMessage[AnthropicMessage.Key.id.rawValue]?.string,
             !messageID.isEmpty,
-            let usage = providerMessage["usage"] as? [String: Any]
+            let usage = providerMessage[AnthropicMessage.Key.usage.rawValue]?.anthropicObject
         else {
             throw AnthropicWebSearch.Error.invalidMessage
         }
-        let inputTokens = try publicTokenCount(usage["input_tokens"])
+        let inputTokens = try publicTokenCount(usage[AnthropicUsageFields.Key.inputTokens.rawValue])
 
         let frame = try publicStreamFrame(
-            name: "message_start",
-            payload: [
-                "type": "message_start",
-                "message": [
-                    "id": messageID,
-                    "type": "message",
-                    "role": "assistant",
-                    "model": originalModel,
-                    "content": [],
-                    "stop_reason": NSNull(),
-                    "stop_sequence": NSNull(),
-                    "usage": publicUsage(
-                        inputTokens: inputTokens,
-                        outputTokens: 0,
-                        webSearchRequests: 0
+            name: AnthropicMessageStartEventType.messageStart.rawValue,
+            payload: AnthropicMessageStartEvent(
+                message: publicMessage(
+                    AnthropicMessage(
+                        content: [],
+                        id: messageID,
+                        stopReason: .null,
+                        stopSequence: .null,
+                        usage: publicUsage(inputTokens: inputTokens, outputTokens: 0, webSearchRequests: 0)
                     ),
-                ],
-            ]
+                    model: originalModel
+                ),
+                type: .messageStart
+            ).wireJSON()
         )
         started = true
         beginProviderTurn()
@@ -95,7 +92,7 @@ package struct AnthropicPublicStreamSession: Sendable {
         case .messageStart(let messageJSON):
             guard !providerTurnActive,
                 pendingSearch == nil,
-                (try publicStreamObject(messageJSON)["id"] as? String)?.isEmpty == false
+                (try publicStreamObject(messageJSON)[AnthropicMessage.Key.id.rawValue]?.string)?.isEmpty == false
             else {
                 throw AnthropicWebSearch.Error.invalidMessage
             }
@@ -162,38 +159,16 @@ package struct AnthropicPublicStreamSession: Sendable {
         }
 
         let index = allocatePublicIndex()
-        let queryData = try publicStreamData(["query": query])
-        // JSONSerialization output is always valid UTF-8.
-        // swiftlint:disable:next optional_data_string_conversion
-        let queryJSON = String(decoding: queryData, as: UTF8.self)
-        let frames = [
-            try publicStreamFrame(
-                name: "content_block_start",
-                payload: [
-                    "type": "content_block_start",
-                    "index": index,
-                    "content_block": [
-                        "type": "server_tool_use",
-                        "id": toolUseID,
-                        "name": "web_search",
-                        "input": [:],
-                        "caller": ["type": "direct"],
-                    ],
-                ]
-            ),
-            try publicStreamFrame(
-                name: "content_block_delta",
-                payload: [
-                    "type": "content_block_delta",
-                    "index": index,
-                    "delta": [
-                        "type": "input_json_delta",
-                        "partial_json": queryJSON,
-                    ],
-                ]
-            ),
-            try contentStopFrame(index: index),
-        ]
+        let call = AnthropicServerToolUseBlock(
+            caller: .value(try AnthropicDirectCaller(type: .direct).wireJSON()),
+            id: toolUseID,
+            input: AnthropicPrivateSearchInput.value(query: query),
+            name: .known(.webSearch),
+            type: .serverToolUse
+        )
+        let frames =
+            try publicContentStartFrames(.serverToolUse(call), index: index, includeToolInput: true)
+            + [contentStopFrame(index: index)]
         usedSearchIDs.insert(toolUseID)
         pendingSearch = PendingSearch(toolUseID: toolUseID, query: query)
         return frames
@@ -224,7 +199,7 @@ extension AnthropicPublicStreamSession {
             throw AnthropicWebSearch.Error.invalidMessage
         }
         let providerBlock = try publicStreamObject(blockJSON)
-        guard let type = providerBlock["type"] as? String else {
+        guard let type = providerBlock[AnthropicToolUseBlock.Key.type.rawValue]?.string else {
             throw AnthropicWebSearch.Error.invalidMessage
         }
         guard let block = try AnthropicPublicSanitizer.block(providerBlock) else {
@@ -233,7 +208,7 @@ extension AnthropicPublicStreamSession {
         }
 
         let privateSearch = AnthropicWebSearch.isPrivateSearchBlock(block, privateToolName: privateToolName)
-        let ordinaryTool = type == "tool_use" && !privateSearch
+        let ordinaryTool = type == AnthropicToolUseBlockType.toolUse.rawValue && !privateSearch
         if privateSearch {
             turnContainsPrivateSearch = true
         }
@@ -259,7 +234,7 @@ extension AnthropicPublicStreamSession {
             return []
         }
 
-        let emitted = try emitContentStart(block, type: type)
+        let emitted = try emitContentStart(block)
         providerBlocks[index] = .emitted(publicIndex: emitted.publicIndex)
         return emitted.frames
     }
@@ -352,11 +327,11 @@ extension AnthropicPublicStreamSession {
             // swiftlint:disable:next pattern_matching_keywords
             case .contentStart(let index, let blockJSON):
                 let block = try publicStreamObject(blockJSON)
-                guard let type = block["type"] as? String else {
+                guard let type = block[AnthropicToolUseBlock.Key.type.rawValue]?.string else {
                     throw AnthropicWebSearch.Error.invalidMessage
                 }
                 let privateSearch = AnthropicWebSearch.isPrivateSearchBlock(block, privateToolName: privateToolName)
-                let ordinaryTool = type == "tool_use"
+                let ordinaryTool = type == AnthropicToolUseBlockType.toolUse.rawValue
                 if privateSearch || ordinaryTool && suppressOrdinaryTools {
                     replayBlocks[index] = .suppressed
                 } else {
@@ -364,7 +339,7 @@ extension AnthropicPublicStreamSession {
                         replayBlocks[index] = .suppressed
                         continue
                     }
-                    let emitted = try emitContentStart(publicBlock, type: type)
+                    let emitted = try emitContentStart(publicBlock)
                     replayBlocks[index] = .emitted(publicIndex: emitted.publicIndex)
                     frames += emitted.frames
                 }
@@ -396,70 +371,11 @@ extension AnthropicPublicStreamSession {
     }
 
     private mutating func emitContentStart(
-        _ publicBlock: [String: Any],
-        type: String
+        _ publicBlock: [String: JSONValue]
     ) throws -> (frames: [Data], publicIndex: Int) {
-        var block = publicBlock
         let index = allocatePublicIndex()
-        var syntheticDeltas: [[String: Any]] = []
-
-        switch type {
-        case "text":
-            // Every caller passes a block validated by AnthropicPublicSanitizer.
-            // swiftlint:disable:next force_cast
-            let text = block["text"] as! String
-            block["text"] = ""
-            if !text.isEmpty {
-                syntheticDeltas.append(["type": "text_delta", "text": text])
-            }
-        case "thinking":
-            // Every caller passes a block validated by AnthropicPublicSanitizer.
-            // swiftlint:disable:next force_cast
-            let thinking = block["thinking"] as! String
-            let signature = block["signature"] as? String
-            block["thinking"] = ""
-            if block["signature"] != nil {
-                block["signature"] = ""
-            }
-            if !thinking.isEmpty {
-                syntheticDeltas.append([
-                    "type": "thinking_delta",
-                    "thinking": thinking,
-                ])
-            }
-            if let signature, !signature.isEmpty {
-                syntheticDeltas.append([
-                    "type": "signature_delta",
-                    "signature": signature,
-                ])
-            }
-        default:
-            break
-        }
-
-        var frames = [
-            try publicStreamFrame(
-                name: "content_block_start",
-                payload: [
-                    "type": "content_block_start",
-                    "index": index,
-                    "content_block": block,
-                ]
-            )
-        ]
-        for delta in syntheticDeltas {
-            frames.append(
-                try publicStreamFrame(
-                    name: "content_block_delta",
-                    payload: [
-                        "type": "content_block_delta",
-                        "index": index,
-                        "delta": delta,
-                    ]
-                )
-            )
-        }
-        return (frames, index)
+        let block = try anthropicDecode(AnthropicContentBlock.self, from: anthropicJSON(publicBlock))
+        return (try publicContentStartFrames(block, index: index), index)
     }
 
     mutating func allocatePublicIndex() -> Int {

@@ -1,11 +1,9 @@
 import Foundation
+import LittleSwitchWire
 
 /// Request-local identities only. Historical calls never grant permission to emit a new call.
 struct ProviderToolContractCatalog: Sendable {
-    enum Kind: String, Sendable {
-        case function
-        case custom
-    }
+    typealias Kind = OpenAIChatToolKind
 
     struct Identity: Hashable, Sendable {
         let name: String

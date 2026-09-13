@@ -1,5 +1,6 @@
 import Foundation
 import LittleSwitchTransport
+import LittleSwitchWire
 import Testing
 
 @testable import LittleSwitchCore
@@ -9,14 +10,14 @@ struct AnthropicDefensiveCoverageTests {
     @Test("Public encoding accepts nullable values and rejects malformed JSON")
     func publicEncodingValidation() throws {
         #expect(try publicTokenCount(nil) == 0)
-        #expect(try publicTokenCount(NSNull()) == 0)
-        for value: Any in [-1, "one"] {
+        #expect(try publicTokenCount(.null) == 0)
+        for value: JSONValue in [-1, "one"] {
             #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
                 _ = try publicTokenCount(value)
             }
         }
 
-        #expect(try publicStreamFragment(nil) is NSNull)
+        #expect(try publicStreamFragment(nil) == .null)
         #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
             _ = try publicStreamFragment(Data("{".utf8))
         }
@@ -28,15 +29,12 @@ struct AnthropicDefensiveCoverageTests {
         }
     }
 
-    @Test("Anthropic JSON encoding rejects non-JSON Foundation values before serialization")
+    @Test("Anthropic JSON boundary rejects values outside the JSON grammar")
     func nonJSONEncodingValues() {
-        #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
-            _ = try publicStreamData([
-                "invalid": Date(timeIntervalSince1970: 0)
-            ])
-        }
-        #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
-            _ = try AnthropicWebSearch.data(from: ["invalid": Double.nan])
+        for json in [#"{"invalid":NaN}"#, #"{"invalid":undefined}"#] {
+            #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
+                _ = try AnthropicWebSearch.object(from: Data(json.utf8))
+            }
         }
     }
 

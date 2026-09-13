@@ -1,0 +1,66 @@
+{
+  "$ref": "#/definitions/OpenAIError",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ErrorObject": {
+      "properties": {
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "misalignment": {
+          "$ref": "#/definitions/ErrorObject.Misalignment"
+        },
+        "param": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "param",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ErrorObject.Misalignment": {
+      "properties": {
+        "detailed_explanation": {
+          "type": "string"
+        },
+        "error_type": {
+          "type": "string"
+        },
+        "steer": {
+          "$ref": "#/definitions/ErrorObject.Misalignment.Steer"
+        }
+      },
+      "type": "object"
+    },
+    "ErrorObject.Misalignment.Steer": {
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "type": "object"
+    },
+    "OpenAIError": {
+      "$ref": "#/definitions/ErrorObject"
+    }
+  }
+}

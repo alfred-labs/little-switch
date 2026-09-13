@@ -1,107 +1,65 @@
 import Foundation
+import LittleSwitchWire
 
 func contentDeltaFrame(index: Int, deltaJSON: Data) throws -> Data {
     try publicStreamFrame(
-        name: "content_block_delta",
-        payload: [
-            "type": "content_block_delta",
-            "index": index,
-            "delta": try publicStreamObject(deltaJSON),
-        ]
+        name: AnthropicContentBlockDeltaEventType.contentBlockDelta.rawValue,
+        payload: AnthropicContentBlockDeltaEvent(
+            delta: try publicStreamFragment(deltaJSON), index: JSONNumber(index), type: .contentBlockDelta
+        ).wireJSON()
     )
 }
 
 func contentStopFrame(index: Int) throws -> Data {
     try publicStreamFrame(
-        name: "content_block_stop",
-        payload: ["type": "content_block_stop", "index": index]
+        name: AnthropicContentBlockStopEventType.contentBlockStop.rawValue,
+        payload: AnthropicContentBlockStopEvent(index: JSONNumber(index), type: .contentBlockStop).wireJSON()
     )
 }
 
-func publicUsage(
-    inputTokens: Int,
-    outputTokens: Int,
-    webSearchRequests: Int
-) -> [String: Any] {
-    publicUsage(
-        usage: AnthropicUsage(
-            inputTokens: inputTokens,
-            outputTokens: outputTokens
-        ),
+func publicUsage(inputTokens: Int, outputTokens: Int, webSearchRequests: Int) throws -> JSONValue {
+    try publicUsage(
+        usage: AnthropicUsage(inputTokens: inputTokens, outputTokens: outputTokens),
         webSearchRequests: webSearchRequests
     )
 }
 
 func publicUsage(
-    usage: AnthropicUsage,
-    outputTokens: Int? = nil,
-    webSearchRequests: Int
-) -> [String: Any] {
-    [
-        "input_tokens": usage.inputTokens,
-        "output_tokens": outputTokens ?? usage.outputTokens,
-        "cache_creation_input_tokens": usage.cacheCreationInputTokens,
-        "cache_read_input_tokens": usage.cacheReadInputTokens,
-        "cache_creation": [
-            "ephemeral_1h_input_tokens": usage.cacheCreationEphemeral1hInputTokens,
-            "ephemeral_5m_input_tokens": usage.cacheCreationEphemeral5mInputTokens,
-        ],
-        "service_tier": usage.serviceTier.map { $0 as Any } ?? NSNull(),
-        "server_tool_use": [
-            "web_search_requests": webSearchRequests,
-            "web_fetch_requests": 0,
-        ],
-    ]
+    usage: AnthropicUsage, outputTokens: Int? = nil, webSearchRequests: Int
+) throws -> JSONValue {
+    let fields = usageFields(usage, outputTokens: outputTokens)
+    return try AnthropicPublicUsage(
+        serverToolUse: AnthropicServerToolUsage(
+            webFetchRequests: JSONNumber(0),
+            webSearchRequests: JSONNumber(webSearchRequests)
+        ),
+        additionalFields: WireObject(fields.wireJSON()).additionalFields(excluding: [])
+    ).wireJSON()
 }
 
-func publicTokenCount(_ value: Any?) throws -> Int {
-    guard let value = value as? Int, value >= 0 else {
-        if value == nil || value is NSNull {
-            return 0
-        }
-        throw AnthropicWebSearch.Error.invalidMessage
-    }
-    return value
+func publicTokenCount(_ value: JSONValue?) throws -> Int {
+    guard let value, !value.isNull else { return 0 }
+    guard let number = value.numberLiteral else { throw AnthropicWebSearch.Error.invalidMessage }
+    return try anthropicTokenCount(number)
 }
 
-func publicStreamFragment(_ data: Data?) throws -> Any {
-    guard let data else {
-        return NSNull()
-    }
-    do {
-        return try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
-    } catch {
-        throw AnthropicWebSearch.Error.invalidMessage
-    }
+func publicStreamFragment(_ data: Data?) throws -> JSONValue {
+    try AnthropicWebSearch.fragmentObject(from: data)
 }
 
-func publicStreamObject(_ data: Data) throws -> [String: Any] {
-    do {
-        guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else {
-            throw AnthropicWebSearch.Error.invalidMessage
-        }
-        return object
-    } catch let error as AnthropicWebSearch.Error {
-        throw error
-    } catch {
-        throw AnthropicWebSearch.Error.invalidMessage
-    }
+func publicStreamObject(_ data: Data) throws -> [String: JSONValue] {
+    try AnthropicWebSearch.object(from: data)
 }
 
-func publicStreamData(_ value: Any) throws -> Data {
-    try AnthropicWebSearch.serialize(
-        value,
-        options: [.fragmentsAllowed, .sortedKeys, .withoutEscapingSlashes]
-    ) { value, options in
-        try JSONSerialization.data(withJSONObject: value, options: options)
-    }
+func publicStreamData(_ value: JSONValue) throws -> Data {
+    try value.serializedData()
 }
 
-func publicStreamFrame(
-    name: String,
-    payload: [String: Any]
-) throws -> Data {
+func publicStreamData(_ value: [String: JSONValue]) throws -> Data {
+    try anthropicJSON(value).serializedData()
+}
+
+func publicStreamFrame(name: String, payload: JSONValue) throws -> Data {
     var frame = Data("event: \(name)\ndata: ".utf8)
     frame.append(try publicStreamData(payload))
     frame.append(Data("\n\n".utf8))

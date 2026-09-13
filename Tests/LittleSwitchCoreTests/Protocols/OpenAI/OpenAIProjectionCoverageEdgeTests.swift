@@ -206,7 +206,11 @@ struct OpenAIProjectionCoverageEdgeTests {
             ])
         }
         #expect(throws: OpenAIResponsesChatCompletions.Error.invalidResponse) {
-            _ = try OpenAIResponsesChatCompletions.responsesUsage("bad")
+            _ = try OpenAIResponsesChatCompletions.project(
+                responseBody: responseData([
+                    "choices": [["finish_reason": "stop", "message": [:]]], "usage": "bad",
+                ]),
+                prepared: prepared)
         }
     }
 }

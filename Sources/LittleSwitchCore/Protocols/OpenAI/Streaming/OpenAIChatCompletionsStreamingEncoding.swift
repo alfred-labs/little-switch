@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 /// Lifecycle of a buffered chat completions turn.
 package enum ChatCompletionAccumulatorPhase: Sendable {
@@ -12,85 +13,87 @@ func chatStartedResponseJSON(
     created: Int,
     originalModel: String
 ) throws -> Data {
-    try chatData([
-        "id": responseID,
-        "object": "response",
-        "created_at": created,
-        "status": "in_progress",
-        "model": originalModel,
-        "output": [],
-        "usage": NSNull(),
-    ])
+    try WireCodec.encode(
+        OpenAIResponsesResponse(
+            createdAt: JSONNumber(created),
+            id: responseID,
+            object: .response,
+            output: [],
+            status: .inProgress,
+            usage: .null,
+            additionalFields: ["model": .string(originalModel)]
+        ))
 }
 
 func chatMessageStartEvents(
     id: String,
     outputIndex: Int
 ) throws -> [ResponsesProviderStreamEvent] {
-    let item: [String: Any] = [
-        "id": id,
-        "type": "message",
-        "status": "in_progress",
-        "role": "assistant",
-        "content": [],
-    ]
-    let part: [String: Any] = [
-        "type": "output_text",
-        "text": "",
-        "annotations": [],
-        "logprobs": [],
-    ]
+    let item = OpenAIResponsesMessage(
+        content: [], id: id, role: .assistant, status: .value(.inProgress), type: .message)
+    let part = OpenAIResponsesOutputText(
+        annotations: .value([]), logprobs: .value([]), text: "", type: .outputText)
     return [
         .outputItemAdded(
             outputIndex: outputIndex,
-            itemJSON: try chatData(item)
+            itemJSON: try WireCodec.encode(item)
         ),
         .contentPartAdded(
             outputIndex: outputIndex,
             contentIndex: 0,
             itemID: id,
-            partJSON: try chatData(part)
+            partJSON: try WireCodec.encode(part)
         ),
     ]
 }
 
 func chatMessageDoneEvents(_ message: ChatCompletionMessageState) throws -> [ResponsesProviderStreamEvent] {
-    var parts: [Int: [String: Any]] = [:]
+    var parts: [Int: OpenAIResponsesContentPart] = [:]
     var events: [ResponsesProviderStreamEvent] = []
     if let text = message.completedText {
-        parts[message.textIndex] = ["type": "output_text", "text": text, "annotations": [], "logprobs": []]
+        parts[message.textIndex] = .outputText(
+            OpenAIResponsesOutputText(
+                annotations: .value([]), logprobs: .value([]), text: text, type: .outputText))
         events.append(
             .outputTextDone(
                 outputIndex: message.outputIndex, contentIndex: message.textIndex, itemID: message.id, text: text))
     }
     if let index = message.refusalIndex {
         let refusal = message.refusal.joined()
-        parts[index] = ["type": "refusal", "refusal": refusal]
+        parts[index] = .refusal(OpenAIResponsesRefusal(refusal: refusal, type: .refusal))
         events.append(
             .passthrough(
-                type: "response.refusal.done",
-                payloadJSON: try chatData([
-                    "type": "response.refusal.done", "output_index": message.outputIndex, "content_index": index,
-                    "item_id": message.id, "refusal": refusal,
-                ])))
+                type: OpenAIResponsesRefusalDoneEventType.responseRefusalDone.rawValue,
+                payloadJSON: try WireCodec.encode(
+                    OpenAIResponsesRefusalDoneEvent(
+                        contentIndex: JSONNumber(index),
+                        itemId: message.id,
+                        outputIndex: JSONNumber(message.outputIndex),
+                        refusal: refusal,
+                        type: .responseRefusalDone
+                    ))))
     }
     for (index, part) in parts.sorted(by: { $0.key < $1.key }) {
         events.append(
             .passthrough(
-                type: "response.content_part.done",
-                payloadJSON: try chatData([
-                    "type": "response.content_part.done", "output_index": message.outputIndex, "content_index": index,
-                    "item_id": message.id, "part": part,
-                ])))
+                type: OpenAIContentPartDoneType.responseContentPartDone.rawValue,
+                payloadJSON: try WireCodec.encode(
+                    OpenAIContentPartDone(
+                        contentIndex: JSONNumber(index),
+                        itemId: message.id,
+                        outputIndex: JSONNumber(message.outputIndex),
+                        part: part.wireJSON(),
+                        type: .responseContentPartDone
+                    ))))
     }
     let content = parts.sorted { $0.key < $1.key }.map(\.value)
     events.append(
         .outputItemDone(
             outputIndex: message.outputIndex,
-            itemJSON: try chatData([
-                "id": message.id, "type": "message", "status": "completed", "role": "assistant",
-                "content": content,
-            ])))
+            itemJSON: try WireCodec.encode(
+                OpenAIResponsesMessage(
+                    content: content, id: message.id, role: .assistant, status: .value(.completed), type: .message
+                ))))
     return events
 }
 
@@ -99,80 +102,23 @@ func chatFunctionItem(
     callID: String,
     name: String,
     arguments: String,
-    status: String,
+    status: OpenAIResponsesFunctionCallStatus,
     binding: ResponsesToolNamespaces.Binding? = nil
-) -> [String: Any] {
-    var item: [String: Any] = [
-        "id": itemID,
-        "type": "function_call",
-        "status": status,
-        "call_id": callID,
-        "name": binding?.name ?? name,
-        "arguments": status == "completed" ? arguments : "",
-    ]
-    if let binding {
-        item["namespace"] = binding.namespace
-    }
-    return item
-}
-
-func chatFinishReason(_ value: Any?) throws -> String? {
-    guard let value, !(value is NSNull) else {
-        return nil
-    }
-    guard let value = value as? String, !value.isEmpty else {
-        throw OpenAIResponsesChatCompletions.Error.invalidResponse
-    }
-    return value
-}
-
-func nonemptyChatString(_ value: Any?) -> String? {
-    guard let value = value as? String, !value.isEmpty else {
-        return nil
-    }
-    return value
-}
-
-func nonnegativeChatIndex(_ value: Any?) -> Int? {
-    guard let value = value as? Int, value >= 0 else {
-        return nil
-    }
-    return value
-}
-
-func chatObject(_ data: Data) throws -> [String: Any] {
-    do {
-        guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else {
-            throw OpenAIResponsesChatCompletions.Error.invalidResponse
-        }
-        return object
-    } catch let error as OpenAIResponsesChatCompletions.Error {
-        throw error
-    } catch {
-        throw OpenAIResponsesChatCompletions.Error.invalidResponse
-    }
+) -> OpenAIResponsesFunctionCall {
+    OpenAIResponsesFunctionCall(
+        arguments: status == .completed ? arguments : "",
+        callId: callID,
+        id: itemID,
+        name: binding?.name ?? name,
+        namespace: binding.map { .value($0.namespace) } ?? .absent,
+        status: .value(status),
+        type: .functionCall)
 }
 
 func chatData(_ value: Any) throws -> Data {
-    guard validChatJSONValue(value) else {
+    do {
+        return try WireJSONCompatibility.data(value)
+    } catch {
         throw OpenAIResponsesChatCompletions.Error.invalidResponse
     }
-    return try JSONSerialization.data(
-        withJSONObject: value,
-        options: [.fragmentsAllowed, .sortedKeys, .withoutEscapingSlashes]
-    )
-}
-
-private func validChatJSONValue(_ value: Any) -> Bool {
-    if JSONSerialization.isValidJSONObject(value) {
-        return true
-    }
-    if value is NSNull || value is String {
-        return true
-    }
-    guard let number = value as? NSNumber else {
-        return false
-    }
-    return number.doubleValue.isFinite
 }

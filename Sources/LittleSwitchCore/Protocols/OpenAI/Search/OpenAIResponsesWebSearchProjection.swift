@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 package struct ResponsesWebSearchTrace: Equatable, Sendable {
     let id: String
@@ -198,7 +199,7 @@ extension OpenAIResponsesWebSearch {
     private static func projectionOutput(from data: Data) throws -> [[String: Any]] {
         let value: Any
         do {
-            value = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
+            value = WireJSONCompatibility.view(try responsesWireDecode(JSONValue.self, from: data))
         } catch {
             throw Error.invalidResponse
         }
@@ -211,7 +212,7 @@ extension OpenAIResponsesWebSearch {
     private static func projectionObject(from data: Data) throws -> [String: Any] {
         let value: Any
         do {
-            value = try JSONSerialization.jsonObject(with: data)
+            value = WireJSONCompatibility.view(try responsesWireDecode(JSONValue.self, from: data))
         } catch {
             throw Error.invalidResponse
         }
@@ -223,16 +224,13 @@ extension OpenAIResponsesWebSearch {
 
     private static func projectionFragment(from data: Data) throws -> Any {
         do {
-            return try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
+            return WireJSONCompatibility.view(try responsesWireDecode(JSONValue.self, from: data))
         } catch {
             throw Error.invalidResponse
         }
     }
 
     private static func projectionData(from object: [String: Any]) throws -> Data {
-        try JSONSerialization.data(
-            withJSONObject: object,
-            options: [.sortedKeys, .withoutEscapingSlashes]
-        )
+        try responsesStreamData(object)
     }
 }

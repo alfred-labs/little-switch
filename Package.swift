@@ -5,6 +5,7 @@ let package = Package(
     name: "LittleSwitch",
     platforms: [.macOS(.v14)],
     products: [
+        .library(name: "LittleSwitchWire", targets: ["LittleSwitchWire"]),
         .library(name: "LittleSwitchTransport", targets: ["LittleSwitchTransport"]),
         .library(name: "LittleSwitchSearch", targets: ["LittleSwitchSearch"]),
         .library(name: "LittleSwitchCore", targets: ["LittleSwitchCore"]),
@@ -12,6 +13,7 @@ let package = Package(
         .executable(name: "LittleSwitch", targets: ["LittleSwitch"]),
     ],
     dependencies: [
+        .package(path: "Vendor/OrderedJSON"),
         .package(
             url: "https://github.com/LebJe/TOMLKit.git",
             exact: "0.5.0"
@@ -66,6 +68,10 @@ let package = Package(
     ],
     targets: [
         .target(
+            name: "LittleSwitchWire",
+            dependencies: [.product(name: "OrderedJSON", package: "orderedjson")]
+        ),
+        .target(
             name: "LittleSwitchTransport",
             dependencies: [
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
@@ -85,6 +91,7 @@ let package = Package(
         .target(
             name: "LittleSwitchCore",
             dependencies: [
+                "LittleSwitchWire",
                 "LittleSwitchTransport",
                 "LittleSwitchSearch",
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
@@ -120,6 +127,16 @@ let package = Package(
             dependencies: ["LittleSwitchCore", "LittleSwitchUI"]
         ),
         .testTarget(
+            name: "LittleSwitchWireTests",
+            dependencies: ["LittleSwitchWire", "LittleSwitchWireContractFixtures"],
+            exclude: ["Generated"]
+        ),
+        .target(
+            name: "LittleSwitchWireContractFixtures",
+            dependencies: ["LittleSwitchWire"],
+            path: "Tests/LittleSwitchWireTests/Generated"
+        ),
+        .testTarget(
             name: "LittleSwitchTransportTests",
             dependencies: [
                 "LittleSwitchTransport",
@@ -142,6 +159,7 @@ let package = Package(
         .testTarget(
             name: "LittleSwitchCoreTests",
             dependencies: [
+                "LittleSwitchWire",
                 "LittleSwitchCore",
                 "LittleSwitchTransport",
                 "LittleSwitchSearch",

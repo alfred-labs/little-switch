@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 extension AnthropicPublicStreamSession {
     package mutating func finishSearch(_ trace: WebSearchTrace) throws -> [Data] {
@@ -16,22 +17,15 @@ extension AnthropicPublicStreamSession {
         }
 
         let index = allocatePublicIndex()
-        var frames = [
-            try publicStreamFrame(
-                name: "content_block_start",
-                payload: [
-                    "type": "content_block_start",
-                    "index": index,
-                    "content_block": [
-                        "type": "web_search_tool_result",
-                        "tool_use_id": trace.toolUseID,
-                        "content": resultContent,
-                        "caller": ["type": "direct"],
-                    ],
-                ]
-            ),
-            try contentStopFrame(index: index),
-        ]
+        let block = AnthropicWebSearchToolResultBlock(
+            caller: .value(try AnthropicDirectCaller(type: .direct).wireJSON()),
+            content: resultContent,
+            toolUseId: trace.toolUseID,
+            type: .webSearchToolResult
+        )
+        var frames =
+            try publicContentStartFrames(.webSearchToolResult(block), index: index)
+            + [contentStopFrame(index: index)]
         frames += try flushPostSearchTurn()
         self.pendingSearch = nil
         return frames
@@ -51,26 +45,14 @@ extension AnthropicPublicStreamSession {
             throw AnthropicWebSearch.Error.invalidMessage
         }
 
-        let stopReason = AnthropicWebSearch.normalizedStopReason(turn.stopReason)
-        let stopSequence = try publicStreamFragment(turn.stopSequenceJSON)
         let frames = [
             try publicStreamFrame(
-                name: "message_delta",
-                payload: [
-                    "type": "message_delta",
-                    "delta": [
-                        "stop_reason": stopReason,
-                        "stop_sequence": stopSequence,
-                    ],
-                    "usage": publicUsage(
-                        usage: usage,
-                        webSearchRequests: successfulSearchCount
-                    ),
-                ]
+                name: AnthropicMessageDeltaEventType.messageDelta.rawValue,
+                payload: publicMessageDelta(turn: turn, usage: usage, webSearchRequests: successfulSearchCount)
             ),
             try publicStreamFrame(
-                name: "message_stop",
-                payload: ["type": "message_stop"]
+                name: AnthropicMessageStopEventType.messageStop.rawValue,
+                payload: AnthropicMessageStopEvent(type: .messageStop).wireJSON()
             ),
         ]
         terminalState = .completed

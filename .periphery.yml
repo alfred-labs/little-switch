@@ -14,9 +14,17 @@
 # records and their retained snapshot projections after the Logs viewer is removed.
 # TrafficLogSnapshot remains the one-shot inspection boundary for retention/replay tests;
 # no retired view, subscription, or Clear command is retained by this exception.
+# WireCodingError retains two public API properties in the baseline: kind and
+# path. LittleSwitchWire publishes these diagnostics for external WireCodable
+# implementations and callers; Core maps wire errors to its existing protocol
+# errors. The error, Kind and initializer are used by Core. Coverage is unchanged,
+# and new members or generated declarations receive no exemption.
 # ProviderRequestPoolProviderSnapshot keeps narrowly annotated diagnostic fields
 # for reconfiguration identity, queue memory bounds and timeout/cancellation checks;
 # the retired provider-row UI projection is not retained by this exception.
 # Run through `mise run swift:deadcode` to inherit the pinned DEVELOPER_DIR.
 index_exclude:
   - Tests/**
+  # Preserve the pinned upstream API, as for remote SwiftPM dependencies.
+  # ordered-json:* verifies these nine inventoried sources, patches and tests.
+  - Vendor/OrderedJSON/Sources/**

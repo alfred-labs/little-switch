@@ -1,0 +1,41 @@
+{
+  "$ref": "#/definitions/PresenceProbe",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "PresenceProbe": {
+      "properties": {
+        "closedValue": {
+          "enum": [
+            "a",
+            "b"
+          ],
+          "type": "string"
+        },
+        "openValue": {
+          "type": "string"
+        },
+        "optionalNullable": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "optionalValue": {
+          "type": "string"
+        },
+        "requiredNullable": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "requiredNullable",
+        "closedValue",
+        "openValue"
+      ],
+      "type": "object"
+    }
+  }
+}

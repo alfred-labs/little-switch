@@ -8,11 +8,7 @@ import Foundation
 /// all-or-nothing `plaintext_agent_message_content` except that the payload
 /// is treated as readable.
 package enum ResponsesAgentMail {
-    package enum Field: String {
-        case encryptedFunctionArguments = "encrypted_function_args"
-    }
-
-    private enum MessageTool: String {
+    enum MessageTool: String {
         case spawn = "spawn_agent"
         case send = "send_message"
         case followup = "followup_task"
@@ -20,19 +16,9 @@ package enum ResponsesAgentMail {
 
     /// Codex treats an absent list as encrypted mail. An explicit empty list
     /// selects its DirectPlaintextMessage path for these collaboration tools.
-    /// Preserve a provider's explicit encryption declaration without inspecting
-    /// or changing its arguments; native OpenAI passthrough never uses this adapter.
-    package static func encryptedArguments(_ item: [String: Any]) throws -> [String]? {
-        if let value = item[Field.encryptedFunctionArguments.rawValue], !(value is NSNull) {
-            guard let arguments = value as? [String] else {
-                throw OpenAIResponsesWebSearch.Error.invalidResponse
-            }
-            return arguments
-        }
-        guard item["namespace"] as? String == "collaboration",
-            let name = item["name"] as? String, MessageTool(rawValue: name) != nil
-        else { return nil }
-        return []
+    /// The Responses sanitizer separately preserves explicit encryption declarations.
+    static func requiresPlaintext(namespace: String?, name: String) -> Bool {
+        namespace == "collaboration" && MessageTool(rawValue: name) != nil
     }
 
     package static func textContent(_ value: Any?) -> String? {

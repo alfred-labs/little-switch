@@ -21,13 +21,20 @@ Anthropic-compatible gateway on `127.0.0.1:11436`.
 
 ## Architecture Boundaries
 
+- `Sources/LittleSwitchWire` owns generated provider contracts and exact JSON
+  codecs. It depends only on OrderedJSON, never Core, Search, Transport, SwiftUI,
+  or AppKit. Update SDK inputs and projections through the repository's
+  `updating-wire-types` skill; never hand-edit generated contracts.
+- `Vendor/OrderedJSON` is a pinned upstream module with explicit local patches.
+  Preserve its source provenance, notices and full test corpus. Run its separate
+  `ordered-json:*` gates when changing the JSON engine or its patches.
 - `Sources/LittleSwitchTransport` owns outbound HTTP, URL assembly, SSE framing,
   and Zstandard. It must not depend on Core, Search, SwiftUI, or AppKit.
 - `Sources/LittleSwitchSearch` owns the common search contract, configuration,
   and provider adapters. It depends on Transport, never Core or Keychain.
 - `Sources/LittleSwitchCore` owns deterministic domain, routing, gateway,
-  protocol adapters, persistence, and security policy. It consumes Search and
-  Transport and must not depend on SwiftUI or AppKit.
+  protocol adapters, persistence, and security policy. It consumes Wire, Search,
+  and Transport and must not depend on SwiftUI or AppKit.
 - `Sources/LittleSwitchUI` owns AppKit lifecycle, SwiftUI presentation, Claude
   application control, and UI-facing state.
 - `ApplicationCoordinator` is the authority for mutable product state. `AppModel`

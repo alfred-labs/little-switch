@@ -155,8 +155,7 @@ enum ResponsesChatCompletionsHistory {
     private static func stringFragment(_ value: Any?) throws -> String? {
         if let string = value as? String { return string }
         guard let value else { return nil }
-        let fragment = try JSONSerialization.data(
-            withJSONObject: value, options: [.fragmentsAllowed, .sortedKeys, .withoutEscapingSlashes])
+        let fragment = try WireJSONCompatibility.data(value)
         return String(data: fragment, encoding: .utf8)
     }
 }

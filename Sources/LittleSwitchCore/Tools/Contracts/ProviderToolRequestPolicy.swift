@@ -1,15 +1,28 @@
 import Foundation
+import LittleSwitchWire
 
 /// Hosted declarations require an explicit gateway adapter before inference.
 package enum ProviderToolRequestPolicy {
-    package static func anthropic(_ root: [String: Any]) throws {
-        if let servers = root["mcp_servers"] {
-            guard let servers = servers as? [[String: Any]], servers.isEmpty else {
+    // Rejected beta extensions are a gateway policy, outside the stable SDK graph.
+    private enum UnsupportedAnthropicExtensionKey: String {
+        case mcpServers = "mcp_servers"
+    }
+
+    package static func anthropic(_ root: [String: JSONValue]) throws {
+        if let servers = root[UnsupportedAnthropicExtensionKey.mcpServers.rawValue] {
+            guard let servers = servers.anthropicObjects, servers.isEmpty else {
                 throw ProviderToolContract.Error.invalidRequest
             }
         }
-        for tool in try tools(in: root) {
-            guard let type = tool["type"] as? String else { continue }
+        let tools: [[String: JSONValue]]
+        if let value = root[AnthropicCountTokensProjection.Key.tools.rawValue] {
+            guard let objects = value.anthropicObjects else { throw ProviderToolContract.Error.invalidRequest }
+            tools = objects
+        } else {
+            tools = []
+        }
+        for tool in tools {
+            guard let type = tool[AnthropicToolDefinition.Key.type.rawValue]?.string else { continue }
             let hostedTypes = ["web_search", "web_fetch", "code_execution", "tool_search_tool", "mcp_toolset"]
             if hostedTypes.contains(where: type.hasPrefix) {
                 throw ProviderToolContract.Error.invalidRequest

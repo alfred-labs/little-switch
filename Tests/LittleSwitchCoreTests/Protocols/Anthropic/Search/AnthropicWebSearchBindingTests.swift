@@ -60,7 +60,7 @@ extension AnthropicWebSearchOwnershipTests {
     func unownedProjection() throws {
         let turn = try AnthropicWebSearch.parseModelTurn(ownershipProviderResponse(), privateToolName: nil)
         let content = try AnthropicWebSearch.responseContent(traces: [], finalTurn: turn, privateToolName: nil)
-        #expect(content.compactMap { $0["name"] as? String } == ["web_search", "__little_switch_web_search"])
+        #expect(content.compactMap { $0["name"]?.string } == ["web_search", "__little_switch_web_search"])
     }
 
     @Test("Search follow-ups retain only the actual bound call and remove only its declaration on error")

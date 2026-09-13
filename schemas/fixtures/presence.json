@@ -1,0 +1,12 @@
+{
+  "root": "PresenceProbe",
+  "description": "Local characterization of TypeScript presence and unions; not an official SDK type.",
+  "cases": [
+    { "name": "absent optional values", "value": { "requiredNullable": null, "closedValue": "a", "openValue": "future" }, "valid": true },
+    { "name": "explicit nullable optional value", "value": { "requiredNullable": "present", "optionalNullable": null, "closedValue": "b", "openValue": "known" }, "valid": true },
+    { "name": "explicit nonnullable optional null", "value": { "requiredNullable": null, "optionalValue": null, "closedValue": "a", "openValue": "known" }, "valid": false },
+    { "name": "absent required nullable value", "value": { "closedValue": "a", "openValue": "known" }, "valid": false },
+    { "name": "closed enum extension", "value": { "requiredNullable": null, "closedValue": "c", "openValue": "known" }, "valid": false },
+    { "name": "opaque additional property", "value": { "requiredNullable": null, "closedValue": "a", "openValue": "future", "vendor": { "opaque": true } }, "valid": true }
+  ]
+}

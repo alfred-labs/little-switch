@@ -9,7 +9,7 @@ extension PortableWebSearchHistoryTests {
     func malformedTokens() throws {
         for suffix in ["", "!", "====", "W10=", "e30=", "bnVsbA==", "eyI=", "/w=="] {
             #expect(throws: PortableWebSearchHistory.Error.invalidResult) {
-                try PortableWebSearchHistory.anthropicResultText(
+                try anthropicReplayText(
                     replayedSearchBlock(token: "little-switch-search:v1:" + suffix)
                 )
             }
@@ -37,7 +37,7 @@ extension PortableWebSearchHistoryTests {
         }
         for token in tokens {
             #expect(throws: PortableWebSearchHistory.Error.invalidResult) {
-                try PortableWebSearchHistory.anthropicResultText(replayedSearchBlock(token: token))
+                try anthropicReplayText(replayedSearchBlock(token: token))
             }
         }
     }
@@ -53,7 +53,7 @@ extension PortableWebSearchHistoryTests {
             var block = base
             block[key] = value
             #expect(throws: PortableWebSearchHistory.Error.invalidResult) {
-                try PortableWebSearchHistory.anthropicResultText(block)
+                try anthropicReplayText(block)
             }
         }
         let result = try #require((base["content"] as? [[String: Any]])?.first)
@@ -70,7 +70,7 @@ extension PortableWebSearchHistoryTests {
             var block = base
             block["content"] = [changed]
             #expect(throws: PortableWebSearchHistory.Error.invalidResult) {
-                try PortableWebSearchHistory.anthropicResultText(block)
+                try anthropicReplayText(block)
             }
         }
     }
@@ -86,7 +86,7 @@ extension PortableWebSearchHistoryTests {
             var block = replayedSearchBlock(token: "unused")
             block["content"] = content
             #expect(throws: PortableWebSearchHistory.Error.invalidResult) {
-                try PortableWebSearchHistory.anthropicResultText(block)
+                try anthropicReplayText(block)
             }
         }
     }
@@ -99,7 +99,7 @@ extension PortableWebSearchHistoryTests {
         let oversizedDecoding = "little-switch-search:v1:" + oversizedPayload.base64EncodedString()
         for token in [oversizedEncoding, oversizedDecoding] {
             #expect(throws: PortableWebSearchHistory.Error.resultTooLarge) {
-                try PortableWebSearchHistory.anthropicResultText(replayedSearchBlock(token: token))
+                try anthropicReplayText(replayedSearchBlock(token: token))
             }
         }
     }
@@ -136,7 +136,7 @@ extension PortableWebSearchHistoryTests {
         let payloadData = try JSONSerialization.data(withJSONObject: payload)
         let token = "little-switch-search:v1:" + payloadData.base64EncodedString()
         #expect(throws: PortableWebSearchHistory.Error.resultTooLarge) {
-            try PortableWebSearchHistory.anthropicResultText(replayedSearchBlock(token: token))
+            try anthropicReplayText(replayedSearchBlock(token: token))
         }
     }
 
@@ -156,7 +156,7 @@ extension PortableWebSearchHistoryTests {
             return try #require((replayedSearchBlock(token: token)["content"] as? [[String: Any]])?.first)
         }
         #expect(throws: PortableWebSearchHistory.Error.resultTooLarge) {
-            try PortableWebSearchHistory.anthropicResultText(block)
+            try anthropicReplayText(block)
         }
     }
 
@@ -172,7 +172,7 @@ extension PortableWebSearchHistoryTests {
             return try #require((replayedSearchBlock(token: token)["content"] as? [[String: Any]])?.first)
         }
         #expect(throws: PortableWebSearchHistory.Error.resultTooLarge) {
-            try PortableWebSearchHistory.anthropicResultText(block)
+            try anthropicReplayText(block)
         }
     }
 
@@ -186,7 +186,7 @@ extension PortableWebSearchHistoryTests {
         )
         let block = try publishedSearchResult(.results([result]))
         #expect(
-            try PortableWebSearchHistory.anthropicResultText(block)
+            try anthropicReplayText(block)
                 == "Historical web search result for srvtoolu_replay:\n"
                 + "Title: \(result.title)\nURL: \(result.url)\nContent: \(result.content)\n\n"
         )

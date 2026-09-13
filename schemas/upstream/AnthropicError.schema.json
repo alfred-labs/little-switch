@@ -1,0 +1,207 @@
+{
+  "$ref": "#/definitions/AnthropicError",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "APIErrorObject": {
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "const": "api_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "type"
+      ],
+      "type": "object"
+    },
+    "AnthropicError": {
+      "$ref": "#/definitions/ErrorResponse"
+    },
+    "AuthenticationError": {
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "const": "authentication_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "type"
+      ],
+      "type": "object"
+    },
+    "BillingError": {
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "const": "billing_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ErrorObject": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/InvalidRequestError"
+        },
+        {
+          "$ref": "#/definitions/AuthenticationError"
+        },
+        {
+          "$ref": "#/definitions/BillingError"
+        },
+        {
+          "$ref": "#/definitions/PermissionError"
+        },
+        {
+          "$ref": "#/definitions/NotFoundError"
+        },
+        {
+          "$ref": "#/definitions/RateLimitError"
+        },
+        {
+          "$ref": "#/definitions/GatewayTimeoutError"
+        },
+        {
+          "$ref": "#/definitions/APIErrorObject"
+        },
+        {
+          "$ref": "#/definitions/OverloadedError"
+        }
+      ]
+    },
+    "ErrorResponse": {
+      "properties": {
+        "error": {
+          "$ref": "#/definitions/ErrorObject"
+        },
+        "request_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "error",
+        "request_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "GatewayTimeoutError": {
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "const": "timeout_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "type"
+      ],
+      "type": "object"
+    },
+    "InvalidRequestError": {
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "const": "invalid_request_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "type"
+      ],
+      "type": "object"
+    },
+    "NotFoundError": {
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "const": "not_found_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "type"
+      ],
+      "type": "object"
+    },
+    "OverloadedError": {
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "const": "overloaded_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "type"
+      ],
+      "type": "object"
+    },
+    "PermissionError": {
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "const": "permission_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "type"
+      ],
+      "type": "object"
+    },
+    "RateLimitError": {
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "const": "rate_limit_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "type"
+      ],
+      "type": "object"
+    }
+  }
+}

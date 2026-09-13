@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "sources": [
+    {
+      "id": "anthropic",
+      "package": "@anthropic-ai/sdk",
+      "version": "0.125.0",
+      "repository": "https://github.com/anthropics/anthropic-sdk-typescript",
+      "license": "MIT",
+      "noticeFile": "LICENSE"
+    },
+    {
+      "id": "openai",
+      "package": "openai",
+      "version": "7.15.0",
+      "repository": "https://github.com/openai/openai-node",
+      "license": "Apache-2.0",
+      "noticeFile": "LICENSE"
+    }
+  ]
+}

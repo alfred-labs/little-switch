@@ -1,0 +1,627 @@
+{
+  "$ref": "#/definitions/OpenAIChatCompletion",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ChatCompletion": {
+      "properties": {
+        "choices": {
+          "items": {
+            "$ref": "#/definitions/ChatCompletion.Choice"
+          },
+          "type": "array"
+        },
+        "created": {
+          "type": "number"
+        },
+        "id": {
+          "type": "string"
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Metadata"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model": {
+          "type": "string"
+        },
+        "moderation": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ChatCompletion.Moderation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "object": {
+          "const": "chat.completion",
+          "type": "string"
+        },
+        "service_tier": {
+          "enum": [
+            "auto",
+            "default",
+            "flex",
+            "scale",
+            "priority",
+            "fast",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "system_fingerprint": {
+          "deprecated": "This fingerprint represents the backend configuration that the model\nruns with.\n\nCan be used in conjunction with the `seed` request parameter to understand when\nbackend changes have been made that might impact determinism.",
+          "type": "string"
+        },
+        "usage": {
+          "$ref": "#/definitions/CompletionUsage"
+        }
+      },
+      "required": [
+        "id",
+        "choices",
+        "created",
+        "model",
+        "object"
+      ],
+      "type": "object"
+    },
+    "ChatCompletion.Choice": {
+      "properties": {
+        "finish_reason": {
+          "enum": [
+            "stop",
+            "length",
+            "tool_calls",
+            "content_filter",
+            "function_call"
+          ],
+          "type": "string"
+        },
+        "index": {
+          "type": "number"
+        },
+        "logprobs": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ChatCompletion.Choice.Logprobs"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message": {
+          "$ref": "#/definitions/ChatCompletionMessage"
+        }
+      },
+      "required": [
+        "finish_reason",
+        "index",
+        "logprobs",
+        "message"
+      ],
+      "type": "object"
+    },
+    "ChatCompletion.Choice.Logprobs": {
+      "properties": {
+        "content": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/definitions/ChatCompletionTokenLogprob"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "refusal": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/definitions/ChatCompletionTokenLogprob"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "content",
+        "refusal"
+      ],
+      "type": "object"
+    },
+    "ChatCompletion.Moderation": {
+      "properties": {
+        "input": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ChatCompletion.Moderation.ModerationResults"
+            },
+            {
+              "$ref": "#/definitions/ChatCompletion.Moderation.Error"
+            }
+          ]
+        },
+        "output": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ChatCompletion.Moderation.ModerationResults"
+            },
+            {
+              "$ref": "#/definitions/ChatCompletion.Moderation.Error"
+            }
+          ]
+        }
+      },
+      "required": [
+        "input",
+        "output"
+      ],
+      "type": "object"
+    },
+    "ChatCompletion.Moderation.Error": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "const": "error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ChatCompletion.Moderation.ModerationResults": {
+      "properties": {
+        "model": {
+          "type": "string"
+        },
+        "results": {
+          "items": {
+            "$ref": "#/definitions/ChatCompletion.Moderation.ModerationResults.Result"
+          },
+          "type": "array"
+        },
+        "type": {
+          "const": "moderation_results",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model",
+        "results",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ChatCompletion.Moderation.ModerationResults.Result": {
+      "properties": {
+        "categories": {
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "type": "object"
+        },
+        "category_applied_input_types": {
+          "additionalProperties": {
+            "items": {
+              "enum": [
+                "text",
+                "image"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "category_scores": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "type": "object"
+        },
+        "flagged": {
+          "type": "boolean"
+        },
+        "model": {
+          "type": "string"
+        },
+        "type": {
+          "const": "moderation_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "categories",
+        "category_applied_input_types",
+        "category_scores",
+        "flagged",
+        "model",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ChatCompletionAudio": {
+      "properties": {
+        "data": {
+          "type": "string"
+        },
+        "expires_at": {
+          "type": "number"
+        },
+        "id": {
+          "type": "string"
+        },
+        "transcript": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "data",
+        "expires_at",
+        "transcript"
+      ],
+      "type": "object"
+    },
+    "ChatCompletionMessage": {
+      "properties": {
+        "annotations": {
+          "items": {
+            "$ref": "#/definitions/ChatCompletionMessage.Annotation"
+          },
+          "type": "array"
+        },
+        "audio": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ChatCompletionAudio"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "function_call": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ChatCompletionMessage.FunctionCall"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "deprecated": "Deprecated and replaced by `tool_calls`. The name and arguments of a\nfunction that should be called, as generated by the model."
+        },
+        "refusal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role": {
+          "const": "assistant",
+          "type": "string"
+        },
+        "tool_calls": {
+          "items": {
+            "$ref": "#/definitions/ChatCompletionMessageToolCall"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "content",
+        "refusal",
+        "role"
+      ],
+      "type": "object"
+    },
+    "ChatCompletionMessage.Annotation": {
+      "properties": {
+        "type": {
+          "const": "url_citation",
+          "type": "string"
+        },
+        "url_citation": {
+          "$ref": "#/definitions/ChatCompletionMessage.Annotation.URLCitation"
+        }
+      },
+      "required": [
+        "type",
+        "url_citation"
+      ],
+      "type": "object"
+    },
+    "ChatCompletionMessage.Annotation.URLCitation": {
+      "properties": {
+        "end_index": {
+          "type": "number"
+        },
+        "start_index": {
+          "type": "number"
+        },
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "end_index",
+        "start_index",
+        "title",
+        "url"
+      ],
+      "type": "object"
+    },
+    "ChatCompletionMessage.FunctionCall": {
+      "deprecated": "Deprecated and replaced by `tool_calls`. The name and arguments of a\nfunction that should be called, as generated by the model.",
+      "properties": {
+        "arguments": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "arguments",
+        "name"
+      ],
+      "type": "object"
+    },
+    "ChatCompletionMessageCustomToolCall": {
+      "properties": {
+        "custom": {
+          "$ref": "#/definitions/ChatCompletionMessageCustomToolCall.Custom"
+        },
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "custom",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "custom",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ChatCompletionMessageCustomToolCall.Custom": {
+      "properties": {
+        "input": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "input",
+        "name"
+      ],
+      "type": "object"
+    },
+    "ChatCompletionMessageFunctionToolCall": {
+      "properties": {
+        "function": {
+          "$ref": "#/definitions/ChatCompletionMessageFunctionToolCall.Function"
+        },
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "function",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "function",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ChatCompletionMessageFunctionToolCall.Function": {
+      "properties": {
+        "arguments": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "arguments",
+        "name"
+      ],
+      "type": "object"
+    },
+    "ChatCompletionMessageToolCall": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ChatCompletionMessageFunctionToolCall"
+        },
+        {
+          "$ref": "#/definitions/ChatCompletionMessageCustomToolCall"
+        }
+      ]
+    },
+    "ChatCompletionTokenLogprob": {
+      "properties": {
+        "bytes": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "logprob": {
+          "type": "number"
+        },
+        "token": {
+          "type": "string"
+        },
+        "top_logprobs": {
+          "items": {
+            "$ref": "#/definitions/ChatCompletionTokenLogprob.TopLogprob"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "token",
+        "bytes",
+        "logprob",
+        "top_logprobs"
+      ],
+      "type": "object"
+    },
+    "ChatCompletionTokenLogprob.TopLogprob": {
+      "properties": {
+        "bytes": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "logprob": {
+          "type": "number"
+        },
+        "token": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "token",
+        "bytes",
+        "logprob"
+      ],
+      "type": "object"
+    },
+    "CompletionUsage": {
+      "properties": {
+        "completion_tokens": {
+          "type": "number"
+        },
+        "completion_tokens_details": {
+          "$ref": "#/definitions/CompletionUsage.CompletionTokensDetails"
+        },
+        "prompt_tokens": {
+          "type": "number"
+        },
+        "prompt_tokens_details": {
+          "$ref": "#/definitions/CompletionUsage.PromptTokensDetails"
+        },
+        "total_tokens": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "completion_tokens",
+        "prompt_tokens",
+        "total_tokens"
+      ],
+      "type": "object"
+    },
+    "CompletionUsage.CompletionTokensDetails": {
+      "properties": {
+        "accepted_prediction_tokens": {
+          "type": "number"
+        },
+        "audio_tokens": {
+          "type": "number"
+        },
+        "reasoning_tokens": {
+          "type": "number"
+        },
+        "rejected_prediction_tokens": {
+          "type": "number"
+        },
+        "text_tokens": {
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "CompletionUsage.PromptTokensDetails": {
+      "properties": {
+        "audio_tokens": {
+          "type": "number"
+        },
+        "cache_write_tokens": {
+          "type": "number"
+        },
+        "cached_tokens": {
+          "type": "number"
+        },
+        "image_tokens": {
+          "type": "number"
+        },
+        "text_tokens": {
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "Metadata": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "OpenAIChatCompletion": {
+      "$ref": "#/definitions/ChatCompletion"
+    }
+  }
+}

@@ -183,6 +183,11 @@ mise run toolchains
 mise run swift:format
 mise run swift:lint
 mise run repo:test
+mise run schemas:test
+mise run schemas:check
+mise run ordered-json:check
+mise run ordered-json:tools:test
+mise run ordered-json:test
 mise run tools:coverage
 mise run tools:deadcode
 mise run swift:test
@@ -197,3 +202,64 @@ mise run verify:bundle
 [tasks.clean]
 description = "Remove generated SwiftPM and application build products"
 run = "swift package clean && rm -rf build"
+
+[tasks."schemas:install"]
+description = "Install the exact SDK extraction dependencies without lifecycle scripts"
+tools = { node = "24.16.0" }
+run = "npm ci --prefix tools/sdk-contracts --ignore-scripts --no-audit --no-fund --cache .cache/sdk-contracts-npm"
+
+[tasks."schemas:test"]
+description = "Test deterministic SDK contracts and their validation boundaries"
+tools = { node = "24.16.0" }
+run = "npm --prefix tools/sdk-contracts test"
+
+[tasks."schemas:extract"]
+description = "Regenerate official SDK schema snapshots and their provenance"
+tools = { node = "24.16.0" }
+run = "npm --prefix tools/sdk-contracts run extract"
+
+[tasks."schemas:upstream:check"]
+description = "Verify SDK snapshot hashes and compare a fresh extraction"
+tools = { node = "24.16.0" }
+run = "npm --prefix tools/sdk-contracts run check"
+
+[tasks."schemas:compare"]
+description = "Compare verified old and new SDK snapshots (pass both directories after --)"
+tools = { node = "24.16.0" }
+run = "npm --silent --prefix tools/sdk-contracts run compare --"
+
+[tasks."schemas:update"]
+description = "Extract deliberately updated SDK pins and report changes from the verified previous snapshot"
+tools = { node = "24.16.0" }
+run = "npm --silent --prefix tools/sdk-contracts run update --"
+
+[tasks."schemas:generate"]
+description = "Generate owned Swift contracts from explicit SDK projections"
+run = "mise run --quiet tools:run -- contracts generate"
+
+[tasks."schemas:check"]
+description = "Verify upstream snapshots and Swift generation without modifying the checkout"
+run = """
+set -eu
+mise run schemas:upstream:check
+mise run --quiet tools:run -- contracts check
+"""
+
+[tasks."ordered-json:check"]
+description = "Verify the pinned OrderedJSON sources, corpus, and local patches"
+tools = { node = "24.16.0" }
+run = "node tools/ordered-json/check.mjs"
+
+[tasks."ordered-json:tools:test"]
+description = "Test OrderedJSON provenance and patch verification"
+tools = { node = "24.16.0" }
+run = "node --test tools/ordered-json/*.test.mjs"
+
+[tasks."ordered-json:test"]
+description = "Qualify the vendored OrderedJSON package and complete upstream corpus"
+run = """
+xcrun swift test --disable-sandbox --enable-code-coverage \
+  --package-path Vendor/OrderedJSON --scratch-path .build/ordered-json \
+  --cache-path .build/cache --config-path .build/config --security-path .build/security \
+  -Xswiftc -warnings-as-errors
+"""

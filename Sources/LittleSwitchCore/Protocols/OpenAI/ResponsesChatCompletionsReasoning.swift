@@ -1,5 +1,5 @@
-import CoreFoundation
 import Foundation
+import LittleSwitchWire
 
 /// Chat providers return replayable state under either spelling. Keep those
 /// fields opaque to Responses clients and restore them only after the provider
@@ -7,37 +7,41 @@ import Foundation
 package enum ResponsesChatCompletionsReasoning {
     private static let keys: Set<String> = ["reasoning", "reasoning_content"]
     private static let carrierType = "little_switch_chat_reasoning"
+    private enum CarrierKey: String { case type, version, data }
 
-    package static func fields(in message: [String: Any]) throws -> [String: String] {
+    static func wireFields(in additionalFields: [String: JSONValue]) throws -> [String: String] {
         var fields: [String: String] = [:]
         for key in keys {
-            guard let value = message[key], !(value is NSNull) else { continue }
-            guard let value = value as? String else {
+            guard let value = additionalFields[key], !value.isNull else { continue }
+            guard case .string(let text) = value else {
                 throw OpenAIResponsesChatCompletions.Error.invalidResponse
             }
-            fields[key] = value
+            fields[key] = text
         }
         return fields
     }
 
     package static func item(
-        message: [String: Any], responseID: String, providerID: UUID? = nil
+        message: [String: String], responseID: String, providerID: UUID? = nil
     ) throws -> [String: Any]? {
-        let fields = try fields(in: message)
+        let fields = message.filter { keys.contains($0.key) }
         guard !fields.isEmpty else { return nil }
         let payload: [String: Any] = [
-            "type": carrierType, "version": 1,
-            "data": try responsesStreamData(fields).base64EncodedString(),
+            CarrierKey.type.rawValue: carrierType, CarrierKey.version.rawValue: 1,
+            CarrierKey.data.rawValue: try responsesStreamData(fields).base64EncodedString(),
         ]
         let encoded = try responsesStreamData(payload)
-        // JSONSerialization always produces valid UTF-8. The base64 payload is
+        // The exact JSON codec produces UTF-8. The base64 payload is
         // an opaque transport encoding, not an encryption or security boundary.
         // swiftlint:disable:next optional_data_string_conversion
         let encrypted = String(decoding: encoded, as: UTF8.self)
-        let item: [String: Any] = [
-            "id": "rs_\(responseID)", "type": "reasoning", "summary": [],
-            "encrypted_content": encrypted,
-        ]
+        let item = try WireJSONCompatibility.fields(
+            OpenAIResponsesReasoning(
+                encryptedContent: .value(encrypted),
+                id: "rs_\(responseID)",
+                summary: [],
+                type: .reasoning
+            ).wireJSON())
         guard let providerID else { return item }
         return try ResponsesProviderState.tagged(item, providerID: providerID)
     }
@@ -47,11 +51,10 @@ package enum ResponsesChatCompletionsReasoning {
             let item = try ResponsesProviderState.restoreTaggedReasoning(item, providerID: providerID),
             let encrypted = item["encrypted_content"] as? String,
             let payload = try? responsesStreamObject(Data(encrypted.utf8)),
-            payload["type"] as? String == carrierType
+            payload[CarrierKey.type.rawValue] as? String == carrierType
         else { return nil }
-        guard let version = payload["version"] as? NSNumber,
-            CFGetTypeID(version) != CFBooleanGetTypeID(), version == 1,
-            let encoded = payload["data"] as? String,
+        guard nonnegativeResponsesIndex(payload[CarrierKey.version.rawValue]) == 1,
+            let encoded = payload[CarrierKey.data.rawValue] as? String,
             let decoded = Data(base64Encoded: encoded),
             let rawFields = try? responsesStreamObject(decoded),
             !rawFields.isEmpty, Set(rawFields.keys).isSubset(of: keys),

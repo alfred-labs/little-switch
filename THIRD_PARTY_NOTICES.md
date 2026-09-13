@@ -60,5 +60,17 @@ The application build copies the unmodified `LICENSE` and `NOTICE` files for
 every resolved package into `Contents/Resources/Licenses`. Those files are the
 authoritative attribution and license texts shipped with the application.
 
+The application also uses the MIT-licensed OrderedJSON module from
+[swift-json-schema](https://github.com/ajevans99/swift-json-schema/tree/v0.14.0/Sources/OrderedJSON),
+maintained with local patches under `Vendor/OrderedJSON`. Its upstream provenance
+and changes are recorded there. Its unmodified license text ships in
+`Contents/Resources/Licenses/ordered-json/LICENSE`.
+
+The OpenAI and Anthropic wire codecs are generated from the contracts in their
+official TypeScript SDKs. Their unmodified license texts ship in
+`Contents/Resources/Licenses/official-sdk-contracts`. The repository records the
+exact SDK versions and provenance in `schemas/sdk-sources.json` and the upstream
+snapshot manifest.
+
 Other provider marks are not redistributed. Application icons shown by the native
 UI are loaded from the user's installed applications at runtime.

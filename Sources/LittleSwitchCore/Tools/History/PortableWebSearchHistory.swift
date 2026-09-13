@@ -1,5 +1,6 @@
 import Foundation
 import LittleSwitchSearch
+import LittleSwitchWire
 
 /// Gateway-owned search history is self-contained: the native encrypted-content
 /// field transports readable results, not encryption or a provider-issued token.
@@ -32,24 +33,28 @@ package enum PortableWebSearchHistory {
     private static let maximumPayloadBytes = 2 * 1_024 * 1_024
     private static let maximumTokenBytes = tokenPrefix.utf8.count + ((maximumPayloadBytes + 2) / 3) * 4
 
-    package static func anthropicResultText(_ block: [String: Any]) throws -> String {
-        guard block["type"] as? String == "web_search_tool_result",
-            let toolUseID = block["tool_use_id"] as? String
+    package static func anthropicResultText(_ block: [String: JSONValue]) throws -> String {
+        guard
+            block[AnthropicWebSearchToolResultBlock.Key.type.rawValue]?.string
+                == AnthropicWebSearchToolResultBlockType.webSearchToolResult.rawValue,
+            let toolUseID = block[AnthropicWebSearchToolResultBlock.Key.toolUseId.rawValue]?.string
         else {
             throw Error.invalidResult
         }
         try validateToolUseID(toolUseID)
         let header = "Historical web search result for \(toolUseID):\n"
-        if let error = block["content"] as? [String: Any] {
-            guard error["type"] as? String == "web_search_tool_result_error",
-                let code = error["error_code"] as? String, !code.isEmpty,
+        if let error = block[AnthropicWebSearchToolResultBlock.Key.content.rawValue]?.anthropicObject {
+            guard
+                error[AnthropicWebSearchError.Key.type.rawValue]?.string
+                    == AnthropicWebSearchErrorType.webSearchToolResultError.rawValue,
+                let code = error[AnthropicWebSearchError.Key.errorCode.rawValue]?.string, !code.isEmpty,
                 code.utf8.count <= 128
             else {
                 throw Error.invalidResult
             }
             return header + "Web search failed: \(code)."
         }
-        guard let content = block["content"] as? [[String: Any]] else {
+        guard let content = block[AnthropicWebSearchToolResultBlock.Key.content.rawValue]?.anthropicObjects else {
             throw Error.invalidResult
         }
         try validateResultCount(content.count)
@@ -121,14 +126,16 @@ package enum PortableWebSearchHistory {
     }
 
     private static func readableResult(
-        _ object: [String: Any],
+        _ object: [String: JSONValue],
         toolUseID: String,
         resultIndex: Int
     ) throws -> WebSearchResult {
-        guard object["type"] as? String == "web_search_result",
-            let title = object["title"] as? String,
-            let url = object["url"] as? String,
-            let token = object["encrypted_content"] as? String, !token.isEmpty
+        guard
+            object[AnthropicWebSearchResult.Key.type.rawValue]?.string
+                == AnthropicWebSearchResultType.webSearchResult.rawValue,
+            let title = object[AnthropicWebSearchResult.Key.title.rawValue]?.string,
+            let url = object[AnthropicWebSearchResult.Key.url.rawValue]?.string,
+            let token = object[AnthropicWebSearchResult.Key.encryptedContent.rawValue]?.string, !token.isEmpty
         else {
             throw Error.invalidResult
         }

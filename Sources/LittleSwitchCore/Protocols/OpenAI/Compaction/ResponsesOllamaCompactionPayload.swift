@@ -1,4 +1,3 @@
-import CoreFoundation
 import Foundation
 
 struct ResponsesOllamaStandaloneName: Sendable {
@@ -10,8 +9,7 @@ struct ResponsesOllamaStandaloneName: Sendable {
 enum ResponsesOllamaCompactionPayload {
     static func expand(_ payload: [String: Any]) throws -> [[String: Any]] {
         guard Set(payload.keys).isSubset(of: ["type", "version", "summary", "retained", "standalone_names"]),
-            let version = payload["version"] as? NSNumber,
-            CFGetTypeID(version) != CFBooleanGetTypeID(), version == 1,
+            nonnegativeResponsesIndex(payload["version"]) == 1,
             let summary = ResponsesCompactionJSON.nonempty(payload["summary"])
         else { throw ResponsesCompactionError.invalidPayload }
         let records: [[String: Any]] = try ResponsesOllamaCompactionMessage.array(payload["retained"])

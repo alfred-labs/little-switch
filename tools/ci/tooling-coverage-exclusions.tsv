@@ -1,5 +1,6 @@
 Sources/LittleSwitchTools/CommitMessageCommand.swift	ArgumentParser and filesystem entry point; ConventionalCommitCLITests covers command parsing, diagnostics and file reads.
 Sources/LittleSwitchTools/CommitMessageReadError.swift	Filesystem diagnostic adapter exercised by ConventionalCommitCLITests unreadable-file integration.
+Sources/LittleSwitchTools/ContractsCommand.swift	ArgumentParser entry points; ContractGenerationTests.cliGeneratesChecksAndReportsDrift covers generation, check, unchanged files and nonzero drift diagnostics. Schema reading, projection, emission and ownership remain measured.
 Sources/LittleSwitchTools/CoverageCommand.swift	ArgumentParser and filesystem entry points; CoverageCLITests and CoverageGateTests exercise command parsing, reports and scope output.
 Sources/LittleSwitchTools/DiagnosticsCommand.swift	ArgumentParser and streaming filesystem adapter; DiagnosticsCLITests cover ordered segments, partial and long lines, empty directories, root resolution and failures. Aggregation remains measured.
 Sources/LittleSwitchTools/LittleSwitchTools.swift	ArgumentParser executable entry point exercised through tooling CLI integration tests.

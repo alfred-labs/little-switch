@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 package struct ResponsesFunctionMetadata {
     let callID: String
@@ -44,4 +45,22 @@ private func responsesFunctionNamespace(_ value: Any?) throws -> String? {
         throw OpenAIResponsesWebSearch.Error.invalidResponse
     }
     return namespace
+}
+
+func responsesFunctionMetadata(
+    _ item: OpenAIResponsesOutputItem
+) throws -> ResponsesFunctionMetadata? {
+    let metadata: ResponsesFunctionMetadata
+    switch item {
+    case .functionCall(let call):
+        metadata = .init(callID: call.callId, name: call.name, namespace: call.namespace.value)
+    case .customToolCall(let call):
+        metadata = .init(callID: call.callId, name: call.name, namespace: call.namespace.value)
+    default:
+        return nil
+    }
+    guard !metadata.callID.isEmpty, !metadata.name.isEmpty, metadata.namespace?.isEmpty != true else {
+        throw OpenAIResponsesWebSearch.Error.invalidResponse
+    }
+    return metadata
 }

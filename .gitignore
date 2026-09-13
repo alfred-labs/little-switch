@@ -11,3 +11,4 @@ build/
 *.profdata
 /docs-internals
 .worktrees/
+/tools/sdk-contracts/node_modules/

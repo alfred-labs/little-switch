@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 struct ResponsesOllamaCompactionMessage: Sendable {
     let role: String
@@ -80,7 +81,8 @@ struct ResponsesOllamaCompactionMessage: Sendable {
         }
         if toolName == "tool_search" {
             guard images.isEmpty,
-                let tools = try? JSONSerialization.jsonObject(with: Data(content.utf8)) as? [[String: Any]]
+                let value = try? JSONValue.parse(Data(content.utf8)),
+                let tools = WireJSONCompatibility.view(value) as? [[String: Any]]
             else { throw ResponsesCompactionError.invalidPayload }
             return [
                 "type": "tool_search_output", "call_id": toolCallID, "execution": "client", "status": "completed",

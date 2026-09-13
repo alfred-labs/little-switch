@@ -11,15 +11,12 @@ package enum RepositoryPolicyFileSystem {
         let snapshot = try read(root: root)
         var issues = RepositoryPolicies.violations(files: snapshot.files, paths: snapshot.paths, rootPath: root.path)
 
-        // Magic key gate: raw string literals used as dictionary keys in the
-        // protocol layer must either come from central constants or be listed
-        // in the migration allowlist. New keys not in the allowlist fail.
-        let allowlist = MagicKeyScanner.loadAllowlist(
-            from: root.appendingPathComponent("tools/magic-key-allowlist.txt")
-        )
-        let protocolsDirectory = root.appendingPathComponent("Sources/LittleSwitchCore/Protocols")
-        let magicViolations = try MagicKeyScanner.scan(directory: protocolsDirectory, allowlist: allowlist)
-        issues.append(contentsOf: magicViolations.map(\.description))
+        do {
+            let committed = try MagicStringBaselineStore.committed(root: root)
+            issues.append(contentsOf: MagicStringPolicy.check(files: snapshot.files, committedBaseline: committed))
+        } catch {
+            issues.append(error.localizedDescription)
+        }
 
         guard issues.isEmpty else {
             throw RepositoryPolicyError(issues: issues)

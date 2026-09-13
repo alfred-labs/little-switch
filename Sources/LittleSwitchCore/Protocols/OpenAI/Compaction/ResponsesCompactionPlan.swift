@@ -1,4 +1,3 @@
-import CoreFoundation
 import Foundation
 
 package enum ResponsesCompactionError: Error, Equatable {
@@ -92,8 +91,7 @@ package struct ResponsesCompactionPlan: Sendable {
         guard let input = rawInput as? [[String: Any]], input.count > 1,
             input.last?["type"] as? String == "compaction_trigger",
             !input.dropLast().contains(where: { $0["type"] as? String == "compaction_trigger" }),
-            let stream = request["stream"] as? NSNumber,
-            CFGetTypeID(stream) == CFBooleanGetTypeID(), stream.boolValue,
+            request["stream"] as? Bool == true,
             !ResponsesConversationReferences.hasServerState(in: request),
             let model = ResponsesCompactionJSON.nonempty(request["model"])
         else { throw ResponsesCompactionError.invalidRequest }

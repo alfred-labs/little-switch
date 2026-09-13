@@ -1,0 +1,2050 @@
+{
+  "formatVersion": 1,
+  "overrides": [
+    {
+      "id": "chat-stream-omitted-finish",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/ChatCompletionChunk.Choice/properties/finish_reason",
+      "operation": "optional",
+      "reason": "Unfinished provider deltas may omit the finish reason; the state machine still requires a terminal reason.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/OpenAIChatAccumulatorCoverageTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-provider-finish-reasons",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/ChatCompletionChunk.Choice/properties/finish_reason",
+      "operation": "enumValues",
+      "values": [
+        "sensitive",
+        "model_context_window_exceeded",
+        "network_error"
+      ],
+      "reason": "Preserve existing ZAI terminal outcomes; Core rejects unsupported states and maps provider failures.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/OpenAIResponsesChatCompletionsTerminalTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-sglang-null-role",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/ChatCompletionChunk.Choice.Delta/properties/role",
+      "operation": "nullable",
+      "reason": "A null continuation field means unchanged; preserve its presence in the wire codec and normalize in Core.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/OpenAIChatCompletionsStreamingValidationTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-sglang-null-tools",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/ChatCompletionChunk.Choice.Delta/properties/tool_calls",
+      "operation": "nullable",
+      "reason": "A null continuation field means unchanged; preserve its presence in the wire codec and normalize in Core.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/OpenAIChatCompletionsStreamingValidationTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-continuation-null-id",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/ChatCompletionChunk.Choice.Delta.ToolCall/properties/id",
+      "operation": "nullable",
+      "reason": "A null continuation field means unchanged; preserve its presence in the wire codec and normalize in Core.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/OpenAIChatCompletionsStreamingValidationTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-continuation-null-kind",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/ChatCompletionChunk.Choice.Delta.ToolCall/properties/type",
+      "operation": "nullable",
+      "reason": "A null continuation field means unchanged; preserve its presence in the wire codec and normalize in Core.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/OpenAIChatCompletionsStreamingValidationTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-continuation-null-function-name",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/ChatCompletionChunk.Choice.Delta.ToolCall.Function/properties/name",
+      "operation": "nullable",
+      "reason": "A null continuation field means unchanged; preserve its presence in the wire codec and normalize in Core.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/OpenAIChatCompletionsStreamingValidationTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-continuation-null-custom-name",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/ChatCompletionChunk.Choice.Delta.ToolCall.Custom/properties/name",
+      "operation": "nullable",
+      "reason": "A null continuation field means unchanged; preserve its presence in the wire codec and normalize in Core.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/OpenAIChatCompletionsStreamingValidationTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-explicit-function-namespace",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/ChatCompletionChunk.Choice.Delta.ToolCall.Function/properties/namespace",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reason": "Providers preserve an explicit namespace; Core validates it against declared tool identities.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ChatExplicitToolNamespaceTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-explicit-custom-namespace",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/ChatCompletionChunk.Choice.Delta.ToolCall.Custom/properties/namespace",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reason": "Providers preserve an explicit namespace; Core validates it against declared tool identities.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ChatExplicitToolNamespaceTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-stream-optional-total",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/CompletionUsage/properties/total_tokens",
+      "operation": "optional",
+      "reason": "Providers may omit the total; Core computes input plus output when absent.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ChatToolStreamingBoundaryTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-null-total-tokens",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/CompletionUsage/properties/total_tokens",
+      "operation": "nullable",
+      "reason": "An explicit null total or details object is treated as unavailable, preserving existing usage normalization.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-null-prompt-tokens-details",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/CompletionUsage/properties/prompt_tokens_details",
+      "operation": "nullable",
+      "reason": "An explicit null total or details object is treated as unavailable, preserving existing usage normalization.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-null-completion-tokens-details",
+      "root": "OpenAIChatChunk",
+      "projection": "OpenAIChatChunk",
+      "pointer": "#/definitions/CompletionUsage/properties/completion_tokens_details",
+      "operation": "nullable",
+      "reason": "An explicit null total or details object is treated as unavailable, preserving existing usage normalization.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch provider stream compatibility",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatChunkWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-optional-id",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/ChatCompletion/properties/id",
+      "operation": "optional",
+      "reason": "Buffered providers may omit metadata; Core retains its deterministic fallback.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-null-id",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/ChatCompletion/properties/id",
+      "operation": "nullable",
+      "reason": "Unavailable metadata remains null in Wire and uses the existing Core fallback.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-optional-created",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/ChatCompletion/properties/created",
+      "operation": "optional",
+      "reason": "Buffered providers may omit metadata; Core retains its deterministic fallback.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-null-created",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/ChatCompletion/properties/created",
+      "operation": "nullable",
+      "reason": "Unavailable metadata remains null in Wire and uses the existing Core fallback.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-null-usage",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/ChatCompletion/properties/usage",
+      "operation": "nullable",
+      "reason": "No usage object normalizes to zero counters.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-optional-content",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/ChatCompletionMessage/properties/content",
+      "operation": "optional",
+      "reason": "Provider messages can omit text or refusal independently.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-optional-refusal",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/ChatCompletionMessage/properties/refusal",
+      "operation": "optional",
+      "reason": "Provider messages can omit text or refusal independently.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-null-tools",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/ChatCompletionMessage/properties/tool_calls",
+      "operation": "nullable",
+      "reason": "Absent or null tool calls carry no calls.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-finish-reasons",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/ChatCompletion.Choice/properties/finish_reason",
+      "operation": "enumValues",
+      "values": [
+        "sensitive",
+        "model_context_window_exceeded",
+        "network_error"
+      ],
+      "reason": "Preserve existing provider terminal reasons while Core maps them to normalized outcomes.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/OpenAIResponsesChatCompletionsTerminalTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-function-namespace",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/ChatCompletionMessageFunctionToolCall.Function/properties/namespace",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reason": "Preserve explicit tool namespaces for validation against declarations.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ChatExplicitToolNamespaceTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-custom-namespace",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/ChatCompletionMessageCustomToolCall.Custom/properties/namespace",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reason": "Preserve explicit tool namespaces for validation against declarations.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ChatExplicitToolNamespaceTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-optional-prompt-tokens",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/CompletionUsage/properties/prompt_tokens",
+      "operation": "optional",
+      "reason": "Missing counts normalize to zero; missing total is computed. Explicit null input/output counts still fail.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-optional-completion-tokens",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/CompletionUsage/properties/completion_tokens",
+      "operation": "optional",
+      "reason": "Missing counts normalize to zero; missing total is computed. Explicit null input/output counts still fail.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-optional-total-tokens",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/CompletionUsage/properties/total_tokens",
+      "operation": "optional",
+      "reason": "Missing counts normalize to zero; missing total is computed. Explicit null input/output counts still fail.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-null-total-tokens",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/CompletionUsage/properties/total_tokens",
+      "operation": "nullable",
+      "reason": "Null totals and details are unavailable and retain the existing Core fallback.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-null-prompt-tokens-details",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/CompletionUsage/properties/prompt_tokens_details",
+      "operation": "nullable",
+      "reason": "Null totals and details are unavailable and retain the existing Core fallback.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "chat-buffered-null-completion-tokens-details",
+      "root": "OpenAIChatCompletion",
+      "projection": "OpenAIChatCompletion",
+      "pointer": "#/definitions/CompletionUsage/properties/completion_tokens_details",
+      "operation": "nullable",
+      "reason": "Null totals and details are unavailable and retain the existing Core fallback.",
+      "source": "openai@7.15.0 resources/chat/completions/completions.ts; LittleSwitch buffered provider normalization",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/OpenAIResponsesChatCompletionsTests.swift",
+        "Tests/LittleSwitchWireTests/OpenAIChat/ChatCompletionWireTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicmessage-message-stop-reason-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicMessage",
+      "pointer": "#/definitions/Message/properties/stop_reason",
+      "operation": "optional",
+      "reason": "Model turns omit terminal fields until the provider has produced them; Core preserves absence.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicmessage-message-stop-sequence-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicMessage",
+      "pointer": "#/definitions/Message/properties/stop_sequence",
+      "operation": "optional",
+      "reason": "Model turns omit terminal fields until the provider has produced them; Core preserves absence.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicmessage-message-stop-reason-openenum",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicMessage",
+      "pointer": "#/definitions/Message/properties/stop_reason",
+      "operation": "openEnum",
+      "reason": "Unknown provider stop reasons survive terminal state updates.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-textblock-citations-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/TextBlock/properties/citations",
+      "operation": "optional",
+      "reason": "Existing text blocks may omit citations; explicit null remains distinct.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-thinkingblock-signature-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/ThinkingBlock/properties/signature",
+      "operation": "optional",
+      "reason": "Existing provider thinking blocks may omit a signature; present signatures must be strings.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-tooluseblock-caller-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/ToolUseBlock/properties/caller",
+      "operation": "optional",
+      "reason": "Current public sanitizer accepts absent caller metadata and validates any present caller separately.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-servertooluseblock-caller-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/ServerToolUseBlock/properties/caller",
+      "operation": "optional",
+      "reason": "Current public sanitizer accepts absent caller metadata and validates any present caller separately.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-websearchtoolresultblock-caller-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/WebSearchToolResultBlock/properties/caller",
+      "operation": "optional",
+      "reason": "Current public sanitizer accepts absent caller metadata and validates any present caller separately.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-servertooluseblock-name-openenum",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/ServerToolUseBlock/properties/name",
+      "operation": "openEnum",
+      "reason": "The public sanitizer accepts any nonempty server tool name; authorization remains in Core.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-citationcharlocation-document-title-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/CitationCharLocation/properties/document_title",
+      "operation": "optional",
+      "reason": "The public sanitizer accepts omitted nullable document metadata.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-citationcharlocation-file-id-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/CitationCharLocation/properties/file_id",
+      "operation": "optional",
+      "reason": "The public sanitizer accepts omitted nullable document metadata.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-citationpagelocation-document-title-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/CitationPageLocation/properties/document_title",
+      "operation": "optional",
+      "reason": "The public sanitizer accepts omitted nullable document metadata.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-citationpagelocation-file-id-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/CitationPageLocation/properties/file_id",
+      "operation": "optional",
+      "reason": "The public sanitizer accepts omitted nullable document metadata.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-citationcontentblocklocation-document-title-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/CitationContentBlockLocation/properties/document_title",
+      "operation": "optional",
+      "reason": "The public sanitizer accepts omitted nullable document metadata.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-citationcontentblocklocation-file-id-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/CitationContentBlockLocation/properties/file_id",
+      "operation": "optional",
+      "reason": "The public sanitizer accepts omitted nullable document metadata.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropiccontentblock-citationssearchresultlocation-title-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicContentBlock",
+      "pointer": "#/definitions/CitationsSearchResultLocation/properties/title",
+      "operation": "optional",
+      "reason": "The public sanitizer accepts omitted nullable search-result titles.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicstreamevent-rawmessagedeltaevent-delta-stop-reason-optional",
+      "root": "AnthropicStreamEvent",
+      "projection": "AnthropicStreamEvent",
+      "pointer": "#/definitions/RawMessageDeltaEvent.Delta/properties/stop_reason",
+      "operation": "optional",
+      "reason": "Terminal deltas can omit either terminal field; absent and null updates preserve the previous value.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicstreamevent-rawmessagedeltaevent-delta-stop-sequence-optional",
+      "root": "AnthropicStreamEvent",
+      "projection": "AnthropicStreamEvent",
+      "pointer": "#/definitions/RawMessageDeltaEvent.Delta/properties/stop_sequence",
+      "operation": "optional",
+      "reason": "Terminal deltas can omit either terminal field; absent and null updates preserve the previous value.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicstreamevent-rawmessagedeltaevent-delta-stop-reason-openenum",
+      "root": "AnthropicStreamEvent",
+      "projection": "AnthropicStreamEvent",
+      "pointer": "#/definitions/RawMessageDeltaEvent.Delta/properties/stop_reason",
+      "operation": "openEnum",
+      "reason": "Unknown provider stop reasons survive terminal state updates.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicusagefields-usage-input-tokens-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicUsageFields",
+      "pointer": "#/definitions/Usage/properties/input_tokens",
+      "operation": "optional",
+      "reason": "Buffered usage defaults missing counters to zero; streaming usage preserves prior counters when an update omits them.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicusagefields-usage-output-tokens-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicUsageFields",
+      "pointer": "#/definitions/Usage/properties/output_tokens",
+      "operation": "optional",
+      "reason": "Buffered usage defaults missing counters to zero; streaming usage preserves prior counters when an update omits them.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicusagefields-usage-cache-creation-input-tokens-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicUsageFields",
+      "pointer": "#/definitions/Usage/properties/cache_creation_input_tokens",
+      "operation": "optional",
+      "reason": "Buffered usage defaults missing counters to zero; streaming usage preserves prior counters when an update omits them.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicusagefields-usage-cache-read-input-tokens-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicUsageFields",
+      "pointer": "#/definitions/Usage/properties/cache_read_input_tokens",
+      "operation": "optional",
+      "reason": "Buffered usage defaults missing counters to zero; streaming usage preserves prior counters when an update omits them.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicusagefields-usage-cache-creation-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicUsageFields",
+      "pointer": "#/definitions/Usage/properties/cache_creation",
+      "operation": "optional",
+      "reason": "Buffered usage defaults missing counters to zero; streaming usage preserves prior counters when an update omits them.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicusagefields-usage-service-tier-optional",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicUsageFields",
+      "pointer": "#/definitions/Usage/properties/service_tier",
+      "operation": "optional",
+      "reason": "Buffered usage defaults missing counters to zero; streaming usage preserves prior counters when an update omits them.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicusagefields-usage-input-tokens-nullable",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicUsageFields",
+      "pointer": "#/definitions/Usage/properties/input_tokens",
+      "operation": "nullable",
+      "reason": "Streaming updates accept null as no update. Buffered Core parsing separately rejects explicit null input/output counters.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicusagefields-usage-output-tokens-nullable",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicUsageFields",
+      "pointer": "#/definitions/Usage/properties/output_tokens",
+      "operation": "nullable",
+      "reason": "Streaming updates accept null as no update. Buffered Core parsing separately rejects explicit null input/output counters.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicthinkingrequest-messagecounttokensparams-reasoning-effort-additionalfield",
+      "root": "AnthropicCountTokensRequest",
+      "projection": "AnthropicThinkingRequest",
+      "pointer": "#/definitions/MessageCountTokensParams/properties/reasoning_effort",
+      "operation": "additionalField",
+      "reason": "Legacy reasoning_effort presence prevents applying the disabled-thinking fallback, regardless of value.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ],
+      "schema": {}
+    },
+    {
+      "id": "anthropic-anthropicmessageparam-thinkingblockparam-signature-optional",
+      "root": "AnthropicMessageParam",
+      "projection": "AnthropicMessageParam",
+      "pointer": "#/definitions/ThinkingBlockParam/properties/signature",
+      "operation": "optional",
+      "reason": "Portable history retains existing provider thinking blocks whose signature may be absent.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-anthropicmessageparam-servertooluseblockparam-name-openenum",
+      "root": "AnthropicMessageParam",
+      "projection": "AnthropicMessageParam",
+      "pointer": "#/definitions/ServerToolUseBlockParam/properties/name",
+      "operation": "openEnum",
+      "reason": "Portable history must identify unsupported server tools by name before removing their results.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; LittleSwitch existing Anthropic normalization",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/Anthropic/AnthropicMessageWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicWireMigrationTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsecustomtoolcall-status-additionalfield",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseCustomToolCall/properties/status",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "enum": [
+          "queued",
+          "in_progress",
+          "searching",
+          "completed",
+          "incomplete",
+          "failed",
+          null
+        ]
+      },
+      "reason": "Codex providers send the same optional item status for custom calls; Core removes explicit null before public projection.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputmessage-status-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputMessage/properties/status",
+      "operation": "optional",
+      "reason": "Providers omit item status; public Core normalization leaves it absent.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputmessage-status-nullable",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputMessage/properties/status",
+      "operation": "nullable",
+      "reason": "Explicit null item status remains null in Wire and normalizes to absent in public Core output.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputmessage-status-enumvalues",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputMessage/properties/status",
+      "operation": "enumValues",
+      "values": [
+        "queued",
+        "searching",
+        "failed"
+      ],
+      "reason": "Preserve the existing finite set of provider item statuses; Core retains lifecycle validation.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsefunctiontoolcall-status-nullable",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseFunctionToolCall/properties/status",
+      "operation": "nullable",
+      "reason": "Explicit null item status remains null in Wire and normalizes to absent in public Core output.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsefunctiontoolcall-status-enumvalues",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseFunctionToolCall/properties/status",
+      "operation": "enumValues",
+      "values": [
+        "queued",
+        "searching",
+        "failed"
+      ],
+      "reason": "Preserve the existing finite set of provider item statuses; Core retains lifecycle validation.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsereasoningitem-status-nullable",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseReasoningItem/properties/status",
+      "operation": "nullable",
+      "reason": "Explicit null item status remains null in Wire and normalizes to absent in public Core output.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsereasoningitem-status-enumvalues",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseReasoningItem/properties/status",
+      "operation": "enumValues",
+      "values": [
+        "queued",
+        "searching",
+        "failed"
+      ],
+      "reason": "Preserve the existing finite set of provider item statuses; Core retains lifecycle validation.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsefunctionwebsearch-status-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseFunctionWebSearch/properties/status",
+      "operation": "optional",
+      "reason": "Providers omit item status; public Core normalization leaves it absent.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsefunctionwebsearch-status-nullable",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseFunctionWebSearch/properties/status",
+      "operation": "nullable",
+      "reason": "Explicit null item status remains null in Wire and normalizes to absent in public Core output.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsefunctionwebsearch-status-enumvalues",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseFunctionWebSearch/properties/status",
+      "operation": "enumValues",
+      "values": [
+        "queued"
+      ],
+      "reason": "Preserve the existing finite set of provider item statuses; Core retains lifecycle validation.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsetoolsearchcall-status-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseToolSearchCall/properties/status",
+      "operation": "optional",
+      "reason": "Providers omit item status; public Core normalization leaves it absent.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsetoolsearchcall-status-nullable",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseToolSearchCall/properties/status",
+      "operation": "nullable",
+      "reason": "Explicit null item status remains null in Wire and normalizes to absent in public Core output.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsetoolsearchcall-status-enumvalues",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseToolSearchCall/properties/status",
+      "operation": "enumValues",
+      "values": [
+        "queued",
+        "searching",
+        "failed"
+      ],
+      "reason": "Preserve the existing finite set of provider item statuses; Core retains lifecycle validation.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsefunctiontoolcall-namespace-nullable",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseFunctionToolCall/properties/namespace",
+      "operation": "nullable",
+      "reason": "Null tool namespace means no explicit namespace; names remain open and authorization remains in Core.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsecustomtoolcall-namespace-nullable",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseCustomToolCall/properties/namespace",
+      "operation": "nullable",
+      "reason": "Null tool namespace means no explicit namespace; names remain open and authorization remains in Core.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputmessage-content-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputMessage/properties/content",
+      "operation": "optional",
+      "reason": "A native added item may omit content while later content events fill it; the public sanitizer still requires content.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsereasoningitem-summary-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseReasoningItem/properties/summary",
+      "operation": "optional",
+      "reason": "Missing reasoning summary normalizes to an empty public list.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsefunctionwebsearch-action-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseFunctionWebSearch/properties/action",
+      "operation": "optional",
+      "reason": "A provider can add a web search item before its action is available.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsetoolsearchcall-arguments-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseToolSearchCall/properties/arguments",
+      "operation": "optional",
+      "reason": "Tool-search projection accepts partial server records and validates the owned public shape in Core.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsetoolsearchcall-call-id-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseToolSearchCall/properties/call_id",
+      "operation": "optional",
+      "reason": "Tool-search projection accepts partial server records and validates the owned public shape in Core.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsetoolsearchcall-execution-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseToolSearchCall/properties/execution",
+      "operation": "optional",
+      "reason": "Tool-search projection accepts partial server records and validates the owned public shape in Core.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-annotations-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText/properties/annotations",
+      "operation": "optional",
+      "reason": "Missing output-text collections normalize to empty public lists.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-annotations-nullable",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText/properties/annotations",
+      "operation": "nullable",
+      "reason": "Null output-text collections remain explicit null in Wire and normalize to empty public lists.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-logprobs-nullable",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText/properties/logprobs",
+      "operation": "nullable",
+      "reason": "Null output-text collections remain explicit null in Wire and normalize to empty public lists.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-filecitation-file-id-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.FileCitation/properties/file_id",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-filecitation-filename-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.FileCitation/properties/filename",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-filecitation-index-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.FileCitation/properties/index",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-urlcitation-end-index-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.URLCitation/properties/end_index",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-urlcitation-start-index-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.URLCitation/properties/start_index",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-urlcitation-title-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.URLCitation/properties/title",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-urlcitation-url-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.URLCitation/properties/url",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-containerfilecitation-container-id-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.ContainerFileCitation/properties/container_id",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-containerfilecitation-end-index-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.ContainerFileCitation/properties/end_index",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-containerfilecitation-file-id-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.ContainerFileCitation/properties/file_id",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-containerfilecitation-filename-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.ContainerFileCitation/properties/filename",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-containerfilecitation-start-index-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.ContainerFileCitation/properties/start_index",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-filepath-file-id-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.FilePath/properties/file_id",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-filepath-index-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.FilePath/properties/index",
+      "operation": "optional",
+      "reason": "Existing public annotation projection copies only present fields and validates every present value.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-logprob-bytes-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.Logprob/properties/bytes",
+      "operation": "optional",
+      "reason": "Provider logprob bytes may be absent.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-logprob-bytes-nullable",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.Logprob/properties/bytes",
+      "operation": "nullable",
+      "reason": "Null logprob bytes are retained by the public projection.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-logprob-toplogprob-bytes-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.Logprob.TopLogprob/properties/bytes",
+      "operation": "optional",
+      "reason": "Provider logprob bytes may be absent.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-logprob-toplogprob-bytes-nullable",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.Logprob.TopLogprob/properties/bytes",
+      "operation": "nullable",
+      "reason": "Null logprob bytes are retained by the public projection.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputtext-logprob-top-logprobs-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputText.Logprob/properties/top_logprobs",
+      "operation": "optional",
+      "reason": "Providers may omit alternative logprobs.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsefunctionwebsearch-find-url-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseFunctionWebSearch.Find/properties/url",
+      "operation": "optional",
+      "reason": "Existing public web search projection validates only present action fields.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsefunctionwebsearch-find-pattern-optional",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseFunctionWebSearch.Find/properties/pattern",
+      "operation": "optional",
+      "reason": "Existing public web search projection validates only present action fields.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesinputitem-responsefunctiontoolcall-namespace-nullable",
+      "root": "OpenAIResponseInput",
+      "projection": "OpenAIResponsesInputFunctionCall",
+      "pointer": "#/definitions/ResponseFunctionToolCall/properties/namespace",
+      "operation": "nullable",
+      "reason": "Null history namespace means unqualified identity and cannot grant tool authority.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesinputitem-responsecustomtoolcall-namespace-nullable",
+      "root": "OpenAIResponseInput",
+      "projection": "OpenAIResponsesInputCustomCall",
+      "pointer": "#/definitions/ResponseCustomToolCall/properties/namespace",
+      "operation": "nullable",
+      "reason": "Null history namespace means unqualified identity and cannot grant tool authority.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsestreamevent-responsefunctioncallargumentsdeltaevent-name-additionalfield",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponseStreamEvent",
+      "pointer": "#/definitions/ResponseFunctionCallArgumentsDeltaEvent/properties/name",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reason": "Optional identity hints must agree with the opened call; null means unchanged and malformed non-null values fail.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsestreamevent-responsefunctioncallargumentsdeltaevent-call-id-additionalfield",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponseStreamEvent",
+      "pointer": "#/definitions/ResponseFunctionCallArgumentsDeltaEvent/properties/call_id",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reason": "Optional identity hints must agree with the opened call; null means unchanged and malformed non-null values fail.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsestreamevent-responsefunctioncallargumentsdoneevent-name-additionalfield",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponseStreamEvent",
+      "pointer": "#/definitions/ResponseFunctionCallArgumentsDoneEvent/properties/name",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reason": "Optional identity hints must agree with the opened call; null means unchanged and malformed non-null values fail.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsestreamevent-responsefunctioncallargumentsdoneevent-call-id-additionalfield",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponseStreamEvent",
+      "pointer": "#/definitions/ResponseFunctionCallArgumentsDoneEvent/properties/call_id",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reason": "Optional identity hints must agree with the opened call; null means unchanged and malformed non-null values fail.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsestreamevent-responsecustomtoolcallinputdeltaevent-name-additionalfield",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponseStreamEvent",
+      "pointer": "#/definitions/ResponseCustomToolCallInputDeltaEvent/properties/name",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reason": "Optional identity hints must agree with the opened call; null means unchanged and malformed non-null values fail.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsestreamevent-responsecustomtoolcallinputdeltaevent-call-id-additionalfield",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponseStreamEvent",
+      "pointer": "#/definitions/ResponseCustomToolCallInputDeltaEvent/properties/call_id",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reason": "Optional identity hints must agree with the opened call; null means unchanged and malformed non-null values fail.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsestreamevent-responsecustomtoolcallinputdoneevent-name-additionalfield",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponseStreamEvent",
+      "pointer": "#/definitions/ResponseCustomToolCallInputDoneEvent/properties/name",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reason": "Optional identity hints must agree with the opened call; null means unchanged and malformed non-null values fail.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsestreamevent-responsecustomtoolcallinputdoneevent-call-id-additionalfield",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponseStreamEvent",
+      "pointer": "#/definitions/ResponseCustomToolCallInputDoneEvent/properties/call_id",
+      "operation": "additionalField",
+      "schema": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "reason": "Optional identity hints must agree with the opened call; null means unchanged and malformed non-null values fail.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-response-object-optional",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/Response/properties/object",
+      "operation": "optional",
+      "reason": "Buffered or failed providers may omit this field; Core enforces the requirements of the active lifecycle and public projection.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-response-created-at-optional",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/Response/properties/created_at",
+      "operation": "optional",
+      "reason": "Buffered or failed providers may omit this field; Core enforces the requirements of the active lifecycle and public projection.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-response-error-optional",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/Response/properties/error",
+      "operation": "optional",
+      "reason": "Buffered or failed providers may omit this field; Core enforces the requirements of the active lifecycle and public projection.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-response-incomplete-details-optional",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/Response/properties/incomplete_details",
+      "operation": "optional",
+      "reason": "Buffered or failed providers may omit this field; Core enforces the requirements of the active lifecycle and public projection.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-response-output-optional",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/Response/properties/output",
+      "operation": "optional",
+      "reason": "Buffered or failed providers may omit this field; Core enforces the requirements of the active lifecycle and public projection.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-response-usage-nullable",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/Response/properties/usage",
+      "operation": "nullable",
+      "reason": "Usage is unavailable during creation and may be null on failure.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "chat-response-context-error-code",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/ResponseError/properties/code",
+      "operation": "enumValues",
+      "values": [
+        "context_length_exceeded"
+      ],
+      "reason": "The Chat adapter preserves the existing provider context-window failure code in its client Responses envelope. The public error sanitizer still owns which failures are exposed.",
+      "source": "openai@7.15.0 ResponseError; LittleSwitch ChatCompletionsTerminalProjection at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/OpenAIResponsesChatCompletionsTerminalTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-responseerror-code-openenum",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/ResponseError/properties/code",
+      "operation": "openEnum",
+      "reason": "Provider error codes are retained for Core redaction; an unknown code grants no public error disclosure.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-responseusage-input-tokens-optional",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/ResponseUsage/properties/input_tokens",
+      "operation": "optional",
+      "reason": "Missing usage counts default to zero or a computed total; details may be unavailable.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-responseusage-output-tokens-optional",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/ResponseUsage/properties/output_tokens",
+      "operation": "optional",
+      "reason": "Missing usage counts default to zero or a computed total; details may be unavailable.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-responseusage-total-tokens-optional",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/ResponseUsage/properties/total_tokens",
+      "operation": "optional",
+      "reason": "Missing usage counts default to zero or a computed total; details may be unavailable.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-responseusage-input-tokens-details-optional",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/ResponseUsage/properties/input_tokens_details",
+      "operation": "optional",
+      "reason": "Missing usage counts default to zero or a computed total; details may be unavailable.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-responseusage-output-tokens-details-optional",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/ResponseUsage/properties/output_tokens_details",
+      "operation": "optional",
+      "reason": "Missing usage counts default to zero or a computed total; details may be unavailable.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-responseusage-input-tokens-details-nullable",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/ResponseUsage/properties/input_tokens_details",
+      "operation": "nullable",
+      "reason": "Null token details carry no available counts.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-responseusage-output-tokens-details-nullable",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/ResponseUsage/properties/output_tokens_details",
+      "operation": "nullable",
+      "reason": "Null token details carry no available counts.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesresponse-responseusage-inputtokensdetails-cache-write-tokens-optional",
+      "root": "OpenAIResponseStreamEvent",
+      "projection": "OpenAIResponsesResponse",
+      "pointer": "#/definitions/ResponseUsage.InputTokensDetails/properties/cache_write_tokens",
+      "operation": "optional",
+      "reason": "Cache-write counts are an optional provider extension in existing Responses usage normalization.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponseEventWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/Streaming/ResponsesWireBoundaryTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responseoutputmessage-internal-chat-message-metadata-passthrough-additionalfield",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseOutputMessage/properties/internal_chat_message_metadata_passthrough",
+      "operation": "additionalField",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "turn_id": {
+            "type": "string"
+          }
+        }
+      },
+      "reason": "Codex response items may carry turn_id. Core copies only that field, rejecting malformed metadata while retaining all extras privately in Wire.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsefunctiontoolcall-internal-chat-message-metadata-passthrough-additionalfield",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseFunctionToolCall/properties/internal_chat_message_metadata_passthrough",
+      "operation": "additionalField",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "turn_id": {
+            "type": "string"
+          }
+        }
+      },
+      "reason": "Codex response items may carry turn_id. Core copies only that field, rejecting malformed metadata while retaining all extras privately in Wire.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsecustomtoolcall-internal-chat-message-metadata-passthrough-additionalfield",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseCustomToolCall/properties/internal_chat_message_metadata_passthrough",
+      "operation": "additionalField",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "turn_id": {
+            "type": "string"
+          }
+        }
+      },
+      "reason": "Codex response items may carry turn_id. Core copies only that field, rejecting malformed metadata while retaining all extras privately in Wire.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsereasoningitem-internal-chat-message-metadata-passthrough-additionalfield",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseReasoningItem/properties/internal_chat_message_metadata_passthrough",
+      "operation": "additionalField",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "turn_id": {
+            "type": "string"
+          }
+        }
+      },
+      "reason": "Codex response items may carry turn_id. Core copies only that field, rejecting malformed metadata while retaining all extras privately in Wire.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "openairesponsesoutputitem-responsefunctiontoolcall-encrypted-function-args-additionalfield",
+      "root": "OpenAIResponseOutput",
+      "projection": "OpenAIResponsesOutputItem",
+      "pointer": "#/definitions/ResponseFunctionToolCall/properties/encrypted_function_args",
+      "operation": "additionalField",
+      "schema": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "reason": "Codex collaboration calls carry encrypted arguments. Existing ResponsesAgentMail at 5b465ab preserves explicit string arrays and supplies [] for collaboration message tools.",
+      "source": "openai@7.15.0 resources/responses/responses.ts; LittleSwitch Responses provider compatibility at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchWireTests/OpenAIResponses/ResponsesItemWireTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/ResponsesSanitizerNullFieldTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-incoming-text-citations",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicIncomingContentBlock",
+      "pointer": "#/definitions/TextBlock/properties/citations",
+      "operation": "optional",
+      "reason": "Stream text blocks can omit citations until later citation deltas.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; existing accumulator and public sanitizer boundary fixtures",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/Streaming/AnthropicStreamingFragmentBufferTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/Streaming/AnthropicAccumulatorCoverageTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicPublicSanitizerCoverageTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-incoming-thinking-signature",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicIncomingContentBlock",
+      "pointer": "#/definitions/ThinkingBlock/properties/signature",
+      "operation": "optional",
+      "reason": "The accumulator retains thinking without a signature until a later signature delta.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; existing accumulator and public sanitizer boundary fixtures",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/Streaming/AnthropicStreamingFragmentBufferTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/Streaming/AnthropicAccumulatorCoverageTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicPublicSanitizerCoverageTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-incoming-server-tool-name",
+      "root": "AnthropicMessage",
+      "projection": "AnthropicIncomingContentBlock",
+      "pointer": "#/definitions/ServerToolUseBlock/properties/name",
+      "operation": "openEnum",
+      "reason": "The accumulator retains nonempty server tool names; the public adapter and authorization policy decide their handling.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; existing accumulator and public sanitizer boundary fixtures",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/Streaming/AnthropicStreamingFragmentBufferTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/Streaming/AnthropicAccumulatorCoverageTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicPublicSanitizerCoverageTests.swift"
+      ]
+    },
+    {
+      "id": "anthropic-public-missing-citation-delta",
+      "root": "AnthropicStreamEvent",
+      "projection": "AnthropicContentDelta",
+      "pointer": "#/definitions/CitationsDelta/properties/citation",
+      "operation": "optional",
+      "reason": "The public sanitizer ignores an absent citation delta. Core's accumulator separately requires a present object when accumulating a provider citation delta.",
+      "source": "@anthropic-ai/sdk@0.125.0 resources/messages/messages.ts; existing accumulator and public sanitizer boundary fixtures",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/Streaming/AnthropicStreamingFragmentBufferTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/Streaming/AnthropicAccumulatorCoverageTests.swift",
+        "Tests/LittleSwitchCoreTests/Protocols/Anthropic/AnthropicPublicSanitizerCoverageTests.swift"
+      ]
+    },
+    {
+      "id": "codex-agent-message-envelope-type",
+      "root": "OpenAIResponseInput",
+      "projection": "OpenAIResponsesCodexAgentMessageEnvelope",
+      "pointer": "#/definitions/EasyInputMessage/properties/type",
+      "operation": "enumValues",
+      "values": [
+        "agent_message"
+      ],
+      "reason": "Codex inter-agent mail uses the message envelope with agent_message and opaque encrypted or readable content parts. Core ResponsesAgentMail keeps the existing plaintext extraction and drop policy; mail does not authorize tools.",
+      "source": "openai@7.15.0 EasyInputMessage; LittleSwitch ResponsesAgentMail and AdapterAgentMessageHistoryTests at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/AdapterAgentMessageHistoryTests.swift"
+      ]
+    },
+    {
+      "id": "codex-agent-message-missing-content",
+      "root": "OpenAIResponseInput",
+      "projection": "OpenAIResponsesCodexAgentMessageEnvelope",
+      "pointer": "#/definitions/EasyInputMessage/properties/content",
+      "operation": "optional",
+      "reason": "Unreadable or missing-content Codex mail is dropped and counted by the existing Core plaintext mail policy, rather than rejecting the complete history. Present mail content remains opaque at this envelope.",
+      "source": "openai@7.15.0 EasyInputMessage; LittleSwitch ResponsesAgentMail and AdapterAgentMessageHistoryTests at 5b465ab",
+      "fixtures": [
+        "Tests/LittleSwitchCoreTests/Protocols/OpenAI/AdapterAgentMessageHistoryTests.swift"
+      ]
+    }
+  ]
+}

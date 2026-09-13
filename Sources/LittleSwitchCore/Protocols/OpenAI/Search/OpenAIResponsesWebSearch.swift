@@ -1,5 +1,6 @@
 import Foundation
 import LittleSwitchSearch
+import LittleSwitchWire
 
 package struct PreparedResponsesWebSearchRequest: Equatable, Sendable {
     let upstreamBody: Data
@@ -99,7 +100,7 @@ package enum OpenAIResponsesWebSearch {
         }
         let maximumUses: Int
         if let requestedMaximum = object["max_tool_calls"] {
-            guard let requestedMaximum = requestedMaximum as? Int,
+            guard let requestedMaximum = nonnegativeResponsesIndex(requestedMaximum),
                 requestedMaximum > 0
             else {
                 throw Error.invalidResponse
@@ -277,7 +278,7 @@ package enum OpenAIResponsesWebSearch {
     private static func object(from data: Data) throws -> [String: Any] {
         let value: Any
         do {
-            value = try JSONSerialization.jsonObject(with: data)
+            value = WireJSONCompatibility.view(try responsesWireDecode(JSONValue.self, from: data))
         } catch {
             throw Error.invalidResponse
         }
@@ -288,16 +289,10 @@ package enum OpenAIResponsesWebSearch {
     }
 
     private static func data(from object: [String: Any]) throws -> Data {
-        try JSONSerialization.data(
-            withJSONObject: object,
-            options: [.sortedKeys, .withoutEscapingSlashes]
-        )
+        try responsesStreamData(object)
     }
 
     private static func fragmentData(from value: Any) throws -> Data {
-        try JSONSerialization.data(
-            withJSONObject: value,
-            options: [.fragmentsAllowed, .sortedKeys, .withoutEscapingSlashes]
-        )
+        try responsesStreamData(value)
     }
 }

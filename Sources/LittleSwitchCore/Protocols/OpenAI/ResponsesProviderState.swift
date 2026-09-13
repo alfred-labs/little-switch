@@ -147,8 +147,7 @@ package enum ResponsesProviderState {
         let encrypted = item["encrypted_content"] as? String
         let payload = encrypted.flatMap { try? responsesStreamObject(Data($0.utf8)) }
         if let payload, payload["type"] as? String == "little_switch_reasoning" {
-            guard let version = payload["version"] as? NSNumber,
-                CFGetTypeID(version) != CFBooleanGetTypeID(), nonnegativeResponsesIndex(version) == 1,
+            guard nonnegativeResponsesIndex(payload["version"]) == 1,
                 let identifier = payload["provider_id"] as? String, let origin = UUID(uuidString: identifier),
                 let original = payload["item"] as? [String: Any], isReasoning(original)
             else { throw Error.invalidState }

@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 extension OpenAIResponsesWebSearch {
     static func streamingResponse(
@@ -105,10 +106,8 @@ private struct ResponsesSSEEncoder {
         event["type"] = name
         event["sequence_number"] = sequenceNumber
         sequenceNumber += 1
-        let data = try JSONSerialization.data(
-            withJSONObject: event,
-            options: [.sortedKeys, .withoutEscapingSlashes]
-        )
+        let wire = try responsesWireDecode(OpenAIResponseStreamEvent.self, json: WireJSONCompatibility.value(event))
+        let data = try WireCodec.encode(wire)
         body.append(contentsOf: "event: \(name)\ndata: ".utf8)
         body.append(data)
         body.append(contentsOf: "\n\n".utf8)

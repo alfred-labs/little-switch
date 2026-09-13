@@ -41,4 +41,10 @@ test -f "$bundle/Contents/Resources/THIRD_PARTY_NOTICES.md"
 test -f "$bundle/Contents/Resources/Licenses/hummingbird/LICENSE.txt"
 test -f "$bundle/Contents/Resources/Licenses/async-http-client/LICENSE.txt"
 test -f "$bundle/Contents/Resources/Licenses/swift-nio/LICENSE.txt"
+cmp "$project_root/Vendor/OrderedJSON/LICENSE" \
+    "$bundle/Contents/Resources/Licenses/ordered-json/LICENSE"
+for sdk in anthropic openai; do
+    cmp "$project_root/schemas/upstream/notices/$sdk.LICENSE" \
+        "$bundle/Contents/Resources/Licenses/official-sdk-contracts/$sdk.LICENSE"
+done
 echo "Verified $bundle"

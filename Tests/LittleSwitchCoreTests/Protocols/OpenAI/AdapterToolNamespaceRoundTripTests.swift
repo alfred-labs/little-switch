@@ -140,26 +140,26 @@ struct AdapterToolNamespaceRoundTripTests {
             callID: "call_1",
             name: "multi_agent_v1__spawn_agent",
             arguments: "{}",
-            status: "completed",
+            status: .completed,
             binding: ResponsesToolNamespaces.Binding(
                 namespace: "multi_agent_v1",
                 name: "spawn_agent"
             )
         )
 
-        #expect(bound["name"] as? String == "spawn_agent")
-        #expect(bound["namespace"] as? String == "multi_agent_v1")
+        #expect(bound.name == "spawn_agent")
+        #expect(bound.namespace.value == "multi_agent_v1")
 
         let unbound = chatFunctionItem(
             itemID: "fc_2",
             callID: "call_2",
             name: "shell",
             arguments: "{}",
-            status: "completed"
+            status: .completed
         )
 
-        #expect(unbound["name"] as? String == "shell")
-        #expect(unbound["namespace"] == nil)
+        #expect(unbound.name == "shell")
+        #expect(unbound.namespace == .absent)
     }
 
     @Test("Replayed history reuses the flat name the provider saw")

@@ -1,5 +1,6 @@
 import Foundation
 import LittleSwitchSearch
+import LittleSwitchWire
 import Testing
 
 @testable import LittleSwitchCore
@@ -334,62 +335,21 @@ extension AnthropicWebSearchTests {
         #expect(usage == AnthropicUsage(inputTokens: Int.max, outputTokens: Int.max))
     }
 
-    @Test("Serialization forwards exact object and fragment values and options")
+    @Test("Exact JSON encoding handles objects and fragments")
     func serializationForwarding() throws {
-        let object: [String: Any] = ["model": "claude", "stream": false]
-        let objectOptions: JSONSerialization.WritingOptions = [
-            .sortedKeys, .withoutEscapingSlashes,
-        ]
-        var capturedObject: [String: Any]?
-        var capturedObjectOptions: JSONSerialization.WritingOptions = []
-        let objectOutput = Data("object".utf8)
-
-        let serializedObject = try AnthropicWebSearch.serialize(
-            object,
-            options: objectOptions
-        ) { value, options in
-            capturedObject = value as? [String: Any]
-            capturedObjectOptions = options
-            return objectOutput
-        }
-
-        #expect(serializedObject == objectOutput)
-        #expect((capturedObject as NSDictionary?)?.isEqual(to: object) == true)
-        #expect(capturedObjectOptions == objectOptions)
-
-        let fragment = NSMutableString(string: "fragment")
-        let fragmentOptions: JSONSerialization.WritingOptions = [
-            .fragmentsAllowed, .sortedKeys, .withoutEscapingSlashes,
-        ]
-        var capturedFragment: AnyObject?
-        var capturedFragmentOptions: JSONSerialization.WritingOptions = []
-        let fragmentOutput = Data("fragment".utf8)
-
-        let serializedFragment = try AnthropicWebSearch.serialize(
-            fragment,
-            options: fragmentOptions
-        ) { value, options in
-            capturedFragment = value as AnyObject
-            capturedFragmentOptions = options
-            return fragmentOutput
-        }
-
-        #expect(serializedFragment == fragmentOutput)
-        #expect(capturedFragment === fragment)
-        #expect(capturedFragmentOptions == fragmentOptions)
+        let object: [String: JSONValue] = ["model": "claude", "stream": false]
+        #expect(try AnthropicWebSearch.data(from: object) == Data(#"{"model":"claude","stream":false}"#.utf8))
+        let fragment = try publicStreamFragment(Data(#""fragment""#.utf8))
+        #expect(try publicStreamData(fragment) == Data(#""fragment""#.utf8))
     }
 
-    @Test("Serialization failures become safe protocol errors")
+    @Test("Invalid JSON fragments become safe protocol errors")
     func serializationFailure() {
         #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
-            try AnthropicWebSearch.serialize(
-                ["model": "claude"],
-                options: [.sortedKeys]
-            ) { _, _ in
-                throw SerializationProbeError()
-            }
+            try AnthropicWebSearch.fragmentObject(from: Data([0xFF]))
         }
     }
+
 }
 
 private func makeAnthropicTurn(
@@ -416,8 +376,6 @@ private struct ParsedAnthropicEvent {
     let name: String
     let data: [String: Any]
 }
-
-private struct SerializationProbeError: Swift.Error {}
 
 private func parseAnthropicEvents(_ data: Data) throws -> [ParsedAnthropicEvent] {
     let text = try #require(String(data: data, encoding: .utf8))

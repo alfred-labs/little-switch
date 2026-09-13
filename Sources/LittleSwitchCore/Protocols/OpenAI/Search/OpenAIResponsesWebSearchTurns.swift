@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 package struct ResponsesUsage: Equatable, Sendable {
     var inputTokens: Int
@@ -70,88 +71,44 @@ extension OpenAIResponsesWebSearch {
     }
 
     static func parseModelTurn(_ body: Data, privateToolName: String? = "web_search") throws -> ResponsesModelTurn {
-        let object = try turnObject(from: body)
-        let terminalStatus = try modelTerminalStatus(from: object)
-        var output = object["output"] as? [[String: Any]]
-        if terminalStatus == .failed, object["output"] == nil {
-            output = []
-        }
-        guard let id = object["id"] as? String, !id.isEmpty,
-            let output
+        let response = try responsesWireDecode(OpenAIResponsesResponse.self, from: body)
+        let terminalStatus = try responsesWireTerminal(response.status)
+        guard !response.id.isEmpty,
+            let output = response.output ?? (terminalStatus == .failed ? [] : nil)
         else {
             throw Error.invalidResponse
         }
-        let usageObject: [String: Any]
-        if let usage = object["usage"] as? [String: Any] {
-            usageObject = usage
-        } else if terminalStatus == .failed, object["usage"] == nil || object["usage"] is NSNull {
-            usageObject = [:]
-        } else {
+        guard response.usage.value != nil || terminalStatus == .failed else {
             throw Error.invalidResponse
         }
-
         var searchCall: ResponsesWebSearchToolCall?
-        for item in output {
-            guard item["type"] is String else {
-                throw Error.invalidResponse
-            }
+        for json in output {
+            let item = try responsesWireDecode(OpenAIResponsesOutputItem.self, json: json)
             // A terminal interruption can contain fully shaped tool calls.
             // Only a completed model turn may authorize another search.
             guard terminalStatus == .completed,
-                let privateToolName, isPrivateSearchCall(item, privateToolName: privateToolName)
+                let privateToolName,
+                case .functionCall(let call) = item,
+                call.name == privateToolName, call.namespace.value == nil
             else {
                 continue
             }
-            guard let callID = item["call_id"] as? String, !callID.isEmpty else {
+            guard !call.callId.isEmpty else {
                 throw Error.invalidResponse
             }
             if searchCall == nil {
                 searchCall = ResponsesWebSearchToolCall(
-                    callID: callID,
-                    query: searchQuery(from: item["arguments"]),
+                    callID: call.callId,
+                    query: searchQuery(from: call.arguments),
                     privateToolName: privateToolName
                 )
             }
         }
-
-        let inputTokens = try tokenCount(usageObject["input_tokens"])
-        let outputTokens = try tokenCount(usageObject["output_tokens"])
-        let inputDetails = try optionalTokenDetails(
-            usageObject["input_tokens_details"]
-        )
-        let outputDetails = try optionalTokenDetails(
-            usageObject["output_tokens_details"]
-        )
-        let cachedInputTokens = try requiredDetailTokenCount(
-            inputDetails,
-            key: "cached_tokens"
-        )
-        let cacheWriteInputTokens = try optionalDetailTokenCount(
-            inputDetails,
-            key: "cache_write_tokens"
-        )
-        let reasoningOutputTokens = try requiredDetailTokenCount(
-            outputDetails,
-            key: "reasoning_tokens"
-        )
-        let totalTokens: Int
-        if usageObject["total_tokens"] == nil {
-            totalTokens = saturatedResponsesUsageSum(inputTokens, outputTokens)
-        } else {
-            totalTokens = try tokenCount(usageObject["total_tokens"])
-        }
         return ResponsesModelTurn(
-            id: id,
-            rootJSON: try turnData(from: object),
-            outputJSON: try turnFragmentData(from: output),
-            usage: ResponsesUsage(
-                inputTokens: inputTokens,
-                outputTokens: outputTokens,
-                cachedInputTokens: cachedInputTokens,
-                cacheWriteInputTokens: cacheWriteInputTokens,
-                reasoningOutputTokens: reasoningOutputTokens,
-                totalTokens: totalTokens
-            ),
+            id: response.id,
+            rootJSON: body,
+            outputJSON: try JSONValue.array(output).serializedData(),
+            usage: try responsesWireUsage(response.usage.value),
             webSearchCall: searchCall
         )
     }
@@ -217,59 +174,10 @@ extension OpenAIResponsesWebSearch {
         return try turnData(from: object)
     }
 
-    private static func searchQuery(from arguments: Any?) -> String {
-        guard let arguments = arguments as? String,
-            let data = arguments.data(using: .utf8),
-            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else {
-            return ""
-        }
-        return object["query"] as? String ?? ""
-    }
-
-    private static func tokenCount(_ value: Any?) throws -> Int {
-        guard let value = value as? Int, value >= 0 else {
-            if value == nil {
-                return 0
-            }
-            throw Error.invalidResponse
-        }
-        return value
-    }
-
-    private static func optionalTokenDetails(
-        _ value: Any?
-    ) throws -> [String: Any]? {
-        guard let value, !(value is NSNull) else {
-            return nil
-        }
-        guard let details = value as? [String: Any] else {
-            throw Error.invalidResponse
-        }
-        return details
-    }
-
-    private static func requiredDetailTokenCount(
-        _ details: [String: Any]?,
-        key: String
-    ) throws -> Int {
-        guard let details else {
-            return 0
-        }
-        guard details[key] != nil else {
-            throw Error.invalidResponse
-        }
-        return try tokenCount(details[key])
-    }
-
-    private static func optionalDetailTokenCount(
-        _ details: [String: Any]?,
-        key: String
-    ) throws -> Int {
-        guard let details else {
-            return 0
-        }
-        return try tokenCount(details[key])
+    private static func searchQuery(from arguments: String) -> String {
+        // The private search function's argument is owned by Core, not an SDK
+        // record. Read its sole string leaf while ignoring opaque extra values.
+        (try? WireObject(JSONValue.parse(Data(arguments.utf8))).required("query")) ?? ""
     }
 
     private static func normalizedInput(_ value: Any?) throws -> [[String: Any]] {
@@ -291,7 +199,7 @@ extension OpenAIResponsesWebSearch {
     private static func turnOutput(from data: Data) throws -> [[String: Any]] {
         let value: Any
         do {
-            value = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
+            value = WireJSONCompatibility.view(try responsesWireDecode(JSONValue.self, from: data))
         } catch {
             throw Error.invalidResponse
         }
@@ -304,7 +212,7 @@ extension OpenAIResponsesWebSearch {
     private static func turnObject(from data: Data) throws -> [String: Any] {
         let value: Any
         do {
-            value = try JSONSerialization.jsonObject(with: data)
+            value = WireJSONCompatibility.view(try responsesWireDecode(JSONValue.self, from: data))
         } catch {
             throw Error.invalidResponse
         }
@@ -315,16 +223,7 @@ extension OpenAIResponsesWebSearch {
     }
 
     private static func turnData(from object: [String: Any]) throws -> Data {
-        try JSONSerialization.data(
-            withJSONObject: object,
-            options: [.sortedKeys, .withoutEscapingSlashes]
-        )
+        try responsesStreamData(object)
     }
 
-    private static func turnFragmentData(from value: Any) throws -> Data {
-        try JSONSerialization.data(
-            withJSONObject: value,
-            options: [.fragmentsAllowed, .sortedKeys, .withoutEscapingSlashes]
-        )
-    }
 }

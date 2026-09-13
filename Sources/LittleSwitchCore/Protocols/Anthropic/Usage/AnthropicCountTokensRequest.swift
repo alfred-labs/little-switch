@@ -1,5 +1,5 @@
-import CoreFoundation
 import Foundation
+import LittleSwitchWire
 
 package enum AnthropicCountTokensRequest {
     package enum Error: Swift.Error, Equatable {
@@ -7,55 +7,28 @@ package enum AnthropicCountTokensRequest {
         case invalidResponse
     }
 
-    private static let tokenBearingKeys: Set<String> = [
-        "model",
-        "messages",
-        "system",
-        "tools",
-        "tool_choice",
-        "thinking",
-        "output_config",
-        "cache_control",
-    ]
-
     package static func project(_ upstreamBody: Data) throws -> Data {
-        let object: Any
+        let request: AnthropicCountTokensProjection
         do {
-            object = try JSONSerialization.jsonObject(with: upstreamBody)
+            let document = try WireCodec.decode(AnthropicCountTokensProjection.self, from: upstreamBody)
+            let root = try WireObject(document.value.wireJSON()).additionalFields(excluding: [])
+            let portable = try PortableToolHistory.anthropic(root)
+            request = try AnthropicCountTokensProjection(wireJSON: anthropicJSON(portable))
+        } catch let error as PortableToolHistory.Error {
+            throw error
+        } catch let error as PortableWebSearchHistory.Error {
+            throw error
         } catch {
             throw Error.invalidRequest
         }
-        guard let root = object as? [String: Any],
-            root["model"] is String,
-            root["messages"] is [Any]
-        else {
-            throw Error.invalidRequest
-        }
-
-        let projected = try PortableToolHistory.anthropic(root).filter { tokenBearingKeys.contains($0.key) }
-        return try JSONSerialization.data(
-            withJSONObject: projected,
-            options: [.sortedKeys, .withoutEscapingSlashes]
-        )
+        var projected = request
+        projected.additionalFields = [:]
+        return try WireCodec.encode(projected)
     }
 
     package static func parseCount(_ responseBody: Data) throws -> Int {
-        let object: Any
-        do {
-            object = try JSONSerialization.jsonObject(with: responseBody)
-        } catch {
-            throw Error.invalidResponse
-        }
-        guard let root = object as? [String: Any],
-            let number = root["input_tokens"] as? NSNumber,
-            CFGetTypeID(number) == CFNumberGetTypeID()
-        else {
-            throw Error.invalidResponse
-        }
-
-        let count = number.intValue
-        guard count > 0,
-            number.compare(NSNumber(value: count)) == .orderedSame
+        guard let response = try? WireCodec.decode(AnthropicInputTokenCount.self, from: responseBody).value,
+            let count = try? response.inputTokens.integerValue(), count > 0
         else {
             throw Error.invalidResponse
         }

@@ -133,8 +133,7 @@ struct ProviderToolContractChatStream: Sendable {
     }
 
     private func validIndex(_ value: Any?) throws -> Int {
-        guard let number = value as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
-            let index = value as? Int, index >= 0
+        guard let index = nonnegativeResponsesIndex(value)
         else { throw ProviderToolContract.Error.invalidResponse }
         return index
     }

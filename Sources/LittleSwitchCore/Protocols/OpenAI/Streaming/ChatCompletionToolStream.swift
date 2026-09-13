@@ -1,4 +1,11 @@
 import Foundation
+import LittleSwitchWire
+
+private struct ChatToolInputDelta {
+    let name: String?
+    let namespace: String?
+    let input: String?
+}
 
 /// Retains only an unresolved identity and its pending input; settled calls stream immediately.
 struct ChatCompletionToolStream {
@@ -7,31 +14,29 @@ struct ChatCompletionToolStream {
     let metadata: ChatCompletionStreamMetadata
 
     func consume(
-        _ rawCall: [String: Any],
+        _ rawCall: OpenAIChatToolDelta,
         state: inout ChatCompletionChoiceState,
         fragments: inout ChatCompletionFragmentBuffer
     ) throws -> [ResponsesProviderStreamEvent] {
-        guard let index = nonnegativeChatIndex(rawCall["index"]) else { throw invalid }
+        let index = try chatWireIndex(rawCall.index)
         let previous = state.toolCalls[index]
         let kind: ProviderToolContractCatalog.Kind
-        if let value = rawCall["type"], !(value is NSNull) {
-            guard let type = value as? String, let parsed = ProviderToolContractCatalog.Kind(rawValue: type),
-                previous == nil || previous?.kind == parsed
+        if let parsed = rawCall.type.value {
+            guard previous == nil || previous?.kind == parsed
             else { throw invalid }
             kind = parsed
         } else {
             guard let previous else { throw invalid }
             kind = previous.kind
         }
-        let input = rawCall[kind.rawValue] as? [String: Any]
-        if rawCall[kind.rawValue] != nil, input == nil { throw invalid }
+        let input = inputDelta(rawCall, kind: kind)
         var call: ChatCompletionToolCallState
         if let previous {
             call = previous
-            if let id = rawCall["id"] as? String, id != call.callID { throw invalid }
+            if let id = rawCall.id.value, id != call.callID { throw invalid }
         } else {
-            guard let callID = nonemptyChatString(rawCall["id"]),
-                let name = nonemptyChatString(input?["name"])
+            guard let callID = rawCall.id.value, !callID.isEmpty,
+                let name = input?.name, !name.isEmpty
             else { throw invalid }
             let offset = state.toolOutputOffset ?? (state.leadingOutputCount + (state.message == nil ? 0 : 1))
             let outputIndex = offset.addingReportingOverflow(index)
@@ -45,8 +50,8 @@ struct ChatCompletionToolStream {
                 outputIndex: outputIndex.partialValue,
                 completedArguments: "")
         }
-        if let value = input?["namespace"], !(value is NSNull) {
-            guard let namespace = nonemptyChatString(value),
+        if let namespace = input?.namespace {
+            guard !namespace.isEmpty,
                 (!call.published && call.namespace == nil) || call.namespace == namespace
             else {
                 throw invalid
@@ -55,16 +60,14 @@ struct ChatCompletionToolStream {
         }
         // Qualify the identity before deciding whether a repeated name is
         // complete: a pending bare name can acquire its namespace later.
-        if previous != nil, let value = input?["name"], !(value is NSNull) {
-            guard let name = value as? String else { throw invalid }
+        if previous != nil, let name = input?.name {
             if call.published {
                 guard name == call.name else { throw invalid }
             } else if name != call.name || !isComplete(call) {
                 call.name += name
             }
         }
-        if let value = input?[kind.inputKey] {
-            guard let fragment = value as? String else { throw invalid }
+        if let fragment = input?.input {
             if !fragment.isEmpty {
                 fragments.appendArguments(
                     fragment,
@@ -78,6 +81,17 @@ struct ChatCompletionToolStream {
             completedName: false)
         state.toolCalls[index] = call
         return events
+    }
+
+    private func inputDelta(_ call: OpenAIChatToolDelta, kind: OpenAIChatToolKind) -> ChatToolInputDelta? {
+        switch kind {
+        case .function:
+            call.function.map {
+                ChatToolInputDelta(name: $0.name.value, namespace: $0.namespace.value, input: $0.arguments)
+            }
+        case .custom:
+            call.custom.map { ChatToolInputDelta(name: $0.name.value, namespace: $0.namespace.value, input: $0.input) }
+        }
     }
 
     func complete(
@@ -198,22 +212,24 @@ struct ChatCompletionToolStream {
         completed: Bool
     ) throws -> Data {
         if call.kind == .function {
-            return try chatData(
+            return try WireCodec.encode(
                 chatFunctionItem(
                     itemID: call.itemID,
                     callID: call.callID,
                     name: call.name,
                     arguments: call.completedArguments,
-                    status: completed ? "completed" : "in_progress",
+                    status: completed ? .completed : .inProgress,
                     binding: binding))
         }
-        var item: [String: Any] = [
-            "id": call.itemID, "type": call.kind.responseType, "call_id": call.callID,
-            "name": binding?.name ?? call.name, "status": completed ? "completed" : "in_progress",
-            call.kind.inputKey: completed ? call.completedArguments : "",
-        ]
-        if let binding { item["namespace"] = binding.namespace }
-        return try chatData(item)
+        return try WireCodec.encode(
+            OpenAIResponsesCustomCall(
+                callId: call.callID,
+                id: call.itemID,
+                input: completed ? call.completedArguments : "",
+                name: binding?.name ?? call.name,
+                namespace: binding.map { .value($0.namespace) } ?? .absent,
+                status: .value(completed ? .completed : .inProgress),
+                type: .customToolCall))
     }
 
     private var invalid: OpenAIResponsesChatCompletions.Error { .invalidResponse }

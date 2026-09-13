@@ -218,7 +218,7 @@ package struct ProviderToolContract: Sendable {
 }
 
 func providerToolObject(_ data: Data, failure: ProviderToolContract.Error) throws -> [String: Any] {
-    guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw failure }
+    guard let object = try? WireJSONCompatibility.fields(data) else { throw failure }
     return object
 }
 

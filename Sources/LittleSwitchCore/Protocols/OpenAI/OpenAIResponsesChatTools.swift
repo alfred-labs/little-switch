@@ -1,7 +1,6 @@
 import Foundation
 
 extension ProviderToolContractCatalog.Kind {
-    var inputKey: String { self == .function ? "arguments" : "input" }
     var responseType: String { self == .function ? "function_call" : "custom_tool_call" }
     var itemIDPrefix: String { self == .function ? "fc" : "ct" }
 }

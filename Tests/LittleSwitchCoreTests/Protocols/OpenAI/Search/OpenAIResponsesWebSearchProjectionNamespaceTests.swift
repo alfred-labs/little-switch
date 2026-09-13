@@ -49,17 +49,17 @@ struct WebSearchProjectionNamespaceTests {
         #expect(unknown["name"] as? String == "totally_unknown")
         #expect(unknown["namespace"] == nil)
 
-        let malformedTurn = try modelTurn(output: [
-            [
-                "id": "fc_bad",
-                "type": "function_call",
-                "name": 5,
-                "call_id": "call_bad",
-                "arguments": "{}",
-            ]
-        ])
         #expect(throws: OpenAIResponsesWebSearch.Error.invalidResponse) {
-            try OpenAIResponsesWebSearch.nonStreamingResponse(
+            let malformedTurn = try modelTurn(output: [
+                [
+                    "id": "fc_bad",
+                    "type": "function_call",
+                    "name": 5,
+                    "call_id": "call_bad",
+                    "arguments": "{}",
+                ]
+            ])
+            _ = try OpenAIResponsesWebSearch.nonStreamingResponse(
                 prepared: prepared,
                 traces: [],
                 finalTurn: malformedTurn,

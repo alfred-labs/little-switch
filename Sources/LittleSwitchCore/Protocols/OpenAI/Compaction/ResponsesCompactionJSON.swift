@@ -2,18 +2,18 @@ import Foundation
 
 enum ResponsesCompactionJSON {
     static func object(_ data: Data, error: ResponsesCompactionError) throws -> [String: Any] {
-        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+        guard let object = try? WireJSONCompatibility.fields(data) else {
             throw error
         }
         return object
     }
 
     static func data(_ object: Any) throws -> Data {
-        try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes])
+        try WireJSONCompatibility.data(object)
     }
 
     static func text(_ object: Any) throws -> String {
-        // JSONSerialization always produces valid UTF-8.
+        // The exact JSON serializer always produces valid UTF-8.
         // swiftlint:disable:next optional_data_string_conversion
         String(decoding: try data(object), as: UTF8.self)
     }

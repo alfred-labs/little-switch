@@ -1,3 +1,5 @@
+import LittleSwitchWire
+
 struct ChatCompletionStreamMetadata: Sendable {
     let chatID: String
     let responseID: String
@@ -32,7 +34,7 @@ struct ChatCompletionChoiceState: Sendable {
     var message: ChatCompletionMessageState?
     var toolCalls: [Int: ChatCompletionToolCallState] = [:]
     var toolOutputOffset: Int?
-    var finishReason: String?
+    var finishReason: OpenAIChatFinishReason?
     var reasoning: [String: [String]] = [:]
     var reasoningIndex: Int?
 
@@ -49,8 +51,7 @@ struct ChatCompletionUsage: Sendable {
 }
 
 struct CompletedChatCompletionChoice: Sendable {
-    let index: Int
-    let finishReason: String
+    let finishReason: OpenAIChatFinishReason
     let messageText: String?
     let toolCalls: [ChatCompletionToolCallState]
     let reasoning: [String: String]

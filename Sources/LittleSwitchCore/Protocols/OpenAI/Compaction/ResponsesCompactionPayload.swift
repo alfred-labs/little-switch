@@ -1,4 +1,3 @@
-import CoreFoundation
 import Foundation
 
 /// A versioned portable continuation; `encrypted_content` is the Responses wire field, not encryption.
@@ -30,8 +29,7 @@ package enum ResponsesCompactionPayload {
         // Early gateway v1 checkpoints stored only the summary. An absent
         // retained field means that legacy shape; a malformed field is rejected.
         guard Set(payload.keys) == legacyKeys || Set(payload.keys) == legacyKeys.union(["retained"]),
-            let version = payload["version"] as? NSNumber,
-            CFGetTypeID(version) != CFBooleanGetTypeID(), version == 1,
+            nonnegativeResponsesIndex(payload["version"]) == 1,
             let summary = ResponsesCompactionJSON.nonempty(payload["summary"]),
             let retained = (payload["retained"] ?? [[String: Any]]()) as? [[String: Any]]
         else { throw ResponsesCompactionError.invalidPayload }

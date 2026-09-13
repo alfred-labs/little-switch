@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 package protocol GatewaySerializing: Sendable {
     func encodeJSONObject(_ object: Any) throws -> Data
@@ -19,35 +20,24 @@ package struct LiveGatewaySerializer: GatewaySerializing {
     }
 
     package func rewriteMessage(_ body: Data, modelID: String) throws -> Data {
-        guard let root = try JSONSerialization.jsonObject(with: body) as? [String: Any] else {
-            throw Error.invalidJSONObject
-        }
-        var rewritten = try PortableToolHistory.anthropic(root)
+        let root = try WireObject(WireCodec.decode(JSONValue.self, from: body).value)
+        let rewritten = try PortableToolHistory.anthropic(root.additionalFields(excluding: []))
         try ProviderToolRequestPolicy.anthropic(rewritten)
-        rewritten["model"] = modelID
-        return try JSONSerialization.data(
-            withJSONObject: rewritten,
-            options: [.sortedKeys, .withoutEscapingSlashes]
-        )
+        let request = AnthropicRoutingRequest(
+            model: modelID,
+            additionalFields: rewritten.filter { $0.key != AnthropicRoutingRequest.Key.model.rawValue })
+        return try WireCodec.encode(request)
     }
 
     package func rewriteResponses(_ body: Data, modelID: String) throws -> Data {
-        try rewrite(body, modelID: modelID)
-    }
-
-    private func rewrite(_ body: Data, modelID: String) throws -> Data {
-        guard let root = try JSONSerialization.jsonObject(with: body) as? [String: Any] else {
-            throw Error.invalidJSONObject
-        }
-        var rewritten = root
-        rewritten["model"] = modelID
-        return try JSONSerialization.data(
-            withJSONObject: rewritten,
-            options: [.sortedKeys, .withoutEscapingSlashes]
+        let document = try WireCodec.decode(JSONValue.self, from: body)
+        let object = try WireObject(document.value)
+        // Routing owns the model even when the incoming field is absent or malformed.
+        let rewritten = OpenAIResponsesRoutingRequest(
+            model: modelID,
+            additionalFields: object.additionalFields(excluding: [OpenAIResponsesRoutingRequest.Key.model.rawValue])
         )
+        return try WireCodec.encode(rewritten)
     }
 
-    private enum Error: Swift.Error {
-        case invalidJSONObject
-    }
 }

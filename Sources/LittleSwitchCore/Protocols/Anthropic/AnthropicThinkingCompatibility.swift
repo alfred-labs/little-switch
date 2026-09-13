@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 package enum AnthropicThinkingCompatibility {
     /// Adds the provider's fallback only when the caller disabled thinking
@@ -8,25 +9,16 @@ package enum AnthropicThinkingCompatibility {
         to body: Data
     ) throws -> Data {
         guard override == .lowEffort,
-            var root = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
-            let thinking = root["thinking"] as? [String: Any],
-            thinking["type"] as? String == "disabled",
-            root["reasoning_effort"] == nil
+            var request = try? WireCodec.decode(AnthropicThinkingRequest.self, from: body).value,
+            case .disabled? = request.thinking,
+            case .absent = request.reasoningEffort
         else {
             return body
         }
-        var outputConfiguration: [String: Any] = [:]
-        if let existing = root["output_config"] {
-            guard let object = existing as? [String: Any], object["effort"] == nil else {
-                return body
-            }
-            outputConfiguration = object
-        }
-        outputConfiguration["effort"] = "low"
-        root["output_config"] = outputConfiguration
-        return try JSONSerialization.data(
-            withJSONObject: root,
-            options: [.sortedKeys, .withoutEscapingSlashes]
-        )
+        var output = request.outputConfig ?? AnthropicOutputConfiguration()
+        guard case .absent = output.effort else { return body }
+        output.effort = .value(.low)
+        request.outputConfig = output
+        return try WireCodec.encode(request)
     }
 }

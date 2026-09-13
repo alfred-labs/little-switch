@@ -23,8 +23,7 @@ package struct ResponsesClientToolSearchContract: Equatable, Sendable {
             arguments = [:]
         } else {
             guard let string = item["arguments"] as? String,
-                let decoded = try? JSONSerialization.jsonObject(with: Data(string.utf8)),
-                let object = decoded as? [String: Any]
+                let object = try? WireJSONCompatibility.fields(Data(string.utf8))
             else {
                 throw OpenAIResponsesWebSearch.Error.invalidResponse
             }

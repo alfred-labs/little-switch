@@ -1,0 +1,253 @@
+{
+  "artifacts": [
+    {
+      "bytes": 103145,
+      "kind": "schema",
+      "path": "AnthropicCountTokensRequest.schema.json",
+      "root": "AnthropicCountTokensRequest",
+      "sha256": "967c7ae1768ff5700b38a6cb5328610dc9e3a7ea26c787dde6f21985d2bd1106"
+    },
+    {
+      "bytes": 4047,
+      "kind": "schema",
+      "path": "AnthropicError.schema.json",
+      "root": "AnthropicError",
+      "sha256": "770ea1c21447a17077b7aec26db0ef56736dd064649914796d7eb029409a24ee"
+    },
+    {
+      "bytes": 33587,
+      "kind": "schema",
+      "path": "AnthropicMessage.schema.json",
+      "root": "AnthropicMessage",
+      "sha256": "f3d6590b05383bf69d231c217479804894e4d3ecce848304e0f034315771ec29"
+    },
+    {
+      "bytes": 40899,
+      "kind": "schema",
+      "path": "AnthropicMessageParam.schema.json",
+      "root": "AnthropicMessageParam",
+      "sha256": "ba813716dfa815906783146a8e8228fcb6c1eb917c7cedd79803b4981bc59975"
+    },
+    {
+      "bytes": 109215,
+      "kind": "schema",
+      "path": "AnthropicRequest.schema.json",
+      "root": "AnthropicRequest",
+      "sha256": "6f1f660a45302550df312432efb869715a8ef06156994a6e8d7f1a271d0798bf"
+    },
+    {
+      "bytes": 449,
+      "kind": "schema",
+      "path": "AnthropicStopReason.schema.json",
+      "root": "AnthropicStopReason",
+      "sha256": "467414680b35b32fecd7385d62dc2e2d19436f2bf3995c25456dad285df2a760"
+    },
+    {
+      "bytes": 41804,
+      "kind": "schema",
+      "path": "AnthropicStreamEvent.schema.json",
+      "root": "AnthropicStreamEvent",
+      "sha256": "dbd6e5861026de9cfec261747e3e988ce10802ae7c4bc163574250bae74b1547"
+    },
+    {
+      "bytes": 11558,
+      "kind": "schema",
+      "path": "OpenAIChatChunk.schema.json",
+      "root": "OpenAIChatChunk",
+      "sha256": "f98b2133df86bdc3c79961c442f51881a69a75aecf09e34ad49b3d1e60ee3b01"
+    },
+    {
+      "bytes": 13907,
+      "kind": "schema",
+      "path": "OpenAIChatCompletion.schema.json",
+      "root": "OpenAIChatCompletion",
+      "sha256": "d089812c65bd01bb879c0918b284b3e272f89cfde292c3111e05fcf25bf8ad35"
+    },
+    {
+      "bytes": 12484,
+      "kind": "schema",
+      "path": "OpenAIChatMessage.schema.json",
+      "root": "OpenAIChatMessage",
+      "sha256": "1c8afefdf7eb6e33f75a1f7cd15678903eed24156ab3c3b87e81928bd51177de"
+    },
+    {
+      "bytes": 47147,
+      "kind": "schema",
+      "path": "OpenAIChatRequest.schema.json",
+      "root": "OpenAIChatRequest",
+      "sha256": "4af502ac02c703ca45709e1c614813be74784c46dad087aa637a267e4b1041be"
+    },
+    {
+      "bytes": 1313,
+      "kind": "schema",
+      "path": "OpenAIError.schema.json",
+      "root": "OpenAIError",
+      "sha256": "11208f76820c2eaae5b1c8b0f0ec5b992847f783eb90266491c2f3f8d8d27d96"
+    },
+    {
+      "bytes": 101366,
+      "kind": "schema",
+      "path": "OpenAIResponseCompactRequest.schema.json",
+      "root": "OpenAIResponseCompactRequest",
+      "sha256": "6f60cfc66168b17b7616df29ab0a8f380f82baa0702f0aef2e33668954487250"
+    },
+    {
+      "bytes": 99281,
+      "kind": "schema",
+      "path": "OpenAIResponseInput.schema.json",
+      "root": "OpenAIResponseInput",
+      "sha256": "870dcd8b84d9a4fcdb3a9435cdaad8e560c959041c4e6f699dea1d9fe1e66bce"
+    },
+    {
+      "bytes": 92762,
+      "kind": "schema",
+      "path": "OpenAIResponseOutput.schema.json",
+      "root": "OpenAIResponseOutput",
+      "sha256": "3d68a375f7e5c82576cbd145e2eab271a10ff98cf4e1c0d1ad9b4281e2c4814f"
+    },
+    {
+      "bytes": 128895,
+      "kind": "schema",
+      "path": "OpenAIResponseRequest.schema.json",
+      "root": "OpenAIResponseRequest",
+      "sha256": "42950e6c13d690951bbc54e22531b19280d3254b9ecdd2b56b2506cb16f57e36"
+    },
+    {
+      "bytes": 121299,
+      "kind": "schema",
+      "path": "OpenAIResponseRequestBase.schema.json",
+      "root": "OpenAIResponseRequestBase",
+      "sha256": "d6c9260f36d822d1a881d033a223917ca6cbf8d9da4b7aa4f6a6cb7991b93f6d"
+    },
+    {
+      "bytes": 202612,
+      "kind": "schema",
+      "path": "OpenAIResponseStreamEvent.schema.json",
+      "root": "OpenAIResponseStreamEvent",
+      "sha256": "a4acd1523e8727a5c3b498809875e8809314f92f7cb346b017e1ca36af17808f"
+    },
+    {
+      "bytes": 789,
+      "kind": "fixture",
+      "path": "PresenceProbe.schema.json",
+      "root": "PresenceProbe",
+      "sha256": "f244b79585358a89dafecb1798f712af65c5c98e10cc0e6607b9cb93d0bce40a"
+    },
+    {
+      "bytes": 2329596,
+      "kind": "catalog",
+      "path": "catalog.json",
+      "sha256": "d3a4f07c2728aedf0c94958b3ce7ab837ce56a57c9a94d742091393de7f1b8bb"
+    },
+    {
+      "bytes": 1056,
+      "kind": "notice",
+      "path": "notices/anthropic.LICENSE",
+      "sha256": "8bf96984ff8bcfae7e48cae76a529e8a25317ba9e02abf7fd3cc64fdf95657a6"
+    },
+    {
+      "bytes": 11336,
+      "kind": "notice",
+      "path": "notices/openai.LICENSE",
+      "sha256": "636eb7d79da9bb6d515a4b3fd417aa26679eb3cf16396ddab4bc55fa74e616e4"
+    }
+  ],
+  "dialect": "http://json-schema.org/draft-07/schema#",
+  "formatVersion": 1,
+  "generator": {
+    "additionalPropertiesPolicy": "Objects are open unless their extracted index signature constrains additional values.",
+    "ajv": "8.20.0",
+    "node": "24.16.0",
+    "options": {
+      "additionalProperties": true,
+      "functions": "fail",
+      "jsDoc": "basic",
+      "skipTypeCheck": false,
+      "sortProps": true
+    },
+    "package": "ts-json-schema-generator",
+    "scope": "TypeScript declarations only; not complete API business validation.",
+    "typescript": "5.9.3",
+    "version": "2.9.0"
+  },
+  "inputs": {
+    "schemas/roots.json": "47ad4cd7e874f91752acc9e15a8736351b2136bac8be04d8526aa1412853c54c",
+    "schemas/sdk-sources.json": "7f60b36951087e959ac6d6659b7cb8a425130b77f0c0b9ae7d94b46b54ca98a4",
+    "tools/sdk-contracts/catalog.mjs": "d5aadd0e53ba5ef5229f8c8ad88b0df9047925d2a07d84971839bb212bf61486",
+    "tools/sdk-contracts/contracts.ts": "c446b632537d66349ecb633eed620a9426f6fef3e0ca0345925c9edd709f235b",
+    "tools/sdk-contracts/extract.mjs": "9370d52ecadd5527464a99e189344f17aa5f6a325f50126a53814b92909b4c52",
+    "tools/sdk-contracts/inputs.mjs": "4226567305b46271ed44ed6eda9139ebf4df9d629c172baaf0ac7896a110f14f",
+    "tools/sdk-contracts/output.mjs": "6c9aaba15ad78b838b5266dd93f81f438500e65c4f00deedafc0556affc34eef",
+    "tools/sdk-contracts/package-lock.json": "eb1239b9e5b46cace29e7301c7781f3e1863febc0f73449742c8c110250907c4",
+    "tools/sdk-contracts/package.json": "20d65a9228a8100e9c3ff8b52ef132d864761a503f979fba51831c564a51f320",
+    "tools/sdk-contracts/serialization.mjs": "93b850427491dde106225e2ce3bc57ed71c4c3c6a6b52823162ee8fc5d1b17b9",
+    "tools/sdk-contracts/snapshot.mjs": "462cdd7179eee63e88a6c85c3f265dd2eac6f6940bfad5fe4a4a2e6a3735bbfa",
+    "tools/sdk-contracts/tsconfig.json": "369836ecfa34442a1c5b21818856c4b0e15af495dc5205e156d4e979b2739eb9"
+  },
+  "sources": [
+    {
+      "declarations": [
+        {
+          "path": "resources/messages/messages.d.mts",
+          "sha256": "9922224edfd3148628b24e09abb13cf4f047dc759b541d2ebaa29642ec2c0128"
+        },
+        {
+          "path": "resources/messages/messages.d.ts",
+          "sha256": "3f0bae2032f94314ec5dd9ecec8df0daa5e982375f19a6b35b1cc8f07e024dd3"
+        },
+        {
+          "path": "resources/shared.d.mts",
+          "sha256": "5caa0588efcb8241237c81f0226beb06084970c5e1f640f3bb46ff39e7ff9fad"
+        },
+        {
+          "path": "resources/shared.d.ts",
+          "sha256": "b744556f87cf10af2aff9931bfd60e47674b07410f3b0e6af9cdcda07fa01acf"
+        }
+      ],
+      "id": "anthropic",
+      "license": "MIT",
+      "notice": "notices/anthropic.LICENSE",
+      "noticeFile": "LICENSE",
+      "noticeSHA256": "8bf96984ff8bcfae7e48cae76a529e8a25317ba9e02abf7fd3cc64fdf95657a6",
+      "package": "@anthropic-ai/sdk",
+      "repository": "https://github.com/anthropics/anthropic-sdk-typescript",
+      "version": "0.125.0"
+    },
+    {
+      "declarations": [
+        {
+          "path": "resources/chat/completions/completions.d.mts",
+          "sha256": "e3579edfc93704fc3f1e457228d1ee34eade123ed0b294a9cf6fc7d225fd1b0a"
+        },
+        {
+          "path": "resources/chat/completions/completions.d.ts",
+          "sha256": "9d89e908f48f6d2b9b10c8afe3dde20b5fd7fee367d81527880771ec5f58a8d0"
+        },
+        {
+          "path": "resources/responses/responses.d.mts",
+          "sha256": "375fe8f18a531690aa1d9df9c5ad870195279d1d4e55690423939f909dfa476d"
+        },
+        {
+          "path": "resources/responses/responses.d.ts",
+          "sha256": "ce8ea2fa0fa0ba4dcd5527872fc5e87a2b35923f988f3f3dc0bdf925d6b59ae4"
+        },
+        {
+          "path": "resources/shared.d.mts",
+          "sha256": "04a7ad5a7c551bbd37f9285a9bcde71f4c3f348e60614245b24edd85fc02f3d9"
+        },
+        {
+          "path": "resources/shared.d.ts",
+          "sha256": "25034baf818743a8e26ec3f59ad6d10b90c2825a69ac6e558c81f883a12533ac"
+        }
+      ],
+      "id": "openai",
+      "license": "Apache-2.0",
+      "notice": "notices/openai.LICENSE",
+      "noticeFile": "LICENSE",
+      "noticeSHA256": "636eb7d79da9bb6d515a4b3fd417aa26679eb3cf16396ddab4bc55fa74e616e4",
+      "package": "openai",
+      "repository": "https://github.com/openai/openai-node",
+      "version": "7.15.0"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import Foundation
 import LittleSwitchSearch
+import LittleSwitchWire
 
 extension AnthropicWebSearch {
     static func followUpRequest(
@@ -12,54 +13,55 @@ extension AnthropicWebSearch {
     ) throws -> Data {
         var object = try object(from: baseBody)
         guard let privateToolName,
-            var messages = object["messages"] as? [[String: Any]],
-            let content = try fragmentObject(from: turn.contentJSON) as? [[String: Any]]
-        else {
-            throw Error.invalidMessage
-        }
-
+            let priorMessages = object[AnthropicCountTokensProjection.Key.messages.rawValue]?.anthropicObjects,
+            let content = try fragmentObject(from: turn.contentJSON).anthropicObjects
+        else { throw Error.invalidMessage }
         let assistantContent = content.filter { block in
-            guard block["type"] as? String == "tool_use" else {
-                return true
-            }
-            return block["name"] as? String == privateToolName
-                && block["id"] as? String == toolCall.id
+            guard block[AnthropicToolUseParam.Key.type.rawValue]?.string == AnthropicToolUseParamType.toolUse.rawValue
+            else { return true }
+            return block[AnthropicToolUseParam.Key.name.rawValue]?.string == privateToolName
+                && block[AnthropicToolUseParam.Key.id.rawValue]?.string == toolCall.id
         }
         guard
-            assistantContent.contains(where: { block in
-                block["type"] as? String == "tool_use"
-                    && block["id"] as? String == toolCall.id
+            assistantContent.contains(where: {
+                $0[AnthropicToolUseParam.Key.type.rawValue]?.string == AnthropicToolUseParamType.toolUse.rawValue
+                    && $0[AnthropicToolUseParam.Key.id.rawValue]?.string == toolCall.id
             })
-        else {
-            throw Error.invalidMessage
-        }
-        messages.append(["role": "assistant", "content": assistantContent])
-
-        var result: [String: Any] = [
-            "type": "tool_result",
-            "tool_use_id": toolCall.id,
-            "content": resultText,
-        ]
-        if mode == .terminalError {
-            result["is_error"] = true
-        }
-        messages.append(["role": "user", "content": [result]])
-        object["messages"] = messages
-
-        if mode == .terminalError, let tools = object["tools"] as? [[String: Any]] {
-            let remainingTools = tools.filter { $0["name"] as? String != privateToolName }
+        else { throw Error.invalidMessage }
+        let assistant = AnthropicMessageParam(
+            content: .variant2(
+                try assistantContent.map {
+                    try anthropicDecode(AnthropicContentBlockParam.self, from: anthropicJSON($0))
+                }),
+            role: .assistant
+        )
+        let result = AnthropicToolResultParam(
+            content: .value(.string(resultText)),
+            isError: mode == .terminalError ? true : nil,
+            toolUseId: toolCall.id,
+            type: .toolResult
+        )
+        let user = AnthropicMessageParam(content: .variant2([.toolResult(result)]), role: .user)
+        object[AnthropicCountTokensProjection.Key.messages.rawValue] = .array(
+            priorMessages.map(anthropicJSON) + [try assistant.wireJSON(), try user.wireJSON()]
+        )
+        let declarations = object[AnthropicCountTokensProjection.Key.tools.rawValue]?.anthropicObjects
+        if mode == .terminalError, let tools = declarations {
+            let remainingTools = tools.filter {
+                $0[AnthropicToolDefinition.Key.name.rawValue]?.string != privateToolName
+            }
             if remainingTools.isEmpty {
-                object.removeValue(forKey: "tools")
-                object.removeValue(forKey: "tool_choice")
+                object.removeValue(forKey: AnthropicCountTokensProjection.Key.tools.rawValue)
+                object.removeValue(forKey: AnthropicCountTokensProjection.Key.toolChoice.rawValue)
             } else {
-                object["tools"] = remainingTools
-                if let choice = object["tool_choice"] as? [String: Any] {
-                    let isTool = choice["type"] as? String == "tool"
-                    let namesSearch = choice["name"] as? String == privateToolName
-                    let forcesSearch = isTool && namesSearch
-                    if forcesSearch {
-                        object["tool_choice"] = ["type": "auto"]
-                    }
+                object[AnthropicCountTokensProjection.Key.tools.rawValue] = .array(remainingTools.map(anthropicJSON))
+                let choice = object[AnthropicCountTokensProjection.Key.toolChoice.rawValue].flatMap {
+                    try? AnthropicNamedToolChoice(wireJSON: $0)
+                }
+                if choice?.name == privateToolName {
+                    object[AnthropicCountTokensProjection.Key.toolChoice.rawValue] = try AnthropicAutomaticToolChoice(
+                        type: .auto
+                    ).wireJSON()
                 }
             }
         }
@@ -67,11 +69,10 @@ extension AnthropicWebSearch {
     }
 
     static func formatResults(_ results: [WebSearchResult]) -> String {
-        results
-            .map { result in
-                "Title: \(result.title)\nURL: \(result.url)\nContent: \(result.content)\n\n"
-            }
-            .joined()
+        let passages = results.map { result in
+            "Title: \(result.title)\nURL: \(result.url)\nContent: \(result.content)\n\n"
+        }
+        return passages.joined()
     }
 
     static func nonStreamingResponse(
@@ -81,20 +82,18 @@ extension AnthropicWebSearch {
         usage: AnthropicUsage,
         privateToolName: String? = toolName
     ) throws -> Data {
-        let response: [String: Any] = [
-            "id": finalTurn.id,
-            "type": "message",
-            "role": "assistant",
-            "model": originalModel,
-            "content": try responseContent(traces: traces, finalTurn: finalTurn, privateToolName: privateToolName),
-            "stop_reason": normalizedStopReason(finalTurn.stopReason),
-            "stop_sequence": try fragmentObject(from: finalTurn.stopSequenceJSON),
-            "usage": publicUsage(
-                usage: usage,
-                webSearchRequests: successfulSearchCount(traces)
-            ),
-        ]
-        return try data(from: response)
+        let content = try responseContent(traces: traces, finalTurn: finalTurn, privateToolName: privateToolName)
+        let stopSequence = try fragmentObject(from: finalTurn.stopSequenceJSON)
+        let message = try AnthropicMessage(
+            content: content.map(anthropicJSON),
+            id: finalTurn.id,
+            stopReason: normalizedStopReason(finalTurn.stopReason).string.map {
+                .value(OpenWireValue(rawValue: $0))
+            } ?? .null,
+            stopSequence: stopSequence.isNull ? .null : .value(stopSequence),
+            usage: publicUsage(usage: usage, webSearchRequests: successfulSearchCount(traces))
+        )
+        return try publicMessage(message, model: originalModel).serializedData()
     }
 
     static func streamingResponse(
@@ -106,52 +105,65 @@ extension AnthropicWebSearch {
     ) throws -> Data {
         var stream = Data()
         try appendEvent(
-            name: "message_start",
-            payload: [
-                "type": "message_start",
-                "message": [
-                    "id": finalTurn.id,
-                    "type": "message",
-                    "role": "assistant",
-                    "model": originalModel,
-                    "content": [],
-                    "stop_reason": NSNull(),
-                    "stop_sequence": NSNull(),
-                    "usage": publicUsage(
-                        usage: usage,
-                        outputTokens: 0,
-                        webSearchRequests: 0
+            name: AnthropicMessageStartEventType.messageStart.rawValue,
+            payload: AnthropicMessageStartEvent(
+                message: publicMessage(
+                    AnthropicMessage(
+                        content: [],
+                        id: finalTurn.id,
+                        stopReason: .null,
+                        stopSequence: .null,
+                        usage: publicUsage(usage: usage, outputTokens: 0, webSearchRequests: 0)
                     ),
-                ],
-            ],
+                    model: originalModel
+                ),
+                type: .messageStart
+            ).wireJSON(),
             to: &stream
         )
-
         let content = try responseContent(traces: traces, finalTurn: finalTurn, privateToolName: privateToolName)
         for (index, block) in content.enumerated() {
             try appendStreamingBlock(block, index: index, to: &stream)
         }
-
         try appendEvent(
-            name: "message_delta",
-            payload: [
-                "type": "message_delta",
-                "delta": [
-                    "stop_reason": normalizedStopReason(finalTurn.stopReason),
-                    "stop_sequence": try fragmentObject(from: finalTurn.stopSequenceJSON),
-                ],
-                "usage": publicUsage(
-                    usage: usage,
-                    webSearchRequests: successfulSearchCount(traces)
-                ),
-            ],
+            name: AnthropicMessageDeltaEventType.messageDelta.rawValue,
+            payload: publicMessageDelta(
+                turn: finalTurn, usage: usage, webSearchRequests: successfulSearchCount(traces)),
             to: &stream
         )
         try appendEvent(
-            name: "message_stop",
-            payload: ["type": "message_stop"],
+            name: AnthropicMessageStopEventType.messageStop.rawValue,
+            payload: AnthropicMessageStopEvent(type: .messageStop).wireJSON(),
             to: &stream
         )
         return stream
     }
+}
+
+func publicMessage(_ message: AnthropicMessage, model: String) throws -> JSONValue {
+    try AnthropicMessageMetadata(
+        model: model,
+        role: .assistant,
+        type: .message,
+        additionalFields: WireObject(message.wireJSON()).additionalFields(excluding: [])
+    ).wireJSON()
+}
+
+func publicMessageDelta(turn: AnthropicModelTurn, usage: AnthropicUsage, webSearchRequests: Int) throws -> JSONValue {
+    // Public stop_sequence historically accepts an opaque fragment. Preserve it
+    // in the emitted delta while the incoming terminal codec remains string/null.
+    let fields = AnthropicMessageDelta(
+        stopReason: AnthropicWebSearch.normalizedStopReason(turn.stopReason).string.map {
+            .value(OpenWireValue(rawValue: $0))
+        } ?? .null,
+        stopSequence: .absent
+    )
+    var delta = try WireObject(fields.wireJSON()).additionalFields(excluding: [])
+    delta[AnthropicMessageDelta.Key.stopSequence.rawValue] = try AnthropicWebSearch.fragmentObject(
+        from: turn.stopSequenceJSON)
+    return try AnthropicPublicMessageDeltaEvent(
+        delta: anthropicJSON(delta),
+        type: .messageDelta,
+        usage: publicUsage(usage: usage, webSearchRequests: webSearchRequests)
+    ).wireJSON()
 }

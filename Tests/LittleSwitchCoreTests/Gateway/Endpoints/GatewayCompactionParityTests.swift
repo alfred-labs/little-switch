@@ -1,6 +1,7 @@
 import Foundation
 import HTTPTypes
 import HummingbirdTesting
+import LittleSwitchWire
 import NIOCore
 import NIOHTTP1
 import Testing
@@ -64,7 +65,8 @@ extension GatewayTests {
                 == (native ? ["context": "all_turns", "effort": "max", "summary": "detailed"] : nil))
         // Managed image requests still need their provider compatibility reserve;
         // the summary itself no longer imposes or inherits an output limit.
-        #expect(sent["max_output_tokens"] as? Int == (native ? 100_000 : 32_768))
+        let sentJSON = try JSONValue.parse(try #require(requests.first).body)
+        #expect(sentJSON.object?["max_output_tokens"] == .integer(native ? 100_000 : 32_768))
         if native { #expect(requests.first?.body == body) }
         let input = try #require(sent["input"] as? [[String: Any]])
         let parts = input.compactMap { $0["content"] as? [[String: Any]] }.joined()

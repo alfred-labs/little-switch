@@ -7,7 +7,7 @@ struct LittleSwitchTools: AsyncParsableCommand {
         abstract: "Repository tools for LittleSwitch.",
         subcommands: [
             RepositoryCommand.self, CoverageCommand.self, ReleaseCommand.self, DiagnosticsCommand.self,
-            MonitoringCommand.self,
+            MonitoringCommand.self, ContractsCommand.self,
         ]
     )
 

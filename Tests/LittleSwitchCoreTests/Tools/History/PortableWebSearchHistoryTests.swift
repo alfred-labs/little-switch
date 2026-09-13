@@ -23,9 +23,9 @@ struct PortableWebSearchHistoryTests {
             finalTurn: bareAnthropicTurn(contentJSON: Data("[]".utf8))
         )
         let block = try #require(content.last)
-        let results = try #require(block["content"] as? [[String: Any]])
+        let results = try #require(block["content"]?.anthropicObjects)
         let recovered = try results.enumerated().map { index, result in
-            let token = try #require(result["encrypted_content"] as? String)
+            let token = try #require(result["encrypted_content"]?.string)
             let prefix = "little-switch-search:v1:"
             try #require(token.hasPrefix(prefix))
             let data = try #require(Data(base64Encoded: String(token.dropFirst(prefix.count))))
@@ -50,14 +50,14 @@ struct PortableWebSearchHistoryTests {
                 WebSearchResult(title: "Empty excerpt", url: "https://example.com/", content: ""),
             ])
         )
-        #expect(try PortableWebSearchHistory.anthropicResultText(block) == expected)
+        #expect(try anthropicReplayText(block) == expected)
     }
 
     @Test("Empty search results retain an explicit completed result")
     func emptyResults() throws {
         let block = try publishedSearchResult(.results([]))
         #expect(
-            try PortableWebSearchHistory.anthropicResultText(block)
+            try anthropicReplayText(block)
                 == "Historical web search result for srvtoolu_replay:\nNo results were returned."
         )
     }
@@ -66,7 +66,7 @@ struct PortableWebSearchHistoryTests {
     func errorResult() throws {
         let block = try publishedSearchResult(.error("invalid_request"))
         #expect(
-            try PortableWebSearchHistory.anthropicResultText(block)
+            try anthropicReplayText(block)
                 == "Historical web search result for srvtoolu_replay:\nWeb search failed: invalid_tool_input."
         )
     }
@@ -75,7 +75,7 @@ struct PortableWebSearchHistoryTests {
     func legacyResult() throws {
         let block = replayedSearchBlock(token: "little-switch-opaque:srvtoolu_replay:0")
         #expect(
-            try PortableWebSearchHistory.anthropicResultText(block)
+            try anthropicReplayText(block)
                 == "Historical web search result for srvtoolu_replay:\n"
                 + "Title: Swift.org\nURL: https://swift.org/\n"
                 + "Content: Content unavailable: this legacy LittleSwitch replay token retained only source metadata.\n\n"
@@ -85,14 +85,14 @@ struct PortableWebSearchHistoryTests {
     @Test("Foreign opaque search tokens cannot masquerade as portable history")
     func foreignOpaqueResult() throws {
         #expect(throws: PortableWebSearchHistory.Error.unsupportedOpaqueContent) {
-            try PortableWebSearchHistory.anthropicResultText(replayedSearchBlock(token: "native-opaque-provider-data"))
+            try anthropicReplayText(replayedSearchBlock(token: "native-opaque-provider-data"))
         }
     }
 
     @Test("Unknown gateway replay versions fail explicitly")
     func unsupportedVersion() throws {
         #expect(throws: PortableWebSearchHistory.Error.unsupportedReplayVersion) {
-            try PortableWebSearchHistory.anthropicResultText(replayedSearchBlock(token: "little-switch-search:v2:e30="))
+            try anthropicReplayText(replayedSearchBlock(token: "little-switch-search:v2:e30="))
         }
     }
 
@@ -116,8 +116,8 @@ struct PortableWebSearchHistoryTests {
             let buffered = try publishedSearchResult(content)
             #expect(NSDictionary(dictionary: streamed).isEqual(to: buffered))
             #expect(
-                try PortableWebSearchHistory.anthropicResultText(streamed)
-                    == PortableWebSearchHistory.anthropicResultText(buffered)
+                try anthropicReplayText(streamed)
+                    == anthropicReplayText(buffered)
             )
         }
     }
@@ -128,7 +128,7 @@ func publishedSearchResult(_ content: WebSearchTraceContent) throws -> [String: 
         traces: [WebSearchTrace(toolUseID: "srvtoolu_replay", query: "Swift", content: content)],
         finalTurn: bareAnthropicTurn(contentJSON: Data("[]".utf8))
     )
-    return try #require(blocks.last)
+    return try anthropicFoundationObject(#require(blocks.last))
 }
 
 func replayedSearchBlock(token: String) -> [String: Any] {

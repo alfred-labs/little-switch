@@ -2,6 +2,7 @@ import AsyncHTTPClient
 import Foundation
 import Hummingbird
 import LittleSwitchTransport
+import LittleSwitchWire
 import NIOCore
 
 package struct AnthropicLiveTurnContext: Sendable {
@@ -198,11 +199,15 @@ extension GatewayResponder {
         request: AnthropicInitialUsageRequestContext?,
         eventID: UUID?
     ) async throws -> AnthropicProviderStreamEvent {
-        var message = try publicStreamObject(messageJSON)
-        guard var usage = message["usage"] as? [String: Any] else {
+        var message: AnthropicMessage
+        var usage: AnthropicUsageFields
+        do {
+            message = try WireCodec.decode(AnthropicMessage.self, from: messageJSON).value
+            usage = try AnthropicUsageFields(wireJSON: message.usage ?? .null)
+        } catch {
             throw GatewayAnthropicLiveError.invalidProviderResponse
         }
-        let inputTokens = try publicTokenCount(usage["input_tokens"])
+        let inputTokens = try usage.inputTokens.value.map(anthropicTokenCount) ?? 0
         guard inputTokens == 0, let request else {
             return .messageStart(messageJSON: messageJSON)
         }
@@ -222,8 +227,8 @@ extension GatewayResponder {
             throw GatewayAnthropicLiveError.invalidProviderResponse
         }
 
-        usage["input_tokens"] = resolvedTokens
-        message["usage"] = usage
+        usage.inputTokens = .value(JSONNumber(resolvedTokens))
+        message.usage = try usage.wireJSON()
         if let eventID, let estimate = anthropicTrafficEstimate(for: resolution) {
             await GatewayMonitoringScope.current?.estimatedInput(estimate.tokenCount)
             trafficRecorder.record(
@@ -231,7 +236,7 @@ extension GatewayResponder {
                 action: .initialUsageEstimate(estimate)
             )
         }
-        return .messageStart(messageJSON: try publicStreamData(message))
+        return .messageStart(messageJSON: try WireCodec.encode(message))
     }
 
 }
@@ -239,50 +244,44 @@ extension GatewayResponder {
 package func anthropicLiveEvents(
     for turn: AnthropicModelTurn
 ) throws -> [AnthropicProviderStreamEvent] {
-    let message: [String: Any] = [
-        "id": turn.id,
-        "type": "message",
-        "role": "assistant",
-        "content": [],
-        "stop_reason": NSNull(),
-        "stop_sequence": NSNull(),
-        "usage": [
-            "input_tokens": turn.usage.inputTokens,
-            "output_tokens": 0,
-        ],
-    ]
+    let message = AnthropicMessage(
+        content: [],
+        id: turn.id,
+        stopReason: .null,
+        stopSequence: .null,
+        usage: try AnthropicUsageFields(
+            inputTokens: .value(JSONNumber(turn.usage.inputTokens)), outputTokens: .value(JSONNumber(0))
+        ).wireJSON(),
+        additionalFields: [
+            AnthropicMessageMetadata.Key.type.rawValue: .string(AnthropicMessageMetadataType.message.rawValue),
+            AnthropicMessageMetadata.Key.role.rawValue: .string(AnthropicMessageMetadataRole.assistant.rawValue),
+        ]
+    )
     var events: [AnthropicProviderStreamEvent] = [
-        .messageStart(messageJSON: try anthropicLiveData(message))
+        .messageStart(messageJSON: try WireCodec.encode(message))
     ]
 
-    guard
-        let blocks = try JSONSerialization.jsonObject(with: turn.contentJSON)
-            as? [[String: Any]]
-    else {
+    guard let blocks = try WireCodec.decode(JSONValue.self, from: turn.contentJSON).value.array else {
         throw GatewayAnthropicLiveError.invalidProviderResponse
     }
     for (index, block) in blocks.enumerated() {
         events += try anthropicLiveBlockEvents(block, index: index)
     }
 
-    let stopReason: Any
-    if let value = turn.stopReason {
-        stopReason = value
-    } else {
-        stopReason = NSNull()
-    }
+    let stopReason = turn.stopReason.map(JSONValue.string) ?? .null
     events.append(
         .messageDelta(
             deltaJSON: try anthropicLiveData([
-                "stop_reason": stopReason,
-                "stop_sequence": try AnthropicWebSearch.fragmentObject(
+                AnthropicMessageDelta.Key.stopReason.rawValue: stopReason,
+                AnthropicMessageDelta.Key.stopSequence.rawValue: try AnthropicWebSearch.fragmentObject(
                     from: turn.stopSequenceJSON
                 ),
             ]),
-            usageJSON: try anthropicLiveData([
-                "input_tokens": turn.usage.inputTokens,
-                "output_tokens": turn.usage.outputTokens,
-            ])
+            usageJSON: try WireCodec.encode(
+                AnthropicUsageFields(
+                    inputTokens: .value(JSONNumber(turn.usage.inputTokens)),
+                    outputTokens: .value(JSONNumber(turn.usage.outputTokens))
+                ))
         )
     )
     events.append(.messageStop)
@@ -290,35 +289,40 @@ package func anthropicLiveEvents(
 }
 
 private func anthropicLiveBlockEvents(
-    _ block: [String: Any],
+    _ block: JSONValue,
     index: Int
 ) throws -> [AnthropicProviderStreamEvent] {
-    guard let type = block["type"] as? String, !type.isEmpty else {
-        throw GatewayAnthropicLiveError.invalidProviderResponse
-    }
-    var startBlock = block
+    var startBlock = try AnthropicContentBlock(wireJSON: block)
     var events: [AnthropicProviderStreamEvent] = []
     var inputDelta: AnthropicProviderStreamEvent?
-
-    if ["tool_use", "server_tool_use"].contains(type) {
-        guard let input = block["input"] as? [String: Any] else {
+    let input: JSONValue?
+    switch startBlock {
+    case .toolUse(var tool):
+        input = tool.input
+        tool.input = [:]
+        startBlock = .toolUse(tool)
+    case .serverToolUse(var tool):
+        input = tool.input
+        tool.input = [:]
+        startBlock = .serverToolUse(tool)
+    default:
+        input = nil
+    }
+    if let input {
+        guard input.object != nil else {
             throw GatewayAnthropicLiveError.invalidProviderResponse
         }
-        startBlock["input"] = [String: Any]()
-        // JSONSerialization always emits valid UTF-8.
+        // The exact JSON codec emits UTF-8.
         // swiftlint:disable:next optional_data_string_conversion
-        let partialJSON = String(decoding: try anthropicLiveData(input), as: UTF8.self)
+        let partialJSON = String(decoding: try input.serializedData(), as: UTF8.self)
         inputDelta = .contentDelta(
             index: index,
-            deltaJSON: try anthropicLiveData([
-                "type": "input_json_delta",
-                "partial_json": partialJSON,
-            ])
+            deltaJSON: try WireCodec.encode(AnthropicInputJSONDelta(partialJson: partialJSON, type: .inputJsonDelta))
         )
     }
 
     events.append(
-        .contentStart(index: index, blockJSON: try anthropicLiveData(startBlock))
+        .contentStart(index: index, blockJSON: try WireCodec.encode(startBlock))
     )
     if let inputDelta {
         events.append(inputDelta)
@@ -327,11 +331,6 @@ private func anthropicLiveBlockEvents(
     return events
 }
 
-private func anthropicLiveData(_ value: Any) throws -> Data {
-    try AnthropicWebSearch.serialize(
-        value,
-        options: [.fragmentsAllowed, .sortedKeys, .withoutEscapingSlashes]
-    ) { value, options in
-        try JSONSerialization.data(withJSONObject: value, options: options)
-    }
+private func anthropicLiveData(_ value: [String: JSONValue]) throws -> Data {
+    try anthropicJSON(value).serializedData()
 }

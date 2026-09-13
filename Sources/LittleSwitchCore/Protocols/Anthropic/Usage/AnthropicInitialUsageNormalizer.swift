@@ -1,5 +1,5 @@
-import CoreFoundation
 import Foundation
+import LittleSwitchWire
 
 private struct AnthropicMessageStartPatch: Sendable {
     let before: Data
@@ -33,19 +33,6 @@ private struct AnthropicInitialUsageSSEFields {
 private struct AnthropicInitialUsageRawFrameBoundary {
     let range: Range<Int>
     let separatorByteCount: Int
-}
-
-private func integralTokenCount(_ value: Any?) -> Int? {
-    guard let number = value as? NSNumber,
-        CFGetTypeID(number) == CFNumberGetTypeID()
-    else {
-        return nil
-    }
-    let count = number.intValue
-    guard number.compare(NSNumber(value: count)) == .orderedSame else {
-        return nil
-    }
-    return count
 }
 
 private func rewrittenFrame(
@@ -246,18 +233,18 @@ package struct AnthropicInitialUsageNormalizer: Sendable {
             return fields.event == nil ? .ignorable : .invalid
         }
         guard fields.payload != Data("[DONE]".utf8),
-            let root = try? JSONSerialization.jsonObject(with: fields.payload) as? [String: Any],
-            let type = root["type"] as? String
+            let event = try? WireCodec.decode(AnthropicStreamEvent.self, from: fields.payload).value
         else {
             return .invalid
         }
-        if fields.event == "ping", type == "ping" {
+        if fields.event == "ping", case .unknown(type: "ping", payload: _) = event {
             return .ignorable
         }
-        guard fields.event == "message_start", type == "message_start",
-            let message = root["message"] as? [String: Any],
-            let usage = message["usage"] as? [String: Any],
-            let inputTokens = integralTokenCount(usage["input_tokens"]),
+        guard fields.event == "message_start", case .messageStart(let start) = event,
+            let message = start.message?.object,
+            let usage = message[AnthropicMessage.Key.usage.rawValue],
+            let count = try? AnthropicInputTokenCount(wireJSON: usage),
+            let inputTokens = try? count.inputTokens.integerValue(),
             inputTokens >= 0,
             let inputTokenRange = inputTokenRange(
                 in: fields.payload,

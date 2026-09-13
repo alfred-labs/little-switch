@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "#/definitions/Presence",
+  "definitions": {
+    "Presence": {
+      "type": "object",
+      "properties": {
+        "required": { "type": "string" },
+        "nullable": { "type": ["string", "null"] },
+        "optional": { "type": "string" },
+        "presence": { "type": ["string", "null"] },
+        "amount": { "type": "number" },
+        "class": { "enum": ["public", "private"], "type": "string" }
+      },
+      "required": ["required", "nullable", "amount", "class"],
+      "additionalProperties": true
+    },
+    "Tagged": { "anyOf": [{ "$ref": "#/definitions/Text" }, { "$ref": "#/definitions/Tool" }] },
+    "Text": {
+      "type": "object",
+      "properties": { "type": { "const": "text", "type": "string" }, "text": { "type": "string" } },
+      "required": ["type", "text"]
+    },
+    "Tool": {
+      "type": "object",
+      "properties": { "type": { "const": "tool", "type": "string" }, "input": {} },
+      "required": ["type", "input"]
+    },
+    "Any": { "anyOf": [{ "$ref": "#/definitions/Left" }, { "$ref": "#/definitions/Right" }] },
+    "One": { "oneOf": [{ "$ref": "#/definitions/Left" }, { "$ref": "#/definitions/Right" }] },
+    "Left": { "type": "object", "properties": { "left": { "type": "string" } }, "required": ["left"] },
+    "Right": { "type": "object", "properties": { "right": { "type": "number" } }, "required": ["right"] },
+    "Stream": { "anyOf": [{ "$ref": "#/definitions/StreamFalse" }, { "$ref": "#/definitions/StreamTrue" }] },
+    "StreamFalse": {
+      "type": "object", "properties": { "stream": { "type": "boolean", "const": false }, "model": { "type": "string" } },
+      "required": ["model"]
+    },
+    "StreamTrue": {
+      "type": "object", "properties": { "stream": { "type": "boolean", "const": true }, "model": { "type": "string" } },
+      "required": ["model", "stream"]
+    },
+    "NullableStream": {
+      "anyOf": [
+        { "type": "object", "properties": { "stream": { "anyOf": [{ "type": "boolean", "const": false }, { "type": "null" }] }, "model": { "type": "string" } }, "required": ["model"] },
+        { "$ref": "#/definitions/StreamTrue" }
+      ]
+    },
+    "Nested": {
+      "type": "object",
+      "properties": { "values": { "type": "array", "items": { "type": ["number", "null"] } } },
+      "required": ["values"],
+      "additionalProperties": false
+    },
+    "Map": { "type": "object", "additionalProperties": { "type": ["number", "null"] } },
+    "Scalar": { "type": ["string", "number", "boolean"] },
+    "BooleanArray": {
+      "type": "object",
+      "properties": { "flags": { "type": "array", "items": { "type": "boolean", "const": true } } },
+      "required": ["flags"]
+    },
+    "LocalNames": {
+      "type": "object",
+      "properties": { "object": { "type": "string" }, "value": { "type": "string" } },
+      "required": ["object", "value"]
+    },
+    "BooleanMap": { "type": "object", "additionalProperties": { "type": "boolean", "const": true } },
+    "BooleanUnion": { "oneOf": [{ "type": "boolean", "const": true }, { "type": "boolean", "const": false }] },
+    "NullableOne": {
+      "type": "object",
+      "properties": { "value": { "oneOf": [{ "type": "string", "enum": ["yes"] }, { "type": "null" }] } },
+      "required": ["value"]
+    },
+    "Projection": {
+      "type": "object",
+      "properties": { "type": { "type": "string", "const": "projected" }, "kept": { "type": "string" }, "other": { "type": "number" } },
+      "required": ["type", "kept", "other"],
+      "additionalProperties": false
+    },
+    "Recursive": {
+      "oneOf": [
+        { "type": "object", "properties": { "type": { "type": "string", "const": "leaf" }, "value": { "type": "string" } }, "required": ["type", "value"] },
+        { "type": "object", "properties": { "type": { "type": "string", "const": "branch" }, "child": { "$ref": "#/definitions/Recursive" } }, "required": ["type", "child"] }
+      ]
+    },
+    "OverlappingOne": { "oneOf": [{ "enum": ["a", "b"] }, { "enum": ["a", "c"] }] },
+    "NestedOverlappingOne": {
+      "type": "object",
+      "properties": { "choice": { "$ref": "#/definitions/OverlappingOne" } },
+      "required": ["choice"]
+    },
+    "OpaqueAny": { "anyOf": [{}, { "type": "string" }] },
+    "PayloadTag": {
+      "anyOf": [
+        { "type": "object", "properties": { "__wire_payload__": { "const": "a" } }, "required": ["__wire_payload__"] },
+        { "type": "object", "properties": { "__wire_payload__": { "const": "b" } }, "required": ["__wire_payload__"] }
+      ]
+    }
+  }
+}

@@ -1,0 +1,55 @@
+--- a/Sources/OrderedJSON/JSONValue+Serialize.swift
++++ b/Sources/OrderedJSON/JSONValue+Serialize.swift
+@@ -105,28 +105,31 @@
+ 
+   private static func appendQuoted(_ string: String, to out: inout String) {
+     out.append("\"")
+-    for scalar in string.unicodeScalars {
+-      switch scalar {
+-      case "\"":
+-        out.append("\\\"")
+-      case "\\":
+-        out.append("\\\\")
+-      case "\n":
+-        out.append("\\n")
+-      case "\r":
+-        out.append("\\r")
+-      case "\t":
+-        out.append("\\t")
+-      case "\u{08}":
+-        out.append("\\b")
+-      case "\u{0C}":
+-        out.append("\\f")
+-      default:
+-        if scalar.value < 0x20 {
+-          out.append(String(format: "\\u%04x", scalar.value))
+-        } else {
+-          out.append(Character(scalar))
++    var utf8Source = string
++    utf8Source.withUTF8 { bytes in
++      var segmentStart = 0
++      for index in bytes.indices {
++        let byte = bytes[index]
++        guard byte < 0x20 || byte == 0x22 || byte == 0x5C else { continue }
++        if segmentStart < index {
++          out.append(String(decoding: bytes[segmentStart..<index], as: UTF8.self))
+         }
++        switch byte {
++        case 0x22: out.append("\\\"")
++        case 0x5C: out.append("\\\\")
++        case 0x0A: out.append("\\n")
++        case 0x0D: out.append("\\r")
++        case 0x09: out.append("\\t")
++        case 0x08: out.append("\\b")
++        case 0x0C: out.append("\\f")
++        default: out.append(String(format: "\\u%04x", UInt32(byte)))
++        }
++        segmentStart = index + 1
++      }
++      if segmentStart == 0 {
++        out.append(string)
++      } else if segmentStart < bytes.count {
++        out.append(String(decoding: bytes[segmentStart..<bytes.count], as: UTF8.self))
+       }
+     }
+     out.append("\"")

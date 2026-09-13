@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 package enum ResponsesChatCompletionsMode: Equatable, Sendable {
     case buffered
@@ -7,8 +8,16 @@ package enum ResponsesChatCompletionsMode: Equatable, Sendable {
 
 private struct ChatCompletionsTerminalProjection {
     let status: ResponsesStreamTerminal
-    let incompleteReason: String?
-    let error: [String: String]?
+    let incompleteReason: OpenAIResponsesIncompleteDetailsReason?
+    let error: OpenAIResponsesWireError?
+
+    var wireStatus: OpenAIResponsesStatus {
+        switch status {
+        case .completed: .completed
+        case .incomplete: .incomplete
+        case .failed: .failed
+        }
+    }
 }
 
 package enum OpenAIResponsesChatCompletions {
@@ -119,7 +128,7 @@ package enum OpenAIResponsesChatCompletions {
             }
         }
 
-        let upstreamBody = try data(request)
+        let upstreamBody = try outboundData(request)
         return PreparedResponsesChatCompletionsRequest(
             upstreamBody: upstreamBody,
             originalBody: originalBody ?? search?.originalBody ?? body,
@@ -139,14 +148,10 @@ package enum OpenAIResponsesChatCompletions {
 
 extension OpenAIResponsesChatCompletions {
     static func terminalStatus(responseBody: Data) throws -> ResponsesStreamTerminal {
-        guard
-            let chat = object(responseBody),
-            let choices = chat["choices"] as? [[String: Any]],
-            let choice = choices.first
-        else {
+        guard let choice = try decodedChat(responseBody).choices.first else {
             throw Error.invalidResponse
         }
-        let terminal = try terminalProjection(choice["finish_reason"] as? String)
+        let terminal = try terminalProjection(choice.finishReason)
         return terminal.status
     }
 
@@ -154,23 +159,17 @@ extension OpenAIResponsesChatCompletions {
         responseBody: Data,
         prepared: PreparedResponsesChatCompletionsRequest
     ) throws -> Data {
-        guard
-            let chat = object(responseBody),
-            let choices = chat["choices"] as? [[String: Any]],
-            let choice = choices.first,
-            let message = choice["message"] as? [String: Any],
-            let original = object(prepared.originalBody)
-        else {
+        let chat = try decodedChat(responseBody)
+        guard let choice = chat.choices.first else {
             throw Error.invalidResponse
         }
 
-        let chatID = nonemptyString(chat["id"]) ?? "chatcmpl_little_switch"
+        let chatID = nonemptyString(chat.id.value) ?? "chatcmpl_little_switch"
         let responseID = chatID.hasPrefix("resp_") ? chatID : "resp_\(chatID)"
-        let created = chat["created"] as? Int ?? 0
-        let finishReason = choice["finish_reason"] as? String
-        let terminal = try terminalProjection(finishReason)
+        let created = (try? chat.created.value?.integerValue()) ?? 0
+        let terminal = try terminalProjection(choice.finishReason)
         let rawOutput = try responseOutput(
-            message: message,
+            message: choice.message,
             responseID: responseID,
             bindings: prepared.toolBindings,
             resolver: ProviderToolNamespaceResolver(
@@ -182,83 +181,72 @@ extension OpenAIResponsesChatCompletions {
         let output = try rawOutput.map { item in
             try prepared.toolSearchContract?.projectItem(item) ?? item
         }
-        let usage = try responsesUsage(chat["usage"])
-        let incompleteDetails: Any =
-            terminal.incompleteReason.map { ["reason": $0] } ?? NSNull()
-        let responseError: Any = terminal.error ?? NSNull()
-
-        let response: [String: Any] = [
-            "id": responseID,
-            "object": "response",
-            "created_at": created,
-            "completed_at": created,
-            "status": terminal.status.rawValue,
-            "error": responseError,
-            "incomplete_details": incompleteDetails,
-            "instructions": original["instructions"] ?? NSNull(),
-            "max_output_tokens": original["max_output_tokens"] ?? NSNull(),
-            "model": prepared.originalModel,
-            "output": output,
-            "parallel_tool_calls": original["parallel_tool_calls"] as? Bool ?? true,
-            "previous_response_id": original["previous_response_id"] ?? NSNull(),
-            "reasoning": original["reasoning"]
-                ?? ["effort": NSNull(), "summary": NSNull()],
-            "store": original["store"] as? Bool ?? true,
-            "temperature": original["temperature"] ?? NSNull(),
-            "text": original["text"] ?? ["format": ["type": "text"]],
-            "tool_choice": original["tool_choice"] ?? "auto",
-            "tools": original["tools"] ?? [],
-            "top_p": original["top_p"] ?? NSNull(),
-            "truncation": original["truncation"] ?? "disabled",
-            "usage": responsesPublicUsage(usage),
-            "user": original["user"] ?? NSNull(),
-            "metadata": original["metadata"] ?? [:],
-        ]
+        let usage = try responsesUsage(chat.usage.value)
+        let response = try OpenAIResponsesResponse(
+            completedAt: .value(JSONNumber(created)),
+            createdAt: JSONNumber(created),
+            error: terminal.error.map { .value($0) } ?? .null,
+            id: responseID,
+            incompleteDetails: terminal.incompleteReason.map {
+                .value(try OpenAIResponsesIncompleteDetails(reason: $0).wireJSON())
+            } ?? .null,
+            object: .response,
+            output: output.map(WireJSONCompatibility.value),
+            status: terminal.wireStatus,
+            usage: .value(OpenAIResponsesWireUsage(wireJSON: WireJSONCompatibility.value(responsesPublicUsage(usage)))),
+            additionalFields: responseEcho(prepared)
+        )
+        let data = try WireCodec.encode(response)
         return prepared.streaming
-            ? try OpenAIResponsesStreaming.encode(completed: response)
-            : try data(response)
+            ? try OpenAIResponsesStreaming.encode(completed: WireJSONCompatibility.fields(data))
+            : data
     }
 
     private static func terminalProjection(
-        _ finishReason: String?
+        _ finishReason: OpenAIChatCompletionFinishReason
     ) throws -> ChatCompletionsTerminalProjection {
         switch finishReason {
-        case "stop", "tool_calls":
+        case .stop, .toolCalls:
             ChatCompletionsTerminalProjection(
                 status: .completed,
                 incompleteReason: nil,
                 error: nil
             )
-        case "length":
+        case .length:
             ChatCompletionsTerminalProjection(
                 status: .incomplete,
-                incompleteReason: "max_output_tokens",
+                incompleteReason: .maxOutputTokens,
                 error: nil
             )
-        case "sensitive", "content_filter":
+        case .sensitive, .contentFilter:
             ChatCompletionsTerminalProjection(
                 status: .incomplete,
-                incompleteReason: "content_filter",
+                incompleteReason: .contentFilter,
                 error: nil
             )
-        case "model_context_window_exceeded", "network_error":
+        case .modelContextWindowExceeded, .networkError:
             ChatCompletionsTerminalProjection(
                 status: .failed,
                 incompleteReason: nil,
-                error: [
-                    "code": finishReason == "model_context_window_exceeded"
-                        ? "context_length_exceeded"
-                        : "server_error",
-                    "message": "Internal server error",
-                ]
+                error: OpenAIResponsesWireError(
+                    code: .known(finishReason == .modelContextWindowExceeded ? .contextLengthExceeded : .serverError),
+                    message: "Internal server error")
             )
-        default:
+        case .functionCall:
             throw Error.invalidResponse
         }
     }
 
     private static func validateToolsForChat(_ tools: [[String: Any]]) throws {
         do { try ProviderToolContractCatalog.validateResponsesDeclarations(tools) } catch { throw Error.invalidRequest }
+    }
+
+    private static func decodedChat(_ data: Data) throws -> OpenAIChatCompletion {
+        do {
+            return try WireCodec.decode(OpenAIChatCompletion.self, from: data).value
+        } catch {
+            throw Error.invalidResponse
+        }
     }
 
     private static func chatTool(_ tool: [String: Any]) -> [String: Any]? {
@@ -290,13 +278,22 @@ extension OpenAIResponsesChatCompletions {
     }
 
     private static func object(_ data: Data) -> [String: Any]? {
-        (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        try? WireJSONCompatibility.fields(data)
     }
 
     private static func data(_ object: [String: Any]) throws -> Data {
-        try JSONSerialization.data(
-            withJSONObject: object,
-            options: [.sortedKeys, .withoutEscapingSlashes]
-        )
+        try WireJSONCompatibility.data(object)
+    }
+
+    private static func outboundData(_ request: [String: Any]) throws -> Data {
+        // The history builder validates roles and required fields before this
+        // internal encoding boundary. Keep the resulting SDK record checks.
+        var envelope = try OpenAIChatRequestEnvelope(wireJSON: WireJSONCompatibility.value(request))
+        envelope.messages = try envelope.messages.map { value in
+            let message = try OpenAIChatRequestMessage(wireJSON: value)
+            if case .unknown = message { throw Error.invalidRequest }
+            return try message.wireJSON()
+        }
+        return try WireCodec.encode(envelope)
     }
 }

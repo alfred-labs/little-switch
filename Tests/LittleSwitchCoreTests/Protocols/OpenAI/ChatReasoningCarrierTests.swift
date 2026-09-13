@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 import Testing
 
 @testable import LittleSwitchCore
@@ -7,9 +8,12 @@ import Testing
 struct ChatReasoningCarrierTests {
     @Test("Absent and null fields do not invent a reasoning item")
     func absentFields() throws {
-        let message: [String: Any] = ["content": "Visible", "reasoning": NSNull(), "reasoning_content": NSNull()]
-        #expect(try ResponsesChatCompletionsReasoning.fields(in: message).isEmpty)
-        #expect(try ResponsesChatCompletionsReasoning.item(message: message, responseID: "resp_none") == nil)
+        let message: [String: JSONValue] = [
+            "content": .string("Visible"), "reasoning": .null, "reasoning_content": .null,
+        ]
+        let fields = try ResponsesChatCompletionsReasoning.wireFields(in: message)
+        #expect(fields.isEmpty)
+        #expect(try ResponsesChatCompletionsReasoning.item(message: fields, responseID: "resp_none") == nil)
     }
 
     @Test("Carrier preserves empty and Unicode values without merging field spellings")

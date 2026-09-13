@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 extension ResponsesPublicStreamSession {
     func publicContentReference(
@@ -63,7 +64,8 @@ extension ResponsesPublicStreamSession {
         object["type"] = name
         object["sequence_number"] = sequenceNumber
         var data = Data("event: \(name)\ndata: ".utf8)
-        data.append(try responsesStreamData(object))
+        let event = try responsesWireDecode(OpenAIResponseStreamEvent.self, json: WireJSONCompatibility.value(object))
+        data.append(try WireCodec.encode(event))
         data.append(Data("\n\n".utf8))
         nextSequenceNumber = next.partialValue
         return data

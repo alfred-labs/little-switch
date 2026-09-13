@@ -112,17 +112,17 @@ struct AdapterToolNamespaceIdentityTests {
         let prepared = try nativePrepared()
         var call = nativeCalls()[1]
         call["namespace"] = 42
-        let turn = try OpenAIResponsesWebSearch.parseModelTurn(
-            responseData(
-                responseObject(
-                    id: "resp_identity",
-                    createdAt: 1,
-                    status: "completed",
-                    output: [call],
-                    usage: ResponsesUsage(inputTokens: 0, outputTokens: 0)
-                )))
         #expect(throws: OpenAIResponsesWebSearch.Error.invalidResponse) {
-            try OpenAIResponsesWebSearch.nonStreamingResponse(
+            let turn = try OpenAIResponsesWebSearch.parseModelTurn(
+                responseData(
+                    responseObject(
+                        id: "resp_identity",
+                        createdAt: 1,
+                        status: "completed",
+                        output: [call],
+                        usage: ResponsesUsage(inputTokens: 0, outputTokens: 0)
+                    )))
+            _ = try OpenAIResponsesWebSearch.nonStreamingResponse(
                 prepared: prepared, traces: [], finalTurn: turn, usage: ResponsesUsage(inputTokens: 0, outputTokens: 0)
             )
         }

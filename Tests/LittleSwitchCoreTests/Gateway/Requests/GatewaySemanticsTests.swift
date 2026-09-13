@@ -141,8 +141,10 @@ struct GatewaySemanticsTests {
 
     @Test("Malformed image requests fail rewriting safely")
     func malformedImageRequest() {
-        #expect(throws: (any Swift.Error).self) {
-            try ImageFallback.replacingImages(in: Data("{".utf8))
+        for source in ["{", "null", "true", "1", #""text""#] {
+            #expect(throws: (any Swift.Error).self) {
+                try ImageFallback.replacingImages(in: Data(source.utf8))
+            }
         }
     }
 

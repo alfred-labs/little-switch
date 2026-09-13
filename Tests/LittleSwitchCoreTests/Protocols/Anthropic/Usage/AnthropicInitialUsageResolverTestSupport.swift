@@ -1,6 +1,7 @@
 import AsyncHTTPClient
 import Foundation
 import LittleSwitchTransport
+import LittleSwitchWire
 import NIOCore
 import NIOHTTP1
 
@@ -245,7 +246,7 @@ final class ResolverRecordingEstimator: GatewayTokenEstimating, @unchecked Senda
         return result
     }
 
-    func estimate(root: [String: Any]) throws -> Int {
+    func estimate(root: [String: JSONValue]) throws -> Int {
         _ = root
         lock.lock()
         calls += 1

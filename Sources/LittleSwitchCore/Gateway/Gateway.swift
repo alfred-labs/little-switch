@@ -3,6 +3,7 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import LittleSwitchTransport
+import LittleSwitchWire
 import NIOCore
 import NIOHTTP1
 
@@ -12,7 +13,7 @@ package protocol GatewayAdmitting: Sendable {
 
 package protocol GatewayTokenEstimating: Sendable {
     func estimate(_ request: Data) throws -> Int
-    func estimate(root: [String: Any]) throws -> Int
+    func estimate(root: [String: JSONValue]) throws -> Int
 }
 
 package protocol GatewayRoutingSnapshotCapturing: Sendable {
@@ -34,7 +35,7 @@ package struct LiveGatewayTokenEstimator: GatewayTokenEstimating {
         try TokenEstimator.estimate(request)
     }
 
-    package func estimate(root: [String: Any]) throws -> Int {
+    package func estimate(root: [String: JSONValue]) throws -> Int {
         try TokenEstimator.estimate(root: root)
     }
 }
@@ -282,17 +283,15 @@ public struct GatewayResponder: HTTPResponder {
             return response
         }
         trafficRecorder.record(eventID: eventID, action: .claudeRequestBody(body))
-        let root: [String: Any]
+        let root: [String: JSONValue]
         do {
-            guard let object = try JSONSerialization.jsonObject(with: body) as? [String: Any] else {
-                throw TokenEstimator.Error.invalidRoot
-            }
-            root = object
+            root = try WireObject(WireCodec.decode(JSONValue.self, from: body).value)
+                .additionalFields(excluding: [])
         } catch {
             return anthropicError(status: .badRequest, message: "Invalid token count request")
         }
         guard
-            let model = root["model"] as? String,
+            let model = root[AnthropicRoutingRequest.Key.model.rawValue]?.string,
             let target = capture.snapshot.resolve(model: model)
         else {
             return anthropicError(status: .badRequest, message: "Unknown or invalid model mapping")
@@ -301,10 +300,7 @@ public struct GatewayResponder: HTTPResponder {
         do {
             let estimate = try dependencies.tokenEstimator.estimate(root: root)
             await GatewayMonitoringScope.current?.estimatedInput(estimate)
-            let data = try JSONSerialization.data(
-                withJSONObject: ["input_tokens": estimate],
-                options: [.sortedKeys]
-            )
+            let data = try WireCodec.encode(AnthropicInputTokenCount(inputTokens: JSONNumber(estimate)))
             return jsonResponse(status: .ok, data: data)
         } catch {
             return anthropicError(status: .badRequest, message: "Invalid token count request")

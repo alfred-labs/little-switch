@@ -99,7 +99,7 @@ struct AnthropicSanitizerCitationCoverageTests {
 
 private func expectInvalidTextCitation(_ citation: Any) {
     #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
-        _ = try AnthropicPublicSanitizer.block([
+        _ = try anthropicPublicBlock([
             "type": "text",
             "text": "answer",
             "citations": [citation],

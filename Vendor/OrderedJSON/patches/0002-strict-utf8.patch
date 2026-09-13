@@ -1,0 +1,12 @@
+--- a/Sources/OrderedJSON/JSONValue+Parse.swift
++++ b/Sources/OrderedJSON/JSONValue+Parse.swift
+@@ -362,6 +362,9 @@
+       }
+       value = (value << 6) | UInt32(b & 0x3F)
+     }
++    if (length == 3 && value < 0x800) || (length == 4 && value < 0x10000) {
++      throw error("Overlong UTF-8 sequence")
++    }
+     index += length
+     guard let scalar = Unicode.Scalar(value) else {
+       throw error("Invalid UTF-8 scalar value U+\(String(value, radix: 16, uppercase: true))")

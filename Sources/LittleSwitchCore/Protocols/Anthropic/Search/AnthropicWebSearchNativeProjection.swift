@@ -1,62 +1,48 @@
 import Foundation
+import LittleSwitchWire
 
 extension AnthropicWebSearch {
     package static func successfulSearchCount(_ traces: [WebSearchTrace]) -> Int {
         traces.reduce(into: 0) { count, trace in
-            if case .results = trace.content {
-                count += 1
-            }
+            if case .results = trace.content { count += 1 }
         }
     }
 
-    package static func normalizedStopReason(_ stopReason: String?) -> Any {
+    package static func normalizedStopReason(_ stopReason: String?) -> JSONValue {
         switch stopReason {
-        case "pause_turn":
-            return "end_turn"
-        case .some(let value):
-            return value
-        case .none:
-            return NSNull()
+        case AnthropicStopReason.pauseTurn.rawValue: return .string(AnthropicStopReason.endTurn.rawValue)
+        case .some(let value): return .string(value)
+        case .none: return .null
         }
     }
 
-    package static func nativeSearchErrorCode(_ code: String) -> String {
-        if code == "invalid_request" {
-            return "invalid_tool_input"
-        }
-        let nativeCodes: Set<String> = [
-            "invalid_tool_input",
-            "unavailable",
-            "max_uses_exceeded",
-            "too_many_requests",
-            "query_too_long",
-            "request_too_large",
-        ]
-        return nativeCodes.contains(code) ? code : "unavailable"
+    private static func nativeSearchErrorCode(_ code: String) -> AnthropicWebSearchErrorCode {
+        if code == "invalid_request" { return .invalidToolInput }
+        return AnthropicWebSearchErrorCode(rawValue: code) ?? .unavailable
     }
 
-    package static func nativeResultContent(_ trace: WebSearchTrace) throws -> Any {
+    static func nativeResultContent(_ trace: WebSearchTrace) throws -> AnthropicWebSearchContent {
         switch trace.content {
         case .results(let results):
             try PortableWebSearchHistory.validateResults(results)
-            return try results.enumerated().map { index, result in
-                [
-                    "type": "web_search_result",
-                    "url": result.url,
-                    "title": result.title,
-                    "encrypted_content": try PortableWebSearchHistory.anthropicReplayToken(
-                        toolUseID: trace.toolUseID,
-                        resultIndex: index,
-                        result: result
-                    ),
-                    "page_age": NSNull(),
-                ] as [String: Any]
-            }
+            return .variant2(
+                try results.enumerated().map { index, result in
+                    AnthropicWebSearchResult(
+                        encryptedContent: try PortableWebSearchHistory.anthropicReplayToken(
+                            toolUseID: trace.toolUseID, resultIndex: index, result: result
+                        ),
+                        pageAge: nil,
+                        title: result.title,
+                        type: .webSearchResult,
+                        url: result.url
+                    )
+                })
         case .error(let code):
-            return [
-                "type": "web_search_tool_result_error",
-                "error_code": nativeSearchErrorCode(code),
-            ]
+            return .variant1(
+                AnthropicWebSearchError(
+                    errorCode: nativeSearchErrorCode(code),
+                    type: .webSearchToolResultError
+                ))
         }
     }
 }

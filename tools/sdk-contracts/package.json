@@ -1,0 +1,18 @@
+{
+  "name": "littleswitch-sdk-contracts",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.125.0",
+    "openai": "7.15.0",
+    "ts-json-schema-generator": "2.9.0",
+    "ajv": "8.20.0"
+  },
+  "scripts": {
+    "test": "node --test *.test.mjs",
+    "extract": "node extract.mjs",
+    "check": "node check.mjs",
+    "compare": "node compare.mjs",
+    "update": "node update.mjs"
+  }
+}

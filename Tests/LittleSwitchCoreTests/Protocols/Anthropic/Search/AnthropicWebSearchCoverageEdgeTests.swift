@@ -34,7 +34,7 @@ struct AnthropicWebSearchCoverageEdgeTests {
         for block in malformedBlocks {
             var stream = Data()
             #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
-                try AnthropicWebSearch.appendStreamingBlock(block, index: 0, to: &stream)
+                try AnthropicWebSearch.appendStreamingBlock(anthropicTestObject(block), index: 0, to: &stream)
             }
         }
     }

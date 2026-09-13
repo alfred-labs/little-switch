@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 /// Builds the buffered projection of a completed streamed chat turn.
 enum ChatCompletionStreamProjection {
@@ -8,50 +9,15 @@ enum ChatCompletionStreamProjection {
         choices: [CompletedChatCompletionChoice],
         prepared: PreparedResponsesChatCompletionsRequest
     ) throws -> ResponsesModelTurn {
-        let chatChoices = choices.map { choice -> [String: Any] in
-            var message: [String: Any] = [
-                "role": "assistant",
-                "content": choice.messageText ?? NSNull(),
-            ]
-            for (key, value) in choice.reasoning { message[key] = value }
-            if let refusal = choice.refusal { message["refusal"] = refusal }
-            if !choice.toolCalls.isEmpty {
-                let toolCalls: [[String: Any]] = choice.toolCalls.map { call in
-                    var input: [String: Any] = ["name": call.name, call.kind.inputKey: call.completedArguments]
-                    if let namespace = call.namespace { input["namespace"] = namespace }
-                    return [
-                        "id": call.callID,
-                        "type": call.kind.rawValue,
-                        call.kind.rawValue: input,
-                    ] as [String: Any]
-                }
-                message["tool_calls"] = toolCalls
-            }
-            return [
-                "index": choice.index,
-                "finish_reason": choice.finishReason,
-                "message": message,
-            ]
-        }
-        let chat: [String: Any] = [
-            "id": metadata.chatID,
-            "object": "chat.completion",
-            "created": metadata.created,
-            "model": metadata.model,
-            "choices": chatChoices,
-            "usage": [
-                "prompt_tokens": usage.promptTokens,
-                "prompt_tokens_details": [
-                    "cached_tokens": usage.cachedPromptTokens,
-                    "cache_write_tokens": usage.cacheWritePromptTokens,
-                ],
-                "completion_tokens": usage.completionTokens,
-                "completion_tokens_details": [
-                    "reasoning_tokens": usage.reasoningCompletionTokens
-                ],
-                "total_tokens": usage.totalTokens,
-            ],
-        ]
+        let chat = try OpenAIChatCompletion(
+            choices: choices.map { choice in
+                try OpenAIChatCompletionChoice(
+                    finishReason: OpenAIChatCompletionFinishReason(wireJSON: choice.finishReason.wireJSON()),
+                    message: message(choice))
+            },
+            created: .value(JSONNumber(metadata.created)),
+            id: .value(metadata.chatID),
+            usage: .value(wireUsage(usage)))
         let buffered = PreparedResponsesChatCompletionsRequest(
             upstreamBody: prepared.upstreamBody,
             originalBody: prepared.originalBody,
@@ -65,12 +31,53 @@ enum ChatCompletionStreamProjection {
         )
         do {
             let response = try OpenAIResponsesChatCompletions.project(
-                responseBody: chatData(chat),
+                responseBody: WireCodec.encode(chat),
                 prepared: buffered
             )
             return try OpenAIResponsesWebSearch.parseModelTurn(response)
         } catch {
             throw OpenAIResponsesChatCompletions.Error.invalidResponse
         }
+    }
+
+    private static func message(_ choice: CompletedChatCompletionChoice) -> OpenAIChatMessage {
+        OpenAIChatMessage(
+            content: choice.messageText.map(JSONPresence.value) ?? .null,
+            refusal: choice.refusal.map(JSONPresence.value) ?? .absent,
+            toolCalls: choice.toolCalls.isEmpty ? .absent : .value(choice.toolCalls.map(toolCall)),
+            additionalFields: choice.reasoning.mapValues(JSONValue.string))
+    }
+
+    private static func toolCall(_ call: ChatCompletionToolCallState) -> OpenAIChatMessageToolCall {
+        let namespace = call.namespace.map(JSONPresence.value) ?? .absent
+        switch call.kind {
+        case .function:
+            return .function(
+                OpenAIChatFunctionCall(
+                    function: OpenAIChatFunctionInput(
+                        arguments: call.completedArguments, name: call.name, namespace: namespace),
+                    id: call.callID,
+                    type: .function))
+        case .custom:
+            return .custom(
+                OpenAIChatCustomCall(
+                    custom: OpenAIChatCustomInput(
+                        input: call.completedArguments, name: call.name, namespace: namespace),
+                    id: call.callID,
+                    type: .custom))
+        }
+    }
+
+    private static func wireUsage(_ usage: ChatCompletionUsage) -> OpenAIChatBufferedUsage {
+        OpenAIChatBufferedUsage(
+            completionTokens: JSONNumber(usage.completionTokens),
+            completionTokensDetails: .value(
+                OpenAIChatBufferedCompletionDetails(reasoningTokens: JSONNumber(usage.reasoningCompletionTokens))),
+            promptTokens: JSONNumber(usage.promptTokens),
+            promptTokensDetails: .value(
+                OpenAIChatBufferedPromptDetails(
+                    cacheWriteTokens: JSONNumber(usage.cacheWritePromptTokens),
+                    cachedTokens: JSONNumber(usage.cachedPromptTokens))),
+            totalTokens: .value(JSONNumber(usage.totalTokens)))
     }
 }

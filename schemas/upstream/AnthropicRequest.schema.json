@@ -1,0 +1,5183 @@
+{
+  "$ref": "#/definitions/AnthropicRequest",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "AnthropicRequest": {
+      "$ref": "#/definitions/MessageCreateParams"
+    },
+    "Base64ImageSource": {
+      "properties": {
+        "data": {
+          "type": "string"
+        },
+        "media_type": {
+          "enum": [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+          ],
+          "type": "string"
+        },
+        "type": {
+          "const": "base64",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "media_type",
+        "type"
+      ],
+      "type": "object"
+    },
+    "Base64PDFSource": {
+      "properties": {
+        "data": {
+          "type": "string"
+        },
+        "media_type": {
+          "const": "application/pdf",
+          "type": "string"
+        },
+        "type": {
+          "const": "base64",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "media_type",
+        "type"
+      ],
+      "type": "object"
+    },
+    "BashCodeExecutionOutputBlockParam": {
+      "properties": {
+        "file_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "bash_code_execution_output",
+          "type": "string"
+        }
+      },
+      "required": [
+        "file_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "BashCodeExecutionResultBlockParam": {
+      "properties": {
+        "content": {
+          "items": {
+            "$ref": "#/definitions/BashCodeExecutionOutputBlockParam"
+          },
+          "type": "array"
+        },
+        "return_code": {
+          "type": "number"
+        },
+        "stderr": {
+          "type": "string"
+        },
+        "stdout": {
+          "type": "string"
+        },
+        "type": {
+          "const": "bash_code_execution_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "return_code",
+        "stderr",
+        "stdout",
+        "type"
+      ],
+      "type": "object"
+    },
+    "BashCodeExecutionToolResultBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BashCodeExecutionToolResultErrorParam"
+            },
+            {
+              "$ref": "#/definitions/BashCodeExecutionResultBlockParam"
+            }
+          ]
+        },
+        "tool_use_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "bash_code_execution_tool_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "tool_use_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "BashCodeExecutionToolResultErrorCode": {
+      "enum": [
+        "invalid_tool_input",
+        "unavailable",
+        "too_many_requests",
+        "execution_time_exceeded",
+        "output_file_too_large"
+      ],
+      "type": "string"
+    },
+    "BashCodeExecutionToolResultErrorParam": {
+      "properties": {
+        "error_code": {
+          "$ref": "#/definitions/BashCodeExecutionToolResultErrorCode"
+        },
+        "type": {
+          "const": "bash_code_execution_tool_result_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "error_code",
+        "type"
+      ],
+      "type": "object"
+    },
+    "BrowserCloseTabConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserDoubleClickConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserFileUploadConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserFindConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserFormInputConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserGetPageTextConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserHoldKeyConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserHoverConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserJavascriptExecConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserKeyConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserLeftClickConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserLeftClickDragConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserLeftMouseDownConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserLeftMouseUpConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserListTabsConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserMiddleClickConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserMouseMoveConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserNavigateConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserNewTabConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserReadConsoleConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserReadNetworkConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserReadPageConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserRightClickConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserScreenshotConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserScrollConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserScrollToConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserStateBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state_changes": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/definitions/BrowserStateChange"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tabs": {
+          "items": {
+            "$ref": "#/definitions/BrowserStateTabEntry"
+          },
+          "type": "array"
+        },
+        "type": {
+          "const": "browser_state",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tabs",
+        "type"
+      ],
+      "type": "object"
+    },
+    "BrowserStateChange": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/BrowserStateChangeTabOpened"
+        },
+        {
+          "$ref": "#/definitions/BrowserStateChangeDownloadStarted"
+        },
+        {
+          "$ref": "#/definitions/BrowserStateChangeDownloadCompleted"
+        },
+        {
+          "$ref": "#/definitions/BrowserStateChangeDownloadFailed"
+        }
+      ]
+    },
+    "BrowserStateChangeDownloadCompleted": {
+      "properties": {
+        "download_id": {
+          "type": "string"
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "size_bytes": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "download_completed",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "download_id",
+        "type",
+        "url"
+      ],
+      "type": "object"
+    },
+    "BrowserStateChangeDownloadFailed": {
+      "properties": {
+        "download_id": {
+          "type": "string"
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "download_failed",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "download_id",
+        "type",
+        "url"
+      ],
+      "type": "object"
+    },
+    "BrowserStateChangeDownloadStarted": {
+      "properties": {
+        "download_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "download_started",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "download_id",
+        "type",
+        "url"
+      ],
+      "type": "object"
+    },
+    "BrowserStateChangeTabOpened": {
+      "properties": {
+        "tab_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "tab_opened",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tab_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "BrowserStateTabEntry": {
+      "properties": {
+        "active": {
+          "type": "boolean"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tab_id",
+        "title",
+        "url"
+      ],
+      "type": "object"
+    },
+    "BrowserSwitchTabConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserToolset20260801": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "configs": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserToolsetConfigs"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "const": "browser_toolset_20260801",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "BrowserToolsetConfigs": {
+      "properties": {
+        "close_tab": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserCloseTabConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "double_click": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserDoubleClickConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "file_upload": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserFileUploadConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "find": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserFindConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "form_input": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserFormInputConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "get_page_text": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserGetPageTextConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hold_key": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserHoldKeyConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hover": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserHoverConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "javascript_exec": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserJavascriptExecConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "key": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserKeyConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "left_click": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserLeftClickConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "left_click_drag": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserLeftClickDragConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "left_mouse_down": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserLeftMouseDownConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "left_mouse_up": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserLeftMouseUpConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "list_tabs": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserListTabsConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "middle_click": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserMiddleClickConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mouse_move": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserMouseMoveConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "navigate": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserNavigateConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "new_tab": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserNewTabConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "read_console": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserReadConsoleConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "read_network": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserReadNetworkConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "read_page": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserReadPageConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "right_click": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserRightClickConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "screenshot": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserScreenshotConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scroll": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserScrollConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scroll_to": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserScrollToConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "switch_tab": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserSwitchTabConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "triple_click": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserTripleClickConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserTypeConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wait": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserWaitConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "zoom": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BrowserZoomConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserTripleClickConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserTypeConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserWaitConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BrowserZoomConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "CacheControlEphemeral": {
+      "properties": {
+        "ttl": {
+          "enum": [
+            "5m",
+            "1h"
+          ],
+          "type": "string"
+        },
+        "type": {
+          "const": "ephemeral",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "CitationCharLocationParam": {
+      "properties": {
+        "cited_text": {
+          "type": "string"
+        },
+        "document_index": {
+          "type": "number"
+        },
+        "document_title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "end_char_index": {
+          "type": "number"
+        },
+        "start_char_index": {
+          "type": "number"
+        },
+        "type": {
+          "const": "char_location",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cited_text",
+        "document_index",
+        "document_title",
+        "end_char_index",
+        "start_char_index",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CitationContentBlockLocationParam": {
+      "properties": {
+        "cited_text": {
+          "type": "string"
+        },
+        "document_index": {
+          "type": "number"
+        },
+        "document_title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "end_block_index": {
+          "type": "number"
+        },
+        "start_block_index": {
+          "type": "number"
+        },
+        "type": {
+          "const": "content_block_location",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cited_text",
+        "document_index",
+        "document_title",
+        "end_block_index",
+        "start_block_index",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CitationPageLocationParam": {
+      "properties": {
+        "cited_text": {
+          "type": "string"
+        },
+        "document_index": {
+          "type": "number"
+        },
+        "document_title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "end_page_number": {
+          "type": "number"
+        },
+        "start_page_number": {
+          "type": "number"
+        },
+        "type": {
+          "const": "page_location",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cited_text",
+        "document_index",
+        "document_title",
+        "end_page_number",
+        "start_page_number",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CitationSearchResultLocationParam": {
+      "properties": {
+        "cited_text": {
+          "type": "string"
+        },
+        "end_block_index": {
+          "type": "number"
+        },
+        "search_result_index": {
+          "type": "number"
+        },
+        "source": {
+          "type": "string"
+        },
+        "start_block_index": {
+          "type": "number"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "search_result_location",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cited_text",
+        "end_block_index",
+        "search_result_index",
+        "source",
+        "start_block_index",
+        "title",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CitationWebSearchResultLocationParam": {
+      "properties": {
+        "cited_text": {
+          "type": "string"
+        },
+        "encrypted_index": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "web_search_result_location",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "cited_text",
+        "encrypted_index",
+        "title",
+        "type",
+        "url"
+      ],
+      "type": "object"
+    },
+    "CitationsConfigParam": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "CodeExecutionOutputBlockParam": {
+      "properties": {
+        "file_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "code_execution_output",
+          "type": "string"
+        }
+      },
+      "required": [
+        "file_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CodeExecutionResultBlockParam": {
+      "properties": {
+        "content": {
+          "items": {
+            "$ref": "#/definitions/CodeExecutionOutputBlockParam"
+          },
+          "type": "array"
+        },
+        "return_code": {
+          "type": "number"
+        },
+        "stderr": {
+          "type": "string"
+        },
+        "stdout": {
+          "type": "string"
+        },
+        "type": {
+          "const": "code_execution_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "return_code",
+        "stderr",
+        "stdout",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CodeExecutionTool20250522": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "name": {
+          "const": "code_execution",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "code_execution_20250522",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CodeExecutionTool20250825": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "name": {
+          "const": "code_execution",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "code_execution_20250825",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CodeExecutionTool20260120": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "name": {
+          "const": "code_execution",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "code_execution_20260120",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CodeExecutionTool20260521": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "name": {
+          "const": "code_execution",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "code_execution_20260521",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CodeExecutionToolResultBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "$ref": "#/definitions/CodeExecutionToolResultBlockParamContent"
+        },
+        "tool_use_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "code_execution_tool_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "tool_use_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CodeExecutionToolResultBlockParamContent": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/CodeExecutionToolResultErrorParam"
+        },
+        {
+          "$ref": "#/definitions/CodeExecutionResultBlockParam"
+        },
+        {
+          "$ref": "#/definitions/EncryptedCodeExecutionResultBlockParam"
+        }
+      ]
+    },
+    "CodeExecutionToolResultErrorCode": {
+      "enum": [
+        "invalid_tool_input",
+        "unavailable",
+        "too_many_requests",
+        "execution_time_exceeded"
+      ],
+      "type": "string"
+    },
+    "CodeExecutionToolResultErrorParam": {
+      "properties": {
+        "error_code": {
+          "$ref": "#/definitions/CodeExecutionToolResultErrorCode"
+        },
+        "type": {
+          "const": "code_execution_tool_result_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "error_code",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ComputerCursorPositionConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerDoubleClickConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerHoldKeyConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerKeyConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerLeftClickConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerLeftClickDragConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerLeftMouseDownConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerLeftMouseUpConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerMiddleClickConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerMouseMoveConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerRightClickConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerScreenshotConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerScrollConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerToolset20260801": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "configs": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerToolsetConfigs"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "const": "computer_toolset_20260801",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "ComputerToolsetConfigs": {
+      "properties": {
+        "cursor_position": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerCursorPositionConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "double_click": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerDoubleClickConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hold_key": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerHoldKeyConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "key": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerKeyConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "left_click": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerLeftClickConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "left_click_drag": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerLeftClickDragConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "left_mouse_down": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerLeftMouseDownConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "left_mouse_up": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerLeftMouseUpConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "middle_click": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerMiddleClickConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mouse_move": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerMouseMoveConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "right_click": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerRightClickConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "screenshot": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerScreenshotConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scroll": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerScrollConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "triple_click": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerTripleClickConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerTypeConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wait": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerWaitConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "zoom": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ComputerZoomConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerTripleClickConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerTypeConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerWaitConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ComputerZoomConfig": {
+      "properties": {
+        "defer_loading": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ContainerParams": {
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "skills": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/definitions/SkillParams"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ContainerUploadBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "file_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "container_upload",
+          "type": "string"
+        }
+      },
+      "required": [
+        "file_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ContentBlockParam": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/TextBlockParam"
+        },
+        {
+          "$ref": "#/definitions/ImageBlockParam"
+        },
+        {
+          "$ref": "#/definitions/DocumentBlockParam"
+        },
+        {
+          "$ref": "#/definitions/SearchResultBlockParam"
+        },
+        {
+          "$ref": "#/definitions/ThinkingBlockParam"
+        },
+        {
+          "$ref": "#/definitions/RedactedThinkingBlockParam"
+        },
+        {
+          "$ref": "#/definitions/ToolUseBlockParam"
+        },
+        {
+          "$ref": "#/definitions/ToolResultBlockParam"
+        },
+        {
+          "$ref": "#/definitions/ServerToolUseBlockParam"
+        },
+        {
+          "$ref": "#/definitions/WebSearchToolResultBlockParam"
+        },
+        {
+          "$ref": "#/definitions/WebFetchToolResultBlockParam"
+        },
+        {
+          "$ref": "#/definitions/CodeExecutionToolResultBlockParam"
+        },
+        {
+          "$ref": "#/definitions/BashCodeExecutionToolResultBlockParam"
+        },
+        {
+          "$ref": "#/definitions/TextEditorCodeExecutionToolResultBlockParam"
+        },
+        {
+          "$ref": "#/definitions/ToolSearchToolResultBlockParam"
+        },
+        {
+          "$ref": "#/definitions/ContainerUploadBlockParam"
+        }
+      ]
+    },
+    "ContentBlockSource": {
+      "properties": {
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/ContentBlockSourceContent"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "type": {
+          "const": "content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ContentBlockSourceContent": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/TextBlockParam"
+        },
+        {
+          "$ref": "#/definitions/ImageBlockParam"
+        }
+      ]
+    },
+    "DirectCaller": {
+      "properties": {
+        "type": {
+          "const": "direct",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "DocumentBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "citations": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CitationsConfigParam"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "context": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Base64PDFSource"
+            },
+            {
+              "$ref": "#/definitions/PlainTextSource"
+            },
+            {
+              "$ref": "#/definitions/ContentBlockSource"
+            },
+            {
+              "$ref": "#/definitions/URLPDFSource"
+            },
+            {
+              "$ref": "#/definitions/FileDocumentSource"
+            }
+          ]
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "document",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "type"
+      ],
+      "type": "object"
+    },
+    "EncryptedCodeExecutionResultBlockParam": {
+      "properties": {
+        "content": {
+          "items": {
+            "$ref": "#/definitions/CodeExecutionOutputBlockParam"
+          },
+          "type": "array"
+        },
+        "encrypted_stdout": {
+          "type": "string"
+        },
+        "return_code": {
+          "type": "number"
+        },
+        "stderr": {
+          "type": "string"
+        },
+        "type": {
+          "const": "encrypted_code_execution_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "encrypted_stdout",
+        "return_code",
+        "stderr",
+        "type"
+      ],
+      "type": "object"
+    },
+    "FileDocumentSource": {
+      "properties": {
+        "file_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "file",
+          "type": "string"
+        }
+      },
+      "required": [
+        "file_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "FileImageSource": {
+      "properties": {
+        "file_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "file",
+          "type": "string"
+        }
+      },
+      "required": [
+        "file_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ImageBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Base64ImageSource"
+            },
+            {
+              "$ref": "#/definitions/URLImageSource"
+            },
+            {
+              "$ref": "#/definitions/FileImageSource"
+            }
+          ]
+        },
+        "transformations": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ImageTransformationsParam"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "const": "image",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ImageTransformationsParam": {
+      "properties": {
+        "oversized_image": {
+          "enum": [
+            "downsize",
+            "error"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "JSONOutputFormat": {
+      "properties": {
+        "schema": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "type": {
+          "const": "json_schema",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "type"
+      ],
+      "type": "object"
+    },
+    "MemoryTool20250818": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "input_examples": {
+          "items": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "name": {
+          "const": "memory",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "memory_20250818",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "MessageCreateParams": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/MessageCreateParamsNonStreaming"
+        },
+        {
+          "$ref": "#/definitions/MessageCreateParamsStreaming"
+        }
+      ]
+    },
+    "MessageCreateParamsContainer": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ContainerParams"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "MessageCreateParamsNonStreaming": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "container": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MessageCreateParamsContainer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inference_geo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_tokens": {
+          "type": "number"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/definitions/MessageParam"
+          },
+          "type": "array"
+        },
+        "metadata": {
+          "$ref": "#/definitions/Metadata"
+        },
+        "model": {
+          "$ref": "#/definitions/Model"
+        },
+        "output_config": {
+          "$ref": "#/definitions/OutputConfig"
+        },
+        "service_tier": {
+          "enum": [
+            "auto",
+            "standard_only"
+          ],
+          "type": "string"
+        },
+        "stop_sequences": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "stream": {
+          "const": false,
+          "type": "boolean"
+        },
+        "system": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/TextBlockParam"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "temperature": {
+          "deprecated": "Deprecated. Models released after Claude Opus 4.6 do not support\nsetting temperature. A value of 1.0 of will be accepted for backwards\ncompatibility, all other values will be rejected with a 400 error.",
+          "type": "number"
+        },
+        "thinking": {
+          "$ref": "#/definitions/ThinkingConfigParam"
+        },
+        "tool_choice": {
+          "$ref": "#/definitions/ToolChoice"
+        },
+        "tools": {
+          "items": {
+            "$ref": "#/definitions/ToolUnion"
+          },
+          "type": "array"
+        },
+        "top_k": {
+          "deprecated": "Deprecated. Models released after Claude Opus 4.6 do not accept\ntop_k; any value will be rejected with a 400 error.",
+          "type": "number"
+        },
+        "top_p": {
+          "deprecated": "Deprecated. Models released after Claude Opus 4.6 do not support\nsetting top_p. A value >= 0.99 will be accepted for backwards compatibility, all\nother values will be rejected with a 400 error.",
+          "type": "number"
+        },
+        "user_profile_id": {
+          "type": "string"
+        },
+        "workspace_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "max_tokens",
+        "messages",
+        "model"
+      ],
+      "type": "object"
+    },
+    "MessageCreateParamsStreaming": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "container": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MessageCreateParamsContainer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inference_geo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_tokens": {
+          "type": "number"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/definitions/MessageParam"
+          },
+          "type": "array"
+        },
+        "metadata": {
+          "$ref": "#/definitions/Metadata"
+        },
+        "model": {
+          "$ref": "#/definitions/Model"
+        },
+        "output_config": {
+          "$ref": "#/definitions/OutputConfig"
+        },
+        "service_tier": {
+          "enum": [
+            "auto",
+            "standard_only"
+          ],
+          "type": "string"
+        },
+        "stop_sequences": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "stream": {
+          "const": true,
+          "type": "boolean"
+        },
+        "system": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/TextBlockParam"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "temperature": {
+          "deprecated": "Deprecated. Models released after Claude Opus 4.6 do not support\nsetting temperature. A value of 1.0 of will be accepted for backwards\ncompatibility, all other values will be rejected with a 400 error.",
+          "type": "number"
+        },
+        "thinking": {
+          "$ref": "#/definitions/ThinkingConfigParam"
+        },
+        "tool_choice": {
+          "$ref": "#/definitions/ToolChoice"
+        },
+        "tools": {
+          "items": {
+            "$ref": "#/definitions/ToolUnion"
+          },
+          "type": "array"
+        },
+        "top_k": {
+          "deprecated": "Deprecated. Models released after Claude Opus 4.6 do not accept\ntop_k; any value will be rejected with a 400 error.",
+          "type": "number"
+        },
+        "top_p": {
+          "deprecated": "Deprecated. Models released after Claude Opus 4.6 do not support\nsetting top_p. A value >= 0.99 will be accepted for backwards compatibility, all\nother values will be rejected with a 400 error.",
+          "type": "number"
+        },
+        "user_profile_id": {
+          "type": "string"
+        },
+        "workspace_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "max_tokens",
+        "messages",
+        "model",
+        "stream"
+      ],
+      "type": "object"
+    },
+    "MessageParam": {
+      "properties": {
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/ContentBlockParam"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant",
+            "system"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "role"
+      ],
+      "type": "object"
+    },
+    "Metadata": {
+      "properties": {
+        "user_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "Model": {
+      "type": "string"
+    },
+    "OutputConfig": {
+      "properties": {
+        "effort": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/JSONOutputFormat"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "PlainTextSource": {
+      "properties": {
+        "data": {
+          "type": "string"
+        },
+        "media_type": {
+          "const": "text/plain",
+          "type": "string"
+        },
+        "type": {
+          "const": "text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "media_type",
+        "type"
+      ],
+      "type": "object"
+    },
+    "RedactedThinkingBlockParam": {
+      "properties": {
+        "data": {
+          "type": "string"
+        },
+        "type": {
+          "const": "redacted_thinking",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "type"
+      ],
+      "type": "object"
+    },
+    "SearchResultBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "citations": {
+          "$ref": "#/definitions/CitationsConfigParam"
+        },
+        "content": {
+          "items": {
+            "$ref": "#/definitions/TextBlockParam"
+          },
+          "type": "array"
+        },
+        "source": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "const": "search_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "source",
+        "title",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ServerToolCaller": {
+      "properties": {
+        "tool_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "code_execution_20250825",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ServerToolCaller20260120": {
+      "properties": {
+        "tool_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "code_execution_20260120",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ServerToolUseBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "caller": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/DirectCaller"
+            },
+            {
+              "$ref": "#/definitions/ServerToolCaller"
+            },
+            {
+              "$ref": "#/definitions/ServerToolCaller20260120"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "input": {},
+        "name": {
+          "enum": [
+            "web_search",
+            "web_fetch",
+            "code_execution",
+            "bash_code_execution",
+            "text_editor_code_execution",
+            "tool_search_tool_regex",
+            "tool_search_tool_bm25"
+          ],
+          "type": "string"
+        },
+        "type": {
+          "const": "server_tool_use",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "input",
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "SkillParams": {
+      "properties": {
+        "skill_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "anthropic",
+            "custom"
+          ],
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "skill_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "TextBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "citations": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/definitions/TextCitationParam"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "type": {
+          "const": "text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "type"
+      ],
+      "type": "object"
+    },
+    "TextCitationParam": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/CitationCharLocationParam"
+        },
+        {
+          "$ref": "#/definitions/CitationPageLocationParam"
+        },
+        {
+          "$ref": "#/definitions/CitationContentBlockLocationParam"
+        },
+        {
+          "$ref": "#/definitions/CitationWebSearchResultLocationParam"
+        },
+        {
+          "$ref": "#/definitions/CitationSearchResultLocationParam"
+        }
+      ]
+    },
+    "TextEditorCodeExecutionCreateResultBlockParam": {
+      "properties": {
+        "is_file_update": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "text_editor_code_execution_create_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "is_file_update",
+        "type"
+      ],
+      "type": "object"
+    },
+    "TextEditorCodeExecutionStrReplaceResultBlockParam": {
+      "properties": {
+        "lines": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "new_lines": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "new_start": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "old_lines": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "old_start": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "text_editor_code_execution_str_replace_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "TextEditorCodeExecutionToolResultBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TextEditorCodeExecutionToolResultErrorParam"
+            },
+            {
+              "$ref": "#/definitions/TextEditorCodeExecutionViewResultBlockParam"
+            },
+            {
+              "$ref": "#/definitions/TextEditorCodeExecutionCreateResultBlockParam"
+            },
+            {
+              "$ref": "#/definitions/TextEditorCodeExecutionStrReplaceResultBlockParam"
+            }
+          ]
+        },
+        "tool_use_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "text_editor_code_execution_tool_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "tool_use_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "TextEditorCodeExecutionToolResultErrorCode": {
+      "enum": [
+        "invalid_tool_input",
+        "unavailable",
+        "too_many_requests",
+        "execution_time_exceeded",
+        "file_not_found"
+      ],
+      "type": "string"
+    },
+    "TextEditorCodeExecutionToolResultErrorParam": {
+      "properties": {
+        "error_code": {
+          "$ref": "#/definitions/TextEditorCodeExecutionToolResultErrorCode"
+        },
+        "error_message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "text_editor_code_execution_tool_result_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "error_code",
+        "type"
+      ],
+      "type": "object"
+    },
+    "TextEditorCodeExecutionViewResultBlockParam": {
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "file_type": {
+          "enum": [
+            "text",
+            "image",
+            "pdf"
+          ],
+          "type": "string"
+        },
+        "num_lines": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "start_line": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total_lines": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "text_editor_code_execution_view_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "file_type",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ThinkingBlockParam": {
+      "properties": {
+        "signature": {
+          "type": "string"
+        },
+        "thinking": {
+          "type": "string"
+        },
+        "type": {
+          "const": "thinking",
+          "type": "string"
+        }
+      },
+      "required": [
+        "signature",
+        "thinking",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ThinkingConfigAdaptive": {
+      "properties": {
+        "display": {
+          "enum": [
+            "summarized",
+            "omitted",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "adaptive",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "ThinkingConfigDisabled": {
+      "properties": {
+        "type": {
+          "const": "disabled",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "ThinkingConfigEnabled": {
+      "properties": {
+        "budget_tokens": {
+          "type": "number"
+        },
+        "display": {
+          "enum": [
+            "summarized",
+            "omitted",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "enabled",
+          "type": "string"
+        }
+      },
+      "required": [
+        "budget_tokens",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ThinkingConfigParam": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ThinkingConfigEnabled"
+        },
+        {
+          "$ref": "#/definitions/ThinkingConfigDisabled"
+        },
+        {
+          "$ref": "#/definitions/ThinkingConfigAdaptive"
+        }
+      ]
+    },
+    "Tool": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "eager_input_streaming": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "input_examples": {
+          "items": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "input_schema": {
+          "$ref": "#/definitions/Tool.InputSchema"
+        },
+        "name": {
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "custom",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "input_schema",
+        "name"
+      ],
+      "type": "object"
+    },
+    "Tool.InputSchema": {
+      "additionalProperties": {},
+      "properties": {
+        "properties": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "required": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "const": "object",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolBash20250124": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "input_examples": {
+          "items": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "name": {
+          "const": "bash",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "bash_20250124",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolChoice": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ToolChoiceAuto"
+        },
+        {
+          "$ref": "#/definitions/ToolChoiceAny"
+        },
+        {
+          "$ref": "#/definitions/ToolChoiceTool"
+        },
+        {
+          "$ref": "#/definitions/ToolChoiceNone"
+        }
+      ]
+    },
+    "ToolChoiceAny": {
+      "properties": {
+        "disable_parallel_tool_use": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "any",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolChoiceAuto": {
+      "properties": {
+        "disable_parallel_tool_use": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "auto",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolChoiceNone": {
+      "properties": {
+        "type": {
+          "const": "none",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolChoiceTool": {
+      "properties": {
+        "disable_parallel_tool_use": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "const": "tool",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolReferenceBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tool_name": {
+          "type": "string"
+        },
+        "type": {
+          "const": "tool_reference",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool_name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolResultBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/TextBlockParam"
+                  },
+                  {
+                    "$ref": "#/definitions/ImageBlockParam"
+                  },
+                  {
+                    "$ref": "#/definitions/SearchResultBlockParam"
+                  },
+                  {
+                    "$ref": "#/definitions/DocumentBlockParam"
+                  },
+                  {
+                    "$ref": "#/definitions/ToolReferenceBlockParam"
+                  },
+                  {
+                    "$ref": "#/definitions/BrowserStateBlockParam"
+                  }
+                ]
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "is_error": {
+          "type": "boolean"
+        },
+        "tool_use_id": {
+          "type": "string"
+        },
+        "toolset_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "tool_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool_use_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolSearchToolBm25_20251119": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "name": {
+          "const": "tool_search_tool_bm25",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "tool_search_tool_bm25_20251119",
+            "tool_search_tool_bm25"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolSearchToolRegex20251119": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "name": {
+          "const": "tool_search_tool_regex",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "tool_search_tool_regex_20251119",
+            "tool_search_tool_regex"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolSearchToolResultBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ToolSearchToolResultErrorParam"
+            },
+            {
+              "$ref": "#/definitions/ToolSearchToolSearchResultBlockParam"
+            }
+          ]
+        },
+        "tool_use_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "tool_search_tool_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "tool_use_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolSearchToolResultErrorCode": {
+      "enum": [
+        "invalid_tool_input",
+        "unavailable",
+        "too_many_requests",
+        "execution_time_exceeded"
+      ],
+      "type": "string"
+    },
+    "ToolSearchToolResultErrorParam": {
+      "properties": {
+        "error_code": {
+          "$ref": "#/definitions/ToolSearchToolResultErrorCode"
+        },
+        "error_message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "tool_search_tool_result_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "error_code",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolSearchToolSearchResultBlockParam": {
+      "properties": {
+        "tool_references": {
+          "items": {
+            "$ref": "#/definitions/ToolReferenceBlockParam"
+          },
+          "type": "array"
+        },
+        "type": {
+          "const": "tool_search_tool_search_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool_references",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolTextEditor20250124": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "input_examples": {
+          "items": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "name": {
+          "const": "str_replace_editor",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "text_editor_20250124",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolTextEditor20250429": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "input_examples": {
+          "items": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "name": {
+          "const": "str_replace_based_edit_tool",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "text_editor_20250429",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolTextEditor20250728": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "input_examples": {
+          "items": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "max_characters": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "name": {
+          "const": "str_replace_based_edit_tool",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "text_editor_20250728",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ToolUnion": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Tool"
+        },
+        {
+          "$ref": "#/definitions/ToolBash20250124"
+        },
+        {
+          "$ref": "#/definitions/CodeExecutionTool20250522"
+        },
+        {
+          "$ref": "#/definitions/CodeExecutionTool20250825"
+        },
+        {
+          "$ref": "#/definitions/CodeExecutionTool20260120"
+        },
+        {
+          "$ref": "#/definitions/CodeExecutionTool20260521"
+        },
+        {
+          "$ref": "#/definitions/BrowserToolset20260801"
+        },
+        {
+          "$ref": "#/definitions/MemoryTool20250818"
+        },
+        {
+          "$ref": "#/definitions/ComputerToolset20260801"
+        },
+        {
+          "$ref": "#/definitions/ToolTextEditor20250124"
+        },
+        {
+          "$ref": "#/definitions/ToolTextEditor20250429"
+        },
+        {
+          "$ref": "#/definitions/ToolTextEditor20250728"
+        },
+        {
+          "$ref": "#/definitions/WebSearchTool20250305"
+        },
+        {
+          "$ref": "#/definitions/WebFetchTool20250910"
+        },
+        {
+          "$ref": "#/definitions/WebSearchTool20260209"
+        },
+        {
+          "$ref": "#/definitions/WebFetchTool20260209"
+        },
+        {
+          "$ref": "#/definitions/WebFetchTool20260309"
+        },
+        {
+          "$ref": "#/definitions/WebSearchTool20260318"
+        },
+        {
+          "$ref": "#/definitions/WebFetchTool20260318"
+        },
+        {
+          "$ref": "#/definitions/ToolSearchToolBm25_20251119"
+        },
+        {
+          "$ref": "#/definitions/ToolSearchToolRegex20251119"
+        }
+      ]
+    },
+    "ToolUseBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "caller": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/DirectCaller"
+            },
+            {
+              "$ref": "#/definitions/ServerToolCaller"
+            },
+            {
+              "$ref": "#/definitions/ServerToolCaller20260120"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "input": {},
+        "name": {
+          "type": "string"
+        },
+        "toolset_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "tool_use",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "input",
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "URLImageSource": {
+      "properties": {
+        "type": {
+          "const": "url",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "url"
+      ],
+      "type": "object"
+    },
+    "URLPDFSource": {
+      "properties": {
+        "type": {
+          "const": "url",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "url"
+      ],
+      "type": "object"
+    },
+    "UserLocation": {
+      "properties": {
+        "city": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "country": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "region": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timezone": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "approximate",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "WebFetchBlockParam": {
+      "properties": {
+        "content": {
+          "$ref": "#/definitions/DocumentBlockParam"
+        },
+        "retrieved_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "const": "web_fetch_result",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "type",
+        "url"
+      ],
+      "type": "object"
+    },
+    "WebFetchTool20250910": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "allowed_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "blocked_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "citations": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CitationsConfigParam"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "max_content_tokens": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "max_uses": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "name": {
+          "const": "web_fetch",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "web_fetch_20250910",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "WebFetchTool20260209": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "allowed_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "blocked_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "citations": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CitationsConfigParam"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "max_content_tokens": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "max_uses": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "name": {
+          "const": "web_fetch",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "web_fetch_20260209",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "WebFetchTool20260309": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "allowed_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "blocked_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "citations": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CitationsConfigParam"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "max_content_tokens": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "max_uses": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "name": {
+          "const": "web_fetch",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "web_fetch_20260309",
+          "type": "string"
+        },
+        "use_cache": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "WebFetchTool20260318": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "allowed_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "blocked_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "citations": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CitationsConfigParam"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "max_content_tokens": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "max_uses": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "name": {
+          "const": "web_fetch",
+          "type": "string"
+        },
+        "response_inclusion": {
+          "enum": [
+            "full",
+            "excluded"
+          ],
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "web_fetch_20260318",
+          "type": "string"
+        },
+        "use_cache": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "WebFetchToolResultBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "caller": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/DirectCaller"
+            },
+            {
+              "$ref": "#/definitions/ServerToolCaller"
+            },
+            {
+              "$ref": "#/definitions/ServerToolCaller20260120"
+            }
+          ]
+        },
+        "content": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/WebFetchToolResultErrorBlockParam"
+            },
+            {
+              "$ref": "#/definitions/WebFetchBlockParam"
+            }
+          ]
+        },
+        "tool_use_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "web_fetch_tool_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "tool_use_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "WebFetchToolResultErrorBlockParam": {
+      "properties": {
+        "error_code": {
+          "$ref": "#/definitions/WebFetchToolResultErrorCode"
+        },
+        "type": {
+          "const": "web_fetch_tool_result_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "error_code",
+        "type"
+      ],
+      "type": "object"
+    },
+    "WebFetchToolResultErrorCode": {
+      "enum": [
+        "invalid_tool_input",
+        "url_too_long",
+        "url_not_allowed",
+        "url_not_in_prior_context",
+        "url_not_accessible",
+        "unsupported_content_type",
+        "too_many_requests",
+        "max_uses_exceeded",
+        "unavailable",
+        "content_too_large"
+      ],
+      "type": "string"
+    },
+    "WebSearchResultBlockParam": {
+      "properties": {
+        "encrypted_content": {
+          "type": "string"
+        },
+        "page_age": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "const": "web_search_result",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "encrypted_content",
+        "title",
+        "type",
+        "url"
+      ],
+      "type": "object"
+    },
+    "WebSearchTool20250305": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "allowed_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "blocked_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "max_uses": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "name": {
+          "const": "web_search",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "web_search_20250305",
+          "type": "string"
+        },
+        "user_location": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UserLocation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "WebSearchTool20260209": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "allowed_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "blocked_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "max_uses": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "name": {
+          "const": "web_search",
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "web_search_20260209",
+          "type": "string"
+        },
+        "user_location": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UserLocation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "WebSearchTool20260318": {
+      "properties": {
+        "allowed_callers": {
+          "items": {
+            "enum": [
+              "direct",
+              "code_execution_20250825",
+              "code_execution_20260120",
+              "code_execution_20260521"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "allowed_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "blocked_domains": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "defer_loading": {
+          "type": "boolean"
+        },
+        "max_uses": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "name": {
+          "const": "web_search",
+          "type": "string"
+        },
+        "response_inclusion": {
+          "enum": [
+            "full",
+            "excluded"
+          ],
+          "type": "string"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "type": {
+          "const": "web_search_20260318",
+          "type": "string"
+        },
+        "user_location": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UserLocation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "WebSearchToolRequestError": {
+      "properties": {
+        "error_code": {
+          "$ref": "#/definitions/WebSearchToolResultErrorCode"
+        },
+        "type": {
+          "const": "web_search_tool_result_error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "error_code",
+        "type"
+      ],
+      "type": "object"
+    },
+    "WebSearchToolResultBlockParam": {
+      "properties": {
+        "cache_control": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CacheControlEphemeral"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "caller": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/DirectCaller"
+            },
+            {
+              "$ref": "#/definitions/ServerToolCaller"
+            },
+            {
+              "$ref": "#/definitions/ServerToolCaller20260120"
+            }
+          ]
+        },
+        "content": {
+          "$ref": "#/definitions/WebSearchToolResultBlockParamContent"
+        },
+        "tool_use_id": {
+          "type": "string"
+        },
+        "type": {
+          "const": "web_search_tool_result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "tool_use_id",
+        "type"
+      ],
+      "type": "object"
+    },
+    "WebSearchToolResultBlockParamContent": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/definitions/WebSearchResultBlockParam"
+          },
+          "type": "array"
+        },
+        {
+          "$ref": "#/definitions/WebSearchToolRequestError"
+        }
+      ]
+    },
+    "WebSearchToolResultErrorCode": {
+      "enum": [
+        "invalid_tool_input",
+        "unavailable",
+        "max_uses_exceeded",
+        "too_many_requests",
+        "query_too_long",
+        "request_too_large"
+      ],
+      "type": "string"
+    }
+  }
+}

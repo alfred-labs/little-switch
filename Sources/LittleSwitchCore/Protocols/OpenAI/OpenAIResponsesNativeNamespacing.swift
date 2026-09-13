@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 /// Rewrites Responses requests for providers reached natively.
 ///
@@ -26,60 +27,55 @@ package enum OpenAIResponsesNativeNamespacing {
     }
 
     package static func normalize(_ body: Data) throws -> Normalized {
-        guard
-            let object = try JSONSerialization.jsonObject(with: body)
-                as? [String: Any]
-        else {
-            throw OpenAIResponsesWebSearch.Error.invalidResponse
-        }
-        var rewritten = object
+        let document = try responsesWireDocument(OpenAIResponsesRequestEnvelope.self, from: body)
+        var rewritten = document.value
         var changed = false
         var droppedMailCount = 0
         var toolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
         var declaredToolBindings: [String: ResponsesToolNamespaces.Binding] = [:]
 
-        if let collapsed = ResponsesHistoryDeduplication.rewritten(rewritten) {
-            rewritten = collapsed
-            changed = true
-        }
-
-        let history = rewritten["input"] as? [[String: Any]] ?? []
-        let historicalNamespaces = history.contains { $0["namespace"] is String }
-        if let tools = rewritten["tools"] as? [[String: Any]] ?? (historicalNamespaces ? [] : nil) {
-            // Reassign on any namespace spec, including malformed ones that
-            // flatten drops without producing bindings; forwarding those
-            // as-is contradicts the rewrite.
-            let containsNamespaces = tools.contains {
-                $0["type"] as? String == "namespace"
+        if let input = objectArray(rewritten.input.value) {
+            let collapsed = try ResponsesHistoryDeduplication.collapsed(input)
+            if collapsed.count != input.count {
+                rewritten.input = .value(.array(collapsed))
+                changed = true
             }
+        }
+        let history = objectArray(rewritten.input.value) ?? []
+        let historicalNamespaces = history.contains { $0.object?["namespace"]?.string != nil }
+        if let tools = objectArray(rewritten.tools.value) ?? (historicalNamespaces ? [] : nil) {
+            let containsNamespaces = tools.contains { $0.object?["type"]?.string == "namespace" }
             if containsNamespaces || historicalNamespaces {
-                let flattened = ResponsesToolNamespaces.flatten(tools: tools, history: history)
-                rewritten["tools"] = flattened.tools
+                let flattened = try ResponsesWireToolPolicy.flatten(tools: tools, history: history)
+                rewritten.tools = .value(.array(flattened.tools))
                 toolBindings = flattened.bindings
                 declaredToolBindings = flattened.declaredBindings
                 changed = true
             }
         }
-
-        if let items = rewritten["input"] as? [[String: Any]] {
-            var converted: [[String: Any]] = []
+        if let items = objectArray(rewritten.input.value) {
+            var converted: [JSONValue] = []
             converted.reserveCapacity(items.count)
             for item in items {
-                switch item["type"] as? String {
-                case "web_search_call":
+                switch item.object?["type"]?.string {
+                case OpenAIResponsesWebSearchCallType.webSearchCall.rawValue:
                     converted.append(try PortableResponsesHistory.message(for: item))
                     changed = true
                 case "compaction_trigger":
                     changed = true
-                case "function_call", "custom_tool_call":
-                    converted.append(
-                        flattenedFunctionReference(item, bindings: toolBindings, changed: &changed)
-                    )
-                case "agent_message":
-                    // Every mail item must leave the wire: convertible ones
-                    // become user messages, the rest are counted as dropped.
+                case let type?
+                where [
+                    OpenAIResponsesInputFunctionCallType.functionCall.rawValue,
+                    OpenAIResponsesInputCustomCallType.customToolCall.rawValue,
+                ].contains(type):
+                    let kind: ProviderToolContractCatalog.Kind =
+                        type == OpenAIResponsesInputCustomCallType.customToolCall.rawValue ? .custom : .function
+                    let flattened = try flattenedFunctionReference(item, kind: kind, bindings: toolBindings)
+                    converted.append(flattened)
+                    changed = changed || flattened != item
+                case OpenAICodexAgentMessageType.agentMessage.rawValue:
                     changed = true
-                    if let message = mailMessageItem(item) {
+                    if let message = try mailMessageItem(item) {
                         converted.append(message)
                     } else {
                         droppedMailCount += 1
@@ -88,50 +84,30 @@ package enum OpenAIResponsesNativeNamespacing {
                     converted.append(item)
                 }
             }
-            if changed {
-                rewritten["input"] = converted
-            }
+            if changed { rewritten.input = .value(.array(converted)) }
         }
-
-        if let choice = rewritten["tool_choice"] {
-            let flattened = try ResponsesToolChoice.normalized(choice, bindings: declaredToolBindings)
-            if !NSDictionary(dictionary: ["choice": choice]).isEqual(to: ["choice": flattened]) {
-                rewritten["tool_choice"] = flattened
+        if let choice = rewritten.toolChoice.value {
+            let flattened = try ResponsesWireToolPolicy.choice(choice, bindings: declaredToolBindings)
+            if flattened != choice {
+                rewritten.toolChoice = flattened == .null ? .null : .value(flattened)
                 changed = true
             }
         }
-
-        let toolNameCatalog = try ProviderToolContractCatalog(
-            wire: .responses, requestBody: JSONSerialization.data(withJSONObject: rewritten)
-        ).nameCatalog
-        if try ResponsesAllowedToolSelection.apply(to: &rewritten) {
-            changed = true
-        }
+        let toolNameCatalog = try ResponsesWireToolPolicy.nameCatalog(rewritten)
+        if try ResponsesWireToolPolicy.applySelection(to: &rewritten) { changed = true }
         let customHistory = try ResponsesCustomToolHistory.normalized(rewritten, bindings: toolBindings)
-        if !NSDictionary(dictionary: customHistory).isEqual(to: rewritten) {
+        if try customHistory.wireJSON() != rewritten.wireJSON() {
             rewritten = customHistory
             changed = true
         }
-
-        if let reshaped = ResponsesImageTurnCompatibility.rewritten(rewritten) {
-            rewritten = reshaped
+        var finalJSON = try rewritten.wireJSON()
+        let fields = try WireObject(finalJSON).additionalFields(excluding: [])
+        if let reshaped = try ResponsesImageTurnCompatibility.rewritten(wire: fields) {
+            finalJSON = responsesWireJSON(reshaped)
             changed = true
         }
-
-        guard changed else {
-            return Normalized(
-                body: body,
-                toolBindings: toolBindings,
-                declaredToolBindings: declaredToolBindings,
-                toolNameCatalog: toolNameCatalog,
-                droppedMailCount: droppedMailCount
-            )
-        }
         return Normalized(
-            body: try JSONSerialization.data(
-                withJSONObject: rewritten,
-                options: [.sortedKeys, .withoutEscapingSlashes]
-            ),
+            body: changed ? try finalJSON.serializedData() : document.originalData,
             toolBindings: toolBindings,
             declaredToolBindings: declaredToolBindings,
             toolNameCatalog: toolNameCatalog,
@@ -139,35 +115,47 @@ package enum OpenAIResponsesNativeNamespacing {
         )
     }
 
-    private static func flattenedFunctionReference(
-        _ item: [String: Any],
-        bindings: [String: ResponsesToolNamespaces.Binding],
-        changed: inout Bool
-    ) -> [String: Any] {
-        guard let namespace = nonemptyResponsesString(item["namespace"]),
-            let name = nonemptyResponsesString(item["name"])
-        else {
-            return item
-        }
-        var flat = item
-        flat["name"] = ResponsesToolNamespaces.replayName(
-            bindings: bindings,
-            namespace: namespace,
-            name: name
-        )
-        flat.removeValue(forKey: "namespace")
-        changed = true
-        return flat
+    private static func objectArray(_ value: JSONValue?) -> [JSONValue]? {
+        guard let values = value?.array, values.allSatisfy({ $0.object != nil }) else { return nil }
+        return values
     }
 
-    private static func mailMessageItem(_ item: [String: Any]) -> [String: Any]? {
-        guard let text = ResponsesAgentMail.textContent(item["content"]) else {
-            return nil
+    private static func flattenedFunctionReference(
+        _ item: JSONValue,
+        kind: ProviderToolContractCatalog.Kind,
+        bindings: [String: ResponsesToolNamespaces.Binding]
+    ) throws -> JSONValue {
+        switch kind {
+        case .function:
+            typealias Key = OpenAIResponsesInputFunctionCall.Key
+            guard let namespace = nonemptyResponsesString(item.object?[Key.namespace.rawValue]),
+                let name = nonemptyResponsesString(item.object?[Key.name.rawValue])
+            else { return item }
+            var function = try responsesWireDecode(OpenAIResponsesInputFunctionCall.self, json: item)
+            function.name = ResponsesToolNamespaces.replayName(bindings: bindings, namespace: namespace, name: name)
+            function.namespace = .absent
+            return try function.wireJSON()
+        case .custom:
+            typealias Key = OpenAIResponsesInputCustomCall.Key
+            guard let namespace = nonemptyResponsesString(item.object?[Key.namespace.rawValue]),
+                let name = nonemptyResponsesString(item.object?[Key.name.rawValue])
+            else { return item }
+            var custom = try responsesWireDecode(OpenAIResponsesInputCustomCall.self, json: item)
+            custom.name = ResponsesToolNamespaces.replayName(bindings: bindings, namespace: namespace, name: name)
+            custom.namespace = .absent
+            return try custom.wireJSON()
         }
-        return [
-            "type": "message",
-            "role": "user",
-            "content": [["type": "input_text", "text": text]],
-        ]
     }
+
+    private static func mailMessageItem(_ item: JSONValue) throws -> JSONValue? {
+        let mail = try responsesWireDecode(OpenAICodexAgentMessage.self, json: item)
+        guard let content = mail.content.value,
+            let text = ResponsesAgentMail.textContent(WireJSONCompatibility.view(content))
+        else { return nil }
+        let part = OpenAIResponsesInputTextPart(text: text, type: .inputText)
+        return try OpenAIResponsesUserMessage(
+            content: .variant2([part.wireJSON()]), role: .user, type: .message
+        ).wireJSON()
+    }
+
 }

@@ -3,6 +3,7 @@ import Foundation
 import HTTPTypes
 import HummingbirdTesting
 import LittleSwitchTransport
+import LittleSwitchWire
 import NIOCore
 import Testing
 
@@ -75,8 +76,8 @@ extension GatewayTests {
             var decoder = ServerSentEventDecoder(maximumFrameBytes: 32_768)
             let frames = try decoder.append(result.body) + decoder.finish()
             let terminal = try #require(frames.last)
-            let root = try #require(responsesStreamObject(terminal.data)["response"] as? [String: Any])
-            #expect((root["usage"] as? [String: Any])?["total_tokens"] as? Int == 25)
+            let root = try #require(JSONValue.parse(terminal.data).object?["response"]?.object)
+            #expect(root["usage"]?.object?["total_tokens"] == .integer(25))
             #expect(
                 frames.map(\.event) == [
                     "response.created", "response.in_progress", "response.output_item.added",

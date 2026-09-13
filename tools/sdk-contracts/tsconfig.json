@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "skipLibCheck": false,
+    "lib": ["ES2022", "DOM"]
+  },
+  "files": ["contracts.ts"]
+}

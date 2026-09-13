@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 /// Reshapes Responses turns that carry an image for providers whose
 /// completion reserve mis-sizes them.
@@ -17,6 +18,11 @@ package enum ResponsesImageTurnCompatibility {
     /// Far above any Codex turn, far below the context windows these
     /// providers advertise (262k–400k tokens).
     package static let maximumOutputTokens = 32_768
+
+    static func rewritten(wire object: [String: JSONValue]) throws -> [String: JSONValue]? {
+        guard let rewritten = rewritten(object.mapValues(WireJSONCompatibility.view)) else { return nil }
+        return try rewritten.mapValues(WireJSONCompatibility.value)
+    }
 
     /// The request reshaped for an image turn, or nil when nothing applies.
     package static func rewritten(_ object: [String: Any]) -> [String: Any]? {

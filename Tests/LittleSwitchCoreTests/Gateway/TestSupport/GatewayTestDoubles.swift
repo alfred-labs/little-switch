@@ -1,6 +1,7 @@
 import AsyncHTTPClient
 import Foundation
 import LittleSwitchTransport
+import LittleSwitchWire
 import NIOCore
 import NIOHTTP1
 
@@ -64,7 +65,7 @@ struct FailingGatewayTokenEstimator: GatewayTokenEstimating {
         throw GatewayTestError.failure
     }
 
-    func estimate(root: [String: Any]) throws -> Int {
+    func estimate(root: [String: JSONValue]) throws -> Int {
         _ = root
         throw GatewayTestError.failure
     }

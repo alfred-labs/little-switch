@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 // The chat-completions projection assembles Responses output items from the
 // provider's terminal assistant message: text becomes a `message` item and
@@ -6,7 +7,7 @@ import Foundation
 
 extension OpenAIResponsesChatCompletions {
     static func responseOutput(
-        message: [String: Any],
+        message: OpenAIChatMessage,
         responseID: String,
         bindings: [String: ResponsesToolNamespaces.Binding],
         resolver: ProviderToolNamespaceResolver,
@@ -14,80 +15,83 @@ extension OpenAIResponsesChatCompletions {
     ) throws -> [[String: Any]] {
         var output: [[String: Any]] = []
         let reasoning = try ResponsesChatCompletionsReasoning.item(
-            message: message, responseID: responseID, providerID: providerID)
+            message: ResponsesChatCompletionsReasoning.wireFields(in: message.additionalFields),
+            responseID: responseID,
+            providerID: providerID)
         if let reasoning {
             output.append(reasoning)
         }
-        var contentParts: [[String: Any]] = []
-        if let content = message["content"] as? String {
-            contentParts.append(["type": "output_text", "text": content, "annotations": [], "logprobs": []])
-        } else if message["content"] is NSNull == false, message["content"] != nil {
-            throw Error.invalidResponse
+        var contentParts: [OpenAIResponsesContentPart] = []
+        if let content = message.content.value {
+            contentParts.append(
+                .outputText(
+                    OpenAIResponsesOutputText(
+                        annotations: .value([]), logprobs: .value([]), text: content, type: .outputText)))
         }
-        if let refusal = message["refusal"], !(refusal is NSNull) {
-            guard let refusal = refusal as? String else { throw Error.invalidResponse }
-            contentParts.append(["type": "refusal", "refusal": refusal])
+        if let refusal = message.refusal.value {
+            contentParts.append(.refusal(OpenAIResponsesRefusal(refusal: refusal, type: .refusal)))
         }
         if !contentParts.isEmpty {
-            output.append([
-                "id": "msg_\(responseID)",
-                "type": "message",
-                "status": "completed",
-                "role": "assistant",
-                "content": contentParts,
-            ])
+            output.append(try responseMessage(id: "msg_\(responseID)", content: contentParts))
         }
 
-        if let toolCalls = message["tool_calls"] as? [[String: Any]] {
+        if let toolCalls = message.toolCalls.value {
             for (index, call) in toolCalls.enumerated() {
-                guard
-                    let callID = nonemptyString(call["id"]),
-                    let type = call["type"] as? String,
-                    let kind = ProviderToolContractCatalog.Kind(rawValue: type),
-                    let function = call[type] as? [String: Any],
-                    let name = nonemptyString(function["name"]),
-                    let arguments = function[kind.inputKey] as? String
-                else {
+                let input = try ChatCompletionToolInput(call)
+                guard !input.callID.isEmpty, !input.name.isEmpty else {
                     throw Error.invalidResponse
                 }
+                let kind = input.kind
                 let binding = try restoredChatToolBinding(
-                    name: name, namespace: function["namespace"], bindings: bindings, resolver: resolver)
-                var call: [String: Any] = [
-                    "id": "\(kind.itemIDPrefix)_\(responseID)_\(index)",
-                    "type": kind.responseType,
-                    "status": "completed",
-                    "call_id": callID,
-                    "name": name,
-                    kind.inputKey: arguments,
-                ]
-                if let binding {
-                    call["name"] = binding.name
-                    call["namespace"] = binding.namespace
+                    name: input.name, namespace: input.namespace, bindings: bindings, resolver: resolver)
+                let itemID = "\(kind.itemIDPrefix)_\(responseID)_\(index)"
+                switch kind {
+                case .function:
+                    var call = chatFunctionItem(
+                        itemID: itemID,
+                        callID: input.callID,
+                        name: input.name,
+                        arguments: input.arguments,
+                        status: .completed,
+                        binding: binding)
+                    if ResponsesAgentMail.requiresPlaintext(namespace: call.namespace.value, name: call.name) {
+                        call.encryptedFunctionArgs = .value([])
+                    }
+                    output.append(try WireJSONCompatibility.fields(call.wireJSON()))
+                case .custom:
+                    let call = OpenAIResponsesCustomCall(
+                        callId: input.callID,
+                        id: itemID,
+                        input: input.arguments,
+                        name: binding?.name ?? input.name,
+                        namespace: binding.map { .value($0.namespace) } ?? .absent,
+                        status: .value(.completed),
+                        type: .customToolCall)
+                    output.append(try WireJSONCompatibility.fields(call.wireJSON()))
                 }
-                if kind == .function {
-                    call[ResponsesAgentMail.Field.encryptedFunctionArguments.rawValue] =
-                        try ResponsesAgentMail.encryptedArguments(call)
-                }
-                output.append(call)
             }
         }
         if output.isEmpty {
-            output.append([
-                "id": "msg_\(responseID)",
-                "type": "message",
-                "status": "completed",
-                "role": "assistant",
-                "content": [
-                    [
-                        "type": "output_text",
-                        "text": "",
-                        "annotations": [],
-                        "logprobs": [],
-                    ]
-                ],
-            ])
+            output.append(
+                try responseMessage(
+                    id: "msg_\(responseID)",
+                    content: [
+                        .outputText(
+                            OpenAIResponsesOutputText(
+                                annotations: .value([]), logprobs: .value([]), text: "", type: .outputText))
+                    ]))
         }
         return output
+    }
+
+    private static func responseMessage(
+        id: String,
+        content: [OpenAIResponsesContentPart]
+    ) throws -> [String: Any] {
+        try WireJSONCompatibility.fields(
+            OpenAIResponsesMessage(
+                content: content, id: id, role: .assistant, status: .value(.completed), type: .message
+            ).wireJSON())
     }
 
     static func nonemptyString(_ value: Any?) -> String? {

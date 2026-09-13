@@ -1,10 +1,25 @@
 import Foundation
+import LittleSwitchWire
 import Testing
 
 @testable import LittleSwitchCore
 
 @Suite("Anthropic provider stream terminal state")
 struct AnthropicStreamingTerminalStateTests {
+    @Test("Unknown terminal reasons survive null updates without acquiring known semantics")
+    func unknownTerminalReasonRoundTrips() throws {
+        var state = AnthropicTerminalDeltaState()
+        state.apply(
+            AnthropicMessageDelta(
+                stopReason: .value(.unknown("future_reason")), stopSequence: .value("marker")
+            ))
+        state.apply(AnthropicMessageDelta(stopReason: .null, stopSequence: .null))
+        var message = AnthropicMessage(content: [], id: "msg", usage: [:])
+        state.apply(to: &message)
+        #expect(message.stopReason.value?.rawValue == "future_reason")
+        #expect(message.stopSequence.value == .string("marker"))
+    }
+
     @Test("Highly fragmented terminal updates preserve order and drop unknown state")
     func highlyFragmentedTerminalState() throws {
         let fragmentCount = 1_024

@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 public enum ImageFallback {
     public static let notice = "[Image omitted: the selected model does not accept image input.]"
@@ -36,43 +37,45 @@ public enum ImageFallback {
     }
 
     public static func replacingImages(in request: Data) throws -> Replacement? {
-        let object = try JSONSerialization.jsonObject(with: request)
-        let replacement = rewrite(object)
+        let object = try WireCodec.decode(JSONValue.self, from: request).value
+        switch object {
+        case .object, .array: break
+        default: throw WireCodingError(.typeMismatch)
+        }
+        let replacement = try rewrite(object)
         guard replacement.didReplace else {
             return nil
         }
-        let data = try JSONSerialization.data(
-            withJSONObject: replacement.value,
-            options: [.sortedKeys, .withoutEscapingSlashes]
-        )
+        let data = try WireCodec.encode(replacement.value)
         return Replacement(body: data, didReplace: true)
     }
 
-    private static func rewrite(_ value: Any) -> (value: Any, didReplace: Bool) {
-        if let dictionary = value as? [String: Any] {
-            if dictionary["type"] as? String == "image" {
-                return (["type": "text", "text": notice], true)
+    private static func rewrite(_ value: JSONValue) throws -> (value: JSONValue, didReplace: Bool) {
+        switch value {
+        case .object(let dictionary):
+            if dictionary[AnthropicImageParam.Key.type.rawValue] == .string(AnthropicImageParamType.image.rawValue) {
+                return (try AnthropicTextParam(text: notice, type: .text).wireJSON(), true)
             }
-            var result: [String: Any] = [:]
+            var result = dictionary
             var replaced = false
             for (key, child) in dictionary {
-                let rewritten = rewrite(child)
+                let rewritten = try rewrite(child)
                 result[key] = rewritten.value
                 replaced = replaced || rewritten.didReplace
             }
-            return (result, replaced)
-        }
-        if let array = value as? [Any] {
-            var result: [Any] = []
+            return (.object(result), replaced)
+        case .array(let array):
+            var result: [JSONValue] = []
             var replaced = false
             result.reserveCapacity(array.count)
             for child in array {
-                let rewritten = rewrite(child)
+                let rewritten = try rewrite(child)
                 result.append(rewritten.value)
                 replaced = replaced || rewritten.didReplace
             }
-            return (result, replaced)
+            return (.array(result), replaced)
+        default:
+            return (value, false)
         }
-        return (value, false)
     }
 }

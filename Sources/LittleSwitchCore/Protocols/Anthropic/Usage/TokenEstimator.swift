@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 public enum TokenEstimator {
     public enum Error: Swift.Error {
@@ -6,7 +7,7 @@ public enum TokenEstimator {
     }
 
     public static func estimate(_ request: Data) throws -> Int {
-        guard let root = try JSONSerialization.jsonObject(with: request) as? [String: Any] else {
+        guard let root = try WireCodec.decode(JSONValue.self, from: request).value.anthropicObject else {
             throw Error.invalidRoot
         }
         return try estimate(root: root)
@@ -14,19 +15,19 @@ public enum TokenEstimator {
 
     /// Estimates from an already-parsed request root, so callers that parsed
     /// the body for routing do not re-serialize through JSON.
-    public static func estimate(root: [String: Any]) throws -> Int {
-        var byteCount = semanticBytes(root["system"])
-        if let messages = root["messages"] as? [[String: Any]] {
+    static func estimate(root: [String: JSONValue]) throws -> Int {
+        var byteCount = semanticBytes(root[AnthropicCountTokensProjection.Key.system.rawValue])
+        if let messages = root[AnthropicCountTokensProjection.Key.messages.rawValue]?.anthropicObjects {
             for message in messages {
-                byteCount += semanticBytes(message["role"])
-                byteCount += semanticBytes(message["content"])
+                byteCount += semanticBytes(message[AnthropicMessageParam.Key.role.rawValue])
+                byteCount += semanticBytes(message[AnthropicMessageParam.Key.content.rawValue])
             }
         }
-        if let tools = root["tools"] as? [[String: Any]] {
+        if let tools = root[AnthropicCountTokensProjection.Key.tools.rawValue]?.anthropicObjects {
             for tool in tools {
-                byteCount += semanticBytes(tool["name"])
-                byteCount += semanticBytes(tool["description"])
-                byteCount += semanticBytes(tool["input_schema"])
+                byteCount += semanticBytes(tool[AnthropicToolDefinition.Key.name.rawValue])
+                byteCount += semanticBytes(tool[AnthropicToolDefinition.Key.description.rawValue])
+                byteCount += semanticBytes(tool[AnthropicToolDefinition.Key.inputSchema.rawValue])
             }
         }
         guard byteCount > 0 else {
@@ -35,22 +36,24 @@ public enum TokenEstimator {
         return max(1, (byteCount + 3) / 4)
     }
 
-    private static func semanticBytes(_ value: Any?) -> Int {
+    private static func semanticBytes(_ value: JSONValue?) -> Int {
         switch value {
-        case let string as String:
+        case .string(let string):
             return string.utf8.count
-        case let array as [Any]:
+        case .array(let array):
             return array.reduce(0) { $0 + semanticBytes($1) }
-        case let dictionary as [String: Any]:
-            if dictionary["type"] as? String == "image" {
+        case .object(let dictionary):
+            if dictionary[AnthropicImageParam.Key.type.rawValue]?.string == AnthropicImageParamType.image.rawValue {
                 return 0
             }
             return dictionary.reduce(0) { count, element in
                 count + element.key.utf8.count + semanticBytes(element.value)
             }
-        case let number as NSNumber:
-            return number.stringValue.utf8.count
-        default:
+        case .numberLiteral(let number):
+            return number.rawValue.utf8.count
+        case .boolean:
+            return 1
+        case .null, .none:
             return 0
         }
     }

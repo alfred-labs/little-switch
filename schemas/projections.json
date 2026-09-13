@@ -1,0 +1,1661 @@
+{
+  "formatVersion": 1,
+  "contracts": [
+    {
+      "root": "AnthropicStopReason",
+      "swiftName": "AnthropicStopReason"
+    },
+    {
+      "root": "OpenAIResponseRequestBase",
+      "swiftName": "OpenAIResponsesRoutingRequest",
+      "fields": [
+        "model"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/Presence",
+      "swiftName": "FixturePresence",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/Tagged",
+      "swiftName": "FixtureTagged",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/Any",
+      "swiftName": "FixtureAny",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/One",
+      "swiftName": "FixtureOne",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/Stream",
+      "swiftName": "FixtureStream",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/NullableStream",
+      "swiftName": "FixtureNullableStream",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/Nested",
+      "swiftName": "FixtureNested",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/Map",
+      "swiftName": "FixtureMap",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/Scalar",
+      "swiftName": "FixtureScalar",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/BooleanArray",
+      "swiftName": "FixtureBooleanArray",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/BooleanMap",
+      "swiftName": "FixtureBooleanMap",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/BooleanUnion",
+      "swiftName": "FixtureBooleanUnion",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/NullableOne",
+      "swiftName": "FixtureNullableOne",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/Projection",
+      "swiftName": "FixtureProjection",
+      "fields": [
+        "kept",
+        "type"
+      ],
+      "publicKeys": true,
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/Recursive",
+      "swiftName": "FixtureRecursive",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/LocalNames",
+      "swiftName": "FixtureLocalNames",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "OpenAIChatChunk",
+      "swiftName": "OpenAIChatChunk",
+      "fields": [
+        "id",
+        "object",
+        "created",
+        "model",
+        "choices",
+        "usage"
+      ],
+      "nodes": {
+        "#/definitions/ChatCompletionChunk.Choice": {
+          "name": "OpenAIChatChoice",
+          "fields": [
+            "index",
+            "delta",
+            "finish_reason"
+          ]
+        },
+        "#/definitions/ChatCompletionChunk.Choice/properties/finish_reason": {
+          "name": "OpenAIChatFinishReason"
+        },
+        "#/definitions/ChatCompletionChunk.Choice.Delta": {
+          "name": "OpenAIChatDelta",
+          "fields": [
+            "role",
+            "content",
+            "refusal",
+            "tool_calls"
+          ]
+        },
+        "#/definitions/ChatCompletionChunk.Choice.Delta/properties/role": {
+          "name": "OpenAIChatRole"
+        },
+        "#/definitions/ChatCompletionChunk.Choice.Delta.ToolCall": {
+          "name": "OpenAIChatToolDelta"
+        },
+        "#/definitions/ChatCompletionChunk.Choice.Delta.ToolCall/properties/type": {
+          "name": "OpenAIChatToolKind"
+        },
+        "#/definitions/ChatCompletionChunk.Choice.Delta.ToolCall.Function": {
+          "name": "OpenAIChatFunctionDelta"
+        },
+        "#/definitions/ChatCompletionChunk.Choice.Delta.ToolCall.Custom": {
+          "name": "OpenAIChatCustomDelta"
+        },
+        "#/definitions/CompletionUsage": {
+          "name": "OpenAIChatStreamUsage"
+        },
+        "#/definitions/CompletionUsage.PromptTokensDetails": {
+          "name": "OpenAIChatPromptTokenDetails",
+          "fields": [
+            "cached_tokens",
+            "cache_write_tokens"
+          ]
+        },
+        "#/definitions/CompletionUsage.CompletionTokensDetails": {
+          "name": "OpenAIChatCompletionTokenDetails",
+          "fields": [
+            "reasoning_tokens"
+          ]
+        }
+      }
+    },
+    {
+      "root": "OpenAIChatCompletion",
+      "swiftName": "OpenAIChatCompletion",
+      "fields": [
+        "choices",
+        "id",
+        "created",
+        "usage"
+      ],
+      "nodes": {
+        "#/definitions/ChatCompletion.Choice": {
+          "name": "OpenAIChatCompletionChoice",
+          "fields": [
+            "finish_reason",
+            "message"
+          ]
+        },
+        "#/definitions/ChatCompletion.Choice/properties/finish_reason": {
+          "name": "OpenAIChatCompletionFinishReason"
+        },
+        "#/definitions/ChatCompletionMessage": {
+          "name": "OpenAIChatMessage",
+          "fields": [
+            "content",
+            "refusal",
+            "tool_calls"
+          ]
+        },
+        "#/definitions/ChatCompletionMessageToolCall": {
+          "name": "OpenAIChatMessageToolCall"
+        },
+        "#/definitions/ChatCompletionMessageFunctionToolCall": {
+          "name": "OpenAIChatFunctionCall"
+        },
+        "#/definitions/ChatCompletionMessageFunctionToolCall.Function": {
+          "name": "OpenAIChatFunctionInput"
+        },
+        "#/definitions/ChatCompletionMessageCustomToolCall": {
+          "name": "OpenAIChatCustomCall"
+        },
+        "#/definitions/ChatCompletionMessageCustomToolCall.Custom": {
+          "name": "OpenAIChatCustomInput"
+        },
+        "#/definitions/CompletionUsage": {
+          "name": "OpenAIChatBufferedUsage"
+        },
+        "#/definitions/CompletionUsage.PromptTokensDetails": {
+          "name": "OpenAIChatBufferedPromptDetails",
+          "fields": [
+            "cached_tokens",
+            "cache_write_tokens"
+          ]
+        },
+        "#/definitions/CompletionUsage.CompletionTokensDetails": {
+          "name": "OpenAIChatBufferedCompletionDetails",
+          "fields": [
+            "reasoning_tokens"
+          ]
+        }
+      }
+    },
+    {
+      "root": "AnthropicMessage",
+      "swiftName": "AnthropicMessage",
+      "publicKeys": true,
+      "fields": [
+        "id",
+        "content",
+        "stop_reason",
+        "stop_sequence",
+        "usage"
+      ],
+      "opaque": [
+        "#/definitions/ContentBlock",
+        "#/definitions/Usage",
+        "#/definitions/Message/properties/stop_sequence"
+      ],
+      "nodes": {
+        "#/definitions/Message/properties/stop_reason": {
+          "name": "AnthropicMessageStopReason"
+        }
+      }
+    },
+    {
+      "root": "AnthropicMessage",
+      "swiftName": "AnthropicContentBlock",
+      "pointer": "#/definitions/ContentBlock",
+      "branches": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "nodes": {
+        "#/definitions/TextBlock": {
+          "name": "AnthropicTextBlock"
+        },
+        "#/definitions/ThinkingBlock": {
+          "name": "AnthropicThinkingBlock"
+        },
+        "#/definitions/RedactedThinkingBlock": {
+          "name": "AnthropicRedactedThinkingBlock"
+        },
+        "#/definitions/ToolUseBlock": {
+          "name": "AnthropicToolUseBlock",
+          "fields": [
+            "id",
+            "input",
+            "name",
+            "caller",
+            "type"
+          ]
+        },
+        "#/definitions/ServerToolUseBlock": {
+          "name": "AnthropicServerToolUseBlock"
+        },
+        "#/definitions/WebSearchToolResultBlock": {
+          "name": "AnthropicWebSearchToolResultBlock"
+        },
+        "#/definitions/TextCitation": {
+          "name": "AnthropicCitation"
+        },
+        "#/definitions/CitationCharLocation": {
+          "name": "AnthropicCharCitation"
+        },
+        "#/definitions/CitationPageLocation": {
+          "name": "AnthropicPageCitation"
+        },
+        "#/definitions/CitationContentBlockLocation": {
+          "name": "AnthropicContentCitation"
+        },
+        "#/definitions/CitationsWebSearchResultLocation": {
+          "name": "AnthropicWebCitation"
+        },
+        "#/definitions/CitationsSearchResultLocation": {
+          "name": "AnthropicSearchCitation"
+        },
+        "#/definitions/WebSearchToolResultBlockContent": {
+          "name": "AnthropicWebSearchContent"
+        },
+        "#/definitions/WebSearchResultBlock": {
+          "name": "AnthropicWebSearchResult"
+        },
+        "#/definitions/WebSearchToolResultError": {
+          "name": "AnthropicWebSearchError"
+        },
+        "#/definitions/ServerToolUseBlock/properties/name": {
+          "name": "AnthropicServerToolName"
+        },
+        "#/definitions/WebSearchToolResultError/properties/error_code": {
+          "name": "AnthropicWebSearchErrorCode"
+        }
+      },
+      "opaque": [
+        "#/definitions/ToolUseBlock/properties/caller",
+        "#/definitions/ServerToolUseBlock/properties/caller",
+        "#/definitions/WebSearchToolResultBlock/properties/caller"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "AnthropicMessage",
+      "swiftName": "AnthropicCaller",
+      "pointer": "#/definitions/ToolUseBlock/properties/caller",
+      "nodes": {
+        "#/definitions/DirectCaller": {
+          "name": "AnthropicDirectCaller"
+        },
+        "#/definitions/ServerToolCaller": {
+          "name": "AnthropicServerCaller20250825"
+        },
+        "#/definitions/ServerToolCaller20260120": {
+          "name": "AnthropicServerCaller20260120"
+        }
+      }
+    },
+    {
+      "root": "AnthropicStreamEvent",
+      "swiftName": "AnthropicContentDelta",
+      "pointer": "#/definitions/RawContentBlockDelta",
+      "opaque": [
+        "#/definitions/CitationsDelta/properties/citation"
+      ],
+      "nodes": {
+        "#/definitions/TextDelta": {
+          "name": "AnthropicTextDelta"
+        },
+        "#/definitions/InputJSONDelta": {
+          "name": "AnthropicInputJSONDelta"
+        },
+        "#/definitions/CitationsDelta": {
+          "name": "AnthropicCitationsDelta"
+        },
+        "#/definitions/ThinkingDelta": {
+          "name": "AnthropicThinkingDelta"
+        },
+        "#/definitions/SignatureDelta": {
+          "name": "AnthropicSignatureDelta"
+        }
+      },
+      "publicKeys": true
+    },
+    {
+      "root": "AnthropicStreamEvent",
+      "swiftName": "AnthropicStreamEvent",
+      "nodes": {
+        "#/definitions/RawMessageStartEvent": {
+          "name": "AnthropicMessageStartEvent"
+        },
+        "#/definitions/RawMessageDeltaEvent": {
+          "name": "AnthropicMessageDeltaEvent"
+        },
+        "#/definitions/RawMessageStopEvent": {
+          "name": "AnthropicMessageStopEvent"
+        },
+        "#/definitions/RawContentBlockStartEvent": {
+          "name": "AnthropicContentBlockStartEvent"
+        },
+        "#/definitions/RawContentBlockDeltaEvent": {
+          "name": "AnthropicContentBlockDeltaEvent"
+        },
+        "#/definitions/RawContentBlockStopEvent": {
+          "name": "AnthropicContentBlockStopEvent"
+        },
+        "#/definitions/RawMessageDeltaEvent.Delta": {
+          "name": "AnthropicMessageDelta",
+          "fields": [
+            "stop_reason",
+            "stop_sequence"
+          ]
+        },
+        "#/definitions/RawMessageDeltaEvent.Delta/properties/stop_reason": {
+          "name": "AnthropicDeltaStopReason"
+        }
+      },
+      "opaque": [
+        "#/definitions/RawMessageStartEvent/properties/message",
+        "#/definitions/RawContentBlockStartEvent/properties/content_block",
+        "#/definitions/RawContentBlockDeltaEvent/properties/delta",
+        "#/definitions/RawMessageDeltaEvent/properties/usage"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "AnthropicMessage",
+      "swiftName": "AnthropicUsageFields",
+      "publicKeys": true,
+      "pointer": "#/definitions/Usage",
+      "fields": [
+        "input_tokens",
+        "output_tokens",
+        "cache_creation_input_tokens",
+        "cache_read_input_tokens",
+        "cache_creation",
+        "service_tier"
+      ],
+      "nodes": {
+        "#/definitions/CacheCreation": {
+          "name": "AnthropicCacheCreation"
+        },
+        "#/definitions/Usage/properties/service_tier": {
+          "name": "AnthropicServiceTier"
+        }
+      }
+    },
+    {
+      "root": "AnthropicCountTokensRequest",
+      "swiftName": "AnthropicCountTokensProjection",
+      "publicKeys": true,
+      "fields": [
+        "model",
+        "messages",
+        "system",
+        "tools",
+        "tool_choice",
+        "thinking",
+        "output_config",
+        "cache_control"
+      ],
+      "opaque": [
+        "#/definitions/MessageParam",
+        "#/definitions/MessageCountTokensParams/properties/system",
+        "#/definitions/MessageCountTokensParams/properties/tools",
+        "#/definitions/MessageCountTokensParams/properties/tool_choice",
+        "#/definitions/MessageCountTokensParams/properties/thinking",
+        "#/definitions/MessageCountTokensParams/properties/output_config",
+        "#/definitions/MessageCountTokensParams/properties/cache_control"
+      ]
+    },
+    {
+      "root": "AnthropicCountTokensRequest",
+      "swiftName": "AnthropicRoutingRequest",
+      "publicKeys": true,
+      "fields": [
+        "model"
+      ]
+    },
+    {
+      "root": "AnthropicCountTokensRequest",
+      "swiftName": "AnthropicThinkingRequest",
+      "publicKeys": true,
+      "fields": [
+        "thinking",
+        "output_config",
+        "reasoning_effort"
+      ],
+      "nodes": {
+        "#/definitions/ThinkingConfigParam": {
+          "name": "AnthropicThinkingConfiguration",
+          "branches": [
+            1
+          ]
+        },
+        "#/definitions/ThinkingConfigDisabled": {
+          "name": "AnthropicDisabledThinking"
+        },
+        "#/definitions/OutputConfig": {
+          "name": "AnthropicOutputConfiguration",
+          "fields": [
+            "effort"
+          ]
+        },
+        "#/definitions/OutputConfig/properties/effort": {
+          "name": "AnthropicEffort"
+        }
+      }
+    },
+    {
+      "root": "AnthropicMessageParam",
+      "swiftName": "AnthropicMessageParam",
+      "publicKeys": true,
+      "nodes": {
+        "#/definitions/MessageParam/properties/role": {
+          "name": "AnthropicMessageRole"
+        },
+        "#/definitions/MessageParam/properties/content": {
+          "name": "AnthropicMessageContent"
+        },
+        "#/definitions/ContentBlockParam": {
+          "name": "AnthropicContentBlockParam",
+          "branches": [
+            0,
+            1,
+            2,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        },
+        "#/definitions/TextBlockParam": {
+          "name": "AnthropicTextParam",
+          "fields": [
+            "text",
+            "type"
+          ]
+        },
+        "#/definitions/ImageBlockParam": {
+          "name": "AnthropicImageParam",
+          "fields": [
+            "source",
+            "type"
+          ]
+        },
+        "#/definitions/DocumentBlockParam": {
+          "name": "AnthropicDocumentParam",
+          "fields": [
+            "source",
+            "type"
+          ]
+        },
+        "#/definitions/ThinkingBlockParam": {
+          "name": "AnthropicThinkingParam",
+          "fields": [
+            "thinking",
+            "signature",
+            "type"
+          ]
+        },
+        "#/definitions/RedactedThinkingBlockParam": {
+          "name": "AnthropicRedactedThinkingParam",
+          "fields": [
+            "data",
+            "type"
+          ]
+        },
+        "#/definitions/ToolUseBlockParam": {
+          "name": "AnthropicToolUseParam",
+          "fields": [
+            "id",
+            "input",
+            "name",
+            "type"
+          ]
+        },
+        "#/definitions/ToolResultBlockParam": {
+          "name": "AnthropicToolResultParam",
+          "fields": [
+            "tool_use_id",
+            "content",
+            "is_error",
+            "type"
+          ]
+        },
+        "#/definitions/ServerToolUseBlockParam": {
+          "name": "AnthropicServerToolUseParam",
+          "fields": [
+            "id",
+            "input",
+            "name",
+            "type"
+          ]
+        },
+        "#/definitions/WebSearchToolResultBlockParam": {
+          "name": "AnthropicWebSearchResultParam",
+          "fields": [
+            "tool_use_id",
+            "content",
+            "type"
+          ]
+        },
+        "#/definitions/Base64ImageSource": {
+          "name": "AnthropicBase64ImageSource"
+        },
+        "#/definitions/URLImageSource": {
+          "name": "AnthropicURLImageSource"
+        },
+        "#/definitions/FileImageSource": {
+          "name": "AnthropicFileImageSource"
+        },
+        "#/definitions/ImageBlockParam/properties/source": {
+          "name": "AnthropicImageSource"
+        },
+        "#/definitions/Base64ImageSource/properties/media_type": {
+          "name": "AnthropicImageMediaType"
+        },
+        "#/definitions/ServerToolUseBlockParam/properties/name": {
+          "name": "AnthropicInputServerToolName"
+        }
+      },
+      "opaque": [
+        "#/definitions/DocumentBlockParam/properties/source",
+        "#/definitions/ToolResultBlockParam/properties/content",
+        "#/definitions/WebSearchToolResultBlockParam/properties/content"
+      ]
+    },
+    {
+      "root": "OpenAIResponseOutput",
+      "swiftName": "OpenAIResponsesOutputItem",
+      "branches": [
+        0,
+        2,
+        4,
+        7,
+        10,
+        26
+      ],
+      "nodes": {
+        "#/definitions/ResponseOutputMessage": {
+          "name": "OpenAIResponsesMessage",
+          "fields": [
+            "id",
+            "role",
+            "type",
+            "content",
+            "phase",
+            "status",
+            "internal_chat_message_metadata_passthrough"
+          ]
+        },
+        "#/definitions/ResponseFunctionToolCall": {
+          "name": "OpenAIResponsesFunctionCall",
+          "fields": [
+            "id",
+            "call_id",
+            "name",
+            "namespace",
+            "arguments",
+            "status",
+            "type",
+            "internal_chat_message_metadata_passthrough",
+            "encrypted_function_args"
+          ]
+        },
+        "#/definitions/ResponseCustomToolCall": {
+          "name": "OpenAIResponsesCustomCall",
+          "fields": [
+            "id",
+            "call_id",
+            "name",
+            "namespace",
+            "input",
+            "status",
+            "type",
+            "internal_chat_message_metadata_passthrough"
+          ]
+        },
+        "#/definitions/ResponseReasoningItem": {
+          "name": "OpenAIResponsesReasoning",
+          "fields": [
+            "id",
+            "type",
+            "summary",
+            "content",
+            "encrypted_content",
+            "status",
+            "internal_chat_message_metadata_passthrough"
+          ]
+        },
+        "#/definitions/ResponseFunctionWebSearch": {
+          "name": "OpenAIResponsesWebSearchCall",
+          "fields": [
+            "id",
+            "type",
+            "status",
+            "action"
+          ]
+        },
+        "#/definitions/ResponseToolSearchCall": {
+          "name": "OpenAIResponsesToolSearchCall",
+          "fields": [
+            "id",
+            "type",
+            "arguments",
+            "call_id",
+            "execution",
+            "status"
+          ]
+        },
+        "#/definitions/ResponseOutputText": {
+          "name": "OpenAIResponsesOutputText"
+        },
+        "#/definitions/ResponseOutputRefusal": {
+          "name": "OpenAIResponsesRefusal"
+        },
+        "#/definitions/ResponseOutputMessage/properties/content/items": {
+          "name": "OpenAIResponsesContentPart"
+        },
+        "#/definitions/ResponseOutputText/properties/annotations/items": {
+          "name": "OpenAITextAnnotation"
+        },
+        "#/definitions/ResponseOutputText.Logprob": {
+          "name": "OpenAIResponsesLogprob"
+        },
+        "#/definitions/ResponseOutputText.Logprob.TopLogprob": {
+          "name": "OpenAIResponsesTopLogprob"
+        },
+        "#/definitions/ResponseFunctionWebSearch/properties/action": {
+          "name": "OpenAIWebSearchAction"
+        },
+        "#/definitions/ResponseFunctionWebSearch.Search.Source": {
+          "name": "OpenAIWebSearchSource"
+        },
+        "#/definitions/ResponseOutputText.ContainerFileCitation": {
+          "name": "OpenAIContainerFileCitation"
+        },
+        "#/definitions/ResponseOutputMessage/properties/internal_chat_message_metadata_passthrough": {
+          "name": "OpenAIMessageMetadata"
+        },
+        "#/definitions/ResponseFunctionToolCall/properties/internal_chat_message_metadata_passthrough": {
+          "name": "OpenAIFunctionCallMetadata"
+        },
+        "#/definitions/ResponseCustomToolCall/properties/internal_chat_message_metadata_passthrough": {
+          "name": "OpenAICustomCallMetadata"
+        },
+        "#/definitions/ResponseReasoningItem/properties/internal_chat_message_metadata_passthrough": {
+          "name": "OpenAIReasoningMetadata"
+        }
+      },
+      "opaque": [
+        "#/definitions/ResponseReasoningItem/properties/content",
+        "#/definitions/ResponseReasoningItem/properties/summary/items"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIResponseInput",
+      "pointer": "#/definitions/ResponseFunctionToolCall",
+      "swiftName": "OpenAIResponsesInputFunctionCall",
+      "fields": [
+        "id",
+        "call_id",
+        "name",
+        "namespace",
+        "arguments",
+        "type"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIResponseInput",
+      "pointer": "#/definitions/ResponseCustomToolCall",
+      "swiftName": "OpenAIResponsesInputCustomCall",
+      "fields": [
+        "id",
+        "call_id",
+        "name",
+        "namespace",
+        "input",
+        "type"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIResponseInput",
+      "pointer": "#/definitions/ResponseInputItem.FunctionCallOutput",
+      "swiftName": "OpenAIResponsesInputFunctionOutput",
+      "fields": [
+        "id",
+        "call_id",
+        "name",
+        "namespace",
+        "output",
+        "type"
+      ],
+      "opaque": [
+        "#/definitions/ResponseInputItem.FunctionCallOutput/properties/output"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIResponseInput",
+      "pointer": "#/definitions/ResponseCustomToolCallOutput",
+      "swiftName": "OpenAIResponsesInputCustomOutput",
+      "fields": [
+        "id",
+        "call_id",
+        "output",
+        "type"
+      ],
+      "opaque": [
+        "#/definitions/ResponseCustomToolCallOutput/properties/output"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIResponseStreamEvent",
+      "swiftName": "OpenAIResponseStreamEvent",
+      "branches": [
+        9,
+        10,
+        11,
+        12,
+        13,
+        17,
+        18,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        54,
+        55,
+        56,
+        57
+      ],
+      "nodes": {
+        "#/definitions/ResponseCompletedEvent": {
+          "name": "OpenAIResponsesCompletedEvent",
+          "fields": [
+            "response",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseContentPartAddedEvent": {
+          "name": "OpenAIContentPartAdded",
+          "fields": [
+            "content_index",
+            "item_id",
+            "output_index",
+            "part",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseContentPartDoneEvent": {
+          "name": "OpenAIContentPartDone",
+          "fields": [
+            "content_index",
+            "item_id",
+            "output_index",
+            "part",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseCreatedEvent": {
+          "name": "OpenAIResponsesCreatedEvent",
+          "fields": [
+            "response",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseErrorEvent": {
+          "name": "OpenAIResponsesErrorEvent",
+          "fields": [
+            "code",
+            "message",
+            "param",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseFunctionCallArgumentsDeltaEvent": {
+          "name": "OpenAIFunctionArgumentsDelta",
+          "fields": [
+            "delta",
+            "item_id",
+            "output_index",
+            "type",
+            "name",
+            "call_id"
+          ]
+        },
+        "#/definitions/ResponseFunctionCallArgumentsDoneEvent": {
+          "name": "OpenAIFunctionArgumentsDone",
+          "fields": [
+            "arguments",
+            "item_id",
+            "output_index",
+            "type",
+            "name",
+            "call_id"
+          ]
+        },
+        "#/definitions/ResponseInProgressEvent": {
+          "name": "OpenAIResponsesInProgressEvent",
+          "fields": [
+            "type"
+          ]
+        },
+        "#/definitions/ResponseFailedEvent": {
+          "name": "OpenAIResponsesFailedEvent",
+          "fields": [
+            "response",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseIncompleteEvent": {
+          "name": "OpenAIResponsesIncompleteEvent",
+          "fields": [
+            "response",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseOutputItemAddedEvent": {
+          "name": "OpenAIResponsesOutputItemAddedEvent",
+          "fields": [
+            "item",
+            "output_index",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseOutputItemDoneEvent": {
+          "name": "OpenAIResponsesOutputItemDoneEvent",
+          "fields": [
+            "item",
+            "output_index",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseReasoningSummaryPartAddedEvent": {
+          "name": "OpenAIReasoningSummaryPartAdded",
+          "fields": [
+            "item_id",
+            "output_index",
+            "part",
+            "summary_index",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseReasoningSummaryPartDoneEvent": {
+          "name": "OpenAIReasoningSummaryPartDone",
+          "fields": [
+            "item_id",
+            "output_index",
+            "part",
+            "status",
+            "summary_index",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseReasoningSummaryTextDeltaEvent": {
+          "name": "OpenAIReasoningSummaryTextDelta",
+          "fields": [
+            "delta",
+            "item_id",
+            "output_index",
+            "summary_index",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseReasoningSummaryTextDoneEvent": {
+          "name": "OpenAIReasoningSummaryTextDone",
+          "fields": [
+            "item_id",
+            "output_index",
+            "summary_index",
+            "text",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseReasoningTextDeltaEvent": {
+          "name": "OpenAIReasoningTextDelta",
+          "fields": [
+            "content_index",
+            "delta",
+            "item_id",
+            "output_index",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseReasoningTextDoneEvent": {
+          "name": "OpenAIReasoningTextDone",
+          "fields": [
+            "content_index",
+            "item_id",
+            "output_index",
+            "text",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseRefusalDeltaEvent": {
+          "name": "OpenAIResponsesRefusalDeltaEvent",
+          "fields": [
+            "content_index",
+            "delta",
+            "item_id",
+            "output_index",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseRefusalDoneEvent": {
+          "name": "OpenAIResponsesRefusalDoneEvent",
+          "fields": [
+            "content_index",
+            "item_id",
+            "output_index",
+            "refusal",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseTextDeltaEvent": {
+          "name": "OpenAIResponsesTextDeltaEvent",
+          "fields": [
+            "content_index",
+            "delta",
+            "item_id",
+            "output_index",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseTextDoneEvent": {
+          "name": "OpenAIResponsesTextDoneEvent",
+          "fields": [
+            "content_index",
+            "item_id",
+            "output_index",
+            "text",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseOutputTextAnnotationAddedEvent": {
+          "name": "OpenAITextAnnotationAdded",
+          "fields": [
+            "annotation",
+            "annotation_index",
+            "content_index",
+            "item_id",
+            "output_index",
+            "type"
+          ]
+        },
+        "#/definitions/ResponseQueuedEvent": {
+          "name": "OpenAIResponsesQueuedEvent",
+          "fields": [
+            "type"
+          ]
+        },
+        "#/definitions/ResponseCustomToolCallInputDeltaEvent": {
+          "name": "OpenAICustomInputDelta",
+          "fields": [
+            "delta",
+            "item_id",
+            "output_index",
+            "type",
+            "name",
+            "call_id"
+          ]
+        },
+        "#/definitions/ResponseCustomToolCallInputDoneEvent": {
+          "name": "OpenAICustomInputDone",
+          "fields": [
+            "input",
+            "item_id",
+            "output_index",
+            "type",
+            "name",
+            "call_id"
+          ]
+        }
+      },
+      "opaque": [
+        "#/definitions/Response",
+        "#/definitions/ResponseOutputItem",
+        "#/definitions/ResponseContentPartAddedEvent/properties/part",
+        "#/definitions/ResponseContentPartDoneEvent/properties/part",
+        "#/definitions/ResponseReasoningSummaryPartAddedEvent/properties/part",
+        "#/definitions/ResponseReasoningSummaryPartDoneEvent/properties/part",
+        "#/definitions/ResponseOutputTextAnnotationAddedEvent/properties/annotation"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIResponseStreamEvent",
+      "pointer": "#/definitions/Response",
+      "swiftName": "OpenAIResponsesResponse",
+      "fields": [
+        "id",
+        "object",
+        "output",
+        "status",
+        "usage",
+        "created_at",
+        "completed_at",
+        "error",
+        "incomplete_details"
+      ],
+      "nodes": {
+        "#/definitions/ResponseStatus": {
+          "name": "OpenAIResponsesStatus"
+        },
+        "#/definitions/ResponseUsage": {
+          "name": "OpenAIResponsesWireUsage"
+        },
+        "#/definitions/ResponseUsage.InputTokensDetails": {
+          "name": "OpenAIResponsesInputTokenDetails"
+        },
+        "#/definitions/ResponseUsage.OutputTokensDetails": {
+          "name": "OpenAIResponsesOutputTokenDetails"
+        },
+        "#/definitions/ResponseError": {
+          "name": "OpenAIResponsesWireError",
+          "fields": [
+            "code",
+            "message"
+          ]
+        }
+      },
+      "opaque": [
+        "#/definitions/ResponseOutputItem",
+        "#/definitions/Response/properties/incomplete_details"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "AnthropicMessage",
+      "pointer": "#/definitions/Usage",
+      "swiftName": "AnthropicInputTokenCount",
+      "fields": [
+        "input_tokens"
+      ]
+    },
+    {
+      "root": "AnthropicMessage",
+      "swiftName": "AnthropicMessageMetadata",
+      "fields": [
+        "model",
+        "role",
+        "type"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "AnthropicStreamEvent",
+      "pointer": "#/definitions/RawMessageDeltaEvent",
+      "swiftName": "AnthropicPublicMessageDeltaEvent",
+      "opaque": [
+        "#/definitions/RawMessageDeltaEvent/properties/delta",
+        "#/definitions/RawMessageDeltaEvent/properties/usage"
+      ]
+    },
+    {
+      "root": "OpenAIResponseOutput",
+      "pointer": "#/definitions/ResponseReasoningItem.Summary",
+      "swiftName": "OpenAIResponsesSummaryPart",
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIChatRequest",
+      "pointer": "#/definitions/ChatCompletionCreateParamsNonStreaming",
+      "swiftName": "OpenAIChatRequestEnvelope",
+      "fields": [
+        "model",
+        "messages"
+      ],
+      "opaque": [
+        "#/definitions/ChatCompletionMessageParam"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIChatMessage",
+      "swiftName": "OpenAIChatRequestMessage",
+      "branches": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "nodes": {
+        "#/definitions/ChatCompletionSystemMessageParam": {
+          "name": "OpenAIChatRequestSystem",
+          "fields": [
+            "content",
+            "role"
+          ]
+        },
+        "#/definitions/ChatCompletionUserMessageParam": {
+          "name": "OpenAIChatRequestUser",
+          "fields": [
+            "content",
+            "role"
+          ]
+        },
+        "#/definitions/ChatCompletionAssistantMessageParam": {
+          "name": "OpenAIChatRequestAssistant",
+          "fields": [
+            "content",
+            "role",
+            "refusal",
+            "tool_calls"
+          ]
+        },
+        "#/definitions/ChatCompletionToolMessageParam": {
+          "name": "OpenAIChatRequestTool",
+          "fields": [
+            "content",
+            "role",
+            "tool_call_id"
+          ]
+        },
+        "#/definitions/ChatCompletionMessageToolCall": {
+          "name": "OpenAIChatRequestToolCall"
+        },
+        "#/definitions/ChatCompletionMessageFunctionToolCall": {
+          "name": "OpenAIChatRequestFunctionCall"
+        },
+        "#/definitions/ChatCompletionMessageFunctionToolCall.Function": {
+          "name": "OpenAIChatRequestFunction"
+        },
+        "#/definitions/ChatCompletionMessageCustomToolCall": {
+          "name": "OpenAIChatRequestCustomCall"
+        },
+        "#/definitions/ChatCompletionMessageCustomToolCall.Custom": {
+          "name": "OpenAIChatRequestCustom"
+        }
+      },
+      "opaque": [
+        "#/definitions/ChatCompletionSystemMessageParam/properties/content",
+        "#/definitions/ChatCompletionUserMessageParam/properties/content",
+        "#/definitions/ChatCompletionAssistantMessageParam/properties/content",
+        "#/definitions/ChatCompletionToolMessageParam/properties/content"
+      ]
+    },
+    {
+      "root": "AnthropicMessage",
+      "pointer": "#/definitions/ContentBlock",
+      "swiftName": "AnthropicIncomingContentBlock",
+      "branches": [
+        0,
+        1,
+        3,
+        4
+      ],
+      "nodes": {
+        "#/definitions/TextBlock": {
+          "name": "AnthropicIncomingTextBlock",
+          "fields": [
+            "text",
+            "citations"
+          ]
+        },
+        "#/definitions/ThinkingBlock": {
+          "name": "AnthropicIncomingThinkingBlock",
+          "fields": [
+            "thinking",
+            "signature"
+          ]
+        },
+        "#/definitions/ToolUseBlock": {
+          "name": "AnthropicIncomingToolUseBlock",
+          "fields": [
+            "id",
+            "name",
+            "input"
+          ]
+        },
+        "#/definitions/ServerToolUseBlock": {
+          "name": "AnthropicIncomingServerToolUseBlock",
+          "fields": [
+            "id",
+            "name",
+            "input"
+          ]
+        },
+        "#/definitions/ServerToolUseBlock/properties/name": {
+          "name": "AnthropicIncomingServerToolName"
+        }
+      },
+      "opaque": [
+        "#/definitions/TextCitation"
+      ]
+    },
+    {
+      "root": "AnthropicMessage",
+      "pointer": "#/definitions/TextCitation",
+      "swiftName": "AnthropicCitationIdentity",
+      "nodes": {
+        "#/definitions/CitationCharLocation": {
+          "name": "AnthropicCharCitationIdentity",
+          "fields": []
+        },
+        "#/definitions/CitationPageLocation": {
+          "name": "AnthropicPageCitationIdentity",
+          "fields": []
+        },
+        "#/definitions/CitationContentBlockLocation": {
+          "name": "AnthropicContentCitationIdentity",
+          "fields": []
+        },
+        "#/definitions/CitationsWebSearchResultLocation": {
+          "name": "AnthropicWebCitationIdentity",
+          "fields": []
+        },
+        "#/definitions/CitationsSearchResultLocation": {
+          "name": "AnthropicSearchCitationIdentity",
+          "fields": []
+        }
+      }
+    },
+    {
+      "root": "OpenAIResponseStreamEvent",
+      "pointer": "#/definitions/Response.IncompleteDetails",
+      "swiftName": "OpenAIResponsesIncompleteDetails"
+    },
+    {
+      "root": "OpenAIResponseRequestBase",
+      "swiftName": "OpenAIResponsesRequestEnvelope",
+      "fields": [
+        "input",
+        "tools",
+        "tool_choice"
+      ],
+      "opaque": [
+        "#/definitions/ResponseCreateParamsBase/properties/input",
+        "#/definitions/ResponseCreateParamsBase/properties/tools",
+        "#/definitions/ResponseCreateParamsBase/properties/tool_choice"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIResponseInput",
+      "pointer": "#/definitions/EasyInputMessage",
+      "swiftName": "OpenAIResponsesUserMessage",
+      "fields": [
+        "type",
+        "role",
+        "content"
+      ],
+      "opaque": [
+        "#/definitions/ResponseInputMessageContentList/items"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIResponseInput",
+      "pointer": "#/definitions/ResponseInputText",
+      "swiftName": "OpenAIResponsesInputTextPart",
+      "fields": [
+        "type",
+        "text"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIResponseOutput",
+      "pointer": "#/definitions/ResponseOutputMessage",
+      "swiftName": "OpenAIResponsesReplayMessage",
+      "fields": [
+        "type",
+        "role",
+        "content"
+      ],
+      "opaque": [
+        "#/definitions/ResponseOutputMessage/properties/content/items"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIResponseOutput",
+      "pointer": "#/definitions/ResponseOutputText",
+      "swiftName": "OpenAIResponsesReplayTextPart",
+      "fields": [
+        "type",
+        "text"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIResponseOutput",
+      "pointer": "#/definitions/ResponseReasoningItem.Content",
+      "swiftName": "OpenAIResponsesReasoningContentPart",
+      "publicKeys": true
+    },
+    {
+      "root": "OpenAIResponseInput",
+      "pointer": "#/definitions/EasyInputMessage",
+      "swiftName": "OpenAIResponsesCodexAgentMessageEnvelope",
+      "fields": [
+        "type",
+        "content"
+      ],
+      "opaque": [
+        "#/definitions/EasyInputMessage/properties/content"
+      ],
+      "publicKeys": true,
+      "nodes": {
+        "#/definitions/EasyInputMessage": {
+          "name": "OpenAICodexAgentMessage"
+        }
+      }
+    },
+    {
+      "root": "OpenAIResponseRequestBase",
+      "swiftName": "OpenAIResponsesRequestEcho",
+      "fields": [
+        "instructions",
+        "max_output_tokens",
+        "model",
+        "parallel_tool_calls",
+        "previous_response_id",
+        "reasoning",
+        "store",
+        "temperature",
+        "text",
+        "tool_choice",
+        "tools",
+        "top_p",
+        "truncation",
+        "user",
+        "metadata"
+      ],
+      "opaque": [
+        "#/definitions/ResponseCreateParamsBase/properties/instructions",
+        "#/definitions/ResponseCreateParamsBase/properties/max_output_tokens",
+        "#/definitions/ResponseCreateParamsBase/properties/model",
+        "#/definitions/ResponseCreateParamsBase/properties/parallel_tool_calls",
+        "#/definitions/ResponseCreateParamsBase/properties/previous_response_id",
+        "#/definitions/ResponseCreateParamsBase/properties/reasoning",
+        "#/definitions/ResponseCreateParamsBase/properties/store",
+        "#/definitions/ResponseCreateParamsBase/properties/temperature",
+        "#/definitions/ResponseCreateParamsBase/properties/text",
+        "#/definitions/ResponseCreateParamsBase/properties/tool_choice",
+        "#/definitions/ResponseCreateParamsBase/properties/tools",
+        "#/definitions/ResponseCreateParamsBase/properties/top_p",
+        "#/definitions/ResponseCreateParamsBase/properties/truncation",
+        "#/definitions/ResponseCreateParamsBase/properties/user",
+        "#/definitions/ResponseCreateParamsBase/properties/metadata"
+      ]
+    },
+    {
+      "root": "OpenAIResponseRequestBase",
+      "pointer": "#/definitions/Reasoning",
+      "swiftName": "OpenAIResponsesReasoningOptions",
+      "fields": [
+        "effort",
+        "summary"
+      ],
+      "opaque": [
+        "#/definitions/Reasoning/properties/effort",
+        "#/definitions/Reasoning/properties/summary"
+      ]
+    },
+    {
+      "root": "OpenAIResponseRequestBase",
+      "pointer": "#/definitions/ResponseTextConfig",
+      "swiftName": "OpenAIResponsesTextOptions",
+      "fields": [
+        "format"
+      ],
+      "opaque": [
+        "#/definitions/ResponseTextConfig/properties/format"
+      ]
+    },
+    {
+      "root": "OpenAIResponseRequestBase",
+      "pointer": "#/definitions/ResponseFormatText",
+      "swiftName": "OpenAIResponsesTextFormat"
+    },
+    {
+      "root": "AnthropicCountTokensRequest",
+      "pointer": "#/definitions/Tool",
+      "swiftName": "AnthropicToolDefinition",
+      "fields": [
+        "name",
+        "description",
+        "input_schema",
+        "type"
+      ],
+      "publicKeys": true,
+      "nodes": {
+        "#/definitions/Tool.InputSchema": {
+          "name": "AnthropicToolInputSchema"
+        },
+        "#/definitions/Tool.InputSchema/properties/type": {
+          "name": "AnthropicToolSchemaType"
+        },
+        "#/definitions/Tool/properties/type": {
+          "name": "AnthropicToolDefinitionType"
+        }
+      }
+    },
+    {
+      "root": "AnthropicCountTokensRequest",
+      "pointer": "#/definitions/WebSearchTool20250305",
+      "swiftName": "AnthropicSearchToolConfiguration",
+      "fields": [
+        "type",
+        "name",
+        "allowed_callers",
+        "max_uses",
+        "allowed_domains",
+        "blocked_domains",
+        "user_location"
+      ],
+      "publicKeys": true,
+      "nodes": {
+        "#/definitions/UserLocation": {
+          "name": "AnthropicSearchUserLocation"
+        },
+        "#/definitions/UserLocation/properties/type": {
+          "name": "AnthropicSearchLocationType"
+        },
+        "#/definitions/WebSearchTool20250305/properties/allowed_callers/items": {
+          "name": "AnthropicSearchAllowedCaller"
+        }
+      }
+    },
+    {
+      "root": "AnthropicCountTokensRequest",
+      "pointer": "#/definitions/ToolReferenceBlockParam",
+      "swiftName": "AnthropicToolReferenceIdentity",
+      "fields": [
+        "type",
+        "tool_name"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "AnthropicCountTokensRequest",
+      "pointer": "#/definitions/ToolChoiceTool",
+      "swiftName": "AnthropicNamedToolChoice",
+      "fields": [
+        "type",
+        "name"
+      ],
+      "publicKeys": true
+    },
+    {
+      "root": "AnthropicCountTokensRequest",
+      "pointer": "#/definitions/ToolChoiceAuto",
+      "swiftName": "AnthropicAutomaticToolChoice",
+      "fields": [
+        "type"
+      ]
+    },
+    {
+      "root": "AnthropicMessage",
+      "pointer": "#/definitions/Usage",
+      "swiftName": "AnthropicPublicUsage",
+      "fields": [
+        "server_tool_use"
+      ],
+      "nodes": {
+        "#/definitions/ServerToolUsage": {
+          "name": "AnthropicServerToolUsage"
+        }
+      }
+    },
+    {
+      "root": "OpenAIResponseRequestBase",
+      "pointer": "#/definitions/ToolChoiceOptions",
+      "swiftName": "OpenAIResponsesToolChoiceMode"
+    },
+    {
+      "root": "OpenAIResponseRequestBase",
+      "pointer": "#/definitions/ResponseCreateParamsBase/properties/truncation",
+      "swiftName": "OpenAIResponsesTruncation"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/OverlappingOne",
+      "swiftName": "FixtureOverlappingOne",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/NestedOverlappingOne",
+      "swiftName": "FixtureNestedOverlap",
+      "nodes": {
+        "#/definitions/OverlappingOne": { "name": "FixtureNestedOverlapChoice" }
+      },
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/OpaqueAny",
+      "swiftName": "FixtureOpaqueAny",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    },
+    {
+      "root": "WireGenerationFixtures",
+      "schema": "schemas/fixtures/generation.schema.json",
+      "pointer": "#/definitions/PayloadTag",
+      "swiftName": "FixturePayloadTag",
+      "output": "Tests/LittleSwitchWireTests/Generated",
+      "importModule": "LittleSwitchWire"
+    }
+  ]
+}

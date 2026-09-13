@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 /// Providers pattern-complete on their own replayed history: a run of
 /// identical consecutive tool exchanges teaches weaker models to re-issue
@@ -62,7 +63,11 @@ package enum ResponsesHistoryDeduplication {
             "call": call.filter { !occurrenceKeys.contains($0.key) },
             "output": output.filter { !occurrenceKeys.contains($0.key) },
         ]
-        guard JSONSerialization.isValidJSONObject(object) else { return nil }
-        return try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes])
+        return try? WireJSONCompatibility.data(object)
+    }
+
+    static func collapsed(_ items: [JSONValue]) throws -> [JSONValue] {
+        guard let objects = items.map(WireJSONCompatibility.view) as? [[String: Any]] else { return items }
+        return try collapsed(objects).map(WireJSONCompatibility.value)
     }
 }

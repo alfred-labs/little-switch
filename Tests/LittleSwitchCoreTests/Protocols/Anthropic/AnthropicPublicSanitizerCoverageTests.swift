@@ -29,12 +29,12 @@ struct AnthropicPublicSanitizerCoverageTests {
             expectInvalidSanitizerDelta(value)
         }
         #expect(
-            try AnthropicPublicSanitizer.delta([
+            try anthropicPublicDelta([
                 "type": "citations_delta"
             ]) == nil
         )
         #expect(
-            try AnthropicPublicSanitizer.delta([
+            try anthropicPublicDelta([
                 "type": "citations_delta",
                 "citation": ["type": "future_citation"],
             ]) == nil
@@ -43,7 +43,7 @@ struct AnthropicPublicSanitizerCoverageTests {
 
     @Test("Text and thinking optionals are validated and nullable")
     func textAndThinkingOptionals() throws {
-        let nullableCitations = try AnthropicPublicSanitizer.block([
+        let nullableCitations = try anthropicPublicBlock([
             "type": "text",
             "text": "answer",
             "citations": NSNull(),
@@ -136,7 +136,7 @@ struct AnthropicPublicSanitizerCoverageTests {
             "request_too_large",
         ]
         for code in errorCodes {
-            let block = try AnthropicPublicSanitizer.block([
+            let block = try anthropicPublicBlock([
                 "type": "web_search_tool_result",
                 "tool_use_id": "srvtoolu_1",
                 "content": [
@@ -159,7 +159,7 @@ struct AnthropicPublicSanitizerCoverageTests {
             ])
         }
 
-        let stringPageAge = try AnthropicPublicSanitizer.block([
+        let stringPageAge = try anthropicPublicBlock([
             "type": "web_search_tool_result",
             "tool_use_id": "srvtoolu_1",
             "content": [
@@ -192,12 +192,12 @@ struct AnthropicPublicSanitizerCoverageTests {
 
 private func expectInvalidSanitizerBlock(_ value: Any) {
     #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
-        _ = try AnthropicPublicSanitizer.block(value)
+        _ = try anthropicPublicBlock(value)
     }
 }
 
 private func expectInvalidSanitizerDelta(_ value: Any) {
     #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
-        _ = try AnthropicPublicSanitizer.delta(value)
+        _ = try anthropicPublicDelta(value)
     }
 }

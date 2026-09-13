@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 import Testing
 
 @testable import LittleSwitchCore
@@ -9,19 +10,21 @@ import Testing
 struct OpenAICoverageEdgeTests {
     @Test("JSON helpers reject malformed and non-object values")
     func jsonHelpers() throws {
-        #expect(try chatFinishReason(nil) == nil)
-        #expect(try chatFinishReason(NSNull()) == nil)
-        #expect(throws: OpenAIResponsesChatCompletions.Error.invalidResponse) {
-            _ = try chatFinishReason(1)
+        let absent = try WireCodec.decode(OpenAIChatChoice.self, from: Data(#"{"index":0,"delta":{}}"#.utf8)).value
+        #expect(absent.finishReason == .absent)
+        let null = try WireCodec.decode(
+            OpenAIChatChoice.self, from: Data(#"{"index":0,"delta":{},"finish_reason":null}"#.utf8)
+        ).value
+        #expect(null.finishReason == .null)
+        #expect(throws: WireCodingError.self) {
+            try WireCodec.decode(OpenAIChatChoice.self, from: Data(#"{"index":0,"delta":{},"finish_reason":1}"#.utf8))
         }
-        #expect(nonemptyChatString("") == nil)
-        #expect(nonnegativeChatIndex(-1) == nil)
 
         #expect(throws: OpenAIResponsesChatCompletions.Error.invalidResponse) {
-            _ = try chatObject(Data("[]".utf8))
+            _ = try OpenAIResponsesChatCompletions.terminalStatus(responseBody: Data("[]".utf8))
         }
         #expect(throws: OpenAIResponsesChatCompletions.Error.invalidResponse) {
-            _ = try chatObject(Data("{".utf8))
+            _ = try OpenAIResponsesChatCompletions.terminalStatus(responseBody: Data("{".utf8))
         }
         for invalidJSON: Any in [Date(), Double.nan] {
             #expect(throws: OpenAIResponsesChatCompletions.Error.invalidResponse) {

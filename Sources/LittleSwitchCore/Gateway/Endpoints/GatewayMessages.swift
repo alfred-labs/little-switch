@@ -1,6 +1,7 @@
 import AsyncHTTPClient
 import Foundation
 import Hummingbird
+import LittleSwitchWire
 import NIOHTTP1
 
 private struct DirectMessageContext {
@@ -196,16 +197,18 @@ extension GatewayResponder {
         body: Data,
         capture: GatewayRoutingCapture
     ) -> MessageRoutingMetadata? {
-        guard let root = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
-            let model = root["model"] as? String,
-            let target = capture.snapshot.resolve(model: model)
+        guard let root = try? WireCodec.decode(AnthropicRoutingRequest.self, from: body).value,
+            let target = capture.snapshot.resolve(model: root.model)
         else {
             return nil
         }
-        return MessageRoutingMetadata(
-            target: target,
-            streaming: root["stream"] as? Bool ?? false
-        )
+        let streaming: Bool
+        if case .boolean(let value)? = root.additionalFields["stream"] {
+            streaming = value
+        } else {
+            streaming = false
+        }
+        return MessageRoutingMetadata(target: target, streaming: streaming)
     }
 
 }

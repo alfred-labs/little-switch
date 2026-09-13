@@ -17,7 +17,7 @@ struct PortableHistoryValidationTests {
         let cases: [[Any]] = [[call, result, 1], [call, badFlag], [call, missingContent]]
         for content in cases {
             #expect(throws: (any Error).self) {
-                try PortableToolHistory.anthropic(["messages": [["role": "assistant", "content": content]]])
+                try anthropicPortableHistory(["messages": [["role": "assistant", "content": content]]])
             }
         }
     }
@@ -34,7 +34,9 @@ struct PortableHistoryValidationTests {
             ],
             finalTurn: bareAnthropicTurn(contentJSON: Data("[]".utf8))
         )
-        let root = try PortableToolHistory.anthropic(["messages": [["role": "assistant", "content": content]]])
+        let root = try anthropicPortableHistory([
+            "messages": [["role": "assistant", "content": content.map(anthropicFoundationObject)]]
+        ])
         let data = try JSONSerialization.data(withJSONObject: root, options: [.withoutEscapingSlashes])
         let text = try #require(String(bytes: data, encoding: .utf8))
         #expect(text.contains("Actors"))
@@ -49,7 +51,7 @@ struct PortableHistoryValidationTests {
             ["type": "tool_result", "tool_use_id": "image", "content": [citation]],
             ["opaque_metadata": "preserved"],
         ]
-        let replay = try PortableToolHistory.anthropic(["messages": [["role": "assistant", "content": blocks]]])
+        let replay = try anthropicPortableHistory(["messages": [["role": "assistant", "content": blocks]]])
         let messages = try #require(replay["messages"] as? [[String: Any]])
         let rewritten = try #require(messages.first?["content"] as? [[String: Any]])
         #expect((rewritten[1]["text"] as? String)?.contains("citations") == true)

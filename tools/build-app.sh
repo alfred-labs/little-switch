@@ -73,6 +73,16 @@ for dependency in "$project_root"/.build/checkouts/*; do
     fi
 done
 
+ordered_json_licenses="$licenses/ordered-json"
+mkdir -p "$ordered_json_licenses"
+cp "$project_root/Vendor/OrderedJSON/LICENSE" "$ordered_json_licenses/LICENSE"
+
+sdk_licenses="$licenses/official-sdk-contracts"
+mkdir -p "$sdk_licenses"
+for sdk in anthropic openai; do
+    cp "$project_root/schemas/upstream/notices/$sdk.LICENSE" "$sdk_licenses/$sdk.LICENSE"
+done
+
 signing_env="$project_root/.signing.env"
 if [ ! -f "$signing_env" ]; then
     signing_env="$project_root/.env"

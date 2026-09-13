@@ -1,6 +1,7 @@
 import Foundation
 import Hummingbird
 import HummingbirdTesting
+import LittleSwitchWire
 import NIOCore
 import Testing
 
@@ -88,7 +89,7 @@ extension GatewayTests {
             let encrypted = try #require(output.first?["encrypted_content"] as? String)
             let provenance = try responsesStreamObject(Data(encrypted.utf8))
             #expect(provenance["type"] as? String == "little_switch_reasoning")
-            #expect(provenance["version"] as? Int == 1)
+            #expect(try JSONValue.parse(Data(encrypted.utf8)).object?["version"] == .integer(1))
             #expect(provenance["provider_id"] as? String == openAIBridgeProviderID.uuidString)
             output[0] = try #require(provenance["item"] as? [String: Any])
             received["output"] = output

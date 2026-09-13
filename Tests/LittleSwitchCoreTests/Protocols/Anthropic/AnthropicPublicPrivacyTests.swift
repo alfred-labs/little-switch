@@ -193,7 +193,7 @@ struct AnthropicPublicSanitizerValidationTests {
             ],
             webCitation(providerSecret: "web-secret"),
         ]
-        let sanitizedText = try AnthropicPublicSanitizer.block([
+        let sanitizedText = try anthropicPublicBlock([
             "type": "text",
             "text": "Cited",
             "citations": citations,
@@ -207,7 +207,7 @@ struct AnthropicPublicSanitizerValidationTests {
                 == citations.compactMap { $0["type"] as? String }
         )
 
-        let sanitizedTool = try AnthropicPublicSanitizer.block([
+        let sanitizedTool = try anthropicPublicBlock([
             "type": "tool_use",
             "id": "toolu_1",
             "name": "weather",
@@ -223,7 +223,7 @@ struct AnthropicPublicSanitizerValidationTests {
             tool["caller"] as? [String: String]
                 == ["type": "code_execution_20250825", "tool_id": "srvtoolu_1"]
         )
-        let sanitizedFutureCaller = try AnthropicPublicSanitizer.block([
+        let sanitizedFutureCaller = try anthropicPublicBlock([
             "type": "tool_use",
             "id": "toolu_2",
             "name": "weather",
@@ -236,16 +236,16 @@ struct AnthropicPublicSanitizerValidationTests {
 
     @Test("Malformed known shapes fail closed while unknown shapes are dropped")
     func failClosedShapes() throws {
-        #expect(try AnthropicPublicSanitizer.block(["type": "future_block"]) == nil)
-        #expect(try AnthropicPublicSanitizer.delta(["type": "future_delta"]) == nil)
+        #expect(try anthropicPublicBlock(["type": "future_block"]) == nil)
+        #expect(try anthropicPublicDelta(["type": "future_delta"]) == nil)
         #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
-            _ = try AnthropicPublicSanitizer.block(["type": "text"])
+            _ = try anthropicPublicBlock(["type": "text"])
         }
         #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
-            _ = try AnthropicPublicSanitizer.delta(["type": "text_delta", "text": 1])
+            _ = try anthropicPublicDelta(["type": "text_delta", "text": 1])
         }
         #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
-            _ = try AnthropicPublicSanitizer.block([
+            _ = try anthropicPublicBlock([
                 "type": "tool_use",
                 "id": "toolu_invalid",
                 "name": "weather",
@@ -253,7 +253,7 @@ struct AnthropicPublicSanitizerValidationTests {
             ])
         }
         #expect(throws: AnthropicWebSearch.Error.invalidMessage) {
-            _ = try AnthropicPublicSanitizer.block([
+            _ = try anthropicPublicBlock([
                 "type": "web_search_tool_result",
                 "tool_use_id": "srvtoolu_1",
                 "content": [

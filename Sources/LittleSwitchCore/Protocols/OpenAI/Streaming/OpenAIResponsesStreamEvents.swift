@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 struct ResponsesToolInputReference {
     let index: Int
@@ -102,45 +103,24 @@ package func nonemptyResponsesString(_ value: Any?) -> String? {
 }
 
 package func nonnegativeResponsesIndex(_ value: Any?) -> Int? {
-    guard let value = value as? Int, value >= 0 else {
-        return nil
-    }
-    return value
+    guard let value, let json = try? WireJSONCompatibility.value(value),
+        let number = json.numberLiteral
+    else { return nil }
+    return try? responsesWireIndex(number)
 }
 
 package func responsesStreamObject(_ data: Data) throws -> [String: Any] {
     do {
-        guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else {
-            throw OpenAIResponsesWebSearch.Error.invalidResponse
-        }
-        return object
-    } catch let error as OpenAIResponsesWebSearch.Error {
-        throw error
+        return try WireJSONCompatibility.fields(data)
     } catch {
         throw OpenAIResponsesWebSearch.Error.invalidResponse
     }
 }
 
 package func responsesStreamData(_ value: Any) throws -> Data {
-    guard validResponsesJSONValue(value) else {
+    do {
+        return try WireJSONCompatibility.data(value)
+    } catch {
         throw OpenAIResponsesWebSearch.Error.invalidResponse
     }
-    return try JSONSerialization.data(
-        withJSONObject: value,
-        options: [.fragmentsAllowed, .sortedKeys, .withoutEscapingSlashes]
-    )
-}
-
-private func validResponsesJSONValue(_ value: Any) -> Bool {
-    if JSONSerialization.isValidJSONObject(value) {
-        return true
-    }
-    if value is NSNull || value is String {
-        return true
-    }
-    guard let number = value as? NSNumber else {
-        return false
-    }
-    return number.doubleValue.isFinite
 }

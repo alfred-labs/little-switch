@@ -1,0 +1,11 @@
+--- a/Sources/OrderedJSON/JSONValue+Parse.swift
++++ b/Sources/OrderedJSON/JSONValue+Parse.swift
+@@ -314,7 +314,7 @@
+       switch b {
+       case Self.quote:
+         index += 1
+-        return String(String.UnicodeScalarView(scalars))
++        return scalars.withUnsafeBufferPointer { String(String.UnicodeScalarView($0)) }
+       case Self.backslash:
+         index += 1
+         try parseEscape(into: &scalars)

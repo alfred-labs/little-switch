@@ -11,9 +11,9 @@ package enum OpenAIResponsesToolSearch {
         body: Data,
         originalBody: Data? = nil
     ) throws -> PreparedResponsesToolSearchRequest? {
-        guard var root = try JSONSerialization.jsonObject(with: body) as? [String: Any] else {
-            throw Error.invalidRequest
-        }
+        let decoded: [String: Any]
+        do { decoded = try WireJSONCompatibility.fields(body) } catch { throw Error.invalidRequest }
+        var root = decoded
         let tools = root["tools"] as? [[String: Any]] ?? []
         let input = root["input"] as? [[String: Any]] ?? []
         let declarations = tools.filter {
@@ -127,11 +127,11 @@ package enum OpenAIResponsesToolSearch {
     }
 
     static func encode(_ value: Any) throws -> Data {
-        try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys, .withoutEscapingSlashes])
+        do { return try WireJSONCompatibility.data(value) } catch { throw Error.invalidRequest }
     }
 
     private static func encodedString(_ value: Any) throws -> String {
-        // JSONSerialization emits valid UTF-8; this conversion cannot lose data.
+        // The exact JSON serializer emits valid UTF-8; this conversion cannot lose data.
         // swiftlint:disable:next optional_data_string_conversion
         String(decoding: try encode(value), as: UTF8.self)
     }

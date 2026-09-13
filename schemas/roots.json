@@ -1,0 +1,23 @@
+{
+  "formatVersion": 1,
+  "roots": [
+    { "name": "AnthropicCountTokensRequest", "sdk": "anthropic", "module": "resources/messages/messages", "export": "MessageCountTokensParams", "schema": "AnthropicCountTokensRequest.schema.json" },
+    { "name": "AnthropicError", "sdk": "anthropic", "module": "resources/shared", "export": "ErrorResponse", "schema": "AnthropicError.schema.json" },
+    { "name": "AnthropicMessage", "sdk": "anthropic", "module": "resources/messages/messages", "export": "Message", "schema": "AnthropicMessage.schema.json" },
+    { "name": "AnthropicMessageParam", "sdk": "anthropic", "module": "resources/messages/messages", "export": "MessageParam", "schema": "AnthropicMessageParam.schema.json" },
+    { "name": "AnthropicRequest", "sdk": "anthropic", "module": "resources/messages/messages", "export": "MessageCreateParams", "schema": "AnthropicRequest.schema.json" },
+    { "name": "AnthropicStopReason", "sdk": "anthropic", "module": "resources/messages/messages", "export": "StopReason", "schema": "AnthropicStopReason.schema.json" },
+    { "name": "AnthropicStreamEvent", "sdk": "anthropic", "module": "resources/messages/messages", "export": "RawMessageStreamEvent", "schema": "AnthropicStreamEvent.schema.json" },
+    { "name": "OpenAIChatChunk", "sdk": "openai", "module": "resources/chat/completions/completions", "export": "ChatCompletionChunk", "schema": "OpenAIChatChunk.schema.json" },
+    { "name": "OpenAIChatCompletion", "sdk": "openai", "module": "resources/chat/completions/completions", "export": "ChatCompletion", "schema": "OpenAIChatCompletion.schema.json" },
+    { "name": "OpenAIChatMessage", "sdk": "openai", "module": "resources/chat/completions/completions", "export": "ChatCompletionMessageParam", "schema": "OpenAIChatMessage.schema.json" },
+    { "name": "OpenAIChatRequest", "sdk": "openai", "module": "resources/chat/completions/completions", "export": "ChatCompletionCreateParams", "schema": "OpenAIChatRequest.schema.json" },
+    { "name": "OpenAIError", "sdk": "openai", "module": "resources/shared", "export": "ErrorObject", "schema": "OpenAIError.schema.json" },
+    { "name": "OpenAIResponseCompactRequest", "sdk": "openai", "module": "resources/responses/responses", "export": "ResponseCompactParams", "schema": "OpenAIResponseCompactRequest.schema.json" },
+    { "name": "OpenAIResponseInput", "sdk": "openai", "module": "resources/responses/responses", "export": "ResponseInputItem", "schema": "OpenAIResponseInput.schema.json" },
+    { "name": "OpenAIResponseOutput", "sdk": "openai", "module": "resources/responses/responses", "export": "ResponseOutputItem", "schema": "OpenAIResponseOutput.schema.json" },
+    { "name": "OpenAIResponseRequest", "sdk": "openai", "module": "resources/responses/responses", "export": "ResponseCreateParams", "schema": "OpenAIResponseRequest.schema.json" },
+    { "name": "OpenAIResponseRequestBase", "sdk": "openai", "module": "resources/responses/responses", "export": "ResponseCreateParamsBase", "schema": "OpenAIResponseRequestBase.schema.json" },
+    { "name": "OpenAIResponseStreamEvent", "sdk": "openai", "module": "resources/responses/responses", "export": "ResponseStreamEvent", "schema": "OpenAIResponseStreamEvent.schema.json" }
+  ]
+}
