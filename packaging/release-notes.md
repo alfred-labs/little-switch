@@ -5,7 +5,7 @@
 
 ## Improvements
 
-- **Native and custom models coexist in Codex.** The model picker combines both catalogs in a consistent order. Native OpenAI models keep Codex's own permission reviewer, while custom models use the reviewer selected in LittleSwitch.
+- **Switch models within the same Codex conversation.** Continue a chat by switching between native OpenAI models and custom providers, in either direction, without starting a new conversation. The model picker combines both catalogs in a consistent order. Native OpenAI models keep Codex's own permission reviewer, while custom models use the reviewer selected in LittleSwitch.
 - A new OpenAI provider preset simplifies setup and filters non-conversational model families from its catalog.
 - **Long Codex conversations can compact through custom providers.** If the conversation exceeds the provider's context limit during compaction, the gateway retries after removing older assistant messages and completed tool exchanges while preserving user messages. Summaries no longer have a fixed local length cap.
 - The provider editor offers more room, groups compatibility options and presents model context capacities in a compact table. Connection diagnostics stay folded until opened, and both menus open the same larger About window.
