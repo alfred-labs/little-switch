@@ -5,6 +5,21 @@
         <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
         <description>LittleSwitch releases</description>
         <item>
+            <title>0.5.0</title>
+            <pubDate>Sun, 13 Sep 2026 20:28:14 +0000</pubDate>
+            <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
+            <sparkle:version>22</sparkle:version>
+            <sparkle:shortVersionString>0.5.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Breaking changes</h2>
+<ul><li><strong>Apply the Codex configuration again after upgrading.</strong> Applying or restoring the configuration restarts Codex Desktop, so finish active work before doing so.</li><li>Requests with thinking disabled now use low reasoning effort by default. Choose <strong>Pass through</strong> under <strong>When thinking is off</strong> in the provider&apos;s compatibility settings to preserve the client&apos;s original parameters.</li></ul>
+<h2>Improvements</h2>
+<ul><li><strong>Switch models within the same Codex conversation.</strong> Continue a chat by switching between native OpenAI models and custom providers, in either direction, without starting a new conversation. The model picker combines both catalogs in a consistent order. Native OpenAI models keep Codex&apos;s own permission reviewer, while custom models use the reviewer selected in LittleSwitch.</li><li>A new OpenAI provider preset simplifies setup and filters non-conversational model families from its catalog.</li><li><strong>Long Codex conversations can compact through custom providers.</strong> If the conversation exceeds the provider&apos;s context limit during compaction, the gateway retries after removing older assistant messages and completed tool exchanges while preserving user messages. Summaries no longer have a fixed local length cap.</li><li>The provider editor offers more room, groups compatibility options and presents model context capacities in a compact table. Connection diagnostics stay folded until opened, and both menus open the same larger About window.</li><li>Saving a provider no longer makes an extra model call to test tool naming.</li></ul>
+<h2>Fixes</h2>
+<ul><li>Tool identities, results and readable collaboration messages survive API-format conversion and continued conversations. Completed streamed output is retained when the final event omits it.</li><li>Native Codex compaction preserves upstream state. When switching to a custom provider, unreadable native checkpoints are skipped with an explicit notice instead of triggering repeated recovery requests and reconnects.</li><li>Client headers, including the Codex client version, reach upstream providers while credential replacement remains enforced.</li><li>Large and precise numeric values remain intact when requests are rewritten or retried after an image rejection.</li><li>Tool failures include an error ID that can be matched to gateway diagnostics, and interrupted streams report a more specific failure reason.</li></ul>]]></description>
+            <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.5.0/LittleSwitch-0.5.0-arm64.dmg" length="20878613" type="application/octet-stream" sparkle:edSignature="rPL00EDqKpk4tTQvVSGLUmAzA2qfcD2JmNAp1YbS41GSMOEHCeJdn/FrRMDi4mpVx6Hk4JX94Vi4IIz9zsR0Bg=="/>
+        </item>
+        <item>
             <title>0.4.8</title>
             <pubDate>Thu, 10 Sep 2026 20:59:58 +0000</pubDate>
             <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
