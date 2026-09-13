@@ -42,7 +42,7 @@ package enum RepositoryPolicyFileSystem {
     private struct Visitor {
         private let rootComponents: [String]
         private let skipped: Set<String> = [
-            ".build", ".claude", ".git", ".superpowers", ".swiftpm", "build", "dist", "node_modules",
+            ".build", ".claude", ".git", ".superpowers", ".swiftpm", ".worktrees", "build", "dist", "node_modules",
         ]
         private var activeDirectories: Set<String> = []
         private(set) var files: [String: String] = [:]

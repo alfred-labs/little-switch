@@ -10,7 +10,7 @@ struct RepositoryPolicyFileSystemTests {
         try withTemporaryDirectory { root in
             for directory in [
                 "Sources/Nested", "tools/.build", ".build", ".claude", ".git", ".superpowers", ".swiftpm", "build",
-                "dist", "node_modules",
+                "dist", "node_modules", ".worktrees/other-branch/Sources",
             ] {
                 let url = root.appendingPathComponent(directory)
                 try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)

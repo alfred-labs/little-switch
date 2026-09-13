@@ -129,6 +129,6 @@ extension GatewayResponder {
         } catch {
             return openAIError(status: .badGateway, message: "Provider request failed")
         }
-        return streamingResponse(upstream, eventID: eventID, attempt: 0)
+        return nativeResponsesStream(upstream, eventID: eventID)
     }
 }

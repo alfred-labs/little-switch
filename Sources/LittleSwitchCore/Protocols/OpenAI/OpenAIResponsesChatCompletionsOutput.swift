@@ -64,6 +64,10 @@ extension OpenAIResponsesChatCompletions {
                     call["name"] = binding.name
                     call["namespace"] = binding.namespace
                 }
+                if kind == .function {
+                    call[ResponsesAgentMail.Field.encryptedFunctionArguments.rawValue] =
+                        try ResponsesAgentMail.encryptedArguments(call)
+                }
                 output.append(call)
             }
         }
