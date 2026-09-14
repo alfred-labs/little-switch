@@ -1,6 +1,7 @@
 import AsyncHTTPClient
 import Foundation
 import Hummingbird
+import LittleSwitchCommon
 import LittleSwitchWire
 import NIOHTTP1
 

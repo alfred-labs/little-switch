@@ -1,5 +1,6 @@
 import AsyncHTTPClient
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchTransport
 import NIOCore
 import Testing

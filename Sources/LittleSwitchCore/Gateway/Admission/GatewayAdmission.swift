@@ -1,5 +1,6 @@
 import HTTPTypes
 import Hummingbird
+import LittleSwitchCommon
 
 extension GatewayResponder {
     package enum AdmissionFailureKind: Sendable {

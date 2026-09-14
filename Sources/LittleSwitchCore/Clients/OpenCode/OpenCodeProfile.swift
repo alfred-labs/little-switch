@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 public struct OpenCodeProfilePaths: Equatable, Sendable {
     public let settings: URL

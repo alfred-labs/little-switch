@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 /// Result shaping shared by every search provider: uniform validation plus a
 /// single aggregate content budget so no provider can flood the model context.

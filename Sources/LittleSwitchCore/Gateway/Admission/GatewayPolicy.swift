@@ -1,10 +1,6 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchSearch
-
-public enum GatewayClient: String, Codable, CaseIterable, Equatable, Hashable, Sendable {
-    case claude
-    case codex
-}
 
 public struct GatewayRoutingCapture: Equatable, Sendable {
     public let snapshot: RoutingSnapshot

@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 /// Reads provider-reported token usage out of a recorded client response.
 ///

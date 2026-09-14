@@ -131,7 +131,7 @@ struct SoftwareUpdateTests {
 
     @Test("The Common settings card binds one switch to both Sparkle preferences")
     func commonCardCopy() throws {
-        let source = try source(named: "Features/General/CommonSettingsView.swift")
+        let source = try source(named: "Settings/General/CommonSettingsView.swift")
 
         #expect(source.contains("\"Software updates\""))
         #expect(source.contains("\"Install updates automatically\""))

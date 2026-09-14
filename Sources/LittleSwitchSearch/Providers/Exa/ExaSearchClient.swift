@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchTransport
 
 package struct ExaSearchClient: WebSearchSearching, Sendable {

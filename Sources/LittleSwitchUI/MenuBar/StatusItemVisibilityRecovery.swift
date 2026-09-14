@@ -1,4 +1,5 @@
 import AppKit
+import LittleSwitchCommon
 import LittleSwitchCore
 import OSLog
 import SwiftUI

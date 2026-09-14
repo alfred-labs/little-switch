@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 public enum OpenCodeSettingsDocument {
     public enum Error: Swift.Error, Equatable {

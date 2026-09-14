@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchCore
 
 /// Every menu graph and its metrics describe one period: the plotted thirty

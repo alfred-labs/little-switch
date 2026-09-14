@@ -1,5 +1,6 @@
 import Foundation
 import GRDB
+import LittleSwitchCommon
 import LittleSwitchCore
 
 /// SQLite persistence behind the gateway usage history: one row per local day.

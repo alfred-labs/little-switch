@@ -1,5 +1,6 @@
 import Foundation
 import GRDB
+import LittleSwitchCommon
 import LittleSwitchCore
 import Testing
 

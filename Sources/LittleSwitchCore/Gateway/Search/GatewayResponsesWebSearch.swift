@@ -2,6 +2,7 @@ import AsyncHTTPClient
 import Foundation
 import HTTPTypes
 import Hummingbird
+import LittleSwitchCommon
 import LittleSwitchSearch
 import NIOCore
 import NIOHTTP1

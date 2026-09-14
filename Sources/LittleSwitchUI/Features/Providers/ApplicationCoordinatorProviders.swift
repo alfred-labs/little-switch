@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchCore
 
 package struct ProviderRefreshOperation: Sendable {

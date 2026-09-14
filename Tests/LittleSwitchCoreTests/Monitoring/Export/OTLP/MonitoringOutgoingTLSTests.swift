@@ -1,6 +1,7 @@
 import Foundation
 import Hummingbird
 import HummingbirdTLS
+import LittleSwitchCommon
 import Security
 import ServiceLifecycle
 import Testing

@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 extension MonitoringSignalExporter {
     func complete(

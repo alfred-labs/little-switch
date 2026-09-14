@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchCore
 
 /// A compact local index: no request/response bodies, headers or tool arguments.

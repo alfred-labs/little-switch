@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 extension ResponsesCompactionPlan {
     package func complete(responseBody: Data) throws -> ResponsesCompactionResult {

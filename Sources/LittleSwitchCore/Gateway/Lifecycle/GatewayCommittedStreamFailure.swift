@@ -1,3 +1,5 @@
+import LittleSwitchCommon
+
 package struct GatewayCommittedStreamFailure: Swift.Error, Sendable {
     package let reason: String?
     package let toolError: ProviderToolContract.Error?

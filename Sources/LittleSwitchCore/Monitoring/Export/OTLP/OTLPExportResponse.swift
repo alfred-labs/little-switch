@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 package enum OTLPExportResponse {
     package static func parse(_ response: OTLPHTTPResponse, signal: MonitoringSignal) -> OTLPExportResult {

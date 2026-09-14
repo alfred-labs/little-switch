@@ -41,15 +41,6 @@ struct ChatCompletionChoiceState: Sendable {
     var leadingOutputCount: Int { reasoningIndex == nil ? 0 : 1 }
 }
 
-struct ChatCompletionUsage: Sendable {
-    let promptTokens: Int
-    let cachedPromptTokens: Int
-    let cacheWritePromptTokens: Int
-    let completionTokens: Int
-    let reasoningCompletionTokens: Int
-    let totalTokens: Int
-}
-
 struct CompletedChatCompletionChoice: Sendable {
     let finishReason: OpenAIChatFinishReason
     let messageText: String?

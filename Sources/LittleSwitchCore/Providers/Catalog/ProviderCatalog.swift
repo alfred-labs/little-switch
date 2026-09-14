@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 public enum ProviderCatalog {
     public enum Error: Swift.Error, Equatable {

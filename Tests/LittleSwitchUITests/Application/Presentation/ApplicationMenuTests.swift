@@ -15,10 +15,10 @@ struct ApplicationMenuTests {
         ].map { try source(named: $0) }.joined()
         let appModel = try source(named: "Application/Presentation/AppModel.swift")
         let settingsViews = try [
-            "Application/Settings/SettingsView.swift",
-            "Features/Clients/Codex/CodexSettingsView.swift",
-            "Features/Clients/ClaudeCode/ClaudeCodeSettingsView.swift",
-            "Features/Search/WebSearchSettingsView.swift",
+            "Settings/Root/SettingsView.swift",
+            "Settings/Clients/Codex/CodexSettingsView.swift",
+            "Settings/Clients/ClaudeCode/ClaudeCodeSettingsView.swift",
+            "Settings/Search/WebSearchSettingsView.swift",
         ].map { try source(named: $0) }
 
         #expect(delegate.contains("try await coordinator.connect()"))
@@ -35,7 +35,7 @@ struct ApplicationMenuTests {
 
     @Test("Common never controls external processes or secrets")
     func commonGatewayAccessPolicy() throws {
-        let common = try source(named: "Features/General/CommonSettingsView.swift")
+        let common = try source(named: "Settings/General/CommonSettingsView.swift")
 
         #expect(!common.contains("NSWorkspace"))
         #expect(!common.localizedCaseInsensitiveContains("relaunch"))
@@ -48,7 +48,7 @@ struct ApplicationMenuTests {
     func launchAtLoginOwnership() throws {
         let main = try source(named: "Application/Lifecycle/LittleSwitchApplicationDelegate.swift")
         let actions = try source(named: "Features/General/LittleSwitchApplicationDelegateLaunchAtLogin.swift")
-        let common = try source(named: "Features/General/CommonSettingsView.swift")
+        let common = try source(named: "Settings/General/CommonSettingsView.swift")
         let controller = try source(named: "Platform/LoginItems/LaunchAtLoginController.swift")
         let adapter = try source(named: "Platform/LoginItems/ServiceManagementLaunchAtLoginService.swift")
 
@@ -206,7 +206,7 @@ struct ApplicationMenuTests {
     @Test("LobeHub's Claude Code mark identifies the menu app; settings headings remain text-only")
     func claudeCodeIcon() throws {
         let menuSource = try source(named: "MenuBar/MenuStatusView.swift")
-        let settingsSource = try source(named: "Features/Clients/ClaudeCode/ClaudeCodeSettingsView.swift")
+        let settingsSource = try source(named: "Settings/Clients/ClaudeCode/ClaudeCodeSettingsView.swift")
         let iconSource = try source(named: "Components/BrandIcons/ClaudeCodeIcon.swift")
 
         #expect(menuSource.contains("ClaudeCodeIcon()"))
@@ -225,7 +225,7 @@ struct ApplicationMenuTests {
     @Test("LobeHub's OpenCode mark is used in the menu and settings navigation")
     func openCodeIcon() throws {
         let menuSource = try source(named: "MenuBar/MenuStatusView.swift")
-        let settingsSource = try source(named: "Application/Settings/SettingsChrome.swift")
+        let settingsSource = try source(named: "Settings/Root/SettingsChrome.swift")
 
         #expect(menuSource.contains("OpenCodeIcon()"))
         #expect(settingsSource.contains("OpenCodeIcon()"))
@@ -249,7 +249,7 @@ struct ApplicationMenuTests {
             "Features/Clients/OpenCode/LittleSwitchApplicationDelegateOpenCode.swift",
         ].map { try source(named: $0) }.joined()
         let controller = try source(named: "MenuBar/StatusItemVisibilityRecovery.swift")
-        let settings = try source(named: "Application/Settings/SettingsView.swift")
+        let settings = try source(named: "Settings/Root/SettingsView.swift")
 
         #expect(delegate.contains("onToggleOpenCode"))
         #expect(delegate.contains("onOpenCodeDefault"))

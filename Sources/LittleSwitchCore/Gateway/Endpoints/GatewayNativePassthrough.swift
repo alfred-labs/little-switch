@@ -1,6 +1,7 @@
 import AsyncHTTPClient
 import Foundation
 import Hummingbird
+import LittleSwitchCommon
 import NIOHTTP1
 
 extension GatewayResponder {

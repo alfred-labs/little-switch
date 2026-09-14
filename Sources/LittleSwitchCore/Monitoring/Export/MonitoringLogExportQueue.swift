@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 package struct MonitoringLogExportLimits: Sendable {
     package var maximumEntries = 5_000

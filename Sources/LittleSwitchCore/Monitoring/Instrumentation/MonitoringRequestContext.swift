@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 /// Lifetime is exactly one gateway request. No global completed-ID cache or traffic body is retained.
 package actor MonitoringRequestContext {

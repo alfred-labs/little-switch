@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 package enum OTLPMetricsEncoder {
     package enum Failure: Error { case inconsistentMetric }

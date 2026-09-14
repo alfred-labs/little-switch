@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchCore
 
 /// The connected mapping draft: edits wait here until Apply commits them in

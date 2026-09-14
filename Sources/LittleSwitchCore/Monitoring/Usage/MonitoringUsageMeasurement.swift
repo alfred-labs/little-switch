@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 /// Strict provider counts: booleans, negative values, strings and overflow
 /// cannot masquerade as reported usage. Explicit zero remains a measurement.

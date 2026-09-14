@@ -12,12 +12,12 @@ enum CoverageBoundaryPolicy {
         let boundaries = [
             Boundary(
                 declaration: #"\bstruct MonitoringSettingsDraft\b"#,
-                focused: ui + "Features/Monitoring/MonitoringSettingsDraft.swift",
-                former: ui + "Features/Monitoring/MonitoringSettingsView.swift"),
+                focused: ui + "Settings/Monitoring/MonitoringSettingsDraft.swift",
+                former: ui + "Settings/Monitoring/MonitoringSettingsView.swift"),
             Boundary(
                 declaration: #"\bpublic struct MonitoringApplyInput\b"#,
-                focused: ui + "Features/Monitoring/MonitoringSettingsDraft.swift",
-                former: ui + "Features/Monitoring/MonitoringDestinationFields.swift"),
+                focused: ui + "Settings/Monitoring/MonitoringSettingsDraft.swift",
+                former: ui + "Settings/Monitoring/MonitoringDestinationFields.swift"),
             Boundary(
                 declaration: #"\bpublic struct KeychainSecretStore\b"#,
                 focused: core + "Security/Keychain/KeychainSecretStore.swift",
@@ -36,16 +36,16 @@ enum CoverageBoundaryPolicy {
                 former: transport + "HTTP/ShutdownOnceUpstreamTransport.swift"),
             Boundary(
                 declaration: #"\benum SettingsLayout\b"#,
-                focused: ui + "Components/Settings/SettingsLayout.swift",
-                former: ui + "Application/Settings/SettingsChrome.swift"),
+                focused: ui + "Settings/Shared/SettingsLayout.swift",
+                former: ui + "Settings/Root/SettingsChrome.swift"),
             Boundary(
                 declaration: #"\bstruct ProviderDraft\b"#,
-                focused: ui + "Features/Providers/ProviderDraft.swift",
-                former: ui + "Features/Providers/ProviderEditor.swift"),
+                focused: ui + "Settings/Providers/ProviderDraft.swift",
+                former: ui + "Settings/Providers/ProviderEditor.swift"),
             Boundary(
                 declaration: #"\bstruct WebSearchDraft\b"#,
-                focused: ui + "Features/Search/WebSearchSettingsDraft.swift",
-                former: ui + "Features/Search/WebSearchSettingsView.swift"),
+                focused: ui + "Settings/Search/WebSearchSettingsDraft.swift",
+                former: ui + "Settings/Search/WebSearchSettingsView.swift"),
             Boundary(
                 declaration: #"\benum StatusMenuCopy\b"#,
                 focused: ui + "MenuBar/StatusMenuCopy.swift",

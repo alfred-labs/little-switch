@@ -3,6 +3,7 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdTesting
+import LittleSwitchCommon
 import LittleSwitchTransport
 import NIOCore
 import NIOHTTP1

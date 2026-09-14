@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchSearch
 
 public enum SecretAccount: Hashable, Sendable {

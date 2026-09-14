@@ -1,6 +1,7 @@
 import AsyncHTTPClient
 import Foundation
 import HTTPTypes
+import LittleSwitchCommon
 import LittleSwitchTransport
 import NIOCore
 import NIOHTTP1

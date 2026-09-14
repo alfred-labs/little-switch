@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchSearch
 
 /// Durable input stays in Codex. Only the per-provider request copy is filtered;

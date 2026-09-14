@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchCore
 
 /// One selectable model in a `MenuModelStepper`.

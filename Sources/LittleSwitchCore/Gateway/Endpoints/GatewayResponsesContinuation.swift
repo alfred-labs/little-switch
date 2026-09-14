@@ -1,5 +1,6 @@
 import Foundation
 import Hummingbird
+import LittleSwitchCommon
 import LittleSwitchSearch
 
 extension GatewayResponder {

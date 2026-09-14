@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 package enum OTLPAnyValue: Encodable, Sendable {
     case string(String)

@@ -1,5 +1,3 @@
-import LittleSwitchCore
-
 /// A view action stays busy until its own response arrives, independently of polling.
 enum MonitoringAction: Equatable {
     case apply

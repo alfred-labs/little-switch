@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchWire
 
 /// Wire failures become the existing Core protocol error at the owned adapter boundary.

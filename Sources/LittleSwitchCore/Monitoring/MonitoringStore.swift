@@ -1,5 +1,5 @@
 import Foundation
-import LittleSwitchSearch
+import LittleSwitchCommon
 
 /// Process-owned aggregates. Actor methods never perform network or file I/O.
 /// Request contexts own terminal idempotency; no completed-request ID set is retained here.

@@ -1,20 +1,9 @@
 import Foundation
+import LittleSwitchCommon
 
 enum MonitoringLogQueryError: Error, Equatable, Sendable {
     case invalidQuery
     case cursorExpired
-}
-
-public struct MonitoringLogFilters: Codable, Equatable, Sendable {
-    public let since: Date?
-    public let minimumLevel: MonitoringLevel?
-    public let requestID: UUID?
-
-    package func matches(_ entry: MonitoringLogEntry) -> Bool {
-        (since.map { entry.timestamp >= $0 } ?? true)
-            && (minimumLevel.map { entry.level >= $0 } ?? true)
-            && (requestID.map { entry.attributes.requestID == $0 } ?? true)
-    }
 }
 
 package struct MonitoringLogCursor: Codable, Equatable, Sendable {

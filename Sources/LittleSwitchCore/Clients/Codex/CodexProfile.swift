@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 public struct CodexProfilePaths: Equatable, Sendable {
     public let config: URL

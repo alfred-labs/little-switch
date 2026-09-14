@@ -2,6 +2,7 @@ import AsyncHTTPClient
 import Foundation
 import Hummingbird
 import HummingbirdTesting
+import LittleSwitchCommon
 import NIOCore
 import Testing
 

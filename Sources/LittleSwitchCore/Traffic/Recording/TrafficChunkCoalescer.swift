@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 package struct TrafficChunkCoalescer: Sendable {
     package static let defaultThreshold = 64 * 1_024

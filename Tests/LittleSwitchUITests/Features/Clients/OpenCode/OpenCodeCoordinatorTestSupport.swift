@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchCore
 
 final class TestOpenCodeProfileManager: OpenCodeProfileManaging, @unchecked Sendable {

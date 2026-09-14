@@ -1,5 +1,6 @@
 import Foundation
 import Hummingbird
+import LittleSwitchCommon
 import Testing
 
 @testable import LittleSwitchCore

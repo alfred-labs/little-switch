@@ -1,41 +1,5 @@
 import Foundation
-
-/// What the last scheduled script run produced for a provider. Failure
-/// messages surface in the provider list; successes are silent. The stderr
-/// tail of the last run — success or failure — feeds the editor's output pane.
-public struct CredentialRefreshOutcome: Equatable, Sendable {
-    public enum Kind: Equatable, Sendable {
-        case refreshed
-        case failed
-    }
-
-    public let kind: Kind
-    public let message: String?
-    public let standardError: String
-
-    public init(
-        kind: Kind,
-        message: String? = nil,
-        standardError: String = ""
-    ) {
-        self.kind = kind
-        self.message = message
-        self.standardError = standardError
-    }
-
-    /// The failure outcome for a thrown error: the user-facing localized
-    /// text when the error carries one, its plain description otherwise.
-    /// The save flow and the refresh loop must render the same failure the
-    /// same way — both build their badge through this factory.
-    public static func failure(from error: any Error) -> Self {
-        Self(
-            kind: .failed,
-            message: (error as? LocalizedError)?.errorDescription
-                ?? String(describing: error),
-            standardError: (error as? CredentialScriptError)?.standardError ?? ""
-        )
-    }
-}
+import LittleSwitchCommon
 
 /// The pause a refresh loop takes between runs. Injectable so tests can gate
 /// the cadence instead of waiting real intervals.

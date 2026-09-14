@@ -1,5 +1,6 @@
 import AsyncHTTPClient
 import Foundation
+import LittleSwitchCommon
 import NIOCore
 
 /// Wrap the original provider body before validation or protocol adaptation consumes it.

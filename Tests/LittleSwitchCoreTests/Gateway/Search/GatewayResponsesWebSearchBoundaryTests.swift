@@ -2,6 +2,7 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdTesting
+import LittleSwitchCommon
 import NIOCore
 import Testing
 

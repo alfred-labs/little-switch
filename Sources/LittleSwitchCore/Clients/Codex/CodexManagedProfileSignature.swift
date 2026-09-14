@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 public struct CodexManagedProfileSignature: Equatable, Sendable {
     public let modelSlug: String

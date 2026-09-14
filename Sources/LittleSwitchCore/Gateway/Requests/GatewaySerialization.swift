@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchWire
 
 package protocol GatewaySerializing: Sendable {

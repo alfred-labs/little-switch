@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchSearch
 
 /// The deliberately small, stateless MCP contract exposed by the gateway.

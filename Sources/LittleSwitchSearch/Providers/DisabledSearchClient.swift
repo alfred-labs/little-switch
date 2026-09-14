@@ -1,3 +1,5 @@
+import LittleSwitchCommon
+
 /// The disabled configuration's client. Search loops reject disabled
 /// configurations before reaching a client, so this exists to keep the
 /// factory's switch total without borrowing a real provider's adapter and

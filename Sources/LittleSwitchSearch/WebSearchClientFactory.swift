@@ -1,3 +1,4 @@
+import LittleSwitchCommon
 import LittleSwitchTransport
 
 /// Centralized construction for the active search provider. Orchestration

@@ -1,5 +1,5 @@
 import Foundation
-import LittleSwitchCore
+import LittleSwitchCommon
 
 actor TrafficLogInbox {
     nonisolated let stream: AsyncStream<TrafficLogCommand>

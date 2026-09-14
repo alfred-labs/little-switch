@@ -1,3 +1,4 @@
+import LittleSwitchCommon
 import Testing
 
 @testable import LittleSwitchCore

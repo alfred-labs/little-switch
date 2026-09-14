@@ -1,4 +1,5 @@
 import Hummingbird
+import LittleSwitchCommon
 
 package enum GatewayWebSearchPreflight {
     case ready(searchCredential: String?)

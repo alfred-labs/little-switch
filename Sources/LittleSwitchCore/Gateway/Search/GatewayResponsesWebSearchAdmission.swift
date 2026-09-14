@@ -1,6 +1,7 @@
 import AsyncHTTPClient
 import Foundation
 import Hummingbird
+import LittleSwitchCommon
 
 package enum GatewayResponsesWebSearchPreflight {
     case ready(retainedUpstreamBytes: Int)

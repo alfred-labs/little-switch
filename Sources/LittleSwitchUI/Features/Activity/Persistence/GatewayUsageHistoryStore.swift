@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchCore
 
 /// Sink for finished requests, kept nonisolated so the traffic log can hand off

@@ -21,6 +21,11 @@ Anthropic-compatible gateway on `127.0.0.1:11436`.
 
 ## Architecture Boundaries
 
+- `Sources/LittleSwitchCommon/Domain` owns autonomous domain values, their enums,
+  and pure value operations, grouped by Providers, Clients, Routing,
+  Configuration, Search, Usage, Monitoring, and Traffic. It uses only the Swift
+  standard library and Foundation, with no target dependencies. Core, Search,
+  and UI import Common explicitly; folders do not create Swift namespaces.
 - `Sources/LittleSwitchWire` owns generated provider contracts and exact JSON
   codecs. It depends only on OrderedJSON, never Core, Search, Transport, SwiftUI,
   or AppKit. Update SDK inputs and projections through the repository's
@@ -30,13 +35,16 @@ Anthropic-compatible gateway on `127.0.0.1:11436`.
   `ordered-json:*` gates when changing the JSON engine or its patches.
 - `Sources/LittleSwitchTransport` owns outbound HTTP, URL assembly, SSE framing,
   and Zstandard. It must not depend on Core, Search, SwiftUI, or AppKit.
-- `Sources/LittleSwitchSearch` owns the common search contract, configuration,
-  and provider adapters. It depends on Transport, never Core or Keychain.
-- `Sources/LittleSwitchCore` owns deterministic domain, routing, gateway,
-  protocol adapters, persistence, and security policy. It consumes Wire, Search,
-  and Transport and must not depend on SwiftUI or AppKit.
+- `Sources/LittleSwitchSearch` owns search execution contracts and provider
+  adapters. It consumes Common values and Transport, never Core or Keychain.
+- `Sources/LittleSwitchCore` owns routing resolution, gateway, protocol adapters,
+  persistence, and security policy. It consumes Common, Wire, Search, and
+  Transport and must not depend on SwiftUI or AppKit. Configuration migrations,
+  endpoint validation, and wire-to-domain conversions stay here.
 - `Sources/LittleSwitchUI` owns AppKit lifecycle, SwiftUI presentation, Claude
-  application control, and UI-facing state.
+  application control, and UI-facing state. Settings views, drafts, and controls
+  live under `Settings` by subdomain; coordinators and platform services retain
+  their runtime owners.
 - `ApplicationCoordinator` is the authority for mutable product state. `AppModel`
   is `@MainActor` presentation state; views dispatch intent and do not become a
   second source of truth.

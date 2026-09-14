@@ -1,3 +1,4 @@
+import LittleSwitchCommon
 import LittleSwitchWire
 
 func chatWireIndex(_ value: JSONNumber) throws -> Int {

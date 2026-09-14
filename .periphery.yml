@@ -22,6 +22,9 @@
 # ProviderRequestPoolProviderSnapshot keeps narrowly annotated diagnostic fields
 # for reconfiguration identity, queue memory bounds and timeout/cancellation checks;
 # the retired provider-row UI projection is not retained by this exception.
+# Common extraction remaps existing USRs by the exact demangled declaration,
+# changing only moved type module names. The exception count does not grow;
+# catalogue Codable fields and retained traffic records keep their prior status.
 # Run through `mise run swift:deadcode` to inherit the pinned DEVELOPER_DIR.
 index_exclude:
   - Tests/**

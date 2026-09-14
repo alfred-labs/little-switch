@@ -68,16 +68,17 @@ struct MagicStringQualificationTests {
         #expect(result.allSatisfy { $0.anchor == "func parse()" && $0.rule == .subscriptKey })
     }
 
-    @Test func scopedFilesAreScannedInPathOrderWithoutBroadeningPolicyRoots() {
+    @Test func scopedFilesIncludeCommonAndStayInPathOrder() {
         let result = MagicStringPolicy.scan(
             files: [
+                "Sources/LittleSwitchCommon/Domain/Usage/Usage.swift": #"consume(payload["shared"])"#,
                 "Sources/LittleSwitchCore/Tools/B.swift": #"consume(payload["b"])"#,
                 "Sources/LittleSwitchCore/Protocols/A.swift": #"consume(payload["a"])"#,
                 "Sources/LittleSwitchCore/Gateway/C.swift": #"consume(payload["c"])"#,
                 "Sources/LittleSwitchCore/Outside.swift": #"consume(payload["outside"])"#,
                 "Sources/LittleSwitchCore/Protocols/README.md": #"consume(payload["documentation"])"#,
             ], catalogue: .empty)
-        #expect(result.map(\.literal.value) == ["c", "a", "b"])
+        #expect(result.map(\.literal.value) == ["shared", "c", "a", "b"])
     }
 
     @Test func malformedGitHistoryOutputCannotDisableTheRatchet() throws {

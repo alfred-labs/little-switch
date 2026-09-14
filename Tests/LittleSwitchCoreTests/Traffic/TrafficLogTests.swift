@@ -1,5 +1,6 @@
 import Foundation
 import HTTPTypes
+import LittleSwitchCommon
 import NIOHTTP1
 import Testing
 

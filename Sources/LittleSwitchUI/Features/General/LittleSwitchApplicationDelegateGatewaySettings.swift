@@ -1,4 +1,4 @@
-import LittleSwitchCore
+import LittleSwitchCommon
 
 extension LittleSwitchApplicationDelegate {
     func setAutoMode(_ enabled: Bool) async {

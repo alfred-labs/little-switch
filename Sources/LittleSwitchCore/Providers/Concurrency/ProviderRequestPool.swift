@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 package actor ProviderRequestPool: ProviderRequestPooling {
     package static let maximumWaitingRequests = 128

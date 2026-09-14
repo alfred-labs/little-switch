@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 public actor MonitoringExportService {
     public private(set) var configuration = MonitoringConfiguration()

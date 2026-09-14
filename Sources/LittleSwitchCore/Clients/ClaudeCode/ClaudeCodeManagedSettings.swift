@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 public struct ClaudeCodeManagedSettings: Codable, Equatable, Sendable {
     public enum Error: Swift.Error, Equatable {

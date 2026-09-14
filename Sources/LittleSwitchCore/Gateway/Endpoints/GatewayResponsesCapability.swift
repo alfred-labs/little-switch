@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 extension GatewayResponder {
     /// Chooses the wire for a provider: a user override wins, then a learned

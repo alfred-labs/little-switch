@@ -1,5 +1,6 @@
 import Foundation
 import HummingbirdTesting
+import LittleSwitchCommon
 import NIOCore
 import NIOHTTP1
 import Testing

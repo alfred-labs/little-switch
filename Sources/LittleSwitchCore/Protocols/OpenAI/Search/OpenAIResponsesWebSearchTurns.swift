@@ -1,69 +1,6 @@
 import Foundation
 import LittleSwitchWire
 
-package struct ResponsesUsage: Equatable, Sendable {
-    var inputTokens: Int
-    var outputTokens: Int
-    var cachedInputTokens: Int
-    var cacheWriteInputTokens: Int
-    var reasoningOutputTokens: Int
-    var totalTokens: Int
-
-    package init(
-        inputTokens: Int,
-        outputTokens: Int,
-        cachedInputTokens: Int = 0,
-        cacheWriteInputTokens: Int = 0,
-        reasoningOutputTokens: Int = 0,
-        totalTokens: Int? = nil
-    ) {
-        self.inputTokens = inputTokens
-        self.outputTokens = outputTokens
-        self.cachedInputTokens = cachedInputTokens
-        self.cacheWriteInputTokens = cacheWriteInputTokens
-        self.reasoningOutputTokens = reasoningOutputTokens
-        self.totalTokens =
-            totalTokens ?? saturatedResponsesUsageSum(inputTokens, outputTokens)
-    }
-
-    mutating func add(_ other: ResponsesUsage) {
-        inputTokens = saturatedResponsesUsageSum(inputTokens, other.inputTokens)
-        outputTokens = saturatedResponsesUsageSum(outputTokens, other.outputTokens)
-        cachedInputTokens = saturatedResponsesUsageSum(
-            cachedInputTokens,
-            other.cachedInputTokens
-        )
-        cacheWriteInputTokens = saturatedResponsesUsageSum(
-            cacheWriteInputTokens,
-            other.cacheWriteInputTokens
-        )
-        reasoningOutputTokens = saturatedResponsesUsageSum(
-            reasoningOutputTokens,
-            other.reasoningOutputTokens
-        )
-        totalTokens = saturatedResponsesUsageSum(totalTokens, other.totalTokens)
-    }
-}
-
-private func saturatedResponsesUsageSum(_ lhs: Int, _ rhs: Int) -> Int {
-    let result = lhs.addingReportingOverflow(rhs)
-    return result.overflow ? Int.max : result.partialValue
-}
-
-package struct ResponsesWebSearchToolCall: Equatable, Sendable {
-    let callID: String
-    let query: String
-    var privateToolName = "web_search"
-}
-
-package struct ResponsesModelTurn: Equatable, Sendable {
-    let id: String
-    let rootJSON: Data
-    let outputJSON: Data
-    let usage: ResponsesUsage
-    let webSearchCall: ResponsesWebSearchToolCall?
-}
-
 extension OpenAIResponsesWebSearch {
     enum FollowUpMode {
         case result

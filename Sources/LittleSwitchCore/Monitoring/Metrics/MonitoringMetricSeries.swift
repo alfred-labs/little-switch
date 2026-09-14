@@ -1,3 +1,5 @@
+import LittleSwitchCommon
+
 /// Cumulative series are never evicted. One slot is permanently reserved for overflow.
 package struct MonitoringMetricSeries<Value: Sendable>: Sendable {
     private var values: [[MonitoringMetricAttribute]: Value] = [:]

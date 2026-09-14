@@ -1,10 +1,20 @@
 Sources/LittleSwitch/main.swift	Executable entry point and AppKit application launch boundary.
-Sources/LittleSwitchCore/Providers/Capabilities/ProviderDisabledThinkingOverride.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
-Sources/LittleSwitchCore/Providers/Capabilities/ProviderImageInputOverride.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
-Sources/LittleSwitchCore/Providers/Capabilities/ProviderResponsesWireOverride.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
+Sources/LittleSwitchCommon/Domain/Clients/GatewayClient.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
+Sources/LittleSwitchCommon/Domain/Traffic/TrafficAction.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
+Sources/LittleSwitchCore/Monitoring/Export/OTLP/OTLPHTTPResponse.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
+Sources/LittleSwitchCore/Protocols/Anthropic/AnthropicModelTurn.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
+Sources/LittleSwitchCore/Protocols/Anthropic/Search/WebSearchToolCall.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
+Sources/LittleSwitchCore/Protocols/OpenAI/Compaction/ResponsesCompactionResult.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
+Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesModelTurn.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
+Sources/LittleSwitchCore/Protocols/OpenAI/Streaming/ChatCompletionUsage.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
+Sources/LittleSwitchUI/Features/Clients/Codex/AppliedCodexSnapshot.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
+Sources/LittleSwitchUI/Features/Clients/Codex/AppliedCodexState.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
+Sources/LittleSwitchCommon/Domain/Providers/Capabilities/ProviderDisabledThinkingOverride.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
+Sources/LittleSwitchCommon/Domain/Providers/Capabilities/ProviderImageInputOverride.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
+Sources/LittleSwitchCommon/Domain/Providers/Capabilities/ProviderResponsesWireOverride.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
 Sources/LittleSwitchCore/Providers/Capabilities/ProviderWireProbing.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
-Sources/LittleSwitchCore/Providers/Models/CredentialSource.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
-Sources/LittleSwitchCore/Providers/Models/ProviderStatus.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
+Sources/LittleSwitchCommon/Domain/Providers/Credentials/CredentialSource.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
+Sources/LittleSwitchCommon/Domain/Providers/Models/ProviderStatus.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
 Sources/LittleSwitchCore/Security/Keychain/KeychainSecretStore.swift	Security.framework Keychain persistence boundary.
 Sources/LittleSwitchCore/Security/TLS/GatewayTLSTrust.swift	Security.framework user-domain trust settings boundary.
 Sources/LittleSwitchSearch/Contracts/WebSearchProviderError.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
@@ -14,22 +24,22 @@ Sources/LittleSwitchUI/Application/Coordination/GatewayServing.swift	Compile-tim
 Sources/LittleSwitchUI/Application/Lifecycle/LittleSwitchApplicationDelegate.swift	AppKit application delegate and status-item lifecycle boundary.
 Sources/LittleSwitchUI/Application/Presentation/LittleSwitchApplicationDelegateConnections.swift	AppKit connection toggle and confirmation boundary.
 Sources/LittleSwitchUI/Application/Presentation/LittleSwitchApplicationDelegatePresentation.swift	AppKit alert and application error presentation boundary.
-Sources/LittleSwitchUI/Application/Settings/SettingsChrome.swift	SwiftUI settings window chrome presentation boundary.
-Sources/LittleSwitchUI/Application/Settings/SettingsSplitView.swift	SwiftUI settings navigation and split-view presentation boundary.
-Sources/LittleSwitchUI/Application/Settings/SettingsView.swift	SwiftUI root settings and application presentation boundary.
+Sources/LittleSwitchUI/Settings/Root/SettingsChrome.swift	SwiftUI settings window chrome presentation boundary.
+Sources/LittleSwitchUI/Settings/Root/SettingsSplitView.swift	SwiftUI settings navigation and split-view presentation boundary.
+Sources/LittleSwitchUI/Settings/Root/SettingsView.swift	SwiftUI root settings and application presentation boundary.
 Sources/LittleSwitchUI/Components/BrandIcons/ClaudeCodeIcon.swift	AppKit workspace icon and image rendering boundary.
 Sources/LittleSwitchUI/Components/BrandIcons/ClaudeIcon.swift	Static LobeHub vector geometry rendered through SwiftUI.
 Sources/LittleSwitchUI/Components/BrandIcons/OllamaIcon.swift	Static LobeHub vector geometry rendered through AppKit and SwiftUI.
 Sources/LittleSwitchUI/Components/BrandIcons/OpenCodeIcon.swift	Static LobeHub vector geometry rendered through SwiftUI.
 Sources/LittleSwitchUI/Components/BrandIcons/ZaiIcon.swift	Static LobeHub vector geometry rendered through AppKit and SwiftUI.
-Sources/LittleSwitchUI/Components/Settings/SettingsCard.swift	Shared native SwiftUI settings surface and row presentation boundary.
-Sources/LittleSwitchUI/Components/Settings/SettingsConnectionStatus.swift	SwiftUI integration connection status presentation boundary.
-Sources/LittleSwitchUI/Components/Settings/SettingsDisclosureGroupStyle.swift	SwiftUI disclosure presentation and native keyboard focus boundary shared by settings sections.
-Sources/LittleSwitchUI/Components/Settings/SettingsLayout.swift	Compile-time SwiftUI layout constants emit no executable coverage regions.
-Sources/LittleSwitchUI/Components/Settings/SettingsMappingRow.swift	SwiftUI shared routing label, arrow and picker presentation boundary.
-Sources/LittleSwitchUI/Components/Settings/SettingsPage.swift	SwiftUI shared settings scroll and page geometry boundary.
-Sources/LittleSwitchUI/Components/Settings/SettingsSection.swift	SwiftUI shared section heading and spacing presentation boundary.
-Sources/LittleSwitchUI/Components/Settings/SettingsToolbar.swift	SwiftUI window title metadata and native action group presentation boundary.
+Sources/LittleSwitchUI/Settings/Shared/SettingsCard.swift	Shared native SwiftUI settings surface and row presentation boundary.
+Sources/LittleSwitchUI/Settings/Shared/SettingsConnectionStatus.swift	SwiftUI integration connection status presentation boundary.
+Sources/LittleSwitchUI/Settings/Shared/SettingsDisclosureGroupStyle.swift	SwiftUI disclosure presentation and native keyboard focus boundary shared by settings sections.
+Sources/LittleSwitchUI/Settings/Shared/SettingsLayout.swift	Compile-time SwiftUI layout constants emit no executable coverage regions.
+Sources/LittleSwitchUI/Settings/Shared/SettingsMappingRow.swift	SwiftUI shared routing label, arrow and picker presentation boundary.
+Sources/LittleSwitchUI/Settings/Shared/SettingsPage.swift	SwiftUI shared settings scroll and page geometry boundary.
+Sources/LittleSwitchUI/Settings/Shared/SettingsSection.swift	SwiftUI shared section heading and spacing presentation boundary.
+Sources/LittleSwitchUI/Settings/Shared/SettingsToolbar.swift	SwiftUI window title metadata and native action group presentation boundary.
 Sources/LittleSwitchUI/Features/Activity/GatewayActivityDashboardView.swift	SwiftUI gateway activity dashboard presentation boundary.
 Sources/LittleSwitchUI/Features/Activity/GatewayOverviewChartView.swift	SwiftUI Overview headline and native accessibility presentation boundary; period projection and bar geometry remain measured separately.
 Sources/LittleSwitchUI/Features/Activity/GatewayOverviewLayout.swift	Compile-time Overview layout constants emit no executable coverage regions.
@@ -37,38 +47,38 @@ Sources/LittleSwitchUI/Features/Activity/GatewayQueueSummaryView.swift	SwiftUI l
 Sources/LittleSwitchUI/Features/Activity/LittleSwitchApplicationDelegateGatewayActivity.swift	AppKit polling cadence, cancellation, and status-item refresh adapter; deterministic update logic is measured separately.
 Sources/LittleSwitchUI/Features/Activity/Traffic/OSLogTrafficLogger.swift	Unified Logging system adapter boundary.
 Sources/LittleSwitchUI/Features/Clients/Claude/ClaudeApplicationController.swift	NSWorkspace-backed Claude application lifecycle boundary.
-Sources/LittleSwitchUI/Features/Clients/Claude/ClaudeSettingsView.swift	SwiftUI Claude routing and product presentation boundary.
+Sources/LittleSwitchUI/Settings/Clients/Claude/ClaudeSettingsView.swift	SwiftUI Claude routing and product presentation boundary.
 Sources/LittleSwitchUI/Features/Clients/Claude/LittleSwitchApplicationDelegateClaudeProducts.swift	AppKit settings action and confirmation boundary.
 Sources/LittleSwitchUI/Features/Clients/ClaudeCode/ClaudeCodeConnectionStatus.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
-Sources/LittleSwitchUI/Features/Clients/ClaudeCode/ClaudeCodeSettingsView.swift	SwiftUI Claude Code settings presentation boundary.
+Sources/LittleSwitchUI/Settings/Clients/ClaudeCode/ClaudeCodeSettingsView.swift	SwiftUI Claude Code settings presentation boundary.
 Sources/LittleSwitchUI/Features/Clients/Codex/CodexApplicationController.swift	NSWorkspace-backed Codex application lifecycle boundary.
-Sources/LittleSwitchUI/Features/Clients/Codex/CodexSettingsView.swift	SwiftUI Codex settings presentation boundary.
+Sources/LittleSwitchUI/Settings/Clients/Codex/CodexSettingsView.swift	SwiftUI Codex settings presentation boundary.
 Sources/LittleSwitchUI/Features/Clients/Codex/LittleSwitchApplicationDelegateCodexProducts.swift	AppKit Codex settings action and confirmation boundary.
-Sources/LittleSwitchUI/Features/Clients/Codex/ModelCatalogHeader.swift	SwiftUI catalog heading and enabled count presentation boundary.
-Sources/LittleSwitchUI/Features/Clients/Codex/ModelCatalogView.swift	SwiftUI provider model cards and native switch presentation boundary.
+Sources/LittleSwitchUI/Settings/Clients/Codex/ModelCatalogHeader.swift	SwiftUI catalog heading and enabled count presentation boundary.
+Sources/LittleSwitchUI/Settings/Clients/Codex/ModelCatalogView.swift	SwiftUI provider model cards and native switch presentation boundary.
 Sources/LittleSwitchUI/Features/Clients/OpenCode/LittleSwitchApplicationDelegateOpenCode.swift	AppKit OpenCode settings action and confirmation boundary.
 Sources/LittleSwitchUI/Features/Clients/OpenCode/OpenCodeConnectionStatus.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
-Sources/LittleSwitchUI/Features/Clients/OpenCode/OpenCodeSettingsView.swift	SwiftUI OpenCode settings presentation boundary.
-Sources/LittleSwitchUI/Features/General/CommonSettingsView.swift	SwiftUI common settings presentation boundary.
+Sources/LittleSwitchUI/Settings/Clients/OpenCode/OpenCodeSettingsView.swift	SwiftUI OpenCode settings presentation boundary.
+Sources/LittleSwitchUI/Settings/General/CommonSettingsView.swift	SwiftUI common settings presentation boundary.
 Sources/LittleSwitchUI/Features/General/LittleSwitchApplicationDelegateGatewaySettings.swift	AppKit common settings action boundary.
 Sources/LittleSwitchUI/Features/General/LittleSwitchApplicationDelegateLaunchAtLogin.swift	AppKit launch-at-login presentation and error boundary.
 Sources/LittleSwitchUI/Features/Monitoring/LittleSwitchApplicationDelegateMonitoring.swift	AppKit Monitoring action and alert presentation boundary; transactions and pending state are measured separately.
-Sources/LittleSwitchUI/Features/Monitoring/MonitoringDestinationFields.swift	SwiftUI endpoint and secure-field presentation boundary; validation and credential intents are measured separately.
-Sources/LittleSwitchUI/Features/Monitoring/MonitoringExportStatusView.swift	SwiftUI export-status presentation boundary; exporter state and controlled messages are measured separately.
-Sources/LittleSwitchUI/Features/Monitoring/MonitoringLocalEndpointsView.swift	SwiftUI local-endpoint controls and AppKit pasteboard boundary.
-Sources/LittleSwitchUI/Features/Monitoring/MonitoringSettingsView.swift	SwiftUI Monitoring form and toolbar presentation boundary; draft state, validation, transactions and polling are measured separately.
+Sources/LittleSwitchUI/Settings/Monitoring/MonitoringDestinationFields.swift	SwiftUI endpoint and secure-field presentation boundary; validation and credential intents are measured separately.
+Sources/LittleSwitchUI/Settings/Monitoring/MonitoringExportStatusView.swift	SwiftUI export-status presentation boundary; exporter state and controlled messages are measured separately.
+Sources/LittleSwitchUI/Settings/Monitoring/MonitoringLocalEndpointsView.swift	SwiftUI local-endpoint controls and AppKit pasteboard boundary.
+Sources/LittleSwitchUI/Settings/Monitoring/MonitoringSettingsView.swift	SwiftUI Monitoring form and toolbar presentation boundary; draft state, validation, transactions and polling are measured separately.
 Sources/LittleSwitchUI/Features/Providers/LittleSwitchApplicationDelegateProviderTest.swift	AppKit application delegate test-to-outcome mapping boundary.
-Sources/LittleSwitchUI/Features/Providers/ProviderEditor.swift	SwiftUI provider editor presentation boundary.
-Sources/LittleSwitchUI/Features/Providers/ProviderEditorAdvanced.swift	SwiftUI advanced provider form presentation boundary.
-Sources/LittleSwitchUI/Features/Providers/ProviderEditorCompatibility.swift	SwiftUI editable provider compatibility controls presentation boundary.
-Sources/LittleSwitchUI/Features/Providers/ProviderEditorConnectionDetails.swift	SwiftUI read-only provider connection diagnostics presentation boundary.
-Sources/LittleSwitchUI/Features/Providers/ProviderEditorCredentials.swift	SwiftUI secure credential controls and script chooser presentation boundary.
-Sources/LittleSwitchUI/Features/Providers/ProviderEditorNotice.swift	SwiftUI provider connection-test feedback presentation boundary.
-Sources/LittleSwitchUI/Features/Providers/ProviderModelContextTable.swift	SwiftUI model capacity grid and native context switch presentation boundary; draft values remain measured separately.
-Sources/LittleSwitchUI/Features/Providers/ProviderSettingsRow.swift	SwiftUI provider identity and aligned status presentation boundary.
-Sources/LittleSwitchUI/Features/Providers/ProviderTestOutcome.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
-Sources/LittleSwitchUI/Features/Providers/ProvidersSettingsView.swift	SwiftUI provider list, native menus, sheets and confirmation presentation boundary.
-Sources/LittleSwitchUI/Features/Search/WebSearchSettingsView.swift	SwiftUI web-search settings presentation boundary.
+Sources/LittleSwitchUI/Settings/Providers/ProviderEditor.swift	SwiftUI provider editor presentation boundary.
+Sources/LittleSwitchUI/Settings/Providers/ProviderEditorAdvanced.swift	SwiftUI advanced provider form presentation boundary.
+Sources/LittleSwitchUI/Settings/Providers/ProviderEditorCompatibility.swift	SwiftUI editable provider compatibility controls presentation boundary.
+Sources/LittleSwitchUI/Settings/Providers/ProviderEditorConnectionDetails.swift	SwiftUI read-only provider connection diagnostics presentation boundary.
+Sources/LittleSwitchUI/Settings/Providers/ProviderEditorCredentials.swift	SwiftUI secure credential controls and script chooser presentation boundary.
+Sources/LittleSwitchUI/Settings/Providers/ProviderEditorNotice.swift	SwiftUI provider connection-test feedback presentation boundary.
+Sources/LittleSwitchUI/Settings/Providers/ProviderModelContextTable.swift	SwiftUI model capacity grid and native context switch presentation boundary; draft values remain measured separately.
+Sources/LittleSwitchUI/Settings/Providers/ProviderSettingsRow.swift	SwiftUI provider identity and aligned status presentation boundary.
+Sources/LittleSwitchUI/Settings/Providers/ProviderTestOutcome.swift	Compile-time contract or enum cases emit no executable coverage regions; consuming behavior remains measured in domain tests.
+Sources/LittleSwitchUI/Settings/Providers/ProvidersSettingsView.swift	SwiftUI provider list, native menus, sheets and confirmation presentation boundary.
+Sources/LittleSwitchUI/Settings/Search/WebSearchSettingsView.swift	SwiftUI web-search settings presentation boundary.
 Sources/LittleSwitchUI/MenuBar/MenuClaudeTabView.swift	SwiftUI menu Claude tab presentation boundary.
 Sources/LittleSwitchUI/MenuBar/MenuCodexReviewModelRow.swift	SwiftUI approval-review selector presentation boundary; coordinator transactions and native control dispatch are tested separately.
 Sources/LittleSwitchUI/MenuBar/MenuCodexTabView.swift	SwiftUI menu Codex tab presentation boundary.

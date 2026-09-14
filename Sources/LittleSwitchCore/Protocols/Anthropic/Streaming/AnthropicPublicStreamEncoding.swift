@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchWire
 
 func contentDeltaFrame(index: Int, deltaJSON: Data) throws -> Data {

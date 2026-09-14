@@ -1,14 +1,5 @@
+import LittleSwitchCommon
 import LittleSwitchCore
-
-public struct ClaudeCodeDefaultModelOption: Equatable, Hashable, Identifiable, Sendable {
-    public var routeID: String
-    public var contextMode: ClaudeCodeContextMode
-    public var label: String
-
-    public var id: String {
-        "\(routeID)|\(contextMode.rawValue)"
-    }
-}
 
 extension AppModel {
     public enum ClaudeCodePrimaryAction: Equatable, Sendable {

@@ -67,6 +67,7 @@ let package = Package(
         ),
     ],
     targets: [
+        .target(name: "LittleSwitchCommon"),
         .target(
             name: "LittleSwitchWire",
             dependencies: [.product(name: "OrderedJSON", package: "orderedjson")]
@@ -82,6 +83,7 @@ let package = Package(
         .target(
             name: "LittleSwitchSearch",
             dependencies: [
+                "LittleSwitchCommon",
                 "LittleSwitchTransport",
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "NIOCore", package: "swift-nio"),
@@ -91,6 +93,7 @@ let package = Package(
         .target(
             name: "LittleSwitchCore",
             dependencies: [
+                "LittleSwitchCommon",
                 "LittleSwitchWire",
                 "LittleSwitchTransport",
                 "LittleSwitchSearch",
@@ -115,6 +118,7 @@ let package = Package(
         .target(
             name: "LittleSwitchUI",
             dependencies: [
+                "LittleSwitchCommon",
                 "LittleSwitchCore",
                 "LittleSwitchTransport",
                 "LittleSwitchSearch",
@@ -125,6 +129,10 @@ let package = Package(
         .executableTarget(
             name: "LittleSwitch",
             dependencies: ["LittleSwitchCore", "LittleSwitchUI"]
+        ),
+        .testTarget(
+            name: "LittleSwitchCommonTests",
+            dependencies: ["LittleSwitchCommon"]
         ),
         .testTarget(
             name: "LittleSwitchWireTests",
@@ -149,6 +157,7 @@ let package = Package(
         .testTarget(
             name: "LittleSwitchSearchTests",
             dependencies: [
+                "LittleSwitchCommon",
                 "LittleSwitchSearch",
                 "LittleSwitchTransport",
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
@@ -159,6 +168,7 @@ let package = Package(
         .testTarget(
             name: "LittleSwitchCoreTests",
             dependencies: [
+                "LittleSwitchCommon",
                 "LittleSwitchWire",
                 "LittleSwitchCore",
                 "LittleSwitchTransport",
@@ -175,6 +185,7 @@ let package = Package(
         .testTarget(
             name: "LittleSwitchUITests",
             dependencies: [
+                "LittleSwitchCommon",
                 "LittleSwitchCore",
                 "LittleSwitchUI",
                 "LittleSwitchTransport",

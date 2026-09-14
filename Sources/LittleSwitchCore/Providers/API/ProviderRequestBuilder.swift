@@ -1,5 +1,6 @@
 import AsyncHTTPClient
 import Foundation
+import LittleSwitchCommon
 import NIOHTTP1
 
 public enum ProviderRequestBuilder {

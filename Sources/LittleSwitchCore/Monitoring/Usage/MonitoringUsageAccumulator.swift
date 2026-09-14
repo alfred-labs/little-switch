@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 /// A bounded lexical reader of provider usage, before client-side rewriting.
 /// Only protocol keys and a small usage object are retained; response content

@@ -1,6 +1,7 @@
 import Foundation
 import HTTPTypes
 import Hummingbird
+import LittleSwitchCommon
 
 extension GatewayResponder {
     public func respond(to request: Request, context: Context) async throws -> Response {

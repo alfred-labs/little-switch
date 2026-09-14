@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import LittleSwitchCore
 
 /// Credential plumbing for `ApplicationCoordinator`: resolving what a save

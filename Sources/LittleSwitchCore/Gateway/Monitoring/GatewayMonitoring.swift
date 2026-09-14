@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 /// The same process-owned source is passed to every HTTP/TLS listener generation.
 public struct GatewayMonitoring: Sendable {

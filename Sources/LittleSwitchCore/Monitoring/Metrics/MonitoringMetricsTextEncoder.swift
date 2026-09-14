@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 enum MonitoringMetricsFormat: Equatable, Sendable {
     case prometheus

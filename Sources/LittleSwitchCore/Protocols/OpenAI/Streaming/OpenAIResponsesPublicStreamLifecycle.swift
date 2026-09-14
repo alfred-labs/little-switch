@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 extension ResponsesPublicStreamSession {
     package mutating func start(responseJSON: Data) throws -> [Data] {

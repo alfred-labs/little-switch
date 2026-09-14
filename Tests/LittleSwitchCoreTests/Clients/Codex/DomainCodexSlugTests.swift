@@ -1,9 +1,11 @@
 import Foundation
+import LittleSwitchCommon
 import Testing
 
 @testable import LittleSwitchCore
 
-extension DomainTests {
+@Suite("Codex model routing")
+struct DomainCodexSlugTests {
     @Test("Codex slugs resolve only exposed discovered models")
     func resolvesCodexModels() throws {
         let providerID = UUID()

@@ -9,11 +9,6 @@ package enum ResponsesCompactionError: Error, Equatable {
     case unsupportedCompaction
 }
 
-package struct ResponsesCompactionResult: Sendable {
-    package let itemJSON: Data
-    package let usage: ResponsesUsage
-}
-
 /// Request-scoped compaction state never converts an original Responses item to a provider dialect.
 package struct ResponsesCompactionPlan: Sendable {
     package let originalModel: String

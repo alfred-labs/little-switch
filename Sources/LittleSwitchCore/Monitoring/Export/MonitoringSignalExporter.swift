@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 /// One owner per signal. Neither the driver nor an in-flight request is detached.
 package actor MonitoringSignalExporter {

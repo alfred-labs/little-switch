@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 
 package enum OTLPLogsEncoder {
     package static func encode(resource: MonitoringResource, entries: [MonitoringLogEntry]) throws -> Data {

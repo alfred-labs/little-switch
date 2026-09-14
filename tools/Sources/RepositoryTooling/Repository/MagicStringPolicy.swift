@@ -6,6 +6,7 @@ package enum MagicStringPolicy {
     package static let baselinePath = "tools/magic-string-baseline.json"
     package static let cataloguePath = "schemas/upstream/catalog.json"
     private static let directories = [
+        "Sources/LittleSwitchCommon/",
         "Sources/LittleSwitchCore/Protocols/",
         "Sources/LittleSwitchCore/Tools/",
         "Sources/LittleSwitchCore/Gateway/",
