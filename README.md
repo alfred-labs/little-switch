@@ -43,6 +43,8 @@ and Transport domains.
 
 In **Settings → Codex**, **Exposed models** lists the catalog shared by Codex and OpenCode. Apply writes the profile to Codex's configuration. Quitting or disabling LittleSwitch restores the previous state.
 
+Native OpenAI models and Codex image generation/editing retain Codex's ChatGPT sign-in or configured OpenAI API key. The gateway relays `/v1/images/generations` and `/v1/images/edits` with the original image data and authentication. Upstream requests use a ten-minute default timeout.
+
 ### OpenCode
 
 OpenCode has its own default model and connection state, independent of Codex. Apply writes `model`, `provider.little-switch`, and `mcp.web` to `~/.config/opencode/opencode.json`. The provider uses `@ai-sdk/openai` against `https://127.0.0.1:11436/v1`. Requests go through `/v1/responses`. Restore settings reverts transactionally while preserving other keys.

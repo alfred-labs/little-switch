@@ -5,7 +5,7 @@ public protocol UpstreamTransport: Sendable {
     func execute(_ request: HTTPClientRequest) async throws -> HTTPClientResponse
 
     /// A per-request timeout cap for cheap, best-effort calls (the endpoint
-    /// probe) that must not inherit a traffic-grade 120-second window. A
+    /// probe) that must not inherit the traffic-grade ten-minute window. A
     /// requirement so implementations that can bound a single exchange are
     /// reached through the protocol witness — an extension-only method
     /// never is, and the cap silently disappears.

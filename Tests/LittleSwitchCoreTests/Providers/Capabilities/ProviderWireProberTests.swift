@@ -168,7 +168,7 @@ struct ProviderWireProberTests {
         #expect(probe.responses == .unknown)
         #expect(probe.chatCompletions == .unknown)
         // The deadline must fire at the probe bound (8 s), far under the
-        // transport's traffic-grade 120-second default.
+        // transport's traffic-grade ten-minute default.
         #expect(elapsed >= .seconds(7))
         #expect(elapsed < .seconds(20))
 

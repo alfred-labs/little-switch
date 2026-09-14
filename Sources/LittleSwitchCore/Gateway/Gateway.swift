@@ -187,7 +187,8 @@ public struct GatewayResponder: HTTPResponder {
     package func routeResponse(_ request: Request, eventID: UUID) async throws -> Response {
         let resolvedPath = GatewayRoute.resolve(request.uri.path)
         let path = resolvedPath
-        let errorStyle: ErrorStyle = path == .responses ? .openAI : .anthropic
+        let errorStyle: ErrorStyle =
+            path == .responses || path == .imageGenerations || path == .imageEdits ? .openAI : .anthropic
         guard request.headers[.origin] == nil else {
             return errorResponse(
                 style: errorStyle,
@@ -255,6 +256,10 @@ public struct GatewayResponder: HTTPResponder {
             return try await messagesResponse(request, eventID: eventID)
         case .responses:
             return try await responsesResponse(request, eventID: eventID)
+        case .imageGenerations:
+            return try await nativeImagesResponse(request, endpoint: .imageGenerations, eventID: eventID)
+        case .imageEdits:
+            return try await nativeImagesResponse(request, endpoint: .imageEdits, eventID: eventID)
         case .metrics, .logs:
             return try await monitoringResponse(request, route: path)
         }

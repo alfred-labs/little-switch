@@ -132,16 +132,6 @@
       "rule" : "subscriptKey"
     },
     {
-      "anchor" : "enum CodexNativePassthrough/static func forwardedHeaders(_:HTTPHeaders)->HTTPHeaders/binding connectionTokens",
-      "file" : "Sources/LittleSwitchCore/Gateway/Endpoints/GatewayResponsesNativePassthrough.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "connection"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
       "anchor" : "enum CodexNativePassthrough/static func isNativeRequest(_:Data)->Bool",
       "file" : "Sources/LittleSwitchCore/Gateway/Endpoints/GatewayResponsesNativePassthrough.swift",
       "literal" : {
@@ -157,16 +147,6 @@
       "literal" : {
         "kind" : "string",
         "value" : "authorization"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "extension GatewayResponder/func nativePassthroughResponsesResponse(body:Data,incomingHeaders:HTTPHeaders,eventID:UUID)asyncthrows->Response/binding upstreamRequest",
-      "file" : "Sources/LittleSwitchCore/Gateway/Endpoints/GatewayResponsesNativePassthrough.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "chatgpt-account-id"
       },
       "ordinal" : 1,
       "rule" : "subscriptKey"

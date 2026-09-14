@@ -4,7 +4,7 @@ import NIOCore
 public final class AsyncHTTPTransport: UpstreamTransport, @unchecked Sendable {
     /// The traffic-grade window every production transport inherits when
     /// constructed without an explicit timeout.
-    public static let defaultTimeout: TimeAmount = .seconds(120)
+    public static let defaultTimeout: TimeAmount = .seconds(600)
 
     private let client: HTTPClient
     private let timeout: TimeAmount

@@ -1,14 +1,21 @@
-import AsyncHTTPClient
 import Foundation
+import HTTPTypes
 import Hummingbird
-import LittleSwitchTransport
 import NIOHTTP1
 
 /// Codex's native upstreams for models outside the LittleSwitch catalog.
 /// Native turns keep the user's own session and reusable native state.
 package enum CodexNativePassthrough {
+    /// Only explicitly supported native operations can choose an upstream path.
+    package enum Endpoint: String, Sendable {
+        case responses
+        case imageGenerations = "images/generations"
+        case imageEdits = "images/edits"
+    }
+
     package static let chatGPTBaseURL = "https://chatgpt.com/backend-api/codex"
     package static let openAIBaseURL = "https://api.openai.com/v1"
+    static let accountIDHeader = "chatgpt-account-id"
     /// A local-only sentinel, never a real OpenAI credential. It exists so
     /// Codex can run without a signed-in session and is rejected before any
     /// native forwarding.
@@ -38,20 +45,20 @@ package enum CodexNativePassthrough {
         return value.caseInsensitiveCompare("Bearer \(sentinelAPIKey)") == .orderedSame
     }
 
-    static func upstreamURL(accountSession: Bool) -> String {
-        accountSession ? chatGPTBaseURL + "/responses" : openAIBaseURL + "/responses"
+    static func upstreamURL(accountSession: Bool, endpoint: Endpoint) -> String {
+        let baseURL = accountSession ? chatGPTBaseURL : openAIBaseURL
+        return baseURL + "/" + endpoint.rawValue
     }
 
-    static func forwardedHeaders(_ incoming: HTTPHeaders) -> HTTPHeaders {
+    static func forwardedHeaders(_ incoming: HTTPHeaders, endpoint: Endpoint) -> HTTPHeaders {
         var forwarded = incoming
-        let connectionTokens = forwarded["connection"].flatMap { value in
+        let connectionTokens = forwarded[HTTPField.Name.connection.rawName].flatMap { value in
             value.split(separator: ",").map {
                 $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             }
         }
         for name in [
             "connection",
-            "content-encoding",
             "content-length",
             "host",
             "keep-alive",
@@ -63,6 +70,11 @@ package enum CodexNativePassthrough {
             "upgrade",
         ] + connectionTokens {
             forwarded.remove(name: name)
+        }
+        // Responses bodies have been decoded and normalized. Image bodies
+        // stay opaque, so their encoding must continue to describe the bytes.
+        if endpoint == .responses {
+            forwarded.remove(name: "content-encoding")
         }
         return forwarded
     }
@@ -82,8 +94,8 @@ extension GatewayResponder {
             guard nativeBody.count <= maximumRequestBytes else {
                 return openAIError(status: .contentTooLarge, message: "Expanded history is too large")
             }
-            return try await nativePassthroughResponsesResponse(
-                body: nativeBody, incomingHeaders: incomingHeaders, eventID: eventID
+            return try await nativePassthroughResponse(
+                body: nativeBody, incomingHeaders: incomingHeaders, endpoint: .responses, eventID: eventID
             )
         } catch is CancellationError {
             throw CancellationError()
@@ -92,43 +104,4 @@ extension GatewayResponder {
         }
     }
 
-    package func nativePassthroughResponsesResponse(
-        body: Data,
-        incomingHeaders: HTTPHeaders,
-        eventID: UUID
-    ) async throws -> Response {
-        guard !CodexNativePassthrough.isSentinelAuthorization(incomingHeaders) else {
-            return openAIError(
-                status: .unauthorized,
-                message: CodexNativePassthrough.sentinelRejectionMessage
-            )
-        }
-        var upstreamRequest = HTTPClientRequest(
-            url: CodexNativePassthrough.upstreamURL(
-                accountSession: !incomingHeaders["chatgpt-account-id"].isEmpty
-            )
-        )
-        upstreamRequest.method = .POST
-        upstreamRequest.headers = CodexNativePassthrough.forwardedHeaders(incomingHeaders)
-        upstreamRequest.body = .bytes(body)
-        trafficRecorder.record(
-            eventID: eventID,
-            action: .annotation(
-                TrafficAnnotation(
-                    kind: "native-passthrough",
-                    message: TrafficRedactor.url(upstreamRequest.url)
-                )
-            )
-        )
-        let upstream: HTTPClientResponse
-        do {
-            try Task.checkCancellation()
-            upstream = try await transport.execute(upstreamRequest)
-        } catch is CancellationError {
-            throw CancellationError()
-        } catch {
-            return openAIError(status: .badGateway, message: "Provider request failed")
-        }
-        return nativeResponsesStream(upstream, eventID: eventID)
-    }
 }

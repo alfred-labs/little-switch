@@ -5,8 +5,8 @@ import Testing
 
 @Suite("AsyncHTTP transport")
 struct AsyncHTTPTransportTests {
-    @Test("The traffic-grade window defaults to 120 seconds")
+    @Test("The traffic-grade window allows ten minutes for long model and image requests")
     func trafficWindowDefault() {
-        #expect(AsyncHTTPTransport.defaultTimeout == .seconds(120))
+        #expect(AsyncHTTPTransport.defaultTimeout == .seconds(600))
     }
 }

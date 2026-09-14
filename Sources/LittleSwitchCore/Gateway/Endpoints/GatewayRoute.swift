@@ -16,6 +16,8 @@ package enum GatewayRoute: Equatable, Sendable {
     case countTokens
     case messages
     case responses
+    case imageGenerations
+    case imageEdits
     case metrics
     case logs
 
@@ -43,6 +45,10 @@ package enum GatewayRoute: Equatable, Sendable {
             .messages
         case "/v1/responses":
             .responses
+        case "/v1/images/generations":
+            .imageGenerations
+        case "/v1/images/edits":
+            .imageEdits
         case ProductIdentity.legacyGatewayInternalPathPrefix + "health":
             .health
         case ProductIdentity.legacyGatewayInternalPathPrefix + "about":
@@ -67,7 +73,7 @@ package enum GatewayRoute: Equatable, Sendable {
         switch self {
         case .about, .health, .hello, .models, .metrics, .logs:
             .get
-        case .countTokens, .managedWebSearch, .webSearchMCP, .messages, .responses:
+        case .countTokens, .managedWebSearch, .webSearchMCP, .messages, .responses, .imageGenerations, .imageEdits:
             .post
         }
     }
