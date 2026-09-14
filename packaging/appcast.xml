@@ -5,6 +5,19 @@
         <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
         <description>LittleSwitch releases</description>
         <item>
+            <title>0.5.1</title>
+            <pubDate>Mon, 14 Sep 2026 08:54:24 +0000</pubDate>
+            <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
+            <sparkle:version>23</sparkle:version>
+            <sparkle:shortVersionString>0.5.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Improvements</h2>
+<ul><li><strong>Long-running requests have more time to finish.</strong> The gateway&apos;s default timeout increases from two minutes to ten minutes across providers, including image generation.</li></ul>
+<h2>Fixes</h2>
+<ul><li><strong>Image generation and editing work in Codex through LittleSwitch.</strong> Native image requests preserve the existing ChatGPT sign-in or OpenAI API key instead of failing with an unknown-endpoint error. Codex subscription users can keep generating and editing images without configuring a separate API key.</li></ul>]]></description>
+            <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.5.1/LittleSwitch-0.5.1-arm64.dmg" length="20883386" type="application/octet-stream" sparkle:edSignature="xi7Y7G5Ma8qtDqiRkYVlLfSa0ZUsd4wELH/co/jcy2R9m30HBrdjwgWtb4BMB8yrK+OGsLxBWhnlIglo+jt9AQ=="/>
+        </item>
+        <item>
             <title>0.5.0</title>
             <pubDate>Sun, 13 Sep 2026 20:28:14 +0000</pubDate>
             <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
