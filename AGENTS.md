@@ -26,6 +26,10 @@ Anthropic-compatible gateway on `127.0.0.1:11436`.
   Configuration, Search, Usage, Monitoring, and Traffic. It uses only the Swift
   standard library and Foundation, with no target dependencies. Core, Search,
   and UI import Common explicitly; folders do not create Swift namespaces.
+- During domain refactors and occasional architecture reviews, check structs
+  outside Common. Move autonomous shared values and their enums into Common;
+  retain views, presentation state, wire contracts and private implementation
+  types in their owning modules.
 - `Sources/LittleSwitchWire` owns generated provider contracts and exact JSON
   codecs. It depends only on OrderedJSON, never Core, Search, Transport, SwiftUI,
   or AppKit. Update SDK inputs and projections through the repository's
