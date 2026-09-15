@@ -193,6 +193,7 @@ final class TestCodexController: CodexApplicationControlling {
     private var shouldFailNextQuit = false
     private var shouldFailNextOpen = false
     var eventLog: SharedEventLog?
+    var onQuit: (@MainActor () async -> Void)?
 
     init(running: Bool = false) {
         self.running = running
@@ -201,6 +202,7 @@ final class TestCodexController: CodexApplicationControlling {
     func isRunning() -> Bool { running }
 
     func quitAndWait() async throws {
+        await onQuit?()
         if shouldFailNextQuit {
             shouldFailNextQuit = false
             throw Error.quitInjected

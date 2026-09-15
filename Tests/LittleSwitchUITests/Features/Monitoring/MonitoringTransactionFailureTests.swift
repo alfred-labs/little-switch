@@ -91,7 +91,8 @@ struct MonitoringTransactionFailureTests {
             .init(configuration: saved.configuration.monitoring, logsCredential: .remove)
         )
         #expect(removed.configuration.monitoring.logs.credentialID == nil)
-        #expect(removed.monitoringNotice == "An unused monitoring token could not be removed from Keychain.")
+        #expect(
+            removed.monitoringNotice == L10n.string("An unused monitoring token could not be removed from Keychain."))
         #expect(try secrets.storage.read(account: .monitoring(id)) == "synthetic")
         await coordinator.shutdown()
     }

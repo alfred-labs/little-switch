@@ -71,7 +71,7 @@ struct MenuCodexTabView: View {
 
     private var defaultModelRow: some View {
         GridRow {
-            Text("Default model")
+            Text(L10n.resource("Default model"))
                 .font(.system(size: 12, weight: .medium))
                 .fixedSize()
                 .frame(height: MenuTabContentLayout.rowHeight)
@@ -81,7 +81,7 @@ struct MenuCodexTabView: View {
                 MenuModelLoadingPlaceholder()
             } else {
                 MenuModelStepper(
-                    name: "Default model",
+                    name: L10n.string("Default model"),
                     options: codexOptions,
                     selection: Binding<MenuModelOption?>(
                         get: {
@@ -106,11 +106,11 @@ struct MenuCodexTabView: View {
     private var actionRow: some View {
         HStack {
             if model.hasUnavailableCodexAutoReviewModel {
-                Text("Review model unavailable")
+                Text(L10n.resource("Review model unavailable"))
                     .font(.system(size: 11))
                     .foregroundStyle(.orange)
             } else if model.hasPendingCodexChanges {
-                Text("Changes pending")
+                Text(L10n.resource("Changes pending"))
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }

@@ -33,7 +33,11 @@ struct SettingsDisclosureGroupStyle<Accessory: View>: DisclosureGroupStyle {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityValue(configuration.isExpanded ? "Expanded" : "Collapsed")
+                .accessibilityValue(
+                    configuration.isExpanded
+                        ? L10n.resource("Expanded")
+                        : L10n.resource("Collapsed")
+                )
                 .accessibilityHint(accessibilityHint)
                 .onKeyPress(.leftArrow) {
                     configuration.isExpanded = false

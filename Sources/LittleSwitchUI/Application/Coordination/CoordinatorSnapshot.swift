@@ -30,6 +30,10 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
     /// Stderr tail of each provider's last credential script run, keyed by
     /// provider — successes included; the editor replays it in its output pane.
     public var lastScriptOutputs: [UUID: String]
+    public var imageProbeProgress: [UUID: ProviderImageProbeProgress]
+    public var responsesWireVerdicts: [UUID: Bool] = [:]
+    package var imageInputDiagnostics: [ModelImageInputProbeDiagnostic] = []
+    package var imageInputPersistenceFailures: Set<UUID> = []
 
     public init(
         configuration: AppConfiguration,
@@ -53,7 +57,8 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
         monitoringHTTPSAvailable: Bool = false,
         monitoringSnapshotSequence: UInt64 = 0,
         credentialRefreshFailures: [UUID: String] = [:],
-        lastScriptOutputs: [UUID: String] = [:]
+        lastScriptOutputs: [UUID: String] = [:],
+        imageProbeProgress: [UUID: ProviderImageProbeProgress] = [:]
     ) {
         self.configuration = configuration
         self.requestCount = requestCount
@@ -77,5 +82,6 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
         self.monitoringSnapshotSequence = monitoringSnapshotSequence
         self.credentialRefreshFailures = credentialRefreshFailures
         self.lastScriptOutputs = lastScriptOutputs
+        self.imageProbeProgress = imageProbeProgress
     }
 }

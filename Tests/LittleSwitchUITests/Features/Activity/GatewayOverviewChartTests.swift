@@ -59,10 +59,10 @@ struct GatewayOverviewChartTests {
         let host = host(stats)
         defer { host.close() }
         try await host.activateAccessibility()
-        #expect(try host.element(label: "Token history").accessibilityPerformDecrement())
+        #expect(try host.element(label: L10n.string("Token history")).accessibilityPerformDecrement())
         try await expectPeriod(stats.period(at: 28), in: host)
         for _ in 0..<2 {
-            #expect(try host.element(label: "Token history").accessibilityPerformIncrement())
+            #expect(try host.element(label: L10n.string("Token history")).accessibilityPerformIncrement())
             try await expectPeriod(stats.period(at: 29), in: host)
         }
         #expect(host.hosting.fittingSize.height == GatewayActivityDashboardView.height(stats: stats))
@@ -84,7 +84,7 @@ struct GatewayOverviewChartTests {
         _ = try await eventually(description: "the inspected period and its six metrics") {
             try await MainActor.run {
                 host.render()
-                let chart = try host.element(label: "Token history")
+                let chart = try host.element(label: L10n.string("Token history"))
                 let values = try period.metrics.map {
                     try host.element(label: $0.title).accessibilityValueDescription()
                 }

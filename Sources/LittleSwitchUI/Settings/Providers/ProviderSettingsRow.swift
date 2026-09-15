@@ -5,6 +5,8 @@ import SwiftUI
 struct ProviderSettingsRow: View {
     let provider: Provider
     let scriptFailure: String?
+    var imageProgress: ProviderImageProbeProgress?
+    var imagePersistenceFailed = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -28,17 +30,39 @@ struct ProviderSettingsRow: View {
                         .lineLimit(2)
                         .help(scriptFailure)
                 }
+                if let imageProgress, imageProgress.running {
+                    HStack(spacing: 4) {
+                        ProgressView().controlSize(.mini)
+                        Text(L10n.imageProbeProgress(completed: imageProgress.completed, total: imageProgress.total))
+                            .monospacedDigit()
+                    }
+                    .font(SettingsLayout.Typography.supporting)
+                    .foregroundStyle(.secondary)
+                    .help(L10n.string("Checks are cached for 7 days."))
+                }
+                if imagePersistenceFailed {
+                    Label(
+                        L10n.resource("Image checks could not be saved. Refresh models to try again."),
+                        systemImage: "exclamationmark.triangle"
+                    )
+                    .font(SettingsLayout.Typography.supporting)
+                    .foregroundStyle(.secondary)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Label(statusTitle, systemImage: statusSymbol)
                 .font(.caption)
                 .foregroundStyle(statusColor)
                 .frame(width: 92, alignment: .leading)
-            Text("\(provider.models.count) models")
-                .font(.caption)
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .frame(width: 64, alignment: .trailing)
+            Text(
+                provider.models.count == 1
+                    ? L10n.resource("\(provider.models.count) model")
+                    : L10n.resource("\(provider.models.count) models")
+            )
+            .font(.caption)
+            .monospacedDigit()
+            .foregroundStyle(.secondary)
+            .frame(width: 64, alignment: .trailing)
         }
         .padding(.vertical, 6)
         .accessibilityElement(children: .combine)
@@ -46,10 +70,10 @@ struct ProviderSettingsRow: View {
 
     private var statusTitle: String {
         switch provider.status {
-        case .ready: "Ready"
-        case .refreshing: "Refreshing"
-        case .unavailable: "Unavailable"
-        case .idle: "Not tested"
+        case .ready: L10n.string("Ready")
+        case .refreshing: L10n.string("Refreshing")
+        case .unavailable: L10n.string("Unavailable")
+        case .idle: L10n.string("Not tested")
         }
     }
 

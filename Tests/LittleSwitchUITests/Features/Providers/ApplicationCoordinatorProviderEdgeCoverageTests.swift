@@ -234,7 +234,7 @@ struct CoordinatorProviderEdgeCoverageTests {
     func providerMutationSupersededDescription() {
         #expect(
             ApplicationCoordinator.Error.providerMutationSuperseded.errorDescription
-                == "The provider changed while this operation was running. Try again."
+                == L10n.string("The provider changed while this operation was running. Try again.")
         )
     }
 }

@@ -11,60 +11,63 @@ struct ApplicationCoordinatorContractsTests {
     @Test("Every coordinator error has stable product-facing copy")
     func errorDescriptions() {
         let expected: [(ApplicationCoordinator.Error, String)] = [
-            (.codexUnavailable, "Codex desktop integration is unavailable."),
-            (.claudeCodeUnavailable, "Claude Code integration is unavailable."),
+            (.codexUnavailable, L10n.string("Codex desktop integration is unavailable.")),
+            (.claudeCodeUnavailable, L10n.string("Claude Code integration is unavailable.")),
             (
                 .claudeCodeRecoveryRequired,
-                "Restore the previous Claude Code settings before connecting."
+                L10n.string("Restore the previous Claude Code settings before connecting.")
             ),
-            (.openCodeUnavailable, "OpenCode integration is unavailable."),
+            (.openCodeUnavailable, L10n.string("OpenCode integration is unavailable.")),
             (
                 .openCodeRecoveryRequired,
-                "Restore the previous OpenCode settings before connecting."
+                L10n.string("Restore the previous OpenCode settings before connecting.")
             ),
-            (.noExposedOpenCodeModel, "Expose at least one model before connecting OpenCode."),
+            (.noExposedOpenCodeModel, L10n.string("Expose at least one model before connecting OpenCode.")),
             (
                 .codexApplyRequiredForOpenCode,
-                "Apply the pending Codex model exposure before applying OpenCode."
+                L10n.string("Apply the pending Codex model exposure before applying OpenCode.")
             ),
-            (.duplicateProviderName, "Provider names must be unique."),
-            (.invalidProviderName, "Enter a provider name."),
+            (.duplicateProviderName, L10n.string("Provider names must be unique.")),
+            (.invalidProviderName, L10n.string("Enter a provider name.")),
             (
                 .providerDuplicationSourceUnavailable,
-                "The original provider is no longer available. Choose another provider to duplicate."
+                L10n.string("The original provider is no longer available. Choose another provider to duplicate.")
             ),
             (
                 .missingOriginalProviderCredential,
-                "The original provider has no saved key. Enter an API token for this copy."
+                L10n.string("The original provider has no saved key. Enter an API token for this copy.")
             ),
-            (.invalidMapping, "Choose a model discovered from an available provider."),
+            (.invalidMapping, L10n.string("Choose a model discovered from an available provider.")),
             (
                 .invalidModelContext,
-                "Enter a positive context window for a discovered model."
+                L10n.string("Enter a positive context window for a discovered model.")
             ),
-            (.invalidWebSearchConfiguration, "Check the web search limits."),
-            (.missingFirecrawlCredential, "Enter a Firecrawl API key for Cloud search."),
-            (.missingTavilyCredential, "Enter a Tavily API key for web search."),
-            (.missingBraveCredential, "Enter a Brave API key for web search."),
-            (.missingExaCredential, "Enter an Exa API key for web search."),
-            (.missingCredentialScript, "Enter the shell script that prints the credential."),
-            (.noMappedModel, "Map at least one Claude model before connecting."),
-            (.noExposedCodexModel, "Expose at least one model before connecting Codex."),
+            (.invalidWebSearchConfiguration, L10n.string("Check the web search limits.")),
+            (.missingFirecrawlCredential, L10n.string("Enter a Firecrawl API key for Cloud search.")),
+            (.missingTavilyCredential, L10n.string("Enter a Tavily API key for web search.")),
+            (.missingBraveCredential, L10n.string("Enter a Brave API key for web search.")),
+            (.missingExaCredential, L10n.string("Enter an Exa API key for web search.")),
+            (.missingCredentialScript, L10n.string("Enter the shell script that prints the credential.")),
+            (.noMappedModel, L10n.string("Map at least one Claude model before connecting.")),
+            (.noExposedCodexModel, L10n.string("Expose at least one model before connecting Codex.")),
             (
                 .noMappedClaudeCodeModel,
-                "Map at least one Claude model before connecting Claude Code."
+                L10n.string("Map at least one Claude model before connecting Claude Code.")
             ),
             (
                 .gatewayUnavailable,
-                "Port 11436 is already in use. Quit the other LittleSwitch instance, then reopen the app."
+                L10n.string("Port 11436 is already in use. Quit the other LittleSwitch instance, then reopen the app.")
             ),
             (
                 .rollbackFailed,
-                "Some previous settings could not be restored. Review the affected settings before trying again."
+                L10n.string(
+                    "Some previous settings could not be restored. Review the affected settings before trying again.")
             ),
             (
                 .relaunchFailed,
-                "Claude Desktop kept its previous settings: the app could not be restarted. Relaunch it manually to pick the change up."
+                L10n.string(
+                    "Claude Desktop kept its previous settings: the app could not be restarted. Relaunch it manually to pick the change up."
+                )
             ),
         ]
 

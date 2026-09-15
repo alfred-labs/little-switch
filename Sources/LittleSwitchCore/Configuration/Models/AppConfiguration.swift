@@ -77,6 +77,7 @@ public struct AppConfiguration: Codable, Equatable, Sendable {
             case responsesWireOverride
             case anthropicBaseURL
             case wireProbe
+            case imageInputObservations
         }
 
         static func decode(
@@ -174,7 +175,9 @@ public struct AppConfiguration: Codable, Equatable, Sendable {
                 wireProbe: values.decodeIfPresent(
                     ProviderWireProbe.self,
                     forKey: .wireProbe
-                )
+                ),
+                imageInputObservations: ModelImageInputObservationDecoding.decode(
+                    from: values, forKey: .imageInputObservations)
             )
         }
 

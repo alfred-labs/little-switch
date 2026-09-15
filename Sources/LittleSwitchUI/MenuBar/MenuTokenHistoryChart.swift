@@ -13,7 +13,7 @@ struct MenuTokenHistoryChart: View {
     var body: some View {
         VStack(alignment: .leading, spacing: GatewayOverviewLayout.chartSpacing) {
             HStack {
-                Text("Token history")
+                Text(L10n.resource("Token history"))
                 Spacer(minLength: 0)
                 Text(periodLabel)
             }
@@ -26,7 +26,7 @@ struct MenuTokenHistoryChart: View {
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
-                Text("tokens")
+                Text(L10n.resource("tokens"))
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -50,7 +50,7 @@ struct MenuTokenHistoryChart: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Token history")
+        .accessibilityLabel(L10n.resource("Token history"))
         .accessibilityValue(accessibilityValue)
         .accessibilityAdjustableAction { direction in
             guard !points.isEmpty else {
@@ -65,8 +65,8 @@ struct MenuTokenHistoryChart: View {
             @unknown default: break
             }
         }
-        .accessibilityAction(named: "Show 30 days") { hoveredIndex = nil }
-        .help("\(accessibilityValue). Inspect a day to see its token usage.")
+        .accessibilityAction(named: L10n.string("Show 30 days")) { hoveredIndex = nil }
+        .help(L10n.resource("\(accessibilityValue). Inspect a day to see its token usage."))
     }
 
     private func axisAlignment(for label: String) -> Alignment {

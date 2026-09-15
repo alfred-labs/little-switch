@@ -100,7 +100,8 @@ extension RoutingSnapshot {
                     id: provider.id,
                     displayName: provider.name,
                     maximumParallelRequests: provider.maximumParallelRequests,
-                    revision: providerRevisions[provider.id] ?? 0
+                    revision: providerRevisions[provider.id] ?? 0,
+                    diagnosticModelIDs: Set(provider.models.map(\.id))
                 )
             },
             routes: routes

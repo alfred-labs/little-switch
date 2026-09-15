@@ -17,7 +17,9 @@ extension LittleSwitchApplicationDelegate {
             ].compactMap(\.self)
             guard
                 confirm(
-                    "Apply these LittleSwitch settings to \(AppModel.list(targetNames))?"
+                    L10n.string(
+                        "Apply these LittleSwitch settings to \(AppModel.list(targetNames))?"
+                    )
                 )
             else {
                 return

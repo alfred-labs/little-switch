@@ -8,8 +8,8 @@ swift_version="$(xcrun swift --version | sed -n '1s/.*Swift version \([0-9.]*\).
 format_path="$(xcrun --find swift-format)"
 lint_version="$(swiftlint version)"
 
-test "$xcode_version" = "26.6"
-test "$swift_version" = "6.3.3"
+test "$xcode_version" = "27.0"
+test "$swift_version" = "6.4"
 test -x "$format_path"
 test "$lint_version" = "0.65.0"
 

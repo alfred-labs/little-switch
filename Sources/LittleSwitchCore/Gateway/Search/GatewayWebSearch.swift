@@ -304,17 +304,12 @@ extension GatewayResponder {
             headers: turnRequest.incomingHeaders,
             body: turnRequest.body
         )
-        trafficRecorder.record(
-            eventID: turnRequest.eventID,
-            action: .upstreamRequest(
-                trafficUpstreamRequest(
-                    attempt: turnRequest.attempt,
-                    target: turnRequest.target,
-                    request: request,
-                    body: turnRequest.body,
-                    streaming: false
-                )
-            )
+        let upstreamTraffic = trafficUpstreamRequest(
+            attempt: turnRequest.attempt,
+            target: turnRequest.target,
+            request: request,
+            body: turnRequest.body,
+            streaming: false
         )
 
         let exchange: GatewayModelExchange
@@ -323,6 +318,7 @@ extension GatewayResponder {
             exchange = try await executeModelRequest(
                 request,
                 body: turnRequest.body,
+                traffic: upstreamTraffic,
                 wire: .anthropic,
                 eventID: turnRequest.eventID,
                 attempt: turnRequest.attempt

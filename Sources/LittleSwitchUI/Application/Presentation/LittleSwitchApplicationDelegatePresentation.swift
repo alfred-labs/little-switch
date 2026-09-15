@@ -33,7 +33,7 @@ extension LittleSwitchApplicationDelegate {
         return error.localizedDescription
     }
 
-    func confirm(_ message: String, actionTitle: String = "Continue") -> Bool {
+    func confirm(_ message: String, actionTitle: String = L10n.string("Continue")) -> Bool {
         // LittleSwitch runs as an accessory: a modal raised while the app is
         // not active returns immediately without ever appearing, which reads as
         // the user cancelling something they were never asked about.
@@ -43,7 +43,7 @@ extension LittleSwitchApplicationDelegate {
         alert.informativeText = message
         alert.alertStyle = .warning
         alert.addButton(withTitle: actionTitle)
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: L10n.string("Cancel"))
         return alert.runModal() == .alertFirstButtonReturn
     }
 
@@ -53,6 +53,6 @@ extension LittleSwitchApplicationDelegate {
         guard let warning = model.pendingChangesWarning else {
             return confirm(message, actionTitle: actionTitle)
         }
-        return confirm("\(message) \(warning)", actionTitle: actionTitle)
+        return confirm(L10n.string("\(message) \(warning)"), actionTitle: actionTitle)
     }
 }

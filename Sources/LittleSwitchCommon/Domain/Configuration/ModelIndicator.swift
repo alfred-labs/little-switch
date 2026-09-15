@@ -16,14 +16,4 @@ public enum ModelIndicator: String, Codable, CaseIterable, Sendable {
         case .mapsTo: "↦"
         }
     }
-
-    public var label: String {
-        switch self {
-        case .none: "None"
-        case .swap: "Swap ⇄"
-        case .equilibrium: "Equilibrium ⇌"
-        case .routed: "Routed ⇢"
-        case .mapsTo: "Maps to ↦"
-        }
-    }
 }

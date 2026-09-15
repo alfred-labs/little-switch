@@ -118,7 +118,8 @@ struct CodexAutoReviewTests {
                             id: provider.id,
                             displayName: provider.name,
                             maximumParallelRequests: provider.maximumParallelRequests,
-                            revision: 7)
+                            revision: 7,
+                            diagnosticModelIDs: ["small", "xlarge"])
                     ],
                     routes: [
                         ProviderRequestRouteKey(client: .codex, modelIdentifier: "example/small"):

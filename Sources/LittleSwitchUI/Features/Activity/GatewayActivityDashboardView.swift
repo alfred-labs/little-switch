@@ -23,7 +23,12 @@ struct GatewayActivityDashboardView: View {
         VStack(alignment: .leading, spacing: GatewayOverviewLayout.sectionSpacing) {
             GatewayQueueSummaryView(runningCount: runningCount, waitingCount: waitingCount)
                 .accessibilityHint(
-                    webSearch.map { "Web search via \($0.engineName), \($0.callCount) calls today" } ?? ""
+
+                    webSearch.map {
+                        L10n.string(
+                            "Web search via \($0.engineName), \($0.callCount) calls today"
+                        )
+                    } ?? ""
                 )
             if let stats {
                 GatewayOverviewChartView(stats: stats, hoveredIndex: $hoveredIndex)
@@ -34,8 +39,8 @@ struct GatewayActivityDashboardView: View {
         .padding(.vertical, GatewayOverviewLayout.verticalPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Gateway activity")
-        .accessibilityHint("Gateway requests and usage")
+        .accessibilityLabel(L10n.resource("Gateway activity"))
+        .accessibilityHint(L10n.string("Gateway requests and usage"))
         .onDisappear { hoveredIndex = nil }
     }
 }

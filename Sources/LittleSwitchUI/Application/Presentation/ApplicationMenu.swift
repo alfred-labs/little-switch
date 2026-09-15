@@ -11,7 +11,7 @@ enum ApplicationMenuFactory {
         )
         appItem.submenu = appMenu()
         mainMenu.addItem(appItem)
-        let editItem = NSMenuItem(title: "Edit", action: nil, keyEquivalent: "")
+        let editItem = NSMenuItem(title: L10n.string("Edit"), action: nil, keyEquivalent: "")
         editItem.submenu = editMenu()
         mainMenu.addItem(editItem)
         return mainMenu
@@ -21,7 +21,7 @@ enum ApplicationMenuFactory {
         let menu = NSMenu(title: ProductIdentity.displayName)
         menu.addItem(
             command(
-                "About \(ProductIdentity.displayName)",
+                L10n.string("About \(ProductIdentity.displayName)"),
                 action: "showAbout",
                 key: ""
             )
@@ -30,7 +30,7 @@ enum ApplicationMenuFactory {
         // participates in the menu-action responder chain.
         menu.addItem(
             command(
-                "Check for Updates…",
+                L10n.string("Check for Updates…"),
                 action: "checkForUpdates:",
                 key: ""
             )
@@ -39,21 +39,21 @@ enum ApplicationMenuFactory {
     }
 
     private static func editMenu() -> NSMenu {
-        let menu = NSMenu(title: "Edit")
-        menu.addItem(command("Undo", action: "undo:", key: "z"))
+        let menu = NSMenu(title: L10n.string("Edit"))
+        menu.addItem(command(L10n.string("Undo"), action: "undo:", key: "z"))
         menu.addItem(
             command(
-                "Redo",
+                L10n.string("Redo"),
                 action: "redo:",
                 key: "z",
                 modifiers: [.command, .shift]
             )
         )
         menu.addItem(.separator())
-        menu.addItem(command("Cut", action: "cut:", key: "x"))
-        menu.addItem(command("Copy", action: "copy:", key: "c"))
-        menu.addItem(command("Paste", action: "paste:", key: "v"))
-        menu.addItem(command("Select All", action: "selectAll:", key: "a"))
+        menu.addItem(command(L10n.string("Cut"), action: "cut:", key: "x"))
+        menu.addItem(command(L10n.string("Copy"), action: "copy:", key: "c"))
+        menu.addItem(command(L10n.string("Paste"), action: "paste:", key: "v"))
+        menu.addItem(command(L10n.string("Select All"), action: "selectAll:", key: "a"))
         return menu
     }
 

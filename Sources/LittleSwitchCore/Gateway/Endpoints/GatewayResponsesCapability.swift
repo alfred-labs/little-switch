@@ -10,23 +10,8 @@ extension GatewayResponder {
     package func resolvesChatCompletionsAdapter(
         _ provider: Provider
     ) async -> Bool {
-        // An explicit choice outranks every learned or seeded verdict — the
-        // user pinned the wire, and even a later probe result must not
-        // reroute traffic behind their back.
-        switch provider.responsesWireOverride {
-        case .chatCompletions:
-            return true
-        case .native:
-            return false
-        case nil:
-            break
-        }
-        if let verdict = await state.responsesCapabilities.verdict(
-            for: provider.id
-        ) {
-            return !verdict
-        }
-        return false
+        let learned = await state.responsesCapabilities.verdict(for: provider.id)
+        return ProviderResponsesWireResolver.resolve(provider: provider, learnedNative: learned) == .chatCompletions
     }
 
     /// Classifies a native `/v1/responses` attempt so later requests skip the

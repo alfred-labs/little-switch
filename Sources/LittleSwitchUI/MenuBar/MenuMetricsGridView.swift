@@ -65,6 +65,6 @@ private struct MenuMetricValue: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(metric.title)
         .accessibilityValue(metric.accessibilityValue)
-        .help("\(metric.title): \(metric.accessibilityValue)")
+        .help(L10n.resource("\(metric.title): \(metric.accessibilityValue)"))
     }
 }

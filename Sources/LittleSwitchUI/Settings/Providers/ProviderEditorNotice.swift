@@ -4,7 +4,7 @@ enum ProviderEditorNotice {
     static var runningScript: some View {
         HStack(spacing: 8) {
             ProgressView().controlSize(.small)
-            Text("Testing the credential script; it may open a browser or prompt to log in.")
+            Text(L10n.resource("Testing the credential script; it may open a browser or prompt to log in."))
                 .font(SettingsLayout.Typography.supporting)
                 .foregroundStyle(.secondary)
             Spacer()

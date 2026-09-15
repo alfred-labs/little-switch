@@ -6,7 +6,7 @@ struct CoverageGateFixture {
         case tooling
 
         var script: String { self == .app ? "check-swift-coverage.sh" : "check-tooling-coverage.sh" }
-        var testProduct: String { self == .app ? "LittleSwitchPackageTests" : "LittleSwitchToolingPackageTests" }
+        var testProduct: String { "CoverageTests" }
     }
 
     var sources = ["Sources/App/A.swift"]
@@ -37,6 +37,8 @@ struct CoverageGateFixture {
                 try FileManager.default.createDirectory(
                     at: artifact.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try Data("current fixture".utf8).write(to: artifact)
+                try FileManager.default.setAttributes(
+                    [.posixPermissions: 0o755], ofItemAtPath: artifact.path)
             }
             let stale = root.appendingPathComponent(".build/arm64-apple-macosx/debug", isDirectory: true)
             for path in ["\(testProduct).xctest/Contents/MacOS/\(testProduct)", "codecov/default.profdata"] {
@@ -96,13 +98,22 @@ struct CoverageGateFixture {
         fi
         if [ "$1" = "swift" ]; then exit "$FAKE_TEST_STATUS"; fi
         if [ "$1" != "llvm-cov" ] || [ "$2" != "report" ]; then exit 2; fi
-        if [ "$3" != "$FAKE_BINARY" ] || [ "$4" != "-instr-profile=$FAKE_PROFILE" ]; then
+        for argument in "$@"; do
+            case "$argument" in
+                -instr-profile=*) [ "$argument" = "-instr-profile=$FAKE_PROFILE" ] || exit 3 ;;
+            esac
+        done
+        if [ "$3" != "$FAKE_BINARY" ]; then
             echo 'coverage gate selected stale or mismatched artifacts' >&2
             exit 3
         fi
-        last_argument=
-        for argument in "$@"; do last_argument=$argument; done
-        if [ "$last_argument" = "Sources" ] || [ "$last_argument" = "tools/Sources" ]; then
+        raw_report=
+        for argument in "$@"; do
+            if [ "$argument" = "Sources" ] || [ "$argument" = "tools/Sources" ]; then
+                raw_report=1
+            fi
+        done
+        if [ -n "$raw_report" ]; then
             cat "$FAKE_RAW"
             if [ -n "$FAKE_RAW_WARNING" ]; then printf '%s\n' "$FAKE_RAW_WARNING" >&2; fi
             exit "$FAKE_RAW_STATUS"

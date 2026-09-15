@@ -14,7 +14,9 @@ enum AboutLayout {
 }
 
 struct AboutWindowContent: View {
-    static let copyrightLine = "Copyright © 2026 LittleSwitch contributors"
+    static var copyrightLine: LocalizedStringResource {
+        L10n.resource("Copyright © 2026 LittleSwitch contributors")
+    }
 
     let displayName: String
     let buildTag: String
@@ -36,7 +38,7 @@ struct AboutWindowContent: View {
                 .accessibilityHidden(true)
             Text(displayName)
                 .font(.system(size: AboutLayout.nameFontSize, weight: .semibold))
-            Text("Version \(buildTag)")
+            Text(L10n.resource("Version \(buildTag)"))
                 .font(.system(size: AboutLayout.detailFontSize))
                 .foregroundStyle(.secondary)
             Text(Self.copyrightLine)
@@ -81,7 +83,7 @@ enum AboutWindowFactory {
             backing: .buffered,
             defer: false
         )
-        window.title = "About \(ProductIdentity.displayName)"
+        window.title = L10n.string("About \(ProductIdentity.displayName)")
         window.contentViewController = NSHostingController(
             rootView: AboutWindowContent.current()
         )

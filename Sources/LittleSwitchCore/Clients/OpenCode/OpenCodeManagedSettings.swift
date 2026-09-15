@@ -1,10 +1,12 @@
+import Foundation
 import LittleSwitchCommon
 
 extension OpenCodeManagedSettings {
     public static func resolve(
         providers: [Provider],
         codex: CodexConfiguration,
-        configuration: OpenCodeConfiguration
+        configuration: OpenCodeConfiguration,
+        responsesWireVerdicts: [UUID: Bool] = [:]
     ) throws -> OpenCodeManagedSettings {
         let targets = configuration.availableModels(in: providers, codex: codex)
         guard !targets.isEmpty else {
@@ -16,14 +18,20 @@ extension OpenCodeManagedSettings {
             ?? targets[0]
 
         let models = Dictionary(
-            uniqueKeysWithValues: targets.map { target in
-                (
+            uniqueKeysWithValues: try targets.map { target in
+                let acceptsImages = try ModelImageInputPolicyResolver.acceptsImages(
+                    provider: target.provider,
+                    model: target.model,
+                    wire: ProviderResponsesWireResolver.resolve(
+                        provider: target.provider, learnedNative: responsesWireVerdicts[target.provider.id]),
+                    observations: target.provider.imageInputObservations)
+                return (
                     CodexCatalog.slug(for: target),
                     OpenCodeManagedModel(
                         name: target.displayName,
                         limit: limit(for: target.model),
                         modalities: OpenCodeManagedModelModalities(
-                            input: target.provider.imageInputsAccepted(for: target.model)
+                            input: acceptsImages
                                 ? ["text", "image"] : ["text"],
                             output: ["text"]
                         )

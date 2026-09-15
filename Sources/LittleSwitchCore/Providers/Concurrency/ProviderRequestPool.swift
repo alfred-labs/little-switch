@@ -16,7 +16,6 @@ package actor ProviderRequestPool: ProviderRequestPooling {
     private struct Bucket {
         var displayName: String
         var maximumParallelRequests: Int
-        var revision: UInt64
         var activeEventIDs: Set<UUID> = []
         var waitersByID: [UUID: Waiter] = [:]
         var waiterOrder: [UUID] = []
@@ -70,8 +69,7 @@ package actor ProviderRequestPool: ProviderRequestPooling {
                     provider.id,
                     Bucket(
                         displayName: provider.displayName,
-                        maximumParallelRequests: provider.maximumParallelRequests,
-                        revision: provider.revision
+                        maximumParallelRequests: provider.maximumParallelRequests
                     )
                 )
             }
@@ -179,7 +177,6 @@ package actor ProviderRequestPool: ProviderRequestPooling {
             }
             bucket.displayName = provider.displayName
             bucket.maximumParallelRequests = provider.maximumParallelRequests
-            bucket.revision = provider.revision
             bucket.isRemoved = false
             bucketsByProviderID[providerID] = bucket
             removedOrder.removeAll { $0 == providerID }
@@ -189,8 +186,7 @@ package actor ProviderRequestPool: ProviderRequestPooling {
         where bucketsByProviderID[provider.id] == nil {
             bucketsByProviderID[provider.id] = Bucket(
                 displayName: provider.displayName,
-                maximumParallelRequests: provider.maximumParallelRequests,
-                revision: provider.revision
+                maximumParallelRequests: provider.maximumParallelRequests
             )
         }
 
@@ -255,17 +251,8 @@ extension ProviderRequestPool {
             throw GatewayAdmissionError.invalidRetainedBodyBytes
         }
         guard var bucket = bucketsByProviderID[admission.providerID], !bucket.isRemoved,
-            bucket.revision == admission.providerRevision,
-            configuration.routes[
-                ProviderRequestRouteKey(
-                    client: admission.client,
-                    modelIdentifier: admission.modelIdentifier
-                )
-            ]
-                == ProviderRequestRouteTarget(
-                    providerID: admission.providerID,
-                    modelID: admission.targetModelID
-                )
+            let provider = configuration.providers.first(where: { $0.id == admission.providerID }),
+            isValid(admission, for: provider, in: configuration)
         else {
             throw GatewayAdmissionError.invalidated
         }
@@ -403,6 +390,9 @@ extension ProviderRequestPool {
     ) -> Bool {
         guard admission.providerRevision == provider.revision else {
             return false
+        }
+        if admission.purpose == .imageProbe {
+            return provider.diagnosticModelIDs.contains(admission.targetModelID)
         }
         let route = configuration.routes[
             ProviderRequestRouteKey(

@@ -26,22 +26,24 @@ package struct CredentialScriptError: Error, Equatable, Sendable, LocalizedError
         let prefix: String
         switch reason {
         case .missingScriptPath:
-            return "No credential script is chosen."
+            return CoreL10n.string("No credential script is chosen.")
         case .missingScriptFile:
-            return "The credential script file could not be found. Re-choose it in the provider editor."
+            return CoreL10n.string(
+                "The credential script file could not be found. Re-choose it in the provider editor."
+            )
         case .emptyOutput:
-            return "The credential script printed no token."
+            return CoreL10n.string("The credential script printed no token.")
         case .timedOut:
-            return "The credential script did not finish in time."
+            return CoreL10n.string("The credential script did not finish in time.")
         case .exit(let status):
-            prefix = "The credential script exited with status \(status)."
+            prefix = CoreL10n.string("The credential script exited with status \(status).")
         case .interrupted:
-            return "The credential script was interrupted."
+            return CoreL10n.string("The credential script was interrupted.")
         }
         guard !standardError.isEmpty else {
             return prefix
         }
-        return "\(prefix) \(standardError)"
+        return CoreL10n.string("\(prefix) \(standardError)")
     }
 }
 

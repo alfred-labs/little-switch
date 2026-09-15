@@ -1,0 +1,15 @@
+"%@ %@" = "%@ %@";
+"No credential script is chosen." = "Aucun script d’identifiants n’est choisi.";
+"The `agents.max_concurrent_threads_per_session` assignments in ~/.codex/config.toml conflict. Keep a single one and try again." = "Les affectations `agents.max_concurrent_threads_per_session` dans ~/.codex/config.toml sont en conflit. Gardez-en une seule et réessayez.";
+"The `agents.max_concurrent_threads_per_session` value in ~/.codex/config.toml is not an integer. Fix it and try again." = "La valeur `agents.max_concurrent_threads_per_session` dans ~/.codex/config.toml n’est pas un entier. Corrigez-la et réessayez.";
+"The `agents` entry in ~/.codex/config.toml is an inline table. Rewrite it as an `[agents]` section and try again." = "L’entrée `agents` dans ~/.codex/config.toml est une table en ligne. Réécrivez-la comme section `[agents]` et réessayez.";
+"The `agents` entry in ~/.codex/config.toml is not a table. Rewrite it as an `[agents]` section and try again." = "L’entrée `agents` dans ~/.codex/config.toml n’est pas une table. Réécrivez-la comme section `[agents]` et réessayez.";
+"The credential script did not finish in time." = "Le script d'identifiants ne s'est pas terminé à temps.";
+"The credential script exited with status %d." = "Le script d’identifiants s’est terminé avec le code %d.";
+"The credential script file could not be found. Re-choose it in the provider editor." = "Le fichier du script d'identifiants est introuvable. Choisissez-le à nouveau dans l'éditeur de fournisseur.";
+"The credential script printed no token." = "Le script d’identifiants n’a affiché aucun jeton.";
+"The credential script was interrupted." = "Le script d’identifiants a été interrompu.";
+"The endpoint answered with HTTP %lld instead of a model catalog. Check the Base URL and the credential." = "Le point de terminaison a répondu avec HTTP %1$lld au lieu d’un catalogue de modèles. Vérifiez l’URL de base et l’identifiant.";
+"The endpoint answered, but not with a model catalog. Check the Base URL points at an OpenAI-compatible API root." = "Le point de terminaison a répondu, mais sans catalogue de modèles. Vérifiez que l’URL de base pointe vers une racine API compatible OpenAI.";
+"The legacy `agents.max_threads` key in ~/.codex/config.toml conflicts with the managed concurrency limit. Remove it and try again." = "La clé historique `agents.max_threads` dans ~/.codex/config.toml entre en conflit avec la limite de concurrence gérée. Supprimez-la et réessayez.";
+"The provider connection failed: %@." = "La connexion au fournisseur a échoué : %@.";

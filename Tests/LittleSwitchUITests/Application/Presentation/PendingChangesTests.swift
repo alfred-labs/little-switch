@@ -19,20 +19,22 @@ struct PendingChangesTests {
 
         model.hasPendingClaudeMappings = true
         model.hasPendingCodexChanges = true
-        #expect(model.pendingChangeNames == ["Claude", "Codex"])
+        #expect(model.pendingChangeNames == [L10n.string("Claude"), L10n.string("Codex")])
 
         model.hasPendingClaudeCodeChanges = true
         model.hasPendingOpenCodeChanges = true
         model.webSearchDraft = WebSearchInput(configuration: WebSearchConfiguration())
         #expect(
             model.pendingChangeNames == [
-                "Claude", "Claude Code", "Codex", "OpenCode", "Web search",
+                L10n.string("Claude"), L10n.string("Claude Code"), L10n.string("Codex"), L10n.string("OpenCode"),
+                L10n.string("Web search"),
             ]
         )
         #expect(
             model.pendingChangesWarning
-                == "Unapplied changes for Claude, Claude Code, Codex, OpenCode, "
-                + "and Web search will be discarded."
+                == L10n.string(
+                    "Unapplied changes for \(AppModel.list(model.pendingChangeNames)) will be discarded."
+                )
         )
     }
 
@@ -50,7 +52,7 @@ struct PendingChangesTests {
         )
 
         #expect(model.webSearchDraft == draft)
-        #expect(model.pendingChangeNames == ["Web search"])
+        #expect(model.pendingChangeNames == [L10n.string("Web search")])
 
         model.apply(CoordinatorSnapshot(configuration: AppConfiguration()))
         #expect(model.webSearchDraft == nil)
@@ -90,11 +92,22 @@ struct PendingChangesTests {
     @Test("The name list reads as a sentence at every length")
     func nameList() {
         #expect(AppModel.list([]).isEmpty)
-        #expect(AppModel.list(["Codex"]) == "Codex")
-        #expect(AppModel.list(["Codex", "OpenCode"]) == "Codex and OpenCode")
+        #expect(AppModel.list([L10n.string("Codex")]) == L10n.string("Codex"))
         #expect(
-            AppModel.list(["Claude Desktop", "Codex", "OpenCode"])
-                == "Claude Desktop, Codex, and OpenCode"
+            AppModel.list([L10n.string("Codex"), L10n.string("OpenCode")])
+                == ListFormatter.localizedString(
+                    byJoining: [L10n.string("Codex"), L10n.string("OpenCode")]
+                )
+        )
+        #expect(
+            AppModel.list([L10n.string("Claude Desktop"), L10n.string("Codex"), L10n.string("OpenCode")])
+                == ListFormatter.localizedString(
+                    byJoining: [
+                        L10n.string("Claude Desktop"),
+                        L10n.string("Codex"),
+                        L10n.string("OpenCode"),
+                    ]
+                )
         )
     }
 
@@ -106,8 +119,8 @@ struct PendingChangesTests {
         )
         #expect(
             StatusMenuCopy.detail("3 custom models", hasPendingChanges: true)
-                == "3 custom models · Changes pending"
+                == L10n.string("\("3 custom models") · \(StatusMenuCopy.pendingChanges)")
         )
-        #expect(StatusMenuCopy.customModelCount(1) == "1 custom model")
+        #expect(StatusMenuCopy.customModelCount(1) == L10n.string("\(1) custom model"))
     }
 }

@@ -11,11 +11,11 @@ struct MenuTabSwitcherView: View {
     var body: some View {
         HStack(spacing: 6) {
             HStack(spacing: 2) {
-                segment(.overview, title: "Overview") {
+                segment(.overview, title: L10n.string("Overview")) {
                     Image(systemName: "square.grid.2x2")
                 }
-                segment(.claude, title: "Claude") { ClaudeBrandIcon() }
-                segment(.codex, title: "Codex") { CodexIcon() }
+                segment(.claude, title: L10n.string("Claude")) { ClaudeBrandIcon() }
+                segment(.codex, title: L10n.string("Codex")) { CodexIcon() }
             }
             .padding(2)
             .background(Color.primary.opacity(0.05), in: .rect(cornerRadius: 7))
@@ -27,8 +27,8 @@ struct MenuTabSwitcherView: View {
                     .contentShape(.rect(cornerRadius: 6))
             }
             .buttonStyle(MenuHeaderButtonStyle(isSelected: false))
-            .accessibilityLabel("Open Settings")
-            .help("Settings… (⌘,)")
+            .accessibilityLabel(L10n.resource("Open Settings"))
+            .help(L10n.resource("Settings… (⌘,)"))
         }
         .padding(.horizontal, StatusMenuLayout.horizontalPadding)
         .padding(.vertical, 4)

@@ -1,20 +1,23 @@
 import Foundation
+import LittleSwitchWire
 
 extension ResponsesCompactionPlan {
     package func summaryRequest(
         model: String,
         stream: Bool,
-        repair: String? = nil
+        repair: String? = nil,
+        acceptsImages: Bool = true
     ) throws -> Data {
         guard let model = ResponsesCompactionJSON.nonempty(model) else {
             throw ResponsesCompactionError.invalidRequest
         }
         let original = try ResponsesCompactionJSON.object(requestJSON, error: .invalidRequest)
-        var input = try transcript(original: original)
+        var input = try transcript(original: original, acceptsImages: acceptsImages)
         if let repair {
             input.append([
-                "type": "message", "role": "user",
-                "content":
+                OpenAIResponsesUserMessage.Key.type.rawValue: OpenAIResponsesUserMessageType.message.rawValue,
+                OpenAIResponsesUserMessage.Key.role.rawValue: OpenAIResponsesUserMessageRole.user.rawValue,
+                OpenAIResponsesUserMessage.Key.content.rawValue:
                     "Your previous create_summary call was invalid: \(repair). Return one corrected create_summary call.",
             ])
         }
@@ -31,25 +34,51 @@ extension ResponsesCompactionPlan {
         if !omittedIndices.isEmpty {
             instructions += " " + ResponsesCompactionPlan.omissionNotice(count: omittedIndices.count)
         }
+        if !acceptsImages && !imageItemIndices.isEmpty {
+            instructions +=
+                " Image input was omitted for this model; do not claim to have inspected it. "
+                + "Original image items are retained separately."
+        }
         var request: [String: Any] = [
-            "model": model, "stream": stream, "store": false, "parallel_tool_calls": false,
-            "instructions": instructions,
-            "input": input,
-            "tools": [
+            OpenAIResponsesRoutingRequest.Key.model.rawValue: model,
+            ResponsesCompactionContract.Request.stream.rawValue: stream,
+            ResponsesCompactionContract.Request.store.rawValue: false,
+            ResponsesCompactionContract.Request.parallelToolCalls.rawValue: false,
+            ResponsesCompactionContract.Request.instructions.rawValue: instructions,
+            OpenAIResponsesRequestEnvelope.Key.input.rawValue: input,
+            OpenAIResponsesRequestEnvelope.Key.tools.rawValue: [
                 [
-                    "type": "function", "name": "create_summary", "strict": true,
-                    "description": "Return the summary and the references of exact source items to retain.",
-                    "parameters": [
-                        "type": "object", "additionalProperties": false,
-                        "properties": [
-                            "summary": ["type": "string"],
-                            "retain_item_ids": ["type": "array", "items": ["type": "string"]],
+                    ResponsesCompactionContract.Tool.type.rawValue: ResponsesCompactionContract.Kind.function.rawValue,
+                    ResponsesCompactionContract.Tool.name.rawValue: "create_summary",
+                    ResponsesCompactionContract.Tool.strict.rawValue: true,
+                    ResponsesCompactionContract.Tool.description.rawValue:
+                        "Return the summary and the references of exact source items to retain.",
+                    ResponsesCompactionContract.Tool.parameters.rawValue: [
+                        ResponsesCompactionContract.Schema.type.rawValue: ResponsesCompactionContract.Kind.object
+                            .rawValue,
+                        ResponsesCompactionContract.Schema.additionalProperties.rawValue: false,
+                        ResponsesCompactionContract.Schema.properties.rawValue: [
+                            ResponsesCompactionContract.Selection.summary.rawValue: [
+                                ResponsesCompactionContract.Schema.type.rawValue: "string"
+                            ],
+                            ResponsesCompactionContract.Selection.retainedIDs.rawValue: [
+                                ResponsesCompactionContract.Schema.type.rawValue: "array",
+                                ResponsesCompactionContract.Schema.items.rawValue: [
+                                    ResponsesCompactionContract.Schema.type.rawValue: "string"
+                                ],
+                            ],
                         ],
-                        "required": ["summary", "retain_item_ids"],
+                        ResponsesCompactionContract.Schema.required.rawValue: [
+                            ResponsesCompactionContract.Selection.summary.rawValue,
+                            ResponsesCompactionContract.Selection.retainedIDs.rawValue,
+                        ],
                     ],
                 ]
             ],
-            "tool_choice": ["type": "function", "name": "create_summary"],
+            OpenAIResponsesRequestEnvelope.Key.toolChoice.rawValue: [
+                ResponsesCompactionContract.Tool.type.rawValue: ResponsesCompactionContract.Kind.function.rawValue,
+                ResponsesCompactionContract.Tool.name.rawValue: "create_summary",
+            ],
         ]
         for key in ["temperature", "top_p"] {
             if let value = original[key], !(value is NSNull) { request[key] = value }
@@ -58,43 +87,71 @@ extension ResponsesCompactionPlan {
     }
 
     private func transcript(
-        original: [String: Any]
+        original: [String: Any], acceptsImages: Bool
     ) throws -> [[String: Any]] {
         var messages: [[String: Any]] = []
         var context: [String: Any] = [:]
-        for key in ["instructions", "tools"] {
+        for key in [
+            ResponsesCompactionContract.Request.instructions.rawValue,
+            OpenAIResponsesRequestEnvelope.Key.tools.rawValue,
+        ] {
             if let value = original[key], !(value is NSNull) { context[key] = value }
         }
-        if !context.isEmpty { messages.append(try quotedItem(["context": context], images: [])) }
+        if !context.isEmpty {
+            messages.append(
+                try quotedItem([ResponsesCompactionContract.Transcript.context.rawValue: context], images: []))
+        }
         for (index, data) in items.enumerated()
         where !preservedStateIndices.contains(index) && !omittedIndices.contains(index) {
             var item = try ResponsesCompactionJSON.object(data, error: .invalidRequest)
             let kind = try ResponsesCompactionJSON.kind(item, error: .invalidRequest)
-            if kind == "compaction" {
+            if kind == ResponsesCompactionContract.Kind.compaction.rawValue {
                 // Admission must expand or degrade foreign checkpoints before
                 // a managed model can summarize their readable history.
                 throw ResponsesCompactionError.unsupportedCompaction
             }
             // The quoted transcript can summarize readable reasoning, not decode provider state.
-            if kind == "reasoning" { item.removeValue(forKey: "encrypted_content") }
+            if kind == "reasoning" {
+                item.removeValue(forKey: ResponsesCompactionContract.Payload.encryptedContent.rawValue)
+            }
             var images: [[String: Any]] = []
-            for key in ["content", "output"] {
+            let contentKey = ResponsesImageInputProjection.contentKey(for: try WireJSONCompatibility.value(item))
+            for key in contentKey.map({ [$0] }) ?? [] {
                 if let parts = item[key] as? [[String: Any]] {
                     item[key] = try parts.map { part in
-                        guard part["type"] as? String == "input_image" else { return part }
                         guard
-                            ResponsesCompactionJSON.nonempty(part["image_url"]) != nil
-                                || ResponsesCompactionJSON.nonempty(part["file_id"]) != nil
+                            part[OpenAIResponsesUserMessage.Key.type.rawValue] as? String
+                                == ResponsesImagePartContract.Kind.inputImage.rawValue
+                        else { return part }
+                        guard
+                            ResponsesCompactionJSON.nonempty(part[ResponsesImagePartContract.Field.imageURL.rawValue])
+                                != nil
+                                || ResponsesCompactionJSON.nonempty(
+                                    part[ResponsesImagePartContract.Field.fileID.rawValue]) != nil
                         else { throw ResponsesCompactionError.invalidRequest }
+                        if !acceptsImages {
+                            return [
+                                OpenAIResponsesUserMessage.Key.type.rawValue: OpenAIResponsesInputTextPartType.inputText
+                                    .rawValue,
+                                OpenAIResponsesInputTextPart.Key.text.rawValue: ResponsesImageInputProjection
+                                    .omissionText,
+                            ]
+                        }
                         images.append(part)
-                        return ["type": "input_image", "image_index": images.count]
+                        return [
+                            OpenAIResponsesUserMessage.Key.type.rawValue: ResponsesImagePartContract.Kind.inputImage
+                                .rawValue,
+                            ResponsesCompactionContract.Transcript.imageIndex.rawValue: images.count,
+                        ]
                     }
                 }
             }
             messages.append(
                 try quotedItem(
                     [
-                        "ref": ResponsesCompactionJSON.reference(index), "type": kind, "item": item,
+                        ResponsesCompactionContract.Transcript.ref.rawValue: ResponsesCompactionJSON.reference(index),
+                        ResponsesCompactionContract.Transcript.type.rawValue: kind,
+                        ResponsesCompactionContract.Transcript.item.rawValue: item,
                     ],
                     images: images))
         }
@@ -103,8 +160,14 @@ extension ResponsesCompactionPlan {
 
     private func quotedItem(_ metadata: [String: Any], images: [[String: Any]]) throws -> [String: Any] {
         [
-            "type": "message", "role": "user",
-            "content": [["type": "input_text", "text": try ResponsesCompactionJSON.text(metadata)]] + images,
+            OpenAIResponsesUserMessage.Key.type.rawValue: OpenAIResponsesUserMessageType.message.rawValue,
+            OpenAIResponsesUserMessage.Key.role.rawValue: OpenAIResponsesUserMessageRole.user.rawValue,
+            OpenAIResponsesUserMessage.Key.content.rawValue: [
+                [
+                    OpenAIResponsesUserMessage.Key.type.rawValue: OpenAIResponsesInputTextPartType.inputText.rawValue,
+                    OpenAIResponsesInputTextPart.Key.text.rawValue: try ResponsesCompactionJSON.text(metadata),
+                ]
+            ] + images,
         ]
     }
 }

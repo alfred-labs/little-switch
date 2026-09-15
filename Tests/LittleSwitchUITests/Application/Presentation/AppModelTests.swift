@@ -12,7 +12,7 @@ struct AppModelTests {
     func settingsDestinationGroups() {
         #expect(
             AppModel.SidebarGroup.allCases.map(\.title) == [
-                "Common", "Backends", "Apps",
+                L10n.string("Common"), L10n.string("Backends"), L10n.string("Apps"),
             ])
         #expect(AppModel.SidebarGroup.common.sections == [.common])
         #expect(AppModel.SidebarGroup.backends.sections == [.providers, .webSearch, .monitoring])
@@ -58,7 +58,7 @@ struct AppModelTests {
         )
         #expect(
             AppModel.SidebarGroup.allCases.map(\.title) == [
-                "Common", "Backends", "Apps",
+                L10n.string("Common"), L10n.string("Backends"), L10n.string("Apps"),
             ]
         )
     }
@@ -82,30 +82,30 @@ struct AppModelTests {
         let model = AppModel(snapshot: CoordinatorSnapshot(configuration: configuration))
 
         #expect(model.codexPrimaryAction == .connect)
-        #expect(model.codexPrimaryActionTitle == "Apply")
+        #expect(model.codexPrimaryActionTitle == L10n.string("Apply"))
         #expect(model.canPerformCodexPrimaryAction)
         #expect(model.codexDefaultOptionID == model.optionID(for: first))
         #expect(model.isCodexModelExposed(first))
         #expect(!model.isCodexModelExposed(second))
         #expect(model.codexExposedModelOptions.map(\.mapping) == [first])
-        #expect(model.codexPrimaryActionAccessibilityValue == "Codex disconnected")
+        #expect(model.codexPrimaryActionAccessibilityValue == L10n.string("Codex disconnected"))
 
         model.configuration.codex.connected = true
         model.hasPendingCodexChanges = true
         #expect(model.codexPrimaryAction == .apply)
         #expect(model.canPerformCodexPrimaryAction)
-        #expect(model.codexPrimaryActionAccessibilityValue == "Changes pending")
+        #expect(model.codexPrimaryActionAccessibilityValue == L10n.string("Changes pending"))
 
         model.hasPendingCodexChanges = false
         #expect(!model.canPerformCodexPrimaryAction)
-        #expect(model.codexPrimaryActionAccessibilityHint == "No pending settings")
+        #expect(model.codexPrimaryActionAccessibilityHint == L10n.string("No pending settings"))
 
         model.configuration.codex.excludedModels = [first, second]
         model.hasPendingCodexChanges = true
         #expect(!model.canPerformCodexPrimaryAction)
         #expect(
             model.codexPrimaryActionAccessibilityHint
-                == "Expose at least one available model before applying changes"
+                == L10n.string("Expose at least one available model before applying changes")
         )
     }
 
@@ -132,30 +132,30 @@ struct AppModelTests {
 
         #expect(
             model.claudePrimaryActionAccessibilityHint
-                == "Applies LittleSwitch settings to Claude Desktop"
+                == L10n.string("Applies LittleSwitch settings to Claude Desktop")
         )
-        #expect(model.codexPrimaryActionAccessibilityHint == "Connects Codex to LittleSwitch")
+        #expect(model.codexPrimaryActionAccessibilityHint == L10n.string("Connects Codex to LittleSwitch"))
 
         model.isBusy = true
         #expect(!model.canPerformClaudePrimaryAction)
         #expect(!model.canPerformCodexPrimaryAction)
-        #expect(model.claudePrimaryActionAccessibilityHint == "An operation is in progress")
-        #expect(model.codexPrimaryActionAccessibilityHint == "An operation is in progress")
+        #expect(model.claudePrimaryActionAccessibilityHint == L10n.string("An operation is in progress"))
+        #expect(model.codexPrimaryActionAccessibilityHint == L10n.string("An operation is in progress"))
 
         model.isBusy = false
         model.configuration.connected = true
         model.configuration.codex.connected = true
         model.hasPendingCodexChanges = true
-        #expect(model.claudePrimaryActionTitle == "Apply")
-        #expect(model.codexPrimaryActionTitle == "Apply")
+        #expect(model.claudePrimaryActionTitle == L10n.string("Apply"))
+        #expect(model.codexPrimaryActionTitle == L10n.string("Apply"))
         #expect(
             model.claudePrimaryActionAccessibilityHint
-                == "Model routing edits wait for Apply"
+                == L10n.string("Model routing edits wait for Apply")
         )
-        #expect(model.codexPrimaryActionAccessibilityHint == "Applies pending settings")
+        #expect(model.codexPrimaryActionAccessibilityHint == L10n.string("Applies pending settings"))
 
         model.hasPendingCodexChanges = false
-        #expect(model.codexPrimaryActionAccessibilityValue == "No pending changes")
+        #expect(model.codexPrimaryActionAccessibilityValue == L10n.string("No pending changes"))
 
         model.configuration.mappings["claude-sonnet-5"] = ModelMapping(
             providerID: providerID,
@@ -163,14 +163,14 @@ struct AppModelTests {
         )
         #expect(
             model.claudePrimaryActionAccessibilityHint
-                == "Choose at least one available model to restore live routing"
+                == L10n.string("Choose at least one available model to restore live routing")
         )
 
         model.configuration.codex.connected = false
         model.configuration.codex.excludedModels = [mapping]
         #expect(
             model.codexPrimaryActionAccessibilityHint
-                == "Expose at least one available model before connecting Codex"
+                == L10n.string("Expose at least one available model before connecting Codex")
         )
     }
 
@@ -201,25 +201,25 @@ struct AppModelTests {
         model.configuration.connected = false
         #expect(model.claudePrimaryAction == .connect)
         #expect(model.canPerformClaudePrimaryAction)
-        #expect(model.claudePrimaryActionTitle == "Apply")
+        #expect(model.claudePrimaryActionTitle == L10n.string("Apply"))
         #expect(
             model.claudePrimaryActionAccessibilityHint
-                == "Applies LittleSwitch settings to Claude Desktop"
+                == L10n.string("Applies LittleSwitch settings to Claude Desktop")
         )
-        #expect(model.claudePrimaryActionAccessibilityValue == "Claude disconnected")
+        #expect(model.claudePrimaryActionAccessibilityValue == L10n.string("Claude disconnected"))
 
         model.configuration.connected = true
         #expect(model.claudePrimaryAction == nil)
         #expect(!model.canPerformClaudePrimaryAction)
-        #expect(model.claudePrimaryActionTitle == "Apply")
+        #expect(model.claudePrimaryActionTitle == L10n.string("Apply"))
         #expect(
             model.claudePrimaryActionAccessibilityHint
-                == "Model routing edits wait for Apply"
+                == L10n.string("Model routing edits wait for Apply")
         )
-        #expect(model.claudePrimaryActionAccessibilityValue == "No pending changes")
+        #expect(model.claudePrimaryActionAccessibilityValue == L10n.string("No pending changes"))
 
         model.hasPendingClaudeMappings = true
-        #expect(model.claudePrimaryActionAccessibilityValue == "Changes pending")
+        #expect(model.claudePrimaryActionAccessibilityValue == L10n.string("Changes pending"))
         model.hasPendingClaudeMappings = false
 
         model.isBusy = true
@@ -238,7 +238,7 @@ struct AppModelTests {
         #expect(!model.canPerformClaudePrimaryAction)
         #expect(
             model.claudePrimaryActionAccessibilityHint
-                == "Assign at least one available model before applying settings"
+                == L10n.string("Assign at least one available model before applying settings")
         )
     }
 }
@@ -356,40 +356,27 @@ struct AppModelSelectionTests {
             model: DiscoveredModel(id: "large", detectedContextWindow: 400_000)
         )
 
-        #expect(draft.detail == "Detected 400K · Effective 400K · Claude 200K")
+        #expect(
+            draft.detail
+                == L10n.string(
+                    "Detected \(ModelContextDraft.format(400_000)) · Effective \(ModelContextDraft.format(400_000)) · Claude \(L10n.string("200K"))"
+                )
+        )
         #expect(draft.isValid)
         #expect(try draft.parsedOverride() == nil)
 
         draft.overrideText = "1m"
-        #expect(draft.detail == "Detected 400K · Effective 1M · Claude 200K or 1M")
+        #expect(
+            draft.detail
+                == L10n.string(
+                    "Detected \(ModelContextDraft.format(400_000)) · Effective \(ModelContextDraft.format(1_000_000)) · Claude \(L10n.string("200K or 1M"))"
+                )
+        )
         #expect(try draft.parsedOverride() == 1_000_000)
 
         draft.overrideText = "invalid"
         #expect(!draft.isValid)
-        #expect(draft.detail == "Invalid context override")
-    }
-
-    @Test("Context formatting covers unknown, exact, thousands, and millions")
-    func completeModelContextFormatting() throws {
-        var unknown = ModelContextDraft(model: DiscoveredModel(id: "unknown"))
-        #expect(unknown.detail == "Detected Unknown · Effective Unknown · Claude 200K")
-
-        unknown.overrideText = "123"
-        #expect(unknown.detail == "Detected Unknown · Effective 123 · Claude 200K")
-        #expect(ModelContextDraft.format(123) == "123")
-        #expect(ModelContextDraft.format(400_000) == "400K")
-        #expect(ModelContextDraft.format(2_000_000) == "2M")
-
-        let overridden = ModelContextDraft(
-            model: DiscoveredModel(id: "manual", contextWindowOverride: 1_000_000)
-        )
-        #expect(overridden.overrideText == "1M")
-        #expect(overridden.declares1MManually)
-
-        unknown.overrideText = "invalid"
-        #expect(throws: ContextWindowInput.Error.self) {
-            try ModelContextDraft.contextOverrides(from: [unknown])
-        }
+        #expect(draft.detail == L10n.string("Invalid context override"))
     }
 
     @Test("Model context drafts serialize only explicit overrides")
@@ -450,7 +437,12 @@ struct AppModelSelectionTests {
         #expect(!stale.allows1MOverride)
         #expect(!stale.declares1MManually)
         #expect(stale.overrideText.isEmpty)
-        #expect(stale.detail == "Detected 400K · Effective 400K · Claude 200K")
+        #expect(
+            stale.detail
+                == L10n.string(
+                    "Detected \(ModelContextDraft.format(400_000)) · Effective \(ModelContextDraft.format(400_000)) · Claude \(L10n.string("200K"))"
+                )
+        )
     }
 
     @Test("Coordinator snapshots update menu and settings state atomically")

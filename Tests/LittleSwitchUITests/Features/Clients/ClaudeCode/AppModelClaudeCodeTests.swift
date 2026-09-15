@@ -37,31 +37,31 @@ struct AppModelClaudeCodeTests {
         )
 
         #expect(model.claudeCodePrimaryAction == .connect)
-        #expect(model.claudeCodePrimaryActionTitle == "Apply")
+        #expect(model.claudeCodePrimaryActionTitle == L10n.string("Apply"))
         #expect(model.canPerformClaudeCodePrimaryAction)
         #expect(
             model.claudeCodePrimaryActionAccessibilityHint
-                == "Configures new Claude Code terminal sessions"
+                == L10n.string("Configures new Claude Code terminal sessions")
         )
-        #expect(model.claudeCodePrimaryActionAccessibilityValue == "Claude Code disconnected")
+        #expect(model.claudeCodePrimaryActionAccessibilityValue == L10n.string("Claude Code disconnected"))
         #expect(model.claudeCodeMappedRouteOptions.map(\.id) == ["claude-opus-5"])
         #expect(model.claudeCodeDefaultRouteID == "claude-opus-5")
 
         model.claudeCodeStatus = .connected
         #expect(model.claudeCodeSwitchOn)
         #expect(model.claudeCodePrimaryAction == .apply)
-        #expect(model.claudeCodePrimaryActionTitle == "Apply")
+        #expect(model.claudeCodePrimaryActionTitle == L10n.string("Apply"))
         #expect(!model.canPerformClaudeCodePrimaryAction)
-        #expect(model.claudeCodePrimaryActionAccessibilityHint == "No pending settings")
-        #expect(model.claudeCodePrimaryActionAccessibilityValue == "No pending changes")
+        #expect(model.claudeCodePrimaryActionAccessibilityHint == L10n.string("No pending settings"))
+        #expect(model.claudeCodePrimaryActionAccessibilityValue == L10n.string("No pending changes"))
 
         model.hasPendingClaudeCodeChanges = true
         #expect(model.canPerformClaudeCodePrimaryAction)
         #expect(
             model.claudeCodePrimaryActionAccessibilityHint
-                == "Applies pending settings to new Claude Code terminal sessions"
+                == L10n.string("Applies pending settings to new Claude Code terminal sessions")
         )
-        #expect(model.claudeCodePrimaryActionAccessibilityValue == "Changes pending")
+        #expect(model.claudeCodePrimaryActionAccessibilityValue == L10n.string("Changes pending"))
 
         model.hasPendingClaudeCodeChanges = false
         model.claudeCodeStatus = .needsAttention
@@ -70,35 +70,35 @@ struct AppModelClaudeCodeTests {
         #expect(model.canPerformClaudeCodePrimaryAction)
         #expect(
             model.claudeCodePrimaryActionAccessibilityHint
-                == "Reapplies LittleSwitch settings for new Claude Code sessions"
+                == L10n.string("Reapplies LittleSwitch settings for new Claude Code sessions")
         )
-        #expect(model.claudeCodePrimaryActionAccessibilityValue == "Needs attention")
+        #expect(model.claudeCodePrimaryActionAccessibilityValue == L10n.string("Needs attention"))
 
         model.claudeCodeMappedRouteIDs = []
         #expect(!model.canPerformClaudeCodePrimaryAction)
         #expect(
             model.claudeCodePrimaryActionAccessibilityHint
-                == "Map at least one Claude model before applying Claude Code"
+                == L10n.string("Map at least one Claude model before applying Claude Code")
         )
         model.claudeCodeMappedRouteIDs = ["claude-opus-5"]
 
         model.claudeCodeStatus = .recoveryAvailable
         #expect(model.claudeCodeSwitchOn)
         #expect(model.claudeCodePrimaryAction == .restore)
-        #expect(model.claudeCodePrimaryActionTitle == "Restore settings")
+        #expect(model.claudeCodePrimaryActionTitle == L10n.string("Restore settings"))
         #expect(model.canPerformClaudeCodePrimaryAction)
         #expect(
             model.claudeCodePrimaryActionAccessibilityHint
-                == "Restores the previous user-level Claude Code settings"
+                == L10n.string("Restores the previous user-level Claude Code settings")
         )
-        #expect(model.claudeCodePrimaryActionAccessibilityValue == "Recovery available")
+        #expect(model.claudeCodePrimaryActionAccessibilityValue == L10n.string("Recovery available"))
 
         model.claudeCodeStatus = .recoveryUnavailable
         #expect(!model.claudeCodeSwitchOn)
         #expect(model.claudeCodePrimaryAction == .restore)
         #expect(!model.canPerformClaudeCodePrimaryAction)
-        #expect(model.claudeCodePrimaryActionAccessibilityHint == "Recovery data is unavailable")
-        #expect(model.claudeCodePrimaryActionAccessibilityValue == "Recovery unavailable")
+        #expect(model.claudeCodePrimaryActionAccessibilityHint == L10n.string("Recovery data is unavailable"))
+        #expect(model.claudeCodePrimaryActionAccessibilityValue == L10n.string("Recovery unavailable"))
 
         model.claudeCodeStatus = .disconnected
         #expect(!model.claudeCodeSwitchOn)
@@ -107,7 +107,7 @@ struct AppModelClaudeCodeTests {
         #expect(!model.canPerformClaudeCodePrimaryAction)
         #expect(
             model.claudeCodePrimaryActionAccessibilityHint
-                == "Map at least one Claude model before connecting Claude Code"
+                == L10n.string("Map at least one Claude model before connecting Claude Code")
         )
 
         model.claudeCodeMappedRouteIDs = ["claude-opus-5"]
@@ -117,7 +117,7 @@ struct AppModelClaudeCodeTests {
         #expect(model.claudeCodeDefaultRouteID == "claude-opus-5")
         model.isBusy = true
         #expect(!model.canPerformClaudeCodePrimaryAction)
-        #expect(model.claudeCodePrimaryActionAccessibilityHint == "An operation is in progress")
+        #expect(model.claudeCodePrimaryActionAccessibilityHint == L10n.string("An operation is in progress"))
     }
 
     @Test("Unified Claude Apply follows pending state across both applications")

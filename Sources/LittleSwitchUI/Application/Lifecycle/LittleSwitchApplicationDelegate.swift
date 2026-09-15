@@ -16,7 +16,7 @@ public final class LittleSwitchApplicationDelegate: NSObject, NSApplicationDeleg
     var coordinator: ApplicationCoordinator?
     var statusItemController: StatusItemController?
     var softwareUpdater: any SoftwareUpdateProviding = DisabledSoftwareUpdateController(
-        availability: .disabled(reason: "Software updates have not started.")
+        availability: .disabled(reason: L10n.string("Software updates have not started."))
     )
     private var settingsWindow: NSWindow?
     private var startupTask: Task<Void, Never>?
@@ -73,7 +73,7 @@ public final class LittleSwitchApplicationDelegate: NSObject, NSApplicationDeleg
         } catch {
             startApplicationShell()
             presentStartupFailure(
-                message: "Could not replace the existing LittleSwitch instance."
+                message: L10n.string("Could not replace the existing LittleSwitch instance.")
             )
             showMainWindow()
         }
@@ -253,7 +253,7 @@ extension LittleSwitchApplicationDelegate {
 
     private func saveProvider(_ input: ProviderInput) async -> ProviderSaveOutcome {
         guard let coordinator else {
-            return .failed("LittleSwitch is still starting up. Try again in a moment.")
+            return .failed(L10n.string("LittleSwitch is still starting up. Try again in a moment."))
         }
         model.isBusy = true
         do {
@@ -315,7 +315,7 @@ extension LittleSwitchApplicationDelegate {
     }
 
     private func connectClaudeCode() async {
-        guard confirm("Configure new Claude Code sessions to use LittleSwitch?") else {
+        guard confirm(L10n.string("Configure new Claude Code sessions to use LittleSwitch?")) else {
             return
         }
         await perform { try await $0.connectClaudeCode() }
@@ -324,8 +324,8 @@ extension LittleSwitchApplicationDelegate {
     private func restoreClaudeCodeSettings() async {
         guard
             confirmDiscardingPendingChanges(
-                "Restore the previous user-level Claude Code settings?",
-                actionTitle: "Restore"
+                L10n.string("Restore the previous user-level Claude Code settings?"),
+                actionTitle: L10n.string("Restore")
             )
         else {
             return
@@ -384,12 +384,12 @@ extension LittleSwitchApplicationDelegate {
             },
             onSaveProvider: { [weak self] input in
                 await self?.saveProvider(input)
-                    ?? .failed("LittleSwitch is unavailable. Try again in a moment.")
+                    ?? .failed(L10n.string("LittleSwitch is unavailable. Try again in a moment."))
             },
             onTestProvider: { [weak self] input in
                 await self?.testProvider(input)
                     ?? .authenticationFailed(
-                        "LittleSwitch is unavailable. Try again in a moment."
+                        L10n.string("LittleSwitch is unavailable. Try again in a moment.")
                     )
             },
             onSaveWebSearch: { [weak self] input in

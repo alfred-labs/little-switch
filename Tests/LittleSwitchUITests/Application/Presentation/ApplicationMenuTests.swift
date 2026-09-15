@@ -109,7 +109,7 @@ struct ApplicationMenuTests {
     @MainActor
     func statusMenuSettingsCommand() throws {
         let items = StatusMenuCommands.makeItems(target: nil)
-        let settings = try #require(items.first { $0.title == "Settings…" })
+        let settings = try #require(items.first { $0.title == L10n.string("Settings…") })
         #expect(settings.action == #selector(LittleSwitchApplicationDelegate.showMainWindow))
         #expect(settings.image?.isTemplate == true)
         #expect(settings.keyEquivalent == ",")
@@ -133,10 +133,14 @@ struct ApplicationMenuTests {
             encoding: .utf8
         )
 
-        let claudeDesktop = try #require(menuSource.range(of: "name: \"Claude Desktop\""))
-        let claudeCode = try #require(menuSource.range(of: "name: \"Claude Code\""))
-        let codex = try #require(menuSource.range(of: "name: \"Codex\""))
-        let openCode = try #require(menuSource.range(of: "name: \"OpenCode\""))
+        let claudeDesktop = try #require(
+            menuSource.range(of: "name: L10n.string(\"Claude Desktop\")")
+        )
+        let claudeCode = try #require(
+            menuSource.range(of: "name: L10n.string(\"Claude Code\")")
+        )
+        let codex = try #require(menuSource.range(of: "name: L10n.string(\"Codex\")"))
+        let openCode = try #require(menuSource.range(of: "name: L10n.string(\"OpenCode\")"))
         #expect(claudeDesktop.lowerBound < claudeCode.lowerBound)
         #expect(claudeCode.lowerBound < codex.lowerBound)
         #expect(codex.lowerBound < openCode.lowerBound)
@@ -145,7 +149,7 @@ struct ApplicationMenuTests {
                 "StatusMenuCopy.customModelCount(model.claudeCustomModelCount)"
             )
         )
-        #expect(menuSource.contains("\"Applies to new terminal sessions\""))
+        #expect(menuSource.contains("L10n.string(\"Applies to new terminal sessions\")"))
         #expect(
             menuSource.contains(
                 "StatusMenuCopy.customModelCount(model.codexCustomModelCount)"
@@ -188,9 +192,9 @@ struct ApplicationMenuTests {
     func customModelCountCopy() {
         #expect(
             [0, 1, 2].map(StatusMenuCopy.customModelCount) == [
-                "0 custom models",
-                "1 custom model",
-                "2 custom models",
+                L10n.string("\(0) custom models"),
+                L10n.string("\(1) custom model"),
+                L10n.string("\(2) custom models"),
             ]
         )
     }
@@ -229,7 +233,7 @@ struct ApplicationMenuTests {
 
         #expect(menuSource.contains("OpenCodeIcon()"))
         #expect(settingsSource.contains("OpenCodeIcon()"))
-        #expect(menuSource.contains("\"Applies to new terminal sessions\""))
+        #expect(menuSource.contains("L10n.string(\"Applies to new terminal sessions\")"))
     }
 
     @Test("Claude Code menu confirmations never claim to control a terminal process")
@@ -275,7 +279,7 @@ struct ApplicationMenuTests {
     @Test("Command-V routes Paste to the active text responder")
     func pasteCommand() throws {
         let menu = ApplicationMenuFactory.make()
-        let editItem = try #require(menu.items.first { $0.title == "Edit" })
+        let editItem = try #require(menu.items.first { $0.title == L10n.string("Edit") })
         let editMenu = try #require(editItem.submenu)
         let paste = try #require(editMenu.items.first { $0.action == NSSelectorFromString("paste:") })
 

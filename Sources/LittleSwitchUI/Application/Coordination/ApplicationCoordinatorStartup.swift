@@ -7,6 +7,8 @@ extension ApplicationCoordinator {
         gatewayActivityStartingCount += 1
         defer { gatewayActivityStartingCount -= 1 }
         configuration = try configurationStore.load()
+        await initializeImageInputProbing()
+        for provider in configuration.providers { await synchronizeImageInputContext(providerID: provider.id) }
         await startMonitoring()
         await seedPersistedWireProbes()
         await refreshProvidersAtStartup()
@@ -27,6 +29,7 @@ extension ApplicationCoordinator {
                 try configurationStore.save(configuration)
             }
         }
+        _ = await responsesWireVerdicts()
         if configuration.codex.connected {
             let hasModels =
                 !configuration.codex.exposedModels(in: configuration.providers).isEmpty
@@ -34,7 +37,8 @@ extension ApplicationCoordinator {
             if hasModels {
                 expectedSignature = try? CodexManagedProfileSignature.resolve(
                     providers: configuration.providers,
-                    configuration: configuration.codex
+                    configuration: configuration.codex,
+                    responsesWireVerdicts: catalogResponsesWireVerdicts
                 )
             } else {
                 expectedSignature = nil

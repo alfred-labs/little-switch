@@ -28,23 +28,23 @@ struct MenuTokenHistoryChartTests {
         defer { host.close() }
         try await host.activateAccessibility()
         #expect(
-            try host.element(label: "Token history").accessibilityValueDescription()
+            try host.element(label: L10n.string("Token history")).accessibilityValueDescription()
                 == "4 days, 350 tokens"
         )
-        #expect(try host.element(label: "Token history").accessibilityPerformIncrement())
+        #expect(try host.element(label: L10n.string("Token history")).accessibilityPerformIncrement())
         #expect(selection == 3)
         for expected in [2, 1, 0, 0] {
-            #expect(try host.element(label: "Token history").accessibilityPerformDecrement())
+            #expect(try host.element(label: L10n.string("Token history")).accessibilityPerformDecrement())
             #expect(selection == expected)
             host.hosting.rootView = content()
             host.render()
             #expect(
-                try host.element(label: "Token history").accessibilityValueDescription()
+                try host.element(label: L10n.string("Token history")).accessibilityValueDescription()
                     == "\(days[expected].label), \(points[expected]) tokens"
             )
         }
         for expected in [1, 2, 3, 3] {
-            #expect(try host.element(label: "Token history").accessibilityPerformIncrement())
+            #expect(try host.element(label: L10n.string("Token history")).accessibilityPerformIncrement())
             #expect(selection == expected)
         }
     }
@@ -83,7 +83,7 @@ struct MenuTokenHistoryChartTests {
         host.hosting.rootView = content()
         host.render()
         #expect(
-            try host.element(label: "Token history").accessibilityValueDescription()
+            try host.element(label: L10n.string("Token history")).accessibilityValueDescription()
                 == "Day 2, 100 tokens"
         )
 
@@ -105,7 +105,7 @@ struct MenuTokenHistoryChartTests {
         host.hosting.rootView = content()
         host.render()
         #expect(
-            try host.element(label: "Token history").accessibilityValueDescription()
+            try host.element(label: L10n.string("Token history")).accessibilityValueDescription()
                 == "4 days, 350 tokens"
         )
     }
@@ -129,7 +129,7 @@ struct MenuTokenHistoryChartTests {
         // AppKit exposes an adjustable control's spoken text through
         // AXValueDescription rather than a numeric AXValue.
         #expect(
-            try host.element(label: "Token history").accessibilityValueDescription()
+            try host.element(label: L10n.string("Token history")).accessibilityValueDescription()
                 == "4 days, 0 tokens"
         )
     }
@@ -152,11 +152,12 @@ struct MenuTokenHistoryChartTests {
         defer { host.close() }
         try await host.activateAccessibility()
 
-        #expect(try host.element(label: "Token history").accessibilityPerformIncrement())
+        #expect(try host.element(label: L10n.string("Token history")).accessibilityPerformIncrement())
         #expect(selection == nil)
-        #expect(try host.element(label: "Token history").accessibilityPerformDecrement())
+        #expect(try host.element(label: L10n.string("Token history")).accessibilityPerformDecrement())
         #expect(selection == nil)
-        #expect(try host.element(label: "Token history").accessibilityValueDescription() == "0 days, 0 tokens")
+        #expect(
+            try host.element(label: L10n.string("Token history")).accessibilityValueDescription() == "0 days, 0 tokens")
         #expect(host.hosting.fittingSize.height == GatewayOverviewLayout.chartHeight)
     }
 

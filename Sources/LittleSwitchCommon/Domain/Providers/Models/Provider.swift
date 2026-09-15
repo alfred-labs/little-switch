@@ -42,6 +42,8 @@ public struct Provider: Codable, Equatable, Identifiable, Sendable {
     /// Last endpoint-route probe, refreshed on every save. See
     /// `ProviderWireProbe`.
     public var wireProbe: ProviderWireProbe?
+    /// Conclusive image evidence, separate from advertised model metadata.
+    public var imageInputObservations: [ModelImageInputObservation]
 
     public init(
         id: UUID = UUID(),
@@ -60,7 +62,8 @@ public struct Provider: Codable, Equatable, Identifiable, Sendable {
         disabledThinkingOverride: ProviderDisabledThinkingOverride = .default,
         responsesWireOverride: ProviderResponsesWireOverride? = nil,
         anthropicBaseURL: String? = nil,
-        wireProbe: ProviderWireProbe? = nil
+        wireProbe: ProviderWireProbe? = nil,
+        imageInputObservations: [ModelImageInputObservation] = []
     ) {
         self.id = id
         self.name = name
@@ -79,6 +82,43 @@ public struct Provider: Codable, Equatable, Identifiable, Sendable {
         self.responsesWireOverride = responsesWireOverride
         self.anthropicBaseURL = anthropicBaseURL
         self.wireProbe = wireProbe
+        self.imageInputObservations = imageInputObservations
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, baseURL, authMode, credentialSource, credentialScriptPath
+        case credentialRefreshInterval, models, lastRefresh, status, lastError
+        case maximumParallelRequests, imageInputOverride, disabledThinkingOverride
+        case responsesWireOverride, anthropicBaseURL, wireProbe, imageInputObservations
+    }
+
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: try values.decode(UUID.self, forKey: .id),
+            name: try values.decode(String.self, forKey: .name),
+            baseURL: try values.decode(String.self, forKey: .baseURL),
+            authMode: try values.decode(AuthMode.self, forKey: .authMode),
+            credentialSource: try values.decode(CredentialSource.self, forKey: .credentialSource),
+            credentialScriptPath: try values.decodeIfPresent(String.self, forKey: .credentialScriptPath),
+            credentialRefreshInterval: try values.decodeIfPresent(
+                TimeInterval.self, forKey: .credentialRefreshInterval),
+            models: try values.decode([DiscoveredModel].self, forKey: .models),
+            lastRefresh: try values.decodeIfPresent(Date.self, forKey: .lastRefresh),
+            status: try values.decode(ProviderStatus.self, forKey: .status),
+            lastError: try values.decodeIfPresent(String.self, forKey: .lastError),
+            maximumParallelRequests: try values.decode(Int.self, forKey: .maximumParallelRequests),
+            imageInputOverride: try values.decodeIfPresent(
+                ProviderImageInputOverride.self, forKey: .imageInputOverride),
+            disabledThinkingOverride: try values.decode(
+                ProviderDisabledThinkingOverride.self, forKey: .disabledThinkingOverride),
+            responsesWireOverride: try values.decodeIfPresent(
+                ProviderResponsesWireOverride.self, forKey: .responsesWireOverride),
+            anthropicBaseURL: try values.decodeIfPresent(String.self, forKey: .anthropicBaseURL),
+            wireProbe: try values.decodeIfPresent(ProviderWireProbe.self, forKey: .wireProbe),
+            imageInputObservations: ModelImageInputObservationDecoding.decode(
+                from: values, forKey: .imageInputObservations)
+        )
     }
 
     public func imageInputsAccepted(for model: DiscoveredModel) -> Bool {

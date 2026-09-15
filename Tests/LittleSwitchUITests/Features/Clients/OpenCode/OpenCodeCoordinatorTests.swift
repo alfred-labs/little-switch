@@ -349,7 +349,7 @@ struct OpenCodeCoordinatorTests {
 }
 
 @MainActor
-private struct OpenCodeCoordinatorFixture {
+struct OpenCodeCoordinatorFixture {
     let alpha: ModelMapping
     let beta: ModelMapping
     let store: RecordingConfigurationStore

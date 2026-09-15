@@ -5,7 +5,9 @@ extension LittleSwitchApplicationDelegate {
     func connectCodex() async {
         guard
             confirm(
-                "Connect Codex to LittleSwitch with the exposed provider models?"
+                L10n.string(
+                    "Connect Codex to LittleSwitch with the exposed provider models?"
+                )
             )
         else {
             return

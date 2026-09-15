@@ -123,14 +123,14 @@ struct GatewayActivityMenuTests {
                     activity: .starting,
                     providers: [provider]
                 ),
-                "Starting gateway…"
+                L10n.string("Starting gateway…")
             ),
             (
                 GatewayActivityPresentation(
                     activity: .unavailable,
                     providers: [provider]
                 ),
-                "Gateway unavailable"
+                L10n.string("Gateway unavailable")
             ),
         ]
         for (presentation, expectedTitle) in cases {
@@ -141,7 +141,7 @@ struct GatewayActivityMenuTests {
 
             #expect(item.view == nil)
             #expect(item.title == expectedTitle)
-            #expect(item.image?.accessibilityDescription == "Gateway activity")
+            #expect(item.image?.accessibilityDescription == L10n.string("Gateway activity"))
             #expect(item.accessibilityLabel() == presentation.menu.accessibilityLabel)
             #expect(item.accessibilityValue() as? String == presentation.menu.accessibilityValue)
             #expect(item.accessibilityHelp() == presentation.menu.accessibilityHint)

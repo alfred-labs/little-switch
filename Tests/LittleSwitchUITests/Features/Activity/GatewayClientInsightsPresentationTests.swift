@@ -13,7 +13,8 @@ struct GatewayClientInsightsPresentationTests {
         #expect(stats.period(at: nil).metrics.map(\.value) == ["0", "0", "0", "0", "0%", "0"])
         #expect(stats.period(at: nil).tokenTotal == "0")
         #expect(stats.points == Array(repeating: 0, count: 30))
-        #expect(stats.axisLabels == ["Jul 31", "Aug 14", "Aug 29"])
+        #expect(
+            stats.axisLabels == ["Jul 31", "Aug 14", "Aug 29"])
     }
 
     @Test("The six insights aggregate only the chosen client's traffic")
@@ -23,11 +24,17 @@ struct GatewayClientInsightsPresentationTests {
 
         #expect(
             claude.metrics.map(\.title)
-                == ["Input tokens (est.)", "Cached tokens", "Output tokens", "Requests", "Errors", "Web searches"]
+                == [
+                    "Input tokens (est.)", "Cached tokens", "Output tokens",
+                    "Requests", "Errors", "Web searches",
+                ]
         )
         #expect(claude.metrics.map(\.value) == ["1.2K", "65", "120", "5", "20%", "3"])
         #expect(claude.tokenTotal == "1.42K")
-        #expect(claude.accessibilityValue.hasSuffix("includes estimates"))
+        #expect(
+            claude.accessibilityValue
+                == "30 days, 1,425 tokens, includes estimates"
+        )
         #expect(codex.metrics.map(\.value) == ["18K", "9K", "1.8K", "10", "50%", "12"])
         #expect(codex.tokenTotal == "28.8K")
         #expect(codex.metrics[0].title == "Input tokens")
@@ -48,7 +55,10 @@ struct GatewayClientInsightsPresentationTests {
         #expect(today.metrics.map(\.value) == ["240", "15", "20", "1", "0%", "1"])
         #expect(today.metrics[0].title == "Input tokens (est.)")
         #expect(stats.period(at: nil).metrics.map(\.value) == ["1.2K", "65", "120", "5", "20%", "3"])
-        #expect(today.accessibilityValue == "Today, 275 tokens, includes estimates")
+        #expect(
+            today.accessibilityValue
+                == "Today, 275 tokens, includes estimates"
+        )
         #expect(stats.period(at: Int.min) == stats.period(at: 0))
         #expect(stats.period(at: Int.max) == today)
     }
@@ -93,7 +103,11 @@ struct GatewayClientInsightsPresentationTests {
         )
     }
 
-    private func presentation(client: GatewayClient, days: [GatewayUsageDay]) -> GatewayUsageStatsPresentation {
+    private func presentation(
+        client: GatewayClient,
+        days: [GatewayUsageDay],
+        locale: Locale = Locale(identifier: "en_US")
+    ) -> GatewayUsageStatsPresentation {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .gmt
         return GatewayUsageStatsPresentation(
@@ -102,7 +116,8 @@ struct GatewayClientInsightsPresentationTests {
                 client: client,
                 now: Date(timeIntervalSince1970: 1_788_000_000),
                 calendar: calendar
-            )
+            ),
+            locale: locale
         )
     }
 

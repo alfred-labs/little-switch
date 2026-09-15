@@ -2,17 +2,18 @@ import SwiftUI
 
 struct ProviderModelContextTable: View {
     @Binding var contexts: [ModelContextDraft]
+    var imagePresentations: [String: ProviderModelImageInputPresentation] = [:]
 
     var body: some View {
         Section {
             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 0) {
                 GridRow {
-                    Text("Model")
+                    Text(L10n.resource("Model"))
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Text("Capacity")
+                    Text(L10n.resource("Capacity"))
                         .frame(minWidth: SettingsLayout.ProviderEditor.contextCapacityWidth, alignment: .trailing)
                         .gridColumnAlignment(.trailing)
-                    Text("1M in Claude")
+                    Text(L10n.resource("1M in Claude"))
                         .frame(width: SettingsLayout.ProviderEditor.contextToggleWidth, alignment: .trailing)
                         .gridColumnAlignment(.trailing)
                 }
@@ -23,34 +24,50 @@ struct ProviderModelContextTable: View {
                 ForEach($contexts) { $context in
                     Divider()
                         .gridCellUnsizedAxes(.horizontal)
-                    ProviderModelContextRow(context: $context)
+                    ProviderModelContextRow(context: $context, imagePresentation: imagePresentations[context.id])
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         } header: {
             HStack {
-                Text("Model context")
+                Text(L10n.resource("Model context"))
                 Spacer()
-                Text(contexts.count == 1 ? "1 model" : "\(contexts.count) models")
-                    .foregroundStyle(.secondary)
+                Text(
+                    contexts.count == 1
+                        ? L10n.resource("1 model")
+                        : L10n.resource("\(contexts.count) models")
+                )
+                .foregroundStyle(.secondary)
             }
         } footer: {
-            Text("1M adds an optional model variant in Claude. Unavailable when detected capacity is below 1M.")
+            Text(
+                L10n.resource(
+                    "1M adds an optional model variant in Claude. Unavailable when detected capacity is below 1M."))
         }
     }
 }
 
 private struct ProviderModelContextRow: View {
     @Binding var context: ModelContextDraft
+    let imagePresentation: ProviderModelImageInputPresentation?
 
     var body: some View {
         GridRow {
-            Text(context.id)
-                .font(SettingsLayout.Typography.monospacedValue)
-                .lineLimit(2)
-                .truncationMode(.middle)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .help(context.id)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(context.id)
+                    .font(SettingsLayout.Typography.monospacedValue)
+                    .lineLimit(2)
+                    .truncationMode(.middle)
+                    .help(context.id)
+                if let imagePresentation {
+                    Text(imagePresentation.title)
+                        .font(SettingsLayout.Typography.supporting)
+                        .foregroundStyle(.secondary)
+                        .help(imagePresentation.help)
+                        .accessibilityHint(imagePresentation.help)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
             VStack(alignment: .trailing, spacing: 2) {
                 Text(context.capacityText)
                     .monospacedDigit()
@@ -64,7 +81,7 @@ private struct ProviderModelContextRow: View {
             .fixedSize(horizontal: true, vertical: false)
             .frame(minWidth: SettingsLayout.ProviderEditor.contextCapacityWidth, alignment: .trailing)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Capacity for \(context.id)")
+            .accessibilityLabel(L10n.resource("Capacity for \(context.id)"))
             .accessibilityValue(context.detail)
             .help(context.detail)
 
@@ -74,11 +91,14 @@ private struct ProviderModelContextRow: View {
                 .fixedSize()
                 .frame(width: SettingsLayout.ProviderEditor.contextToggleWidth, alignment: .trailing)
                 .disabled(!context.allows1MOverride)
-                .accessibilityLabel("Expose 1M context for \(context.id)")
+                .accessibilityLabel(L10n.resource("Expose 1M context for \(context.id)"))
                 .help(
+
                     context.allows1MOverride
-                        ? "Expose both the standard and [1m] Claude references"
-                        : "Detected capacity is below 1M"
+                        ? L10n.resource(
+                            "Expose both the standard and [1m] Claude references"
+                        )
+                        : L10n.resource("Detected capacity is below 1M")
                 )
         }
         .frame(minHeight: SettingsLayout.catalogModelRowMinimumHeight)

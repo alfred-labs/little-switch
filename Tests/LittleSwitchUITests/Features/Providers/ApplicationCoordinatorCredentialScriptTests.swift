@@ -5,6 +5,11 @@ import Testing
 @testable import LittleSwitchCore
 @testable import LittleSwitchUI
 
+private func scriptFailure(status: Int32, standardError: String) -> String {
+    let prefix = CoreL10n.string("The credential script exited with status \(status).")
+    return CoreL10n.string("\(prefix) \(standardError)")
+}
+
 private final class ScriptedScriptRunner: CredentialScriptRunning, @unchecked Sendable {
     private let lock = NSLock()
     private var scripts: [String] = []
@@ -416,7 +421,7 @@ struct CoordinatorCredentialScriptTests {
             return failures[fixture.providerID]
         }
         #expect(
-            failure == "The credential script exited with status 1. denied"
+            failure == scriptFailure(status: 1, standardError: "denied")
         )
         await fixture.coordinator.shutdown(mode: .handoff)
     }

@@ -52,6 +52,26 @@ struct MonitoringCoordinatorTests {
         await coordinator.shutdown()
     }
 
+    @Test("A failed settings save explains that the previous settings remain active")
+    func saveFailureCopy() async throws {
+        let store = RecordingConfigurationStore(configuration: .init())
+        let coordinator = makeCoordinator(store: store)
+        store.failNextSave()
+
+        do {
+            _ = try await coordinator.applyMonitoring(.init(configuration: .init()))
+            Issue.record("The failed save should throw")
+        } catch let error as MonitoringSettingsError {
+            #expect(
+                error.errorDescription
+                    == L10n.string(
+                        "Monitoring settings could not be saved. The previous settings remain active."
+                    )
+            )
+        }
+        await coordinator.shutdown()
+    }
+
     private func makeCoordinator(
         store: RecordingConfigurationStore,
         secrets: MemorySecretStore = MemorySecretStore()

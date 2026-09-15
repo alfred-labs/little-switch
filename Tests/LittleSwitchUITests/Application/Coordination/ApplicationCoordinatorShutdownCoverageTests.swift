@@ -25,14 +25,19 @@ struct CoordinatorShutdownCoverageTests {
         let transport = ScriptedCatalogTransport(
             executions: [.catalog, .catalog, .suspended]
         )
+        // Keep the catalog execution script independent of optional inference diagnostics.
+        let imageProber = CoordinatorImageTestProber(outcome: .inconclusive(.invalidResponse))
+        await imageProber.release.open()
         let coordinator = ApplicationCoordinator(
             configurationStore: store,
             secretStore: MemorySecretStore(),
             profileManager: ScriptedClaudeProfileManager(),
             claudeController: ScriptedApplicationController(),
             discoveryTransport: transport,
-            gatewayTransport: TestGatewayTransport(),
-            gatewayServerOverride: TestGatewayServer()
+            gatewayTransportBuilder: InjectedGatewayTransportBuilder(transport: TestGatewayTransport()),
+            gatewayServerOverride: TestGatewayServer(),
+            gatewayFactory: LiveGatewayFactory(builder: LiveGatewayBuilder()),
+            imageInputProber: imageProber
         )
         _ = try await coordinator.start()
 

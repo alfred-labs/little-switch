@@ -89,6 +89,9 @@ extension ApplicationCoordinator {
             routingMutationToken: routingMutationToken
         )
         await seedResponsesCapability(from: provider.wireProbe, providerID: provider.id)
+        if let previousProvider, !provider.hasSameImageInputIdentity(as: previousProvider) {
+            await customToolCapabilities?.invalidate(providerIDs: [provider.id])
+        }
         let credentialChangedProviderIDs: Set<UUID> = credentialChanged ? [provider.id] : []
         await replaceGatewayRoutingIfNeeded(
             credentialChangedProviderIDs: credentialChangedProviderIDs
@@ -103,6 +106,7 @@ extension ApplicationCoordinator {
         } else {
             await gatewayRoutingMutationGuard.end(routingMutationToken)
         }
+        await scheduleImageInputProbes(providerID: providerID)
         return await snapshot()
     }
 
@@ -140,13 +144,20 @@ extension ApplicationCoordinator {
         routingMutationToken: UUID
     ) async throws {
         let oldConfiguration = configuration
-        if let index = configuration.providers.firstIndex(where: { $0.id == provider.id }) {
-            configuration.providers[index] = provider
-        } else {
-            configuration.providers.append(provider)
-        }
-        removeInvalidMappings(for: provider)
+        var provider = provider
         do {
+            // Re-read after the routing guard's await, so a concurrent diagnostic
+            // cannot be overwritten by the provider copy prepared before discovery.
+            provider.imageInputObservations = try imageInputObservationsForProvider(
+                provider,
+                previous: configuration.providers.first { $0.id == provider.id },
+                credentialChanged: previousSecret != credential.secret)
+            if let index = configuration.providers.firstIndex(where: { $0.id == provider.id }) {
+                configuration.providers[index] = provider
+            } else {
+                configuration.providers.append(provider)
+            }
+            removeInvalidMappings(for: provider)
             try persistCredential(credential, providerID: provider.id)
             try configurationStore.save(configuration)
         } catch {
@@ -161,6 +172,8 @@ extension ApplicationCoordinator {
         if dropsLegacyScript {
             deleteLegacyCredentialScript(providerID: provider.id)
         }
+        await synchronizeImageInputContext(
+            providerID: provider.id, credentialChanged: previousSecret != credential.secret)
     }
 
     /// Rolls the stored credential back after a failed save; any restore
@@ -228,13 +241,19 @@ extension ApplicationCoordinator {
                 existingContextOverrides(provider),
                 to: refreshedModels
             )
+            provider.imageInputObservations = try imageInputObservationsForProvider(
+                provider,
+                previous: configuration.providers[refreshedIndex],
+                credentialChanged: false)
             provider.lastRefresh = Date()
             provider.status = .ready
             provider.lastError = nil
             configuration.providers[refreshedIndex] = provider
             removeInvalidMappings(for: provider)
             try configurationStore.save(configuration)
+            await synchronizeImageInputContext(providerID: id)
             await replaceGatewayRoutingIfNeeded()
+            await scheduleImageInputProbes(providerID: id)
             return await snapshot()
         } catch {
             let providerStillExists = configuration.providers.contains { $0.id == id }
@@ -301,6 +320,7 @@ extension ApplicationCoordinator {
             await gatewayRoutingMutationGuard.end(routingMutationToken)
             throw persistenceError
         }
+        await cancelImageInputProbes(providerID: id)
         await replaceGatewayRoutingIfNeeded()
         if providerIntentIsCurrent(intent, providerID: id) {
             await gatewayRoutingMutationGuard.endAll(providerID: id)

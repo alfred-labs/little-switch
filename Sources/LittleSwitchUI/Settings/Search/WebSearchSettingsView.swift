@@ -25,7 +25,7 @@ struct WebSearchSettingsView: View {
 
     var body: some View {
         SettingsPage {
-            SettingsSection("Search provider") {
+            SettingsSection(L10n.resource("Search provider")) {
                 SettingsCard {
                     WebSearchProviderPicker(
                         selection: Binding(
@@ -39,9 +39,9 @@ struct WebSearchSettingsView: View {
             if let connectionTitle = draft.connectionTitle {
                 SettingsSection(connectionTitle) {
                     SettingsCard {
-                        LabeledContent("API key") {
+                        LabeledContent(L10n.string("API key")) {
                             SecureField(
-                                "API key",
+                                L10n.resource("API key"),
                                 text: $draft.credential,
                                 prompt: Text(draft.credentialPresentation.placeholder)
                             )
@@ -50,33 +50,42 @@ struct WebSearchSettingsView: View {
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: 300)
                             .disabled(model.isBusy)
-                            .accessibilityLabel("API key")
+                            .accessibilityLabel(L10n.resource("API key"))
                             .accessibilityHint(draft.credentialPresentation.accessibilityHint)
                         }
                         .settingsRow()
                     }
                 }
-                SettingsSection("Usage limits") {
+                SettingsSection(L10n.resource("Usage limits")) {
                     SettingsCard {
                         Stepper(value: $draft.resultsLimit, in: draft.resultsRange) {
                             usageLabel(
-                                "Results per search",
-                                detail: "More results consume more context.",
+                                L10n.resource("Results per search"),
+                                detail: L10n.resource(
+                                    "More results consume more context."
+                                ),
                                 value: draft.resultsLimit)
                         }
                         .padding(.vertical, 6)
                         Stepper(value: $draft.maximumUses, in: WebSearchDraft.maximumUsesRange) {
-                            usageLabel("Maximum searches", detail: maximumSearchesDetail, value: draft.maximumUses)
+                            usageLabel(
+                                L10n.resource("Maximum searches"),
+                                detail: maximumSearchesDetail,
+                                value: draft.maximumUses
+                            )
                         }
                         .padding(.vertical, 6)
                     }
-                    Text("Limits apply to each response.")
+                    Text(L10n.resource("Limits apply to each response."))
                         .settingsSupportingText()
                 }
                 .disabled(model.isBusy)
             }
             Label(
-                draft.provider == .disabled ? "Web search is disabled." : "Changes apply to new requests.",
+
+                draft.provider == .disabled
+                    ? L10n.resource("Web search is disabled.")
+                    : L10n.resource("Changes apply to new requests."),
                 systemImage: "info.circle"
             )
             .settingsSupportingText()
@@ -84,10 +93,13 @@ struct WebSearchSettingsView: View {
         .toolbar {
             SettingsToolbarActions {
                 if hasPendingChanges { SettingsPendingNotice() }
-                Button(model.isBusy ? "Applying…" : "Apply", systemImage: "checkmark") { applyDraft() }
-                    .keyboardShortcut("s", modifiers: .command)
-                    .disabled(!canApply)
-                    .accessibilityHint("Apply web search settings")
+                Button(
+                    model.isBusy ? L10n.string("Applying…") : L10n.string("Apply"),
+                    systemImage: "checkmark"
+                ) { applyDraft() }
+                .keyboardShortcut("s", modifiers: .command)
+                .disabled(!canApply)
+                .accessibilityHint(L10n.string("Apply web search settings"))
             }
         }
         .onChange(of: model.configuration.webSearch) { _, configuration in
@@ -117,8 +129,8 @@ struct WebSearchSettingsView: View {
     }
 
     private func usageLabel(
-        _ title: String,
-        detail: String,
+        _ title: LocalizedStringResource,
+        detail: LocalizedStringResource,
         value: Int
     ) -> some View {
         HStack(spacing: 12) {
@@ -137,18 +149,18 @@ struct WebSearchSettingsView: View {
         }
     }
 
-    private var maximumSearchesDetail: String {
+    private var maximumSearchesDetail: LocalizedStringResource {
         switch draft.provider {
         case .firecrawl:
-            "Each Firecrawl Cloud search may consume credits."
+            L10n.resource("Each Firecrawl Cloud search may consume credits.")
         case .tavily:
-            "Each Tavily search may consume credits."
+            L10n.resource("Each Tavily search may consume credits.")
         case .brave:
-            "Each Brave search may consume credits."
+            L10n.resource("Each Brave search may consume credits.")
         case .exa:
-            "Each Exa search may consume credits."
+            L10n.resource("Each Exa search may consume credits.")
         case .disabled:
-            "Each search may consume credits."
+            L10n.resource("Each search may consume credits.")
         }
     }
 

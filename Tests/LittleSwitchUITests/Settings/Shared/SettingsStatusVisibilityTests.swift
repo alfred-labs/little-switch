@@ -11,7 +11,7 @@ struct SettingsStatusVisibilityTests {
 
     @Test("Connection text stays visible when a toolbar requests icons only")
     func connectionKeepsItsText() {
-        let status = SettingsConnectionStatus(connected: true, title: "Desktop connected")
+        let status = SettingsConnectionStatus(connected: true, title: L10n.string("Desktop connected"))
         let regular = NSHostingView(rootView: status)
         let iconToolbar = NSHostingView(rootView: status.labelStyle(.iconOnly))
 

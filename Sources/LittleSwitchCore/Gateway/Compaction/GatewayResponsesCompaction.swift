@@ -43,6 +43,8 @@ extension GatewayResponder {
             return openAIError(status: .badRequest, message: "Invalid compaction request")
         } catch ResponsesCompactionError.unsupportedCompaction {
             return openAIError(status: .badRequest, message: "Compacted history requires its original provider")
+        } catch ResponsesCompactionError.responseTooLarge {
+            return openAIError(status: .contentTooLarge, message: "Compacted response is too large")
         } catch {
             return openAIError(status: .badGateway, message: "Could not compact conversation")
         }
@@ -54,93 +56,87 @@ extension GatewayResponder {
         incomingHeaders: HTTPHeaders,
         eventID: UUID
     ) async throws -> ResponsesCompactionResult {
-        try await compactResponses(
-            target: target,
-            incomingHeaders: incomingHeaders,
-            eventID: eventID,
-            attempt: CompactionAttempt(plan: plan)
-        )
-    }
-
-    /// Bounded recursion state: one selection repair and one context-overflow
-    /// trim, so at most three model turns serve a single compaction.
-    private struct CompactionAttempt {
-        let plan: ResponsesCompactionPlan
-        let number: Int
-        let repair: String?
-        let overflowTrimmed: Bool
-        let usage: ResponsesUsage
-
-        init(
-            plan: ResponsesCompactionPlan,
-            number: Int = 1,
-            repair: String? = nil,
-            overflowTrimmed: Bool = false,
-            usage: ResponsesUsage = ResponsesUsage(inputTokens: 0, outputTokens: 0)
-        ) {
-            self.plan = plan
-            self.number = number
-            self.repair = repair
-            self.overflowTrimmed = overflowTrimmed
-            self.usage = usage
-        }
-    }
-
-    private func compactResponses(
-        target: GatewayCompactionTarget,
-        incomingHeaders: HTTPHeaders,
-        eventID: UUID,
-        attempt: CompactionAttempt
-    ) async throws -> ResponsesCompactionResult {
-        var usage = attempt.usage
-        var plan = attempt.plan
-        let body = try plan.summaryRequest(
-            model: target.route.model.id,
-            stream: false,
-            repair: attempt.repair
-        )
-        do {
-            let turn = try await compactionModelTurn(
-                body: body,
-                target: target,
-                incomingHeaders: incomingHeaders,
-                eventID: eventID,
-                attempt: attempt.number
-            )
-            usage.add(turn.usage)
+        var attempt = CompactionAttempt(
+            plan: plan,
+            wire: await resolvesChatCompletionsAdapter(target.route.provider) ? .chatCompletions : .responses)
+        while true {
+            try Task.checkCancellation()
+            let acceptsImages = try await acceptsResponsesImages(
+                target: target.route, wire: attempt.wire, forceText: attempt.budget.imageFallbackUsed)
+            if !acceptsImages { attempt.plan = try attempt.plan.preservingUninspectedImages() }
+            let body = try attempt.plan.summaryRequest(
+                model: target.route.model.id, stream: false, repair: attempt.repair, acceptsImages: acceptsImages)
+            attempt.budget = try attempt.budget.recordingCall()
             do {
-                let result = try plan.complete(responseBody: turn.rootJSON)
-                return ResponsesCompactionResult(itemJSON: result.itemJSON, usage: usage)
-            } catch let error as ResponsesCompactionError {
-                guard case .invalidSelection(let reason) = error, attempt.repair == nil else {
-                    throw ResponsesCompactionError.invalidResponse
+                let turn = try await compactionModelTurn(
+                    body: body,
+                    target: target,
+                    incomingHeaders: incomingHeaders,
+                    eventID: eventID,
+                    attempt: attempt.budget.upstreamCalls,
+                    preferredWire: attempt.wire == .chatCompletions ? .chatCompletions : .native)
+                attempt.usage.add(turn.usage)
+                do {
+                    let result = try attempt.plan.complete(
+                        responseBody: turn.rootJSON, maximumBytes: maximumRequestBytes)
+                    return ResponsesCompactionResult(itemJSON: result.itemJSON, usage: attempt.usage)
+                } catch let error as ResponsesCompactionError {
+                    guard case .invalidSelection(let reason) = error else { throw error }
+                    guard let budget = try? attempt.budget.taking(.selectionRepair) else {
+                        throw ResponsesCompactionError.invalidResponse
+                    }
+                    attempt.budget = budget
+                    attempt.repair = reason
                 }
-                let next = CompactionAttempt(
-                    plan: plan,
-                    number: attempt.number + 1,
-                    repair: reason,
-                    overflowTrimmed: attempt.overflowTrimmed,
-                    usage: usage
-                )
-                return try await compactResponses(
-                    target: target, incomingHeaders: incomingHeaders, eventID: eventID, attempt: next)
+            } catch let failure as CompactionUpstreamFailure {
+                guard try await retryCompaction(failure, attempt: &attempt, body: body, target: target.route) else {
+                    throw failure
+                }
             }
-        } catch let failure as CompactionUpstreamFailure {
-            // A context overflow retries once after shedding the oldest
-            // removable transcript items, mirroring Ollama's trim.
-            guard !attempt.overflowTrimmed, Self.isContextLimit(failure),
-                try plan.trimForContextLimit() > 0
-            else { throw failure }
-            let next = CompactionAttempt(
-                plan: plan,
-                number: attempt.number + 1,
-                repair: attempt.repair,
-                overflowTrimmed: true,
-                usage: usage
-            )
-            return try await compactResponses(
-                target: target, incomingHeaders: incomingHeaders, eventID: eventID, attempt: next)
         }
+    }
+
+    private struct CompactionAttempt {
+        var plan: ResponsesCompactionPlan
+        var wire: ModelImageInputWire
+        var budget = CompactionAttemptBudget()
+        var repair: String?
+        var usage = ResponsesUsage(inputTokens: 0, outputTokens: 0)
+    }
+
+    /// Every retry cause spends the same request-scoped budget. The model-turn executor sends once.
+    private func retryCompaction(
+        _ failure: CompactionUpstreamFailure,
+        attempt: inout CompactionAttempt,
+        body: Data,
+        target: CodexModelTarget
+    ) async throws -> Bool {
+        let status = failure.response.status.code
+        let routeAbsent =
+            attempt.wire == .responses && responsesAdapterFallbackApplies(status: status, provider: target.provider)
+        if routeAbsent {
+            guard let budget = try? attempt.budget.taking(.routeFallback) else { return false }
+            attempt.budget = budget
+            attempt.wire = .chatCompletions
+            return true
+        }
+        let hasImages = try !ResponsesImageInputProjection.project(body: body, acceptsImages: true).imageItemIndices
+            .isEmpty
+        let rejected = await learnResponsesImageRejection(
+            status: status, body: failure.body, target: target, wire: attempt.wire, hasImageInput: hasImages)
+        if rejected {
+            guard let budget = try? attempt.budget.taking(.imageFallback) else { return false }
+            attempt.budget = budget
+            attempt.plan = try attempt.plan.preservingUninspectedImages()
+            return true
+        }
+        if Self.isContextLimit(failure) {
+            guard let budget = try? attempt.budget.taking(.contextTrim), try attempt.plan.trimForContextLimit() > 0
+            else { return false }
+            attempt.budget = budget
+            return true
+        }
+        return false
     }
 
     /// Ollama's heuristic: the provider reports a context overflow either as

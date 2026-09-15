@@ -150,24 +150,24 @@ extension GatewayResponder {
         }
         try Task.checkCancellation()
 
-        trafficRecorder.record(
-            eventID: context.eventID,
-            action: .upstreamRequest(
-                trafficUpstreamRequest(
-                    attempt: 0,
-                    target: context.target,
-                    request: upstreamRequest,
-                    body: upstreamBody,
-                    streaming: context.streaming
-                )
-            )
+        let upstreamTraffic = trafficUpstreamRequest(
+            attempt: 0,
+            target: context.target,
+            request: upstreamRequest,
+            body: upstreamBody,
+            streaming: context.streaming
         )
 
         let firstResponse: GatewayModelExchange
         do {
             try Task.checkCancellation()
             firstResponse = try await executeModelRequest(
-                upstreamRequest, body: upstreamBody, wire: .anthropic, eventID: context.eventID, attempt: 0
+                upstreamRequest,
+                body: upstreamBody,
+                traffic: upstreamTraffic,
+                wire: .anthropic,
+                eventID: context.eventID,
+                attempt: 0
             )
             try Task.checkCancellation()
         } catch is CancellationError {

@@ -18,7 +18,7 @@ struct AppModelGatewayActivityTests {
         )
 
         #expect(model.gatewayActivity == .starting)
-        #expect(model.gatewayActivityPresentation.menu.title == "Starting gateway…")
+        #expect(model.gatewayActivityPresentation.menu.title == L10n.string("Starting gateway…"))
         #expect(model.gatewayActivityPresentation.menu.dashboard == nil)
     }
 
@@ -61,7 +61,10 @@ struct AppModelGatewayActivityTests {
         model.updateGatewayActivity(.running(pool))
 
         #expect(model.gatewayActivity == .running(pool))
-        #expect(model.gatewayActivityPresentation.menu.title == "1 running · 1 waiting")
+        #expect(
+            model.gatewayActivityPresentation.menu.title
+                == L10n.string("\(1) running · \(1) waiting")
+        )
         #expect(model.gatewayActivityPresentation.menu.dashboard == .init(runningCount: 1, waitingCount: 1, stats: nil))
         #expect(model.configuration == configuration)
         #expect(model.requestCount == 12)
@@ -162,7 +165,7 @@ struct AppModelGatewayActivityTests {
         #expect(model.gatewayUsage?.today.requests == 1)
         let stats = model.gatewayActivityPresentation.menu.dashboard?.stats
         let period = stats?.period(at: nil)
-        #expect(period?.metrics[3].title == "Requests")
+        #expect(period?.metrics[3].title == L10n.string("Requests"))
         #expect(period?.metrics[3].value == "1")
         #expect(period?.metrics[3].isLeading == true)
         #expect(period?.metrics[0].value == "300")

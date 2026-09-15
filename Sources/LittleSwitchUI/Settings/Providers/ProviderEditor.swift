@@ -31,6 +31,7 @@ struct ProviderEditor: View {
     let providers: [Provider]
     let responsesWireVerdict: Bool?
     let lastScriptOutput: String?
+    let imageDiagnostics: [ModelImageInputProbeDiagnostic]
     let onTest: @MainActor (ProviderInput) async -> ProviderTestOutcome
     let onSave: @MainActor (ProviderInput) async -> ProviderSaveOutcome
 
@@ -39,6 +40,7 @@ struct ProviderEditor: View {
         providers: [Provider] = [],
         responsesWireVerdict: Bool? = nil,
         lastScriptOutput: String? = nil,
+        imageDiagnostics: [ModelImageInputProbeDiagnostic] = [],
         onTest: @escaping @MainActor (ProviderInput) async -> ProviderTestOutcome,
         onSave: @escaping @MainActor (ProviderInput) async -> ProviderSaveOutcome
     ) {
@@ -47,6 +49,7 @@ struct ProviderEditor: View {
         self.providers = providers
         self.responsesWireVerdict = draft.intent == .edit ? responsesWireVerdict : nil
         self.lastScriptOutput = draft.intent == .edit ? lastScriptOutput : nil
+        self.imageDiagnostics = imageDiagnostics
         self.onTest = onTest
         self.onSave = onSave
     }
@@ -69,7 +72,9 @@ struct ProviderEditor: View {
                 ProviderEditorAdvanced(
                     draft: $draft,
                     isExpanded: $advancedExpanded,
-                    responsesWireVerdict: responsesWireVerdict
+                    responsesWireVerdict: responsesWireVerdict,
+                    imagePresentations: ProviderModelImageInputPresentation.forDraft(
+                        draft, providers: providers, learnedNative: responsesWireVerdict, diagnostics: imageDiagnostics)
                 )
             }
             .formStyle(.grouped)
@@ -117,18 +122,18 @@ struct ProviderEditor: View {
 
     private var title: String {
         switch draft.intent {
-        case .add: "Add Provider"
-        case .edit: "Edit Provider"
-        case .duplicate: "Duplicate Provider"
+        case .add: L10n.string("Add Provider")
+        case .edit: L10n.string("Edit Provider")
+        case .duplicate: L10n.string("Duplicate Provider")
         }
     }
 
     private var connectionSection: some View {
-        Section("Connection") {
+        Section(L10n.resource("Connection")) {
             if draft.intent == .add {
-                Picker("Preset", selection: $preset) {
+                Picker(L10n.resource("Preset"), selection: $preset) {
                     ForEach(ProviderEditorPreset.allCases) { preset in
-                        Text(preset.rawValue).tag(preset)
+                        Text(preset.title).tag(preset)
                     }
                 }
                 .settingsMenuPicker()
@@ -137,14 +142,14 @@ struct ProviderEditor: View {
                     advancedExpanded = draft.hasAdvancedOverrides
                 }
             }
-            TextField("Name", text: $draft.name)
+            TextField(L10n.string("Name"), text: $draft.name)
                 .focused($nameIsFocused)
             if let message = draft.nameValidationMessage(providers: providers) {
                 Label(message, systemImage: "exclamationmark.triangle")
                     .font(SettingsLayout.Typography.supporting)
                     .foregroundStyle(.secondary)
             }
-            TextField("Base URL", text: $draft.baseURL)
+            TextField(L10n.string("Base URL"), text: $draft.baseURL)
                 .textContentType(.URL)
         }
     }
@@ -155,16 +160,16 @@ struct ProviderEditor: View {
                 value: $draft.maximumParallelRequests,
                 in: Provider.maximumParallelRequestsRange
             ) {
-                LabeledContent("Parallel requests") {
+                LabeledContent(L10n.string("Parallel requests")) {
                     Text(draft.maximumParallelRequests.formatted())
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
             }
         } header: {
-            Text("Capacity")
+            Text(L10n.resource("Capacity"))
         } footer: {
-            Text("Shared by every model and app using this provider.")
+            Text(L10n.resource("Shared by every model and app using this provider."))
         }
     }
 
@@ -175,38 +180,53 @@ struct ProviderEditor: View {
             } else if testing || saving {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
-                    Text(testing ? "Testing the connection…" : "Saving provider…")
-                        .font(SettingsLayout.Typography.supporting)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        testing
+                            ? L10n.resource("Testing the connection…")
+                            : L10n.resource("Saving provider…")
+                    )
+                    .font(SettingsLayout.Typography.supporting)
+                    .foregroundStyle(.secondary)
                 }
             } else {
                 if draft.credentialSource == .script, scriptStage != .idle {
-                    ProviderEditorNotice.stageStatusRow("Test script valid", scriptStage)
+                    ProviderEditorNotice.stageStatusRow(
+                        L10n.string("Test script valid"),
+                        scriptStage
+                    )
                 }
                 if authenticationStage != .idle {
                     ProviderEditorNotice.stageStatusRow(
-                        draft.authMode == .none ? "Connection successful" : "Authentication successful",
+                        draft.authMode == .none
+                            ? L10n.string("Connection successful")
+                            : L10n.string("Authentication successful"),
                         authenticationStage
                     )
                 } else {
-                    Text("Test the connection to enable Save.")
+                    Text(L10n.resource("Test the connection to enable Save."))
                         .font(SettingsLayout.Typography.supporting)
                         .foregroundStyle(.secondary)
                 }
             }
             if !draft.contextsAreValid {
-                Label("Review the context overrides in Advanced.", systemImage: "exclamationmark.triangle")
-                    .font(SettingsLayout.Typography.supporting)
-                    .foregroundStyle(.secondary)
+                Label(
+                    L10n.resource("Review the context overrides in Advanced."), systemImage: "exclamationmark.triangle"
+                )
+                .font(SettingsLayout.Typography.supporting)
+                .foregroundStyle(.secondary)
             }
             HStack {
                 Spacer()
-                Button("Cancel") { dismiss() }
+                Button(L10n.resource("Cancel")) { dismiss() }
                     .keyboardShortcut(.cancelAction)
                     .disabled(saving)
-                Button(testing ? "Testing…" : "Test Connection") { runTest() }
-                    .disabled(!testIsEnabled)
-                Button(saving ? "Saving…" : "Save") { save() }
+                Button(
+                    testing
+                        ? L10n.string("Testing…")
+                        : L10n.string("Test Connection")
+                ) { runTest() }
+                .disabled(!testIsEnabled)
+                Button(saving ? L10n.string("Saving…") : L10n.string("Save")) { save() }
                     .keyboardShortcut(.defaultAction)
                     .buttonStyle(.borderedProminent)
                     .disabled(saving || testing || !testPassed || !formIsValid)

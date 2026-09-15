@@ -10,14 +10,17 @@ import NIOHTTP1
 extension GatewayResponder {
     package func chatCompletionsResponsesResponse(
         _ context: TransparentResponsesContext,
-        attempt: Int = 0
+        attempt: Int = 0,
+        forceText: Bool = false
     ) async throws -> Response {
+        let imageProjection = try await responsesImageInput(
+            body: context.body, target: context.target, wire: .chatCompletions, forceText: forceText)
         let prepared: PreparedResponsesChatCompletionsRequest
         do {
             let mode: ResponsesChatCompletionsMode =
                 context.streaming ? .streaming(toolStream: true) : .buffered
             prepared = try OpenAIResponsesChatCompletions.prepare(
-                body: context.body,
+                body: imageProjection.body,
                 targetModel: context.target.model.id,
                 providerID: context.target.provider.id,
                 mode: mode
@@ -42,20 +45,15 @@ extension GatewayResponder {
 
         try Task.checkCancellation()
 
-        trafficRecorder.record(
-            eventID: context.eventID,
-            action: .upstreamRequest(
-                trafficUpstreamRequest(
-                    attempt: attempt,
-                    route: ResponsesTrafficRoute(
-                        claudeRoute: context.model,
-                        target: context.target
-                    ),
-                    request: request,
-                    body: prepared.upstreamBody,
-                    streaming: prepared.streaming
-                )
-            )
+        let upstreamTraffic = trafficUpstreamRequest(
+            attempt: attempt,
+            route: ResponsesTrafficRoute(
+                claudeRoute: context.model,
+                target: context.target
+            ),
+            request: request,
+            body: prepared.upstreamBody,
+            streaming: prepared.streaming
         )
 
         let exchange: GatewayModelExchange
@@ -63,6 +61,7 @@ extension GatewayResponder {
             exchange = try await executeModelRequest(
                 request,
                 body: prepared.upstreamBody,
+                traffic: upstreamTraffic,
                 wire: .chatCompletions,
                 eventID: context.eventID,
                 attempt: attempt,
@@ -83,6 +82,21 @@ extension GatewayResponder {
             providerID: context.target.provider.id,
             status: UInt(upstream.status.code)
         )
+
+        let sentImages = !imageProjection.imageItemIndices.isEmpty && imageProjection.omittedImageCount == 0
+        if sentImages, [400, 422].contains(upstream.status.code) {
+            let bytes = try await exchange.trace.collect(upstream.body, upTo: maximumErrorBytes)
+            let rejected = await learnResponsesImageRejection(
+                status: upstream.status.code,
+                body: bytes,
+                target: context.target,
+                wire: .chatCompletions,
+                hasImageInput: true)
+            if rejected && !forceText {
+                return try await chatCompletionsResponsesResponse(context, attempt: attempt + 1, forceText: true)
+            }
+            return bufferedResponse(upstream, body: bytes)
+        }
 
         if prepared.streaming, (200..<300).contains(upstream.status.code) {
             return liveChatCompletionsResponse(

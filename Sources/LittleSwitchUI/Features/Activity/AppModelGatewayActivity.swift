@@ -35,10 +35,10 @@ extension AppModel {
             names.append("OpenCode")
         }
         if webSearchDraft != nil {
-            names.append("Web search")
+            names.append(L10n.string("Web search"))
         }
         if monitoringDraft != nil {
-            names.append("Monitoring")
+            names.append(L10n.string("Monitoring"))
         }
         return names
     }
@@ -53,19 +53,10 @@ extension AppModel {
         guard !names.isEmpty else {
             return nil
         }
-        return "Unapplied changes for \(AppModel.list(names)) will be discarded."
+        return L10n.string("Unapplied changes for \(AppModel.list(names)) will be discarded.")
     }
 
     static func list(_ names: [String]) -> String {
-        switch names.count {
-        case 0:
-            return ""
-        case 1:
-            return names[0]
-        case 2:
-            return "\(names[0]) and \(names[1])"
-        default:
-            return "\(names.dropLast().joined(separator: ", ")), and \(names[names.count - 1])"
-        }
+        ListFormatter.localizedString(byJoining: names)
     }
 }

@@ -30,8 +30,12 @@ struct GatewayActivityPresentationTests {
             [provider(id: alphaID, name: "Alpha", limit: 2), provider(id: betaID, name: "Beta", limit: 4)],
         ]
         let cases: [LifecycleCase] = [
-            .init(activity: .starting, title: "Starting gateway…", symbolName: "hourglass"),
-            .init(activity: .unavailable, title: "Gateway unavailable", symbolName: "exclamationmark.triangle"),
+            .init(activity: .starting, title: L10n.string("Starting gateway…"), symbolName: "hourglass"),
+            .init(
+                activity: .unavailable,
+                title: L10n.string("Gateway unavailable"),
+                symbolName: "exclamationmark.triangle"
+            ),
         ]
         for providers in configurations {
             for scenario in cases {
@@ -41,9 +45,9 @@ struct GatewayActivityPresentationTests {
                         == GatewayActivityPresentation.Menu(
                             title: scenario.title,
                             symbolName: scenario.symbolName,
-                            accessibilityLabel: "Gateway activity",
+                            accessibilityLabel: L10n.string("Gateway activity"),
                             accessibilityValue: scenario.title,
-                            accessibilityHint: "Gateway requests and usage",
+                            accessibilityHint: L10n.string("Gateway requests and usage"),
                             dashboard: nil
                         )
                 )
@@ -58,11 +62,11 @@ struct GatewayActivityPresentationTests {
             providers: []
         )
 
-        #expect(idle.menu.title == "Gateway idle")
+        #expect(idle.menu.title == L10n.string("Gateway idle"))
         #expect(idle.menu.symbolName == "checkmark.circle")
-        #expect(idle.menu.accessibilityLabel == "Gateway activity")
-        #expect(idle.menu.accessibilityValue == "Gateway idle")
-        #expect(idle.menu.accessibilityHint == "Gateway requests and usage")
+        #expect(idle.menu.accessibilityLabel == L10n.string("Gateway activity"))
+        #expect(idle.menu.accessibilityValue == L10n.string("Gateway idle"))
+        #expect(idle.menu.accessibilityHint == L10n.string("Gateway requests and usage"))
         #expect(idle.menu.dashboard == nil)
     }
 
@@ -79,11 +83,11 @@ struct GatewayActivityPresentationTests {
         #expect(
             presentation.menu
                 == GatewayActivityPresentation.Menu(
-                    title: "Gateway idle",
+                    title: L10n.string("Gateway idle"),
                     symbolName: "checkmark.circle",
-                    accessibilityLabel: "Gateway activity",
-                    accessibilityValue: "Gateway idle",
-                    accessibilityHint: "Gateway requests and usage",
+                    accessibilityLabel: L10n.string("Gateway activity"),
+                    accessibilityValue: L10n.string("Gateway idle"),
+                    accessibilityHint: L10n.string("Gateway requests and usage"),
                     dashboard: .init(runningCount: 0, waitingCount: 0, stats: nil)
                 )
         )
@@ -110,15 +114,15 @@ struct GatewayActivityPresentationTests {
         )
         #expect(
             firecrawl.menu.dashboard?.webSearch
-                == GatewayWebSearchRow(engineName: "Firecrawl", callCount: 7)
+                == GatewayWebSearchRow(engineName: L10n.string("Firecrawl"), callCount: 7)
         )
         #expect(firecrawl.menu.dashboard?.stats?.period(at: nil).metrics.map(\.title) == statsMetricTitles)
         #expect(firecrawl.menu.dashboard?.stats?.period(at: nil).metrics[5].value == "7")
 
         for (engine, engineName) in [
-            (WebSearchProvider.tavily, "Tavily"),
-            (.brave, "Brave"),
-            (.exa, "Exa"),
+            (WebSearchProvider.tavily, L10n.string("Tavily")),
+            (.brave, L10n.string("Brave")),
+            (.exa, L10n.string("Exa")),
         ] {
             let presentation = GatewayActivityPresentation(
                 activity: .running(poolSnapshot(running: 1, waiting: 0)),
@@ -153,7 +157,7 @@ struct GatewayActivityPresentationTests {
         )
         #expect(
             noUsage.menu.dashboard?.webSearch
-                == GatewayWebSearchRow(engineName: "Firecrawl", callCount: 0)
+                == GatewayWebSearchRow(engineName: L10n.string("Firecrawl"), callCount: 0)
         )
     }
 
@@ -172,17 +176,17 @@ struct GatewayActivityPresentationTests {
         )
 
         #expect(presentation.menu.dashboard == .init(runningCount: 1, waitingCount: 1, stats: nil))
-        #expect(presentation.menu.title == "1 running · 1 waiting")
+        #expect(presentation.menu.title == L10n.string("\(1) running · \(1) waiting"))
         #expect(presentation.menu.symbolName == "hourglass")
-        #expect(presentation.menu.accessibilityValue == "1 running, 1 waiting")
+        #expect(presentation.menu.accessibilityValue == L10n.string("\(1) running, \(1) waiting"))
 
         let runningOnly = GatewayActivityPresentation(
             activity: .running(poolSnapshot(running: 1, waiting: 0)),
             providers: []
         )
-        #expect(runningOnly.menu.title == "1 running · 0 waiting")
+        #expect(runningOnly.menu.title == L10n.string("\(1) running · \(0) waiting"))
         #expect(runningOnly.menu.symbolName == "bolt.horizontal.circle")
-        #expect(runningOnly.menu.accessibilityValue == "1 running, 0 waiting")
+        #expect(runningOnly.menu.accessibilityValue == L10n.string("\(1) running, \(0) waiting"))
         #expect(runningOnly.menu.dashboard == nil)
     }
 
@@ -201,11 +205,11 @@ struct GatewayActivityPresentationTests {
         )
 
         #expect(presentation.menu.dashboard == .init(runningCount: 5, waitingCount: 10, stats: nil))
-        #expect(presentation.menu.title == "5 running · 10 waiting")
+        #expect(presentation.menu.title == L10n.string("\(5) running · \(10) waiting"))
         #expect(presentation.menu.symbolName == "hourglass")
-        #expect(presentation.menu.accessibilityLabel == "Gateway activity")
-        #expect(presentation.menu.accessibilityValue == "5 running, 10 waiting")
-        #expect(presentation.menu.accessibilityHint == "Gateway requests and usage")
+        #expect(presentation.menu.accessibilityLabel == L10n.string("Gateway activity"))
+        #expect(presentation.menu.accessibilityValue == L10n.string("\(5) running, \(10) waiting"))
+        #expect(presentation.menu.accessibilityHint == L10n.string("Gateway requests and usage"))
     }
 
 }
@@ -213,8 +217,8 @@ struct GatewayActivityPresentationTests {
 private let alphaID = UUID(uuid: (1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1))
 private let betaID = UUID(uuid: (2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2))
 private let statsMetricTitles = [
-    "Input tokens", "Cached tokens", "Output tokens",
-    "Requests", "Errors", "Web searches",
+    L10n.string("Input tokens"), L10n.string("Cached tokens"), L10n.string("Output tokens"),
+    L10n.string("Requests"), L10n.string("Errors"), L10n.string("Web searches"),
 ]
 
 private func provider(id: UUID, name: String, limit: Int) -> Provider {

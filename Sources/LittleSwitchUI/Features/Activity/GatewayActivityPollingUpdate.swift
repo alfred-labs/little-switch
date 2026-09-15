@@ -10,6 +10,7 @@ struct GatewayActivityPollingUpdate: Equatable, Sendable {
     let usage: GatewayUsageSummary?
     let clientUsage: [GatewayClient: GatewayUsageSummary]?
     let responsesWireVerdicts: [UUID: Bool]
+    let imageInputUpdate: ProviderImageInputUpdate
     let credentialRefreshFailures: [UUID: String]
     let lastScriptOutputs: [UUID: String]
     let monitoringStatus: MonitoringExportStatus
@@ -34,6 +35,7 @@ struct GatewayActivityPollingUpdate: Equatable, Sendable {
         self.usage = usage
         self.clientUsage = clientUsage
         self.responsesWireVerdicts = responsesWireVerdicts
+        imageInputUpdate = ProviderImageInputUpdate(snapshot: snapshot)
         self.credentialRefreshFailures = snapshot.credentialRefreshFailures
         self.lastScriptOutputs = snapshot.lastScriptOutputs
         monitoringStatus = snapshot.monitoringStatus
@@ -53,13 +55,12 @@ struct GatewayActivityPollingUpdate: Equatable, Sendable {
         let activity = await coordinator.gatewayActivity()
         let usage = await usageHistory?.summary()
         let clientUsage = await usageHistory?.clientSummaries()
-        let responsesWireVerdicts = await coordinator.responsesWireVerdicts()
         return Self(
             snapshot: snapshot,
             activity: activity,
             usage: usage,
             clientUsage: clientUsage,
-            responsesWireVerdicts: responsesWireVerdicts
+            responsesWireVerdicts: snapshot.responsesWireVerdicts
         )
     }
 
@@ -71,7 +72,10 @@ struct GatewayActivityPollingUpdate: Equatable, Sendable {
         model.updateGatewayActivity(activity)
         model.updateGatewayUsage(usage)
         model.updateGatewayClientUsage(clientUsage)
-        model.updateResponsesWireVerdicts(responsesWireVerdicts)
+        if imageInputUpdate.state.sequence >= model.imageInputState.sequence {
+            model.updateResponsesWireVerdicts(responsesWireVerdicts)
+            imageInputUpdate.apply(to: model)
+        }
         model.updateCredentialRefreshFailures(credentialRefreshFailures)
         model.updateLastScriptOutputs(lastScriptOutputs)
         guard model.monitoringAction == nil,

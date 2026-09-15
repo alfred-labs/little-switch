@@ -24,8 +24,8 @@ struct GatewayQueueSummaryView: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Request queue")
-        .accessibilityValue("\(runningCount) running, \(waitingCount) pending")
+        .accessibilityLabel(L10n.resource("Request queue"))
+        .accessibilityValue(L10n.resource("\(runningCount) running, \(waitingCount) pending"))
     }
 
     @ViewBuilder

@@ -18,8 +18,12 @@ extension GatewayResponder {
         let wire: ProviderToolContract.Wire
         let upstreamBody: Data
         let route = target.route
-        let usesChat =
-            preferredWire == .chatCompletions ? true : await resolvesChatCompletionsAdapter(route.provider)
+        let usesChat: Bool
+        if let preferredWire {
+            usesChat = preferredWire == .chatCompletions
+        } else {
+            usesChat = await resolvesChatCompletionsAdapter(route.provider)
+        }
         if usesChat {
             let prepared = try OpenAIResponsesChatCompletions.prepare(
                 body: body, targetModel: route.model.id, providerID: route.provider.id)
@@ -38,23 +42,19 @@ extension GatewayResponder {
                 provider: route.provider, secret: target.credential, headers: incomingHeaders, body: upstreamBody
             )
         }
-        trafficRecorder.record(
-            eventID: eventID,
-            action: .upstreamRequest(
-                trafficUpstreamRequest(
-                    attempt: attempt,
-                    route: ResponsesTrafficRoute(
-                        claudeRoute: route.provider.reference(to: route.model.id), target: route),
-                    request: request,
-                    body: upstreamBody,
-                    streaming: false
-                )
-            )
+        let upstreamTraffic = trafficUpstreamRequest(
+            attempt: attempt,
+            route: ResponsesTrafficRoute(
+                claudeRoute: route.provider.reference(to: route.model.id), target: route),
+            request: request,
+            body: upstreamBody,
+            streaming: false
         )
         guard upstreamBody.count <= maximumRequestBytes else { throw ResponsesCompactionError.invalidRequest }
         let exchange = try await executeModelRequest(
             request,
             body: upstreamBody,
+            traffic: upstreamTraffic,
             wire: wire,
             eventID: eventID,
             attempt: attempt,
@@ -66,17 +66,6 @@ extension GatewayResponder {
             await recordChatCompletionsRouteAbsent(providerID: route.provider.id, status: status)
         } else {
             await recordResponsesCapability(providerID: route.provider.id, status: status)
-            if responsesAdapterFallbackApplies(status: status, provider: route.provider) {
-                _ = try? await exchange.trace.collect(exchange.response.body, upTo: maximumErrorBytes)
-                return try await compactionModelTurn(
-                    body: body,
-                    target: target,
-                    incomingHeaders: incomingHeaders,
-                    eventID: eventID,
-                    attempt: attempt + 1,
-                    preferredWire: .chatCompletions
-                )
-            }
         }
         let turn = try await collectCompactionTurn(exchange, adapted: adapted)
         let root = try ResponsesCompactionJSON.object(turn.rootJSON, error: .invalidResponse)

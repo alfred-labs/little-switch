@@ -34,21 +34,27 @@ struct MenuModelStepper: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            chevron("chevron.left", label: "Previous model for \(name)") { step(-1) }
+            chevron(
+                "chevron.left",
+                label: L10n.string("Previous model for \(name)")
+            ) { step(-1) }
             Text(current?.label ?? GatewayUsageFormat.placeholder)
                 .font(.system(size: 11, design: .monospaced))
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 4)
-            chevron("chevron.right", label: "Next model for \(name)") { step(1) }
+            chevron(
+                "chevron.right",
+                label: L10n.string("Next model for \(name)")
+            ) { step(1) }
         }
         .frame(width: width, height: MenuTabContentLayout.controlHeight)
         .background(Color.primary.opacity(0.06), in: .rect(cornerRadius: 6))
         .disabled(options.isEmpty)
-        .help(current?.label ?? "No model selected")
+        .help(current?.label ?? L10n.string("No model selected"))
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Model for \(name)")
+        .accessibilityLabel(L10n.resource("Model for \(name)"))
         .onChange(of: selection) { _, _ in steppedSelection = nil }
     }
 
@@ -76,7 +82,7 @@ struct MenuModelStepper: View {
 
 struct MenuModelLoadingPlaceholder: View {
     var body: some View {
-        Text("Loading models…")
+        Text(L10n.resource("Loading models…"))
             .font(.system(size: 11))
             .foregroundStyle(.secondary)
             .padding(.horizontal, 10)

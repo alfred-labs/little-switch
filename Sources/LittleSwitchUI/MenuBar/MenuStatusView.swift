@@ -24,7 +24,7 @@ public struct MenuStatusView: View {
     public var body: some View {
         VStack(spacing: StatusMenuLayout.applicationRowSpacing) {
             ApplicationStatusRow(
-                name: "Claude Desktop",
+                name: L10n.string("Claude Desktop"),
                 icon: .claudeDesktop,
                 detail: StatusMenuCopy.detail(
                     StatusMenuCopy.customModelCount(model.claudeCustomModelCount),
@@ -35,10 +35,10 @@ public struct MenuStatusView: View {
                 onToggle: onToggleClaude
             )
             ApplicationStatusRow(
-                name: "Claude Code",
+                name: L10n.string("Claude Code"),
                 icon: .claudeCode,
                 detail: StatusMenuCopy.detail(
-                    "Applies to new terminal sessions",
+                    L10n.string("Applies to new terminal sessions"),
                     hasPendingChanges: model.hasPendingClaudeCodeChanges
                 ),
                 connected: model.claudeCodeSwitchOn,
@@ -46,7 +46,7 @@ public struct MenuStatusView: View {
                 onToggle: onToggleClaudeCode
             )
             ApplicationStatusRow(
-                name: "Codex",
+                name: L10n.string("Codex"),
                 icon: .codex,
                 detail: StatusMenuCopy.detail(
                     StatusMenuCopy.customModelCount(model.codexCustomModelCount),
@@ -57,10 +57,10 @@ public struct MenuStatusView: View {
                 onToggle: onToggleCodex
             )
             ApplicationStatusRow(
-                name: "OpenCode",
+                name: L10n.string("OpenCode"),
                 icon: .openCode,
                 detail: StatusMenuCopy.detail(
-                    "Applies to new terminal sessions",
+                    L10n.string("Applies to new terminal sessions"),
                     hasPendingChanges: model.hasPendingOpenCodeChanges
                 ),
                 connected: model.openCodeSwitchOn,
@@ -127,7 +127,7 @@ private struct ApplicationStatusRow: View {
             }
             Spacer(minLength: 8)
             Toggle(
-                "\(name) connection",
+                L10n.resource("\(name) connection"),
                 isOn: Binding(
                     get: { connected },
                     set: { _ in onToggle() }

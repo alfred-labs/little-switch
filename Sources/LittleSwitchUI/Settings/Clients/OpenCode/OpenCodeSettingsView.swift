@@ -12,24 +12,24 @@ struct OpenCodeSettingsView: View {
     var body: some View {
         SettingsPage {
             routingSection
-            SettingsSection("Available models") {
+            SettingsSection(L10n.resource("Available models")) {
                 SettingsCard {
                     HStack {
-                        Text("\(model.codexExposedModelOptions.count) enabled")
+                        Text(L10n.resource("\(model.codexExposedModelOptions.count) enabled"))
                             .monospacedDigit()
                         Spacer(minLength: 12)
-                        Button("Manage in Codex…") { model.selectedSection = .codex }
+                        Button(L10n.resource("Manage in Codex…")) { model.selectedSection = .codex }
                     }
                     .settingsRow()
                 }
-                Text("The model catalog is shared with Codex.")
+                Text(L10n.resource("The model catalog is shared with Codex."))
                     .settingsSupportingText()
             }
-            SettingsSection("Terminal") {
+            SettingsSection(L10n.resource("Terminal")) {
                 SettingsCard {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Changes apply to new OpenCode terminal sessions.")
-                        Text("Project settings can override this default.")
+                        Text(L10n.resource("Changes apply to new OpenCode terminal sessions."))
+                        Text(L10n.resource("Project settings can override this default."))
                             .settingsSupportingText()
                     }
                     .padding(.vertical, 6)
@@ -39,18 +39,21 @@ struct OpenCodeSettingsView: View {
         .toolbar {
             SettingsToolbarActions {
                 if showsCodexGateNotice {
-                    Label("Apply Codex first", systemImage: "arrow.up.forward.app")
+                    Label(L10n.resource("Apply Codex first"), systemImage: "arrow.up.forward.app")
                         .font(SettingsLayout.Typography.toolbarLabel)
                         .foregroundStyle(.secondary)
                         .fixedSize()
-                        .help("Apply Codex changes first, then apply OpenCode settings.")
+                        .help(L10n.resource("Apply Codex changes first, then apply OpenCode settings."))
                 } else if model.hasPendingOpenCodeChanges {
                     SettingsPendingNotice()
                 } else {
                     SettingsConnectionStatus(connected: model.openCodeStatus == .connected)
                 }
                 Button(
-                    model.isBusy ? "Applying…" : model.openCodePrimaryActionTitle,
+
+                    model.isBusy
+                        ? L10n.string("Applying…")
+                        : model.openCodePrimaryActionTitle,
                     systemImage: model.openCodePrimaryAction == .restore ? "arrow.uturn.backward" : "checkmark"
                 ) {
                     let action = model.openCodePrimaryAction
@@ -71,12 +74,12 @@ struct OpenCodeSettingsView: View {
     }
 
     private var routingSection: some View {
-        SettingsSection("Model routing", subtitle: "For OpenCode terminal sessions.") {
+        SettingsSection(L10n.resource("Model routing"), subtitle: L10n.resource("For OpenCode terminal sessions.")) {
             SettingsCard {
                 Grid(horizontalSpacing: 14, verticalSpacing: 0) {
-                    SettingsMappingRow("Default model") {
+                    SettingsMappingRow(L10n.string("Default model")) {
                         Picker(
-                            "Default model",
+                            L10n.resource("Default model"),
                             selection: Binding<String?>(
                                 get: { model.openCodeDefaultOptionID },
                                 set: { optionID in
@@ -95,7 +98,12 @@ struct OpenCodeSettingsView: View {
             }
             statusNotice
             if model.openCodeDefaultModelOptions.isEmpty {
-                notice("Enable a model in Codex before connecting OpenCode.", systemImage: "info.circle")
+                notice(
+                    L10n.resource(
+                        "Enable a model in Codex before connecting OpenCode."
+                    ),
+                    systemImage: "info.circle"
+                )
             }
         }
     }
@@ -113,23 +121,28 @@ struct OpenCodeSettingsView: View {
             EmptyView()
         case .needsAttention:
             notice(
-                "OpenCode settings changed outside LittleSwitch. Apply them again or restore the previous settings.",
+                L10n.resource(
+                    "OpenCode settings changed outside LittleSwitch. Apply them again or restore the previous settings."
+                ),
                 systemImage: "exclamationmark.triangle"
             )
         case .recoveryAvailable:
             notice(
-                "Previous user-level settings can be restored.",
+                L10n.resource("Previous user-level settings can be restored."),
                 systemImage: "clock.arrow.circlepath"
             )
         case .recoveryUnavailable:
             notice(
-                "Recovery data is unavailable.",
+                L10n.resource("Recovery data is unavailable."),
                 systemImage: "exclamationmark.octagon"
             )
         }
     }
 
-    private func notice(_ text: String, systemImage: String) -> some View {
+    private func notice(
+        _ text: LocalizedStringResource,
+        systemImage: String
+    ) -> some View {
         Label(text, systemImage: systemImage)
             .settingsSupportingText()
     }

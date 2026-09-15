@@ -29,6 +29,7 @@ extension ApplicationCoordinator {
     }
 
     public func connectOpenCode() async throws -> CoordinatorSnapshot {
+        _ = await responsesWireVerdicts()
         let profileManager = try openCodeDependency()
         guard openCodeStatus != .recoveryAvailable,
             openCodeStatus != .recoveryUnavailable
@@ -51,6 +52,7 @@ extension ApplicationCoordinator {
 
         do {
             try profileManager.activate(managed: managed)
+            candidate = retainingCurrentImageObservations(in: candidate)
             try configurationStore.save(candidate)
             configuration = candidate
             pendingOpenCodeSettings = nil
@@ -59,8 +61,8 @@ extension ApplicationCoordinator {
             return await snapshot()
         } catch {
             let restored = (try? profileManager.restore()) != nil
-            configuration = previous
-            let saved = (try? configurationStore.save(previous)) != nil
+            configuration = retainingCurrentImageObservations(in: previous)
+            let saved = (try? configurationStore.save(configuration)) != nil
             pendingOpenCodeSettings = nil
             appliedOpenCodeSettings = nil
             openCodeStatus = .disconnected
@@ -72,6 +74,7 @@ extension ApplicationCoordinator {
     }
 
     public func applyOpenCode() async throws -> CoordinatorSnapshot {
+        _ = await responsesWireVerdicts()
         guard configuration.openCode.connected, hasPendingOpenCodeChanges else {
             return await snapshot()
         }
@@ -258,7 +261,8 @@ extension ApplicationCoordinator {
             return try OpenCodeManagedSettings.resolve(
                 providers: configuration.providers,
                 codex: configuration.codex,
-                configuration: configuration.openCode
+                configuration: configuration.openCode,
+                responsesWireVerdicts: catalogResponsesWireVerdicts
             )
         } catch OpenCodeManagedSettings.Error.noExposedModel {
             throw Error.noExposedOpenCodeModel

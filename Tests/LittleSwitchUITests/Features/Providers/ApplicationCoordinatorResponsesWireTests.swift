@@ -152,7 +152,8 @@ struct ApplicationCoordinatorResponsesWireTests {
         )
 
         // An unchanged endpoint and credential reuse the previous probe: the
-        // rename fires zero new upstream requests.
+        // rename fires zero new endpoint-probe requests. Vision diagnostics
+        // have a separate payload and budget, tested by ProviderImageInputProbingTests.
         _ = try await coordinator.saveProvider(
             ProviderInput(
                 id: saved.id,
@@ -301,7 +302,10 @@ private actor WireProbingCatalogTransport: UpstreamTransport {
                 )
             )
         }
-        probeURLs.append(request.url)
+        let body = try await request.body?.collect(upTo: 16 * 1_024)
+        if let body, body.getString(at: body.readerIndex, length: body.readableBytes) == "{}" {
+            probeURLs.append(request.url)
+        }
         let path = URL(string: request.url)?.path ?? ""
         let status: Int
         if path.contains("/v1/messages") {

@@ -66,7 +66,7 @@ struct SettingsSidebarRow: View {
                     .font(SettingsLayout.Typography.sidebarIcon)
                     .frame(width: SettingsLayout.sidebarIconSize)
             }
-            Text(section.rawValue)
+            Text(section.title)
                 .font(SettingsLayout.Typography.sidebarLabel)
         }
         .frame(minHeight: SettingsLayout.sidebarRowMinimumHeight, alignment: .leading)
@@ -82,9 +82,9 @@ struct SettingsSidebarIdentity: View {
                 .frame(width: 34, height: 34)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text("LittleSwitch")
+                Text(L10n.resource("LittleSwitch"))
                     .font(SettingsLayout.Typography.sectionTitle)
-                Text("Settings")
+                Text(L10n.resource("Settings"))
                     .font(SettingsLayout.Typography.supporting)
                     .foregroundStyle(.secondary)
             }
@@ -101,7 +101,7 @@ struct SettingsSidebarIdentity: View {
 /// Every pane with a draft shows this, in the same words, in the same place.
 struct SettingsPendingNotice: View {
     var body: some View {
-        Label("Changes are ready to apply.", systemImage: "checkmark.circle")
+        Label(L10n.resource("Changes are ready to apply."), systemImage: "checkmark.circle")
             .labelStyle(.titleAndIcon)
             .font(SettingsLayout.Typography.toolbarLabel)
             .foregroundStyle(.secondary)

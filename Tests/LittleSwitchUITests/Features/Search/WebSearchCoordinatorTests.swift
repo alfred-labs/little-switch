@@ -172,7 +172,7 @@ struct WebSearchCoordinatorTests {
         #expect((try fixture.store.load()).webSearch == .disabled)
         #expect(
             ApplicationCoordinator.Error.invalidWebSearchConfiguration.errorDescription
-                == "Check the web search limits."
+                == L10n.string("Check the web search limits.")
         )
     }
 

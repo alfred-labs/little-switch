@@ -20,12 +20,12 @@ struct ModelCatalogHeader: View {
     }
 
     private var title: some View {
-        SettingsSectionHeader("Available models")
+        SettingsSectionHeader(L10n.resource("Available models"))
             .fixedSize()
     }
 
     private var count: some View {
-        Text("\(enabledCount) enabled")
+        Text(L10n.resource("\(enabledCount) enabled"))
             .font(SettingsLayout.Typography.supporting)
             .monospacedDigit()
             .foregroundStyle(.secondary)

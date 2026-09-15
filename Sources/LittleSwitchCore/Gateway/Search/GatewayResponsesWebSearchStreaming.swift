@@ -22,6 +22,9 @@ package struct GatewayResponsesLiveModelHead {
     let response: HTTPClientResponse
     let adapted: PreparedResponsesChatCompletionsRequest?
     let trace: GatewayUpstreamResponseTrace
+    var bufferedError: Data?
+    var nextAttempt = 0
+    var imageFallbackUsed = false
 }
 
 private struct GatewayResponsesLiveLoopState {
@@ -71,14 +74,16 @@ private struct GatewayResponsesLiveSearch {
 extension GatewayResponder {
     package func liveResponsesWebSearchResponse(
         context: GatewayResponsesWebSearchContext,
-        attemptOffset: Int = 0
+        attemptOffset: Int = 0,
+        forceText: Bool = false
     ) async throws -> Response {
         let firstHead: GatewayResponsesLiveModelHead
         do {
             firstHead = try await executeResponsesLiveModelHead(
                 body: context.prepared.upstreamBody,
                 attempt: attemptOffset,
-                context: context
+                context: context,
+                forceText: forceText
             )
         } catch is CancellationError {
             throw CancellationError()
@@ -106,9 +111,11 @@ extension GatewayResponder {
                 // keeps both exchanges.
                 return try await liveResponsesWebSearchResponse(
                     context: context.usingChatCompletionsAdapter(),
-                    attemptOffset: 1
+                    attemptOffset: firstHead.nextAttempt,
+                    forceText: firstHead.imageFallbackUsed
                 )
             }
+            if let body = firstHead.bufferedError { return bufferedResponse(firstHead.response, body: body) }
             return streamingResponse(
                 firstHead.response,
                 eventID: context.eventID,
@@ -123,7 +130,6 @@ extension GatewayResponder {
             run: { session, writer in
                 try await responder.runResponsesLiveWebSearch(
                     firstHead: firstHead,
-                    attemptOffset: attemptOffset,
                     context: context,
                     session: &session,
                     writer: &writer
@@ -182,29 +188,29 @@ extension GatewayResponder {
     package func executeResponsesLiveModelHead(
         body: Data,
         attempt: Int,
-        context: GatewayResponsesWebSearchContext
+        context: GatewayResponsesWebSearchContext,
+        allowImageRetry: Bool = true,
+        forceText: Bool = false
     ) async throws -> GatewayResponsesLiveModelHead {
         guard body.count <= maximumRequestBytes else {
             throw GatewayResponsesLiveError.requestTooLarge
         }
-        let prepared = try responsesLiveModelRequest(body: body, context: context)
+        let wire: ModelImageInputWire = context.needsChatCompletionsAdapter ? .chatCompletions : .responses
+        let projected = try await responsesImageInput(
+            body: body, target: context.target, wire: wire, forceText: forceText)
+        let prepared = try responsesLiveModelRequest(body: projected.body, context: context)
         guard prepared.body.count <= maximumRequestBytes else {
             throw GatewayResponsesLiveError.requestTooLarge
         }
-        trafficRecorder.record(
-            eventID: context.eventID,
-            action: .upstreamRequest(
-                trafficUpstreamRequest(
-                    attempt: attempt,
-                    route: ResponsesTrafficRoute(
-                        claudeRoute: context.prepared.originalModel,
-                        target: context.target
-                    ),
-                    request: prepared.request,
-                    body: prepared.body,
-                    streaming: true
-                )
-            )
+        let upstreamTraffic = trafficUpstreamRequest(
+            attempt: attempt,
+            route: ResponsesTrafficRoute(
+                claudeRoute: context.prepared.originalModel,
+                target: context.target
+            ),
+            request: prepared.request,
+            body: prepared.body,
+            streaming: true
         )
 
         let exchange: GatewayModelExchange
@@ -213,6 +219,7 @@ extension GatewayResponder {
             exchange = try await executeModelRequest(
                 prepared.request,
                 body: prepared.body,
+                traffic: upstreamTraffic,
                 wire: context.needsChatCompletionsAdapter ? .chatCompletions : .responses,
                 eventID: context.eventID,
                 attempt: attempt,
@@ -237,10 +244,29 @@ extension GatewayResponder {
                 status: response.status.code
             )
         }
+        var bufferedError: Data?
+        let sentImages = !projected.imageItemIndices.isEmpty && projected.omittedImageCount == 0
+        if sentImages, [400, 422].contains(response.status.code) {
+            let bytes = try await exchange.trace.collect(response.body, upTo: maximumErrorBytes)
+            let rejected = await learnResponsesImageRejection(
+                status: response.status.code, body: bytes, target: context.target, wire: wire, hasImageInput: true)
+            if rejected && allowImageRetry && !forceText {
+                return try await executeResponsesLiveModelHead(
+                    body: body,
+                    attempt: attempt + 1,
+                    context: context,
+                    allowImageRetry: allowImageRetry,
+                    forceText: true)
+            }
+            bufferedError = bytes
+        }
         return GatewayResponsesLiveModelHead(
             response: response,
             adapted: prepared.adapted,
-            trace: exchange.trace
+            trace: exchange.trace,
+            bufferedError: bufferedError,
+            nextAttempt: attempt + 1,
+            imageFallbackUsed: forceText
         )
     }
 }
@@ -297,7 +323,6 @@ extension GatewayResponder {
 
     private func runResponsesLiveWebSearch(
         firstHead: GatewayResponsesLiveModelHead,
-        attemptOffset: Int,
         context: GatewayResponsesWebSearchContext,
         session: inout ResponsesPublicStreamSession,
         writer: inout any ResponseBodyWriter
@@ -312,7 +337,9 @@ extension GatewayResponder {
         while true {
             try Task.checkCancellation()
             guard (200..<300).contains(head.response.status.code) else {
-                _ = try? await head.trace.collect(head.response.body, upTo: maximumErrorBytes)
+                if head.bufferedError == nil {
+                    _ = try? await head.trace.collect(head.response.body, upTo: maximumErrorBytes)
+                }
                 throw GatewayResponsesLiveError.providerFailed
             }
             let turn = try await consumeResponsesLiveTurn(
@@ -339,8 +366,10 @@ extension GatewayResponder {
                 state.modelAttempt += 1
                 head = try await executeResponsesLiveModelHead(
                     body: state.upstreamBody,
-                    attempt: attemptOffset + state.modelAttempt,
-                    context: context
+                    attempt: head.nextAttempt,
+                    context: context,
+                    allowImageRetry: false,
+                    forceText: head.imageFallbackUsed
                 )
             } else {
                 try await writeResponsesLiveFrames(

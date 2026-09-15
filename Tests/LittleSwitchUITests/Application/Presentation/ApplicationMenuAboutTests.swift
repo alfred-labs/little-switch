@@ -10,18 +10,18 @@ struct ApplicationMenuAboutTests {
     @Test("The app menu opens the same enlarged About window as the status menu")
     func aboutPanelCommand() throws {
         let menu = ApplicationMenuFactory.make()
-        let appItem = try #require(menu.items.first { $0.title == "LittleSwitch" })
+        let appItem = try #require(menu.items.first { $0.title == L10n.string("LittleSwitch") })
         let appSubmenu = try #require(appItem.submenu)
         let about = try #require(
             appSubmenu.items.first {
-                $0.title == "About LittleSwitch"
+                $0.title == L10n.string("About LittleSwitch")
             }
         )
 
-        #expect(about.title == "About LittleSwitch")
+        #expect(about.title == L10n.string("About LittleSwitch"))
         #expect(about.action == #selector(LittleSwitchApplicationDelegate.showAbout))
         #expect(about.target == nil)
-        #expect(appSubmenu.title == "LittleSwitch")
+        #expect(appSubmenu.title == L10n.string("LittleSwitch"))
     }
 
     @Test("The status menu opens the custom About window without adding separators")
@@ -29,14 +29,14 @@ struct ApplicationMenuAboutTests {
     func statusMenuAboutCommand() throws {
         let controller = try source(named: "MenuBar/StatusItemVisibilityRecovery.swift")
         let commands = StatusMenuCommands.makeItems(target: nil)
-        let aboutItem = try #require(commands.first { $0.title == "About LittleSwitch" })
+        let aboutItem = try #require(commands.first { $0.title == L10n.string("About LittleSwitch") })
         let about = try source(named: "Application/Presentation/LittleSwitchApplicationDelegateAbout.swift")
         let window = try source(named: "Application/Presentation/AboutWindow.swift")
 
         #expect(aboutItem.action == #selector(LittleSwitchApplicationDelegate.showAbout))
         let separators = commands.filter(\.isSeparatorItem)
         #expect(separators.count == 1)
-        #expect(commands.last?.title == "Quit LittleSwitch")
+        #expect(commands.last?.title == L10n.string("Quit LittleSwitch"))
         #expect(!controller.contains("sectionHeader("))
         #expect(!controller.contains(".uppercased()"))
         // The tab switcher tops the menu.
@@ -57,7 +57,7 @@ struct ApplicationMenuAboutTests {
         delegate.showAbout()
 
         let window = try #require(LittleSwitchApplicationDelegate.aboutWindow)
-        #expect(window.title == "About LittleSwitch")
+        #expect(window.title == L10n.string("About LittleSwitch"))
         #expect(window.contentViewController is NSHostingController<AboutWindowContent>)
         #expect(window.styleMask.contains(.titled))
         #expect(window.styleMask.contains(.closable))
@@ -77,7 +77,7 @@ struct ApplicationMenuAboutTests {
     func makeAboutWindowBuildsIndependentPanel() {
         let window = LittleSwitchApplicationDelegate().makeAboutWindow()
 
-        #expect(window.title == "About LittleSwitch")
+        #expect(window.title == L10n.string("About LittleSwitch"))
         #expect(window.contentViewController != nil)
         #expect(!window.styleMask.contains(.resizable))
         #expect(!window.isReleasedWhenClosed)
@@ -89,11 +89,11 @@ struct ApplicationMenuAboutTests {
     func aboutWindowContentCopy() {
         let content = AboutWindowContent.current()
 
-        #expect(content.displayName == "LittleSwitch")
+        #expect(content.displayName == L10n.string("LittleSwitch"))
         #expect(content.buildTag == ApplicationBuild.currentTag)
         #expect(
             AboutWindowContent.copyrightLine
-                == "Copyright © 2026 LittleSwitch contributors"
+                == L10n.resource("Copyright © 2026 LittleSwitch contributors")
         )
     }
 
@@ -108,7 +108,7 @@ struct ApplicationMenuAboutTests {
         )
         window.contentViewController = NSHostingController(
             rootView: AboutWindowContent(
-                displayName: "LittleSwitch",
+                displayName: L10n.string("LittleSwitch"),
                 buildTag: "development",
                 icon: nil
             )

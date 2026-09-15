@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 
 /// Keeps a Responses assistant turn together on Chat's message-oriented wire.
 /// Tool results and incoming messages delimit turns; parallel calls share one
@@ -18,22 +19,35 @@ enum ResponsesChatCompletionsHistory {
             throw OpenAIResponsesChatCompletions.Error.invalidRequest
         }
         var droppedMailCount = 0
+        var pendingCalls: Set<String> = []
+        var pendingImages: [[String: Any]] = []
         for item in items {
-            switch item["type"] as? String {
+            let kind = item[OpenAIResponsesUserMessage.Key.type.rawValue] as? String
+            if !pendingImages.isEmpty, kind != "function_call_output", kind != "custom_tool_call_output" {
+                throw OpenAIResponsesChatCompletions.Error.invalidRequest
+            }
+            switch kind {
             case "message":
                 try appendMessage(item, to: &messages)
             case "function_call", "custom_tool_call":
                 let call = try toolCall(item, bindings: bindings)
+                if let id = item[OpenAIResponsesInputFunctionCall.Key.callId.rawValue] as? String {
+                    pendingCalls.insert(id)
+                }
                 var message = takeAssistant(from: &messages)
                 var calls = message["tool_calls"] as? [[String: Any]] ?? []
                 calls.append(call)
                 message["tool_calls"] = calls
                 messages.append(message)
             case "function_call_output", "custom_tool_call_output":
-                guard let callID = nonemptyResponsesString(item["call_id"]),
-                    let output = try stringFragment(item["output"])
-                else { throw OpenAIResponsesChatCompletions.Error.invalidRequest }
-                messages.append(["role": "tool", "tool_call_id": callID, "content": output])
+                let output = try ResponsesChatCompletionsToolOutput.project(item: item)
+                messages.append(output.toolMessage)
+                pendingImages.append(contentsOf: output.imageMessages)
+                if let callID = item["call_id"] as? String { pendingCalls.remove(callID) }
+                if pendingCalls.isEmpty {
+                    messages.append(contentsOf: pendingImages)
+                    pendingImages.removeAll()
+                }
             case "reasoning":
                 if let fields = try ResponsesChatCompletionsReasoning.fields(from: item, providerID: providerID) {
                     // A carrier is one complete Chat assistant state. A
@@ -59,6 +73,7 @@ enum ResponsesChatCompletionsHistory {
                 throw OpenAIResponsesChatCompletions.Error.invalidRequest
             }
         }
+        guard pendingImages.isEmpty else { throw OpenAIResponsesChatCompletions.Error.invalidRequest }
         return droppedMailCount
     }
 
@@ -152,10 +167,4 @@ enum ResponsesChatCompletionsHistory {
         return content as? [[String: Any]]
     }
 
-    private static func stringFragment(_ value: Any?) throws -> String? {
-        if let string = value as? String { return string }
-        guard let value else { return nil }
-        let fragment = try WireJSONCompatibility.data(value)
-        return String(data: fragment, encoding: .utf8)
-    }
 }

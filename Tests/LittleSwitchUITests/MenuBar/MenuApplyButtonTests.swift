@@ -20,7 +20,7 @@ struct MenuApplyButtonTests {
         defer { host.close() }
         host.window.appearance = NSAppearance(named: .darkAqua)
         try await host.activateAccessibility()
-        let button = try host.element(label: "Apply changes")
+        let button = try host.element(label: L10n.string("Apply changes"))
         #expect(button.accessibilityRole() == .button)
         #expect(button.isAccessibilityEnabled())
         #expect(button.accessibilityPerformPress())
@@ -29,7 +29,7 @@ struct MenuApplyButtonTests {
         model.isBusy = true
         host.hosting.rootView = content()
         host.render()
-        let disabled = try host.element(label: "Apply changes")
+        let disabled = try host.element(label: L10n.string("Apply changes"))
         #expect(!disabled.isAccessibilityEnabled())
         _ = disabled.accessibilityPerformPress()
         #expect(calls == 1)
@@ -37,7 +37,7 @@ struct MenuApplyButtonTests {
         model.isBusy = false
         host.hosting.rootView = content()
         host.render()
-        #expect(try host.element(label: "Apply changes").accessibilityPerformPress())
+        #expect(try host.element(label: L10n.string("Apply changes")).accessibilityPerformPress())
         #expect(calls == 2)
     }
 
@@ -78,7 +78,7 @@ struct MenuApplyButtonTests {
         try await host.activateAccessibility()
         let wasActive = NSApp.isActive
         let resting = try pixels(of: host.hosting)
-        let button = try host.element(label: "Apply changes")
+        let button = try host.element(label: L10n.string("Apply changes"))
         #expect(button.object.isAccessibilityFocused?() == false)
 
         // The native accessibility action focuses this control even when

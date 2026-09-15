@@ -5,16 +5,16 @@ enum GatewayUsageFormat {
     /// Shown wherever a day has not produced a value yet.
     static let placeholder = "—"
 
-    static func count(_ value: Int) -> String {
-        value.formatted(.number)
+    static func count(_ value: Int, locale: Locale = .current) -> String {
+        value.formatted(.number.locale(locale))
     }
 
     /// Token counts run to billions, which do not fit a 320-point menu.
-    static func compactCount(_ value: Int) -> String {
+    static func compactCount(_ value: Int, locale: Locale = .current) -> String {
         let units: [(divisor: Int, suffix: String)] = [
-            (1_000, "K"),
-            (1_000_000, "M"),
-            (1_000_000_000, "B"),
+            (1_000, L10n.string("K", locale: locale)),
+            (1_000_000, L10n.string("M", locale: locale)),
+            (1_000_000_000, L10n.string("B", locale: locale)),
         ]
         // The unit whose scaled count stays under a full thousand at display
         // rounding keeps the value. A unit takes the count once it reaches
@@ -33,46 +33,42 @@ enum GatewayUsageFormat {
                 break
             }
         }
-        guard let chosen else {
-            return "\(value)"
-        }
+        guard let chosen else { return count(value, locale: locale) }
         let scaled = Double(value) / Double(chosen.divisor)
-        return scaled >= 10
-            ? "\(Int(scaled.rounded()))\(chosen.suffix)"
-            : trimmed(String(format: "%.1f", scaled)) + chosen.suffix
-    }
-
-    /// The graph's larger headline can show the precision that the small
-    /// metric cells omit: 1,416,000 tokens reads 1.42M instead of 1.4M.
-    static func tokenTotal(_ value: Int) -> String {
-        let units: [(divisor: Int, suffix: String)] = [
-            (1_000, "K"),
-            (1_000_000, "M"),
-            (1_000_000_000, "B"),
-        ]
-        let amount = Double(value)
-        let chosen = units.last { amount >= Double($0.divisor) * 0.999995 }
-        guard let chosen else { return "\(value)" }
-        let formatted = (amount / Double(chosen.divisor)).formatted(
-            .number.locale(Locale(identifier: "en_US"))
-                .grouping(.never)
-                .precision(.fractionLength(0...2))
+        let precision = scaled >= 10 ? 0...0 : 0...1
+        let formatted = scaled.formatted(
+            .number.locale(locale).grouping(.never).precision(.fractionLength(precision))
         )
         return formatted + chosen.suffix
     }
 
-    static func errorRate(failures: Double, requests: Double) -> String {
-        guard failures > 0, requests > 0 else { return "0%" }
-        return percent(failures / requests * 100)
+    /// The graph's larger headline can show the precision that the small
+    /// metric cells omit: 1,416,000 tokens reads 1.42M instead of 1.4M.
+    static func tokenTotal(_ value: Int, locale: Locale = .current) -> String {
+        let units: [(divisor: Int, suffix: String)] = [
+            (1_000, L10n.string("K", locale: locale)),
+            (1_000_000, L10n.string("M", locale: locale)),
+            (1_000_000_000, L10n.string("B", locale: locale)),
+        ]
+        let amount = Double(value)
+        let chosen = units.last { amount >= Double($0.divisor) * 0.999995 }
+        guard let chosen else { return count(value, locale: locale) }
+        let formatted = (amount / Double(chosen.divisor)).formatted(
+            .number.locale(locale).grouping(.never).precision(.fractionLength(0...2))
+        )
+        return formatted + chosen.suffix
     }
 
-    private static func percent(_ value: Double) -> String {
-        value >= 10
-            ? "\(Int(value.rounded()))%"
-            : "\(trimmed(String(format: "%.1f", value)))%"
-    }
-
-    private static func trimmed(_ text: String) -> String {
-        text.hasSuffix(".0") ? String(text.dropLast(2)) : text
+    static func errorRate(
+        failures: Double,
+        requests: Double,
+        locale: Locale = .current
+    ) -> String {
+        let ratio = failures > 0 && requests > 0 ? failures / requests : 0
+        let percentage = ratio * 100
+        let precision = percentage >= 10 ? 0...0 : 0...1
+        return ratio.formatted(
+            .percent.locale(locale).precision(.fractionLength(precision))
+        )
     }
 }

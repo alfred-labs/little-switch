@@ -10,7 +10,8 @@ struct NativeSettingsNavigationTests {
     func destinations() {
         #expect(
             AppModel.Section.allCases.map(\.rawValue) == [
-                "General", "Providers", "Web Search", "Monitoring", "Claude", "Codex", "OpenCode",
+                "General", "Providers", "Web Search", "Monitoring",
+                "Claude", "Codex", "OpenCode",
             ])
         #expect(
             AppModel.Section.allCases.prefix(4).map(\.systemImage) == [

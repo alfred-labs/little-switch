@@ -11,7 +11,8 @@ public struct CodexManagedProfileSignature: Equatable, Sendable {
     public static func resolve(
         providers: [Provider],
         configuration: CodexConfiguration,
-        nativeCatalogData: Data? = nil
+        nativeCatalogData: Data? = nil,
+        responsesWireVerdicts: [UUID: Bool] = [:]
     ) throws -> CodexManagedProfileSignature {
         let normalized = configuration.normalized(for: providers)
         guard
@@ -28,7 +29,8 @@ public struct CodexManagedProfileSignature: Equatable, Sendable {
             catalogData: try CodexCatalog.encode(
                 providers: providers,
                 configuration: normalized,
-                nativeCatalogData: nativeCatalogData
+                nativeCatalogData: nativeCatalogData,
+                responsesWireVerdicts: responsesWireVerdicts
             ),
             maximumConcurrentThreadsPerSession: max(1, provider.maximumParallelRequests),
             webSearchMode: CodexTOMLEditor.defaultWebSearchMode

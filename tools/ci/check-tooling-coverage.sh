@@ -17,11 +17,11 @@ xcrun swift test --disable-sandbox --package-path tools --enable-code-coverage \
 binary_path=$(xcrun swift build --show-bin-path --package-path tools \
     --scratch-path "$coverage_scratch_path" \
     --cache-path .build/tooling-cache --config-path .build/tooling-config --security-path .build/tooling-security)
-test_binary="$binary_path/LittleSwitchToolingPackageTests.xctest/Contents/MacOS/LittleSwitchToolingPackageTests"
 profile="$binary_path/codecov/default.profdata"
 
-if [ ! -f "$test_binary" ]; then
-    echo "Tooling coverage test binary was not produced" >&2
+coverage_test_binaries=$(find "$binary_path" -type f -perm -111 -path '*/Contents/MacOS/*Tests' | LC_ALL=C sort)
+if [ -z "$coverage_test_binaries" ]; then
+    echo "Tooling coverage test binaries were not produced" >&2
     exit 1
 fi
 if [ ! -f "$profile" ]; then
@@ -43,6 +43,16 @@ if [ ! -s "$measured_list" ]; then
 fi
 
 set --
+while IFS= read -r test_binary; do
+    if [ ! -f "$test_binary" ]; then
+        echo "Tooling coverage test binary disappeared: $test_binary" >&2
+        exit 1
+    fi
+    set -- "$@" "$test_binary"
+done <<COVERAGE_TEST_BINARIES
+$coverage_test_binaries
+COVERAGE_TEST_BINARIES
+
 while IFS= read -r source_path; do
     if [ -z "$source_path" ]; then
         echo "Coverage scope classifier returned an empty source path" >&2
@@ -51,7 +61,7 @@ while IFS= read -r source_path; do
     set -- "$@" "tools/$source_path"
 done < "$measured_list"
 
-xcrun llvm-cov report "$test_binary" -instr-profile="$profile" "$@" > "$measured_report" 2>&1 || {
+xcrun llvm-cov report "$@" -instr-profile="$profile" > "$measured_report" 2>&1 || {
     status=$?
     cat "$measured_report" >&2
     echo "Failed to produce measured tooling source coverage report" >&2
@@ -62,7 +72,14 @@ cat "$measured_report"
 mise run --quiet tools:run -- coverage verify --root "$project_root/tools" \
     --measured-list "$measured_list" --report "$measured_report"
 
-xcrun llvm-cov report "$test_binary" -instr-profile="$profile" tools/Sources > "$raw_report" 2>&1 || {
+set --
+while IFS= read -r test_binary; do
+    set -- "$@" "$test_binary"
+done <<COVERAGE_TEST_BINARIES
+$coverage_test_binaries
+COVERAGE_TEST_BINARIES
+set -- "$@" "tools/Sources"
+xcrun llvm-cov report "$@" -instr-profile="$profile" > "$raw_report" 2>&1 || {
     status=$?
     cat "$raw_report" >&2
     echo "Failed to produce raw linked-tooling-source coverage report" >&2

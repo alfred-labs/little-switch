@@ -52,9 +52,9 @@ struct WebSearchSettingsTests {
 
         #expect(
             draft.credentialPresentation.accessibilityHint
-                == "Required for Tavily. Leave blank to keep the saved key."
+                == L10n.resource("Required for Tavily. Leave blank to keep the saved key.")
         )
-        #expect(draft.credentialPresentation.placeholder == "Leave blank to keep the saved key")
+        #expect(draft.credentialPresentation.placeholder == L10n.resource("Leave blank to keep the saved key"))
     }
 
     @Test("A typed Tavily key reaches the input trimmed")
@@ -84,9 +84,9 @@ struct WebSearchSettingsTests {
 
         #expect(
             draft.credentialPresentation.accessibilityHint
-                == "Required for Brave. Leave blank to keep the saved key."
+                == L10n.resource("Required for Brave. Leave blank to keep the saved key.")
         )
-        #expect(draft.credentialPresentation.placeholder == "Leave blank to keep the saved key")
+        #expect(draft.credentialPresentation.placeholder == L10n.resource("Leave blank to keep the saved key"))
     }
 
     @Test("A typed Brave key reaches the input trimmed")
@@ -141,37 +141,37 @@ struct WebSearchSettingsTests {
         #expect(draft.connectionTitle == nil)
 
         draft.select(provider: .firecrawl)
-        #expect(draft.connectionTitle == "Firecrawl connection")
+        #expect(draft.connectionTitle == L10n.resource("Firecrawl connection"))
 
         draft.select(provider: .tavily)
-        #expect(draft.connectionTitle == "Tavily connection")
+        #expect(draft.connectionTitle == L10n.resource("Tavily connection"))
 
         draft.select(provider: .brave)
-        #expect(draft.connectionTitle == "Brave connection")
+        #expect(draft.connectionTitle == L10n.resource("Brave connection"))
     }
 
     @Test("Credential guidance explains whether blank input preserves or removes the key")
     func credentialGuidance() {
         var draft = WebSearchDraft(configuration: .firecrawlCloud)
 
-        #expect(draft.credentialPresentation.placeholder == "Leave blank to keep the saved key")
+        #expect(draft.credentialPresentation.placeholder == L10n.resource("Leave blank to keep the saved key"))
         #expect(
             draft.credentialPresentation.accessibilityHint
-                == "Required for Firecrawl. Leave blank to keep the saved key."
+                == L10n.resource("Required for Firecrawl. Leave blank to keep the saved key.")
         )
 
         draft.select(provider: .tavily)
-        #expect(draft.credentialPresentation.placeholder == "Leave blank to keep the saved key")
+        #expect(draft.credentialPresentation.placeholder == L10n.resource("Leave blank to keep the saved key"))
         #expect(
             draft.credentialPresentation.accessibilityHint
-                == "Required for Tavily. Leave blank to keep the saved key."
+                == L10n.resource("Required for Tavily. Leave blank to keep the saved key.")
         )
 
         draft.select(provider: .brave)
-        #expect(draft.credentialPresentation.placeholder == "Leave blank to keep the saved key")
+        #expect(draft.credentialPresentation.placeholder == L10n.resource("Leave blank to keep the saved key"))
         #expect(
             draft.credentialPresentation.accessibilityHint
-                == "Required for Brave. Leave blank to keep the saved key."
+                == L10n.resource("Required for Brave. Leave blank to keep the saved key.")
         )
     }
 }

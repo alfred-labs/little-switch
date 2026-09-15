@@ -20,52 +20,53 @@ struct AppModelOpenCodeTests {
 
         #expect(!model.openCodeSwitchOn)
         #expect(model.openCodePrimaryAction == .connect)
-        #expect(model.openCodePrimaryActionTitle == "Apply")
+        #expect(model.openCodePrimaryActionTitle == L10n.string("Apply"))
         #expect(model.canPerformOpenCodePrimaryAction)
-        #expect(model.openCodePrimaryActionAccessibilityHint == "Configures OpenCode to use LittleSwitch")
-        #expect(model.openCodePrimaryActionAccessibilityValue == "OpenCode disconnected")
+        #expect(model.openCodePrimaryActionAccessibilityHint == L10n.string("Configures OpenCode to use LittleSwitch"))
+        #expect(model.openCodePrimaryActionAccessibilityValue == L10n.string("OpenCode disconnected"))
 
         model.openCodeStatus = .connected
         #expect(model.openCodeSwitchOn)
         #expect(model.openCodePrimaryAction == .apply)
         #expect(!model.canPerformOpenCodePrimaryAction)
-        #expect(model.openCodePrimaryActionAccessibilityHint == "No pending settings")
-        #expect(model.openCodePrimaryActionAccessibilityValue == "No pending changes")
+        #expect(model.openCodePrimaryActionAccessibilityHint == L10n.string("No pending settings"))
+        #expect(model.openCodePrimaryActionAccessibilityValue == L10n.string("No pending changes"))
 
         model.hasPendingOpenCodeChanges = true
         #expect(model.canPerformOpenCodePrimaryAction)
-        #expect(model.openCodePrimaryActionAccessibilityHint == "Applies pending settings to OpenCode")
-        #expect(model.openCodePrimaryActionAccessibilityValue == "Changes pending")
+        #expect(model.openCodePrimaryActionAccessibilityHint == L10n.string("Applies pending settings to OpenCode"))
+        #expect(model.openCodePrimaryActionAccessibilityValue == L10n.string("Changes pending"))
 
         model.hasPendingOpenCodeChanges = false
         model.openCodeStatus = .needsAttention
         #expect(model.openCodeSwitchOn)
         #expect(model.openCodePrimaryAction == .apply)
         #expect(model.canPerformOpenCodePrimaryAction)
-        #expect(model.openCodePrimaryActionAccessibilityHint == "Reapplies LittleSwitch settings to OpenCode")
-        #expect(model.openCodePrimaryActionAccessibilityValue == "Needs attention")
+        #expect(
+            model.openCodePrimaryActionAccessibilityHint == L10n.string("Reapplies LittleSwitch settings to OpenCode"))
+        #expect(model.openCodePrimaryActionAccessibilityValue == L10n.string("Needs attention"))
 
         model.openCodeStatus = .recoveryAvailable
         #expect(model.openCodeSwitchOn)
         #expect(model.openCodePrimaryAction == .restore)
-        #expect(model.openCodePrimaryActionTitle == "Restore settings")
+        #expect(model.openCodePrimaryActionTitle == L10n.string("Restore settings"))
         #expect(model.canPerformOpenCodePrimaryAction)
         #expect(
             model.openCodePrimaryActionAccessibilityHint
-                == "Restores the previous user-level OpenCode settings"
+                == L10n.string("Restores the previous user-level OpenCode settings")
         )
-        #expect(model.openCodePrimaryActionAccessibilityValue == "Recovery available")
+        #expect(model.openCodePrimaryActionAccessibilityValue == L10n.string("Recovery available"))
 
         model.openCodeStatus = .recoveryUnavailable
         #expect(!model.openCodeSwitchOn)
         #expect(model.openCodePrimaryAction == .restore)
         #expect(!model.canPerformOpenCodePrimaryAction)
-        #expect(model.openCodePrimaryActionAccessibilityHint == "Recovery data is unavailable")
-        #expect(model.openCodePrimaryActionAccessibilityValue == "Recovery unavailable")
+        #expect(model.openCodePrimaryActionAccessibilityHint == L10n.string("Recovery data is unavailable"))
+        #expect(model.openCodePrimaryActionAccessibilityValue == L10n.string("Recovery unavailable"))
 
         model.isBusy = true
         #expect(!model.canPerformOpenCodePrimaryAction)
-        #expect(model.openCodePrimaryActionAccessibilityHint == "An operation is in progress")
+        #expect(model.openCodePrimaryActionAccessibilityHint == L10n.string("An operation is in progress"))
     }
 
     @Test("Codex pending state gates OpenCode connect and apply")
@@ -81,17 +82,17 @@ struct AppModelOpenCodeTests {
         )
 
         #expect(!model.canPerformOpenCodePrimaryAction)
-        #expect(model.openCodePrimaryActionAccessibilityHint == "Apply Codex changes first")
+        #expect(model.openCodePrimaryActionAccessibilityHint == L10n.string("Apply Codex changes first"))
 
         model.openCodeStatus = .connected
         #expect(!model.canPerformOpenCodePrimaryAction)
-        #expect(model.openCodePrimaryActionAccessibilityHint == "Apply Codex changes first")
+        #expect(model.openCodePrimaryActionAccessibilityHint == L10n.string("Apply Codex changes first"))
 
         model.openCodeStatus = .recoveryAvailable
         #expect(model.canPerformOpenCodePrimaryAction)
         #expect(
             model.openCodePrimaryActionAccessibilityHint
-                == "Restores the previous user-level OpenCode settings"
+                == L10n.string("Restores the previous user-level OpenCode settings")
         )
     }
 
@@ -113,7 +114,7 @@ struct AppModelOpenCodeTests {
         #expect(!model.canPerformOpenCodePrimaryAction)
         #expect(
             model.openCodePrimaryActionAccessibilityHint
-                == "Expose at least one model in Codex before connecting OpenCode"
+                == L10n.string("Expose at least one model in Codex before connecting OpenCode")
         )
 
         model.openCodeStatus = .connected
@@ -121,7 +122,7 @@ struct AppModelOpenCodeTests {
         #expect(!model.canPerformOpenCodePrimaryAction)
         #expect(
             model.openCodePrimaryActionAccessibilityHint
-                == "Expose at least one model in Codex before applying OpenCode"
+                == L10n.string("Expose at least one model in Codex before applying OpenCode")
         )
     }
 

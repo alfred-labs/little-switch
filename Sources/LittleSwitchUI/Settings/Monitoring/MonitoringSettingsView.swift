@@ -44,15 +44,24 @@ struct MonitoringSettingsView: View {
         .toolbar {
             SettingsToolbarActions {
                 if hasPendingChanges { SettingsPendingNotice() }
-                Button(model.monitoringStatus.isTesting ? "Testing…" : "Test export") {
+                Button(
+                    model.monitoringStatus.isTesting
+                        ? L10n.string("Testing…")
+                        : L10n.string("Test export")
+                ) {
                     Task { await onTest() }
                 }
                 .disabled(!canTest)
-                .help("Send a synthetic event using the applied settings. Apply changes before testing.")
-                Button(model.monitoringApplying ? "Applying…" : "Apply", systemImage: "checkmark") { applyDraft() }
-                    .keyboardShortcut("s", modifiers: .command)
-                    .disabled(isBusy || !hasPendingChanges || draft.validationMessage != nil)
-                    .accessibilityHint("Apply monitoring settings")
+                .help(L10n.resource("Send a synthetic event using the applied settings. Apply changes before testing."))
+                Button(
+                    model.monitoringApplying
+                        ? L10n.string("Applying…")
+                        : L10n.string("Apply"),
+                    systemImage: "checkmark"
+                ) { applyDraft() }
+                .keyboardShortcut("s", modifiers: .command)
+                .disabled(isBusy || !hasPendingChanges || draft.validationMessage != nil)
+                .accessibilityHint(L10n.string("Apply monitoring settings"))
             }
         }
         .onChange(of: draft) { _, value in
@@ -70,9 +79,9 @@ struct MonitoringSettingsView: View {
     }
 
     private var exportSection: some View {
-        SettingsSection("OTLP export") {
+        SettingsSection(L10n.resource("OTLP export")) {
             MonitoringDestinationFields(
-                title: "Metrics",
+                title: L10n.string("Metrics"),
                 placeholder: "https://collector.example/v1/metrics",
                 destination: $draft.configuration.metrics,
                 token: $draft.metricsToken,
@@ -85,7 +94,7 @@ struct MonitoringSettingsView: View {
                 MonitoringMetricIntervalPicker(value: $draft.configuration.metricIntervalSeconds)
             }
             MonitoringDestinationFields(
-                title: "Logs",
+                title: L10n.string("Logs"),
                 placeholder: "https://collector.example/v1/logs",
                 destination: $draft.configuration.logs,
                 token: $draft.logsToken,
@@ -95,11 +104,11 @@ struct MonitoringSettingsView: View {
                 status: model.monitoringStatus.logs,
                 testResult: model.monitoringTestResult?.logs
             ) {
-                LabeledContent("Minimum level") {
-                    Picker("Minimum level", selection: $draft.configuration.minimumLogLevel) {
-                        Text("Info").tag(MonitoringLevel.info)
-                        Text("Warning").tag(MonitoringLevel.warn)
-                        Text("Error").tag(MonitoringLevel.error)
+                LabeledContent(L10n.string("Minimum level")) {
+                    Picker(L10n.resource("Minimum level"), selection: $draft.configuration.minimumLogLevel) {
+                        Text(L10n.resource("Info")).tag(MonitoringLevel.info)
+                        Text(L10n.resource("Warning")).tag(MonitoringLevel.warn)
+                        Text(L10n.resource("Error")).tag(MonitoringLevel.error)
                     }
                     .labelsHidden()
                     .settingsMenuPicker()
@@ -112,7 +121,7 @@ struct MonitoringSettingsView: View {
                     .font(SettingsLayout.Typography.supporting)
                     .foregroundStyle(.orange)
             }
-            Text("Logs export structured events without prompts, response bodies or credentials.")
+            Text(L10n.resource("Logs export structured events without prompts, response bodies or credentials."))
                 .settingsSupportingText()
         }
     }

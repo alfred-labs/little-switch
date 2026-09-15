@@ -107,7 +107,13 @@ struct MenuClaudeTabView: View {
     }
 
     private var routeOptions: [MenuModelOption] {
-        [MenuModelOption(id: "none", label: "Not assigned", mapping: nil)]
+        [
+            MenuModelOption(
+                id: "none",
+                label: L10n.string("Not assigned"),
+                mapping: nil
+            )
+        ]
             + model.modelOptions.map { option in
                 MenuModelOption(id: option.id, label: option.label, mapping: option.mapping)
             }
@@ -116,7 +122,7 @@ struct MenuClaudeTabView: View {
     private var actionRow: some View {
         HStack {
             if model.hasPendingClaudeMappings || model.hasPendingClaudeCodeChanges {
-                Text("Changes pending")
+                Text(L10n.resource("Changes pending"))
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }

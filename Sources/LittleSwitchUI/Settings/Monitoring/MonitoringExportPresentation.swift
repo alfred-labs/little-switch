@@ -3,13 +3,16 @@ import LittleSwitchCore
 
 enum MonitoringExportPresentation {
     static func title(for status: MonitoringSignalExportStatus, pending: Bool) -> String {
-        if pending { return "Pending" }
+        if pending { return L10n.string("Pending") }
         switch status.state {
-        case .disabled: return "Disabled"
-        case .idle: return status.lastAccepted == nil ? "Waiting" : "Ready"
-        case .sending: return "Sending…"
-        case .retrying: return "Retry scheduled"
-        case .failed: return "Export failed"
+        case .disabled: return L10n.string("Disabled")
+        case .idle:
+            return status.lastAccepted == nil
+                ? L10n.string("Waiting")
+                : L10n.string("Ready")
+        case .sending: return L10n.string("Sending…")
+        case .retrying: return L10n.string("Retry scheduled")
+        case .failed: return L10n.string("Export failed")
         }
     }
 
@@ -40,10 +43,12 @@ struct MonitoringLocalEndpointPresentation {
 
     var copyHelp: String {
         if appliedEnabled {
-            return enabled ? "Copy a local endpoint URL." : "Available until you apply this change."
+            return enabled
+                ? L10n.string("Copy a local endpoint URL.")
+                : L10n.string("Available until you apply this change.")
         }
         return enabled
-            ? "Apply changes to make this endpoint available."
-            : "Enable this endpoint and apply changes to make it available."
+            ? L10n.string("Apply changes to make this endpoint available.")
+            : L10n.string("Enable this endpoint and apply changes to make it available.")
     }
 }

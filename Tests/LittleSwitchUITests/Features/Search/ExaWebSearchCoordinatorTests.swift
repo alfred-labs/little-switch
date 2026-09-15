@@ -37,7 +37,8 @@ struct ExaWebSearchCoordinatorTests {
         #expect((try fixture.store.load()).webSearch == .disabled)
         #expect(try fixture.secrets.read(account: .webSearch(.exa)) == nil)
         #expect(
-            ApplicationCoordinator.Error.missingExaCredential.errorDescription == "Enter an Exa API key for web search."
+            ApplicationCoordinator.Error.missingExaCredential.errorDescription
+                == L10n.string("Enter an Exa API key for web search.")
         )
     }
 
@@ -85,12 +86,12 @@ struct ExaWebSearchCoordinatorTests {
         draft.select(provider: .exa)
         #expect(draft.resultsRange == 1...100)
         #expect(draft.input == WebSearchInput(configuration: WebSearchConfiguration(provider: .exa, resultsLimit: 80)))
-        #expect(draft.connectionTitle == "Exa connection")
+        #expect(draft.connectionTitle == L10n.resource("Exa connection"))
         #expect(
             draft.credentialPresentation
                 == WebSearchCredentialPresentation(
-                    placeholder: "Leave blank to keep the saved key",
-                    accessibilityHint: "Required for Exa. Leave blank to keep the saved key."
+                    placeholder: L10n.resource("Leave blank to keep the saved key"),
+                    accessibilityHint: L10n.resource("Required for Exa. Leave blank to keep the saved key.")
                 ))
         draft.credential = "  exa-key\n"
         draft.select(provider: .exa)

@@ -144,7 +144,9 @@ extension ApplicationCoordinator {
     private func discardMonitoringCredentials(_ credentialIDs: [UUID]) {
         for credentialID in Set(credentialIDs) {
             do { try secretStore.delete(account: .monitoring(credentialID)) } catch {
-                monitoringNotice = "An unused monitoring token could not be removed from Keychain."
+                monitoringNotice = L10n.string(
+                    "An unused monitoring token could not be removed from Keychain."
+                )
             }
         }
     }

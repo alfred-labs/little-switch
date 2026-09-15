@@ -10,7 +10,7 @@ struct ProviderConcurrencySettingsTests {
     @Test("Provider inputs default and preserve parallel request settings")
     func providerInputMaximumParallelRequests() {
         let defaultInput = ProviderInput(
-            name: "Default",
+            name: L10n.string("Default"),
             baseURL: "https://example.com",
             authMode: .none
         )
@@ -29,7 +29,7 @@ struct ProviderConcurrencySettingsTests {
     func invalidMaximumParallelRequestsDescription() {
         #expect(
             ApplicationCoordinator.Error.invalidMaximumParallelRequests.errorDescription
-                == "Choose between 1 and 32 parallel requests."
+                == L10n.string("Choose between 1 and 32 parallel requests.")
         )
     }
 
@@ -45,7 +45,7 @@ struct ProviderConcurrencySettingsTests {
         )
         #expect(compactSource.contains("Text(draft.maximumParallelRequests.formatted())"))
         #expect(compactSource.contains(".monospacedDigit()"))
-        #expect(source.contains(#""Parallel requests""#))
+        #expect(source.contains(#"L10n.string("Parallel requests")"#))
         #expect(source.contains("Shared by every model and app using this provider."))
         #expect(source.contains("draft.apply(selection.providerPreset)"))
         var draft = ProviderDraft()

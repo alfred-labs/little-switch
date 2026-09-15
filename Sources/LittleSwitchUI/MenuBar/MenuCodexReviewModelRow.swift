@@ -9,15 +9,18 @@ struct MenuCodexReviewModelRow: View {
 
     var body: some View {
         GridRow {
-            Text("Custom review")
+            Text(L10n.resource("Custom review"))
                 .font(.system(size: 12, weight: .medium))
                 .fixedSize()
                 .frame(height: MenuTabContentLayout.rowHeight)
                 .gridColumnAlignment(.leading)
-                .help("Reviews permission requests for custom models. Native OpenAI models keep Codex's own reviewer.")
+                .help(
+                    L10n.resource(
+                        "Reviews permission requests for custom models. Native OpenAI models keep Codex's own reviewer."
+                    ))
             MenuMappingArrow()
             MenuModelStepper(
-                name: "Custom approval review model",
+                name: L10n.string("Custom approval review model"),
                 options: options,
                 selection: Binding(
                     get: { selection },
@@ -27,12 +30,19 @@ struct MenuCodexReviewModelRow: View {
             )
             .disabled(model.isBusy || model.modelOptions.isEmpty)
             .accessibilityHint(
-                "Reviews permission requests for custom models. Native OpenAI models keep Codex's own reviewer.")
+                L10n.resource(
+                    "Reviews permission requests for custom models. Native OpenAI models keep Codex's own reviewer."))
         }
     }
 
     private var options: [MenuModelOption] {
-        [MenuModelOption(id: "same-as-default", label: "Same as default", mapping: nil)]
+        [
+            MenuModelOption(
+                id: "same-as-default",
+                label: L10n.string("Same as default"),
+                mapping: nil
+            )
+        ]
             + model.modelOptions.map {
                 MenuModelOption(id: $0.id, label: $0.label, mapping: $0.mapping)
             }
@@ -44,6 +54,10 @@ struct MenuCodexReviewModelRow: View {
         }
         guard let mapping = model.configuration.codex.autoReviewModel else { return nil }
         // Keep the stale choice visible without offering it in the cycle.
-        return MenuModelOption(id: "unavailable", label: "Unavailable: \(mapping.modelID)", mapping: mapping)
+        return MenuModelOption(
+            id: "unavailable",
+            label: L10n.string("Unavailable: \(mapping.modelID)"),
+            mapping: mapping
+        )
     }
 }

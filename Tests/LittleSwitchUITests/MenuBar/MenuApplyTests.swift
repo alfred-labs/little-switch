@@ -95,7 +95,7 @@ struct MenuApplyTests {
         menu.addItem(apply)
         apply.setTracking(true)
         let settings = NSMenuItem(
-            title: "Settings…", action: #selector(NativeActionRecorder.invoke), keyEquivalent: ","
+            title: L10n.string("Settings…"), action: #selector(NativeActionRecorder.invoke), keyEquivalent: ","
         )
         settings.target = recorder
         settings.keyEquivalentModifierMask = [.command]

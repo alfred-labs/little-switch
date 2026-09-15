@@ -5,6 +5,7 @@ struct ProviderEditorAdvanced: View {
     @Binding var isExpanded: Bool
     @State private var connectionDetailsExpanded = false
     let responsesWireVerdict: Bool?
+    var imagePresentations: [String: ProviderModelImageInputPresentation] = [:]
 
     var body: some View {
         Section {
@@ -13,25 +14,30 @@ struct ProviderEditorAdvanced: View {
             }
         } header: {
             VStack(alignment: .leading, spacing: 8) {
-                DisclosureGroup("Advanced", isExpanded: $isExpanded) {}
+                DisclosureGroup(L10n.string("Advanced"), isExpanded: $isExpanded) {}
                     .font(SettingsLayout.Typography.disclosureTitle)
                     .foregroundStyle(.primary)
-                    .accessibilityHint("Show or hide advanced provider settings")
-                if isExpanded { Text("Compatibility") }
+                    .accessibilityHint(L10n.string("Show or hide advanced provider settings"))
+                if isExpanded { Text(L10n.resource("Compatibility")) }
             }
         } footer: {
             if isExpanded {
                 Text(
+
                     draft.disabledThinkingOverride == .lowEffort
-                        ? "Low effort applies only when the request does not specify an effort."
-                        : "Pass through preserves the caller's thinking parameters."
+                        ? L10n.resource(
+                            "Low effort applies only when the request does not specify an effort."
+                        )
+                        : L10n.resource(
+                            "Pass through preserves the caller's thinking parameters."
+                        )
                 )
             }
         }
 
         if isExpanded {
             if !draft.modelContexts.isEmpty {
-                ProviderModelContextTable(contexts: $draft.modelContexts)
+                ProviderModelContextTable(contexts: $draft.modelContexts, imagePresentations: imagePresentations)
             }
             Section {
                 ProviderEditorConnectionDetails(

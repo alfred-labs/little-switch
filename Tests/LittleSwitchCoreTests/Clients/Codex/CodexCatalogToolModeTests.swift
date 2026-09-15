@@ -6,8 +6,8 @@ import Testing
 
 @Suite("Codex catalog tool mode")
 struct CodexCatalogToolModeTests {
-    @Test("Managed models and reviewer request direct tools while native model metadata stays intact")
-    func managedDirectTools() throws {
+    @Test("Managed models inherit Codex tool mode while native model metadata stays intact")
+    func managedToolModeInheritance() throws {
         let providerID = UUID()
         let provider = Provider(
             id: providerID,
@@ -23,7 +23,7 @@ struct CodexCatalogToolModeTests {
         let configuration = CodexConfiguration(
             defaultModel: ModelMapping(providerID: providerID, modelID: "coding-model"))
         let catalog = try CodexCatalog.make(providers: [provider], configuration: configuration)
-        #expect(catalog.models.map(\.toolMode) == ["direct", "direct"])
+        #expect(catalog.models.count == 2)
         let data = try CodexCatalog.encode(
             providers: [provider],
             configuration: configuration,
@@ -34,7 +34,7 @@ struct CodexCatalogToolModeTests {
         #expect(managed.count == 2)
         #expect(managed.contains { $0["slug"] as? String == CodexCatalog.managedAutoReviewModel })
         for entry in managed {
-            #expect(entry["tool_mode"] as? String == "direct")
+            #expect(entry["tool_mode"] == nil)
             #expect(entry["apply_patch_tool_type"] is NSNull)
         }
         var expectedNative = native

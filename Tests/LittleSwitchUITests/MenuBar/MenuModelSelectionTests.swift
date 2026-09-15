@@ -8,7 +8,7 @@ import Testing
 @Suite("Menu model selection")
 struct MenuModelSelectionTests {
     private let options = [
-        MenuModelOption(id: "none", label: "Not assigned", mapping: nil),
+        MenuModelOption(id: "none", label: L10n.string("Not assigned"), mapping: nil),
         MenuModelOption(
             id: "zai",
             label: "z.ai/glm-4.7",

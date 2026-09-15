@@ -95,7 +95,9 @@ extension ApplicationCoordinator {
             gatewayTransportBuilder: LiveGatewayTransportBuilder(),
             gatewayFactory: LiveGatewayFactory(builder: LiveGatewayBuilder()),
             trafficRecorder: trafficRecorder,
-            tlsProvisioner: LiveGatewayTLSProvisioner()
+            tlsProvisioner: LiveGatewayTLSProvisioner(),
+            customToolCapabilities: CustomToolCapabilityCache(
+                storeURL: root.appending(path: "Cache/CustomToolCapabilities.json"))
         )
     }
 }

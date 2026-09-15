@@ -7,7 +7,7 @@ extension LittleSwitchApplicationDelegate {
     func testProvider(_ input: ProviderInput) async -> ProviderTestOutcome {
         guard let coordinator else {
             return .authenticationFailed(
-                "LittleSwitch is still starting up. Try again in a moment."
+                L10n.string("LittleSwitch is still starting up. Try again in a moment.")
             )
         }
         do {

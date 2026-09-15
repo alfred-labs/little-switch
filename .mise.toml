@@ -39,12 +39,29 @@ run = "./tools/ci/check-swift-coverage.sh"
 
 [tasks."swift:deadcode"]
 description = "Require Periphery to find no unreferenced code"
-run = "periphery scan --strict --baseline .periphery-baseline.yml"
+run = """
+set -eu
+mkdir -p "{{config_root}}/.build/home" "{{config_root}}/.build/clang-cache" .build/cache .build/config .build/security
+env HOME="{{config_root}}/.build/home" \
+  CLANG_MODULE_CACHE_PATH="{{config_root}}/.build/clang-cache" \
+  xcrun swift package --disable-sandbox \
+  --cache-path .build/cache --config-path .build/config --security-path .build/security \
+  describe --type json > .build/package-describe.json
+xcrun swift build --disable-sandbox --build-system native --enable-index-store \
+  --scratch-path .build/periphery \
+  --cache-path .build/cache --config-path .build/config --security-path .build/security \
+  -Xswiftc -warnings-as-errors
+periphery scan --strict --baseline .periphery-baseline.yml --skip-build \
+  --index-store-path "{{config_root}}/.build/periphery/debug/index/store" \
+  --json-package-manifest-path "{{config_root}}/.build/package-describe.json"
+"""
 
 [tasks."swift:thread-sanitizer"]
 description = "Run concurrency-sensitive tests with Thread Sanitizer"
 run = """
-xcrun swift test --disable-sandbox --sanitize=thread \
+# Parallel suite scheduling interleaves NIO continuation setup and resume in a
+# way TSAN reports before test teardown; coverage already uses serial mode.
+xcrun swift test --disable-sandbox --sanitize=thread --no-parallel \
   --cache-path .build/cache --config-path .build/config --security-path .build/security \
   -Xswiftc -warnings-as-errors
 """
@@ -72,6 +89,7 @@ run = """
 xcrun swift build --disable-sandbox --package-path tools \
   --scratch-path .build/tooling \
   --cache-path .build/tooling-cache --config-path .build/tooling-config --security-path .build/tooling-security \
+  --enable-index-store \
   -Xswiftc -warnings-as-errors
 """
 
@@ -98,9 +116,20 @@ description = "Require no unused production declarations in repository tooling"
 dir = "tools"
 run = """
 set -eu
-mise run tools:build
+mkdir -p "{{config_root}}/.build/home" "{{config_root}}/.build/clang-cache" \
+  .build/tooling-cache .build/tooling-config .build/tooling-security
+env HOME="{{config_root}}/.build/home" \
+  CLANG_MODULE_CACHE_PATH="{{config_root}}/.build/clang-cache" \
+  xcrun swift package --disable-sandbox \
+  --cache-path .build/tooling-cache --config-path .build/tooling-config --security-path .build/tooling-security \
+  describe --type json > "{{config_root}}/.build/tooling/package-describe.json"
+xcrun swift build --disable-sandbox --build-system native --enable-index-store \
+  --scratch-path .build/tooling-periphery \
+  --cache-path .build/tooling-cache --config-path .build/tooling-config --security-path .build/tooling-security \
+  -Xswiftc -warnings-as-errors
 periphery scan --strict --config .periphery.yml --skip-build \
-  --index-store-path "{{config_root}}/.build/tooling/debug/index/store"
+  --index-store-path "{{config_root}}/.build/tooling-periphery/debug/index/store" \
+  --json-package-manifest-path "{{config_root}}/.build/tooling/package-describe.json"
 """
 
 [tasks."tools:coverage"]

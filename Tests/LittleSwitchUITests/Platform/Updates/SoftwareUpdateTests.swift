@@ -27,7 +27,7 @@ struct SoftwareUpdateTests {
 
         #expect(
             chosen?.availability
-                == .disabled(reason: "Software updates run in the installed application.")
+                == .disabled(reason: L10n.string("Software updates run in the installed application."))
         )
     }
 
@@ -47,7 +47,7 @@ struct SoftwareUpdateTests {
         #expect(
             chosen?.availability
                 == .disabled(
-                    reason: "Software updates require the Developer ID signed release build."
+                    reason: L10n.string("Software updates require the Developer ID signed release build.")
                 )
         )
     }
@@ -98,7 +98,7 @@ struct SoftwareUpdateTests {
     @Test("The app menu offers Check for Updates below About")
     func appMenuCheckForUpdatesItem() throws {
         let menu = ApplicationMenuFactory.make()
-        let appItem = try #require(menu.items.first { $0.title == "LittleSwitch" })
+        let appItem = try #require(menu.items.first { $0.title == L10n.string("LittleSwitch") })
         let appSubmenu = try #require(appItem.submenu)
         let about = try #require(
             appSubmenu.items.first {
@@ -111,7 +111,7 @@ struct SoftwareUpdateTests {
             }
         )
 
-        #expect(checkForUpdates.title == "Check for Updates…")
+        #expect(checkForUpdates.title == L10n.string("Check for Updates…"))
         #expect(checkForUpdates.target == nil)
         #expect(checkForUpdates.keyEquivalent.isEmpty)
         #expect(
@@ -133,9 +133,9 @@ struct SoftwareUpdateTests {
     func commonCardCopy() throws {
         let source = try source(named: "Settings/General/CommonSettingsView.swift")
 
-        #expect(source.contains("\"Software updates\""))
-        #expect(source.contains("\"Install updates automatically\""))
-        #expect(source.contains("Button(\"Check for Updates Now…\")"))
+        #expect(source.contains("L10n.resource(\"Software updates\")"))
+        #expect(source.contains("L10n.resource(\"Install updates automatically\")"))
+        #expect(source.contains("L10n.resource(\"Check for Updates Now…\")"))
         #expect(source.contains("updater.automaticallyChecksForUpdates = enabled"))
         #expect(source.contains("updater.automaticallyDownloadsUpdates = enabled"))
     }

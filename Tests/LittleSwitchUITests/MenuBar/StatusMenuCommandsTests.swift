@@ -27,7 +27,7 @@ struct StatusMenuCommandsTests {
             defer { host.close() }
             try await host.activateAccessibility()
 
-            #expect(try host.element(label: "Open Settings").accessibilityPerformPress())
+            #expect(try host.element(label: L10n.string("Open Settings")).accessibilityPerformPress())
 
             #expect(settingsCalls == 1)
             #expect(selections.isEmpty)
@@ -40,7 +40,10 @@ struct StatusMenuCommandsTests {
         let recorder = StatusCommandRecorder()
         let items = StatusMenuCommands.makeItems(target: recorder)
         #expect(
-            items.map(\.title) == ["Settings…", "", "About LittleSwitch", "Check for Updates…", "Quit LittleSwitch"])
+            items.map(\.title) == [
+                L10n.string("Settings…"), "", L10n.string("About LittleSwitch"), L10n.string("Check for Updates…"),
+                L10n.string("Quit LittleSwitch"),
+            ])
         #expect(items.filter(\.isSeparatorItem).count == 1)
         let menu = NSMenu()
         menu.autoenablesItems = false
@@ -67,7 +70,7 @@ struct StatusMenuCommandsTests {
                 ))
             #expect(menu.performKeyEquivalent(with: event))
         }
-        #expect(recorder.titles == ["Settings…", "Quit LittleSwitch"])
+        #expect(recorder.titles == [L10n.string("Settings…"), L10n.string("Quit LittleSwitch")])
     }
 
     @Test("Tab navigation disarms hidden Return actions and preserves the shared footer")

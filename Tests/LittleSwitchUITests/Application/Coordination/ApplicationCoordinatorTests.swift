@@ -253,7 +253,8 @@ struct ApplicationCoordinatorTests {
     func listenerCollisionMessage() {
         #expect(
             ApplicationCoordinator.Error.gatewayUnavailable.errorDescription
-                == "Port 11436 is already in use. Quit the other LittleSwitch instance, then reopen the app."
+                == L10n.string(
+                    "Port 11436 is already in use. Quit the other LittleSwitch instance, then reopen the app.")
         )
     }
 }

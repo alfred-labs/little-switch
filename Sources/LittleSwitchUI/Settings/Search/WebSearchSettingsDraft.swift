@@ -3,8 +3,8 @@ import LittleSwitchCommon
 import LittleSwitchSearch
 
 struct WebSearchCredentialPresentation: Equatable, Sendable {
-    let placeholder: String
-    let accessibilityHint: String
+    let placeholder: LocalizedStringResource
+    let accessibilityHint: LocalizedStringResource
 }
 
 struct WebSearchDraft: Equatable {
@@ -33,18 +33,18 @@ struct WebSearchDraft: Equatable {
     }
 
     /// The credential section is hidden while search is disabled.
-    var connectionTitle: String? {
+    var connectionTitle: LocalizedStringResource? {
         switch provider {
         case .disabled:
             nil
         case .firecrawl:
-            "Firecrawl connection"
+            L10n.resource("Firecrawl connection")
         case .tavily:
-            "Tavily connection"
+            L10n.resource("Tavily connection")
         case .brave:
-            "Brave connection"
+            L10n.resource("Brave connection")
         case .exa:
-            "Exa connection"
+            L10n.resource("Exa connection")
         }
     }
 
@@ -80,27 +80,29 @@ struct WebSearchDraft: Equatable {
         switch provider {
         case .tavily:
             WebSearchCredentialPresentation(
-                placeholder: "Leave blank to keep the saved key",
+                placeholder: L10n.resource("Leave blank to keep the saved key"),
                 accessibilityHint:
-                    "Required for Tavily. Leave blank to keep the saved key."
+                    L10n.resource("Required for Tavily. Leave blank to keep the saved key.")
             )
         case .brave:
             WebSearchCredentialPresentation(
-                placeholder: "Leave blank to keep the saved key",
+                placeholder: L10n.resource("Leave blank to keep the saved key"),
                 accessibilityHint:
-                    "Required for Brave. Leave blank to keep the saved key."
+                    L10n.resource("Required for Brave. Leave blank to keep the saved key.")
             )
         case .exa:
             WebSearchCredentialPresentation(
-                placeholder: "Leave blank to keep the saved key",
+                placeholder: L10n.resource("Leave blank to keep the saved key"),
                 accessibilityHint:
-                    "Required for Exa. Leave blank to keep the saved key."
+                    L10n.resource("Required for Exa. Leave blank to keep the saved key.")
             )
         case .firecrawl, .disabled:
             WebSearchCredentialPresentation(
-                placeholder: "Leave blank to keep the saved key",
+                placeholder: L10n.resource("Leave blank to keep the saved key"),
                 accessibilityHint:
-                    "Required for Firecrawl. Leave blank to keep the saved key."
+                    L10n.resource(
+                        "Required for Firecrawl. Leave blank to keep the saved key."
+                    )
             )
         }
     }

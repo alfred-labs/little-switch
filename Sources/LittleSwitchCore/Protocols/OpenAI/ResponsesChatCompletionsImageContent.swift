@@ -1,22 +1,30 @@
 import Foundation
+import LittleSwitchWire
 
 package enum ResponsesChatCompletionsImageContent {
     package static func multipart(_ parts: [[String: Any]]) -> [[String: Any]]? {
         var content: [[String: Any]] = []
         for part in parts {
-            switch part["type"] as? String {
-            case "input_text", "output_text":
-                guard let text = part["text"] as? String else {
-                    return nil
-                }
-                content.append(["type": "text", "text": text])
-            case "input_image":
-                guard let url = part["image_url"] as? String, !url.isEmpty else {
+            switch part[OpenAIResponsesUserMessage.Key.type.rawValue] as? String {
+            case OpenAIResponsesInputTextPartType.inputText.rawValue, OpenAIResponsesOutputTextType.outputText.rawValue:
+                guard let text = part[OpenAIResponsesInputTextPart.Key.text.rawValue] as? String else {
                     return nil
                 }
                 content.append([
-                    "type": "image_url",
-                    "image_url": ["url": url],
+                    OpenAIResponsesInputTextPart.Key.type.rawValue: ResponsesImagePartContract.Kind.chatText.rawValue,
+                    OpenAIResponsesInputTextPart.Key.text.rawValue: text,
+                ])
+            case ResponsesImagePartContract.Kind.inputImage.rawValue:
+                guard let url = part[ResponsesImagePartContract.Field.imageURL.rawValue] as? String, !url.isEmpty else {
+                    return nil
+                }
+                var image = [ResponsesImagePartContract.Field.url.rawValue: url]
+                if let detail = part[ResponsesImagePartContract.Field.detail.rawValue] as? String {
+                    image[ResponsesImagePartContract.Field.detail.rawValue] = detail
+                }
+                content.append([
+                    OpenAIResponsesInputTextPart.Key.type.rawValue: ResponsesImagePartContract.Kind.chatImage.rawValue,
+                    ResponsesImagePartContract.Field.imageURL.rawValue: image,
                 ])
             default:
                 return nil

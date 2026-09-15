@@ -10,11 +10,11 @@ extension LittleSwitchApplicationDelegate {
         let disconnecting = model.connected
         let message =
             disconnecting
-            ? "Disconnect Claude from LittleSwitch? Claude will return to its first-party profile."
-            : "Apply these LittleSwitch settings to Claude Desktop?"
+            ? L10n.string("Disconnect Claude from LittleSwitch? Claude will return to its first-party profile.")
+            : L10n.string("Apply these LittleSwitch settings to Claude Desktop?")
         let confirmed =
             disconnecting
-            ? confirmDiscardingPendingChanges(message, actionTitle: "Disconnect")
+            ? confirmDiscardingPendingChanges(message, actionTitle: L10n.string("Disconnect"))
             : confirm(message)
         guard confirmed else {
             return
@@ -42,11 +42,11 @@ extension LittleSwitchApplicationDelegate {
         let disconnecting = model.codexConnected
         let message =
             disconnecting
-            ? "Disconnect Codex from LittleSwitch? Codex will return to its previous configuration."
-            : "Connect Codex to LittleSwitch with the exposed provider models?"
+            ? L10n.string("Disconnect Codex from LittleSwitch? Codex will return to its previous configuration.")
+            : L10n.string("Connect Codex to LittleSwitch with the exposed provider models?")
         let confirmed =
             disconnecting
-            ? confirmDiscardingPendingChanges(message, actionTitle: "Disconnect")
+            ? confirmDiscardingPendingChanges(message, actionTitle: L10n.string("Disconnect"))
             : confirm(message)
         guard confirmed else {
             return
@@ -75,6 +75,9 @@ extension LittleSwitchApplicationDelegate {
         else {
             return true
         }
-        return confirm("\(warning) Quit LittleSwitch anyway?", actionTitle: "Quit")
+        return confirm(
+            L10n.string("\(warning) Quit LittleSwitch anyway?"),
+            actionTitle: L10n.string("Quit")
+        )
     }
 }

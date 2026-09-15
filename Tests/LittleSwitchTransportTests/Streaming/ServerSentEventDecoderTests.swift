@@ -33,15 +33,15 @@ struct ServerSentEventDecoderTests {
 
     @Test("Random chunk boundaries never change the decoded frames")
     func randomChunkingMatchesSingleAppend() throws {
-        let wire = Data(
-            ("event: one\ndata: a\n\n"
-                + "data: b\r\n\r\n"
-                + "event: two\rdata: c\r"
-                + ": comment\n\n"
-                + "data: [DONE]\n\n"
-                + "data: split-deferred\r"
-                + "\ndata: tail\r\r").utf8
-        )
+        var text = ""
+        text += "event: one\ndata: a\n\n"
+        text += "data: b\r\n\r\n"
+        text += "event: two\rdata: c\r"
+        text += ": comment\n\n"
+        text += "data: [DONE]\n\n"
+        text += "data: split-deferred\r"
+        text += "\ndata: tail\r\r"
+        let wire = Data(text.utf8)
         var oracle = ServerSentEventDecoder(maximumFrameBytes: 1_024)
         var expected = try oracle.append(ByteBuffer(bytes: [UInt8](wire)))
         expected += try oracle.finish()

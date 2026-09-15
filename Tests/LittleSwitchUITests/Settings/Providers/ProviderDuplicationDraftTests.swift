@@ -77,7 +77,7 @@ struct ProviderDuplicationDraftTests {
         #expect(edited.intent == .edit)
         #expect(ProviderDraft().intent == .add)
         duplicate.name = " \n "
-        #expect(duplicate.nameValidationMessage(providers: [source]) == "Enter a provider name.")
+        #expect(duplicate.nameValidationMessage(providers: [source]) == L10n.string("Enter a provider name."))
     }
 
     @Test("An advanced context error remains an advanced state even without a valid override")

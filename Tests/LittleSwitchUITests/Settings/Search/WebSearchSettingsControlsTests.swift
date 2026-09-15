@@ -17,7 +17,7 @@ struct WebSearchSettingsControlsTests {
         let hosting = hostPage()
         let field = try #require(descendant(NSSecureTextField.self, in: hosting))
 
-        #expect(field.placeholderString == "Leave blank to keep the saved key")
+        #expect(field.placeholderString == L10n.string("Leave blank to keep the saved key"))
         #expect(field.stringValue.isEmpty)
         #expect(field.alignment == .natural)
     }
@@ -28,16 +28,19 @@ struct WebSearchSettingsControlsTests {
         defer { host.close() }
         try await host.activateAccessibility()
 
-        let group = try host.element(label: "Search provider")
+        let group = try host.element(label: L10n.string("Search provider"))
         #expect(group.accessibilityRole() == .group)
-        let names = ["None", "Firecrawl", "Tavily", "Brave", "Exa"]
+        let names = [
+            L10n.string("None"), L10n.string("Firecrawl"), L10n.string("Tavily"), L10n.string("Brave"),
+            L10n.string("Exa"),
+        ]
         let buttons = host.accessibilityElements.filter { $0.accessibilityRole() == .button }
         #expect(Set(buttons.compactMap { $0.accessibilityLabel() }) == Set(names))
         #expect(buttons.count == 5)
         for name in names {
             let button = try host.element(label: name)
             #expect(button.isAccessibilityEnabled())
-            #expect(button.object.isAccessibilitySelected?() == (name == "Tavily"))
+            #expect(button.object.isAccessibilitySelected?() == (name == L10n.string("Tavily")))
         }
     }
 
@@ -56,8 +59,8 @@ struct WebSearchSettingsControlsTests {
         )
         defer { host.close() }
         try await host.activateAccessibility()
-        #expect(try host.element(label: "Tavily").accessibilityPerformPress())
-        try await expectSelection("Tavily", in: host)
+        #expect(try host.element(label: L10n.string("Tavily")).accessibilityPerformPress())
+        try await expectSelection(L10n.string("Tavily"), in: host)
 
         #expect(
             state.draft.input
@@ -67,13 +70,13 @@ struct WebSearchSettingsControlsTests {
                 ))
         state.draft.credential = "current-provider-test-key"
         host.render()
-        #expect(try host.element(label: "Tavily").accessibilityPerformPress())
-        try await expectSelection("Tavily", in: host)
+        #expect(try host.element(label: L10n.string("Tavily")).accessibilityPerformPress())
+        try await expectSelection(L10n.string("Tavily"), in: host)
         #expect(state.draft.credential == "current-provider-test-key")
 
         host.render()
-        #expect(try host.element(label: "None").accessibilityPerformPress())
-        try await expectSelection("None", in: host)
+        #expect(try host.element(label: L10n.string("None")).accessibilityPerformPress())
+        try await expectSelection(L10n.string("None"), in: host)
         #expect(
             state.draft.input
                 == WebSearchInput(
@@ -101,7 +104,10 @@ struct WebSearchSettingsControlsTests {
         )
         defer { host.close() }
         try await host.activateAccessibility()
-        let frames = try ["None", "Firecrawl", "Tavily", "Brave", "Exa"].map { name in
+        let frames = try [
+            L10n.string("None"), L10n.string("Firecrawl"), L10n.string("Tavily"), L10n.string("Brave"),
+            L10n.string("Exa"),
+        ].map { name in
             let control = try host.element(label: name)
             return try #require(control.object.accessibilityFrame?())
         }
@@ -126,7 +132,10 @@ struct WebSearchSettingsControlsTests {
         )
         defer { host.close() }
         try await host.activateAccessibility()
-        for name in ["None", "Firecrawl", "Tavily", "Brave", "Exa"] {
+        for name in [
+            L10n.string("None"), L10n.string("Firecrawl"), L10n.string("Tavily"), L10n.string("Brave"),
+            L10n.string("Exa"),
+        ] {
             let control = try host.element(label: name)
             #expect(!control.isAccessibilityEnabled())
             _ = control.accessibilityPerformPress()
@@ -137,7 +146,7 @@ struct WebSearchSettingsControlsTests {
             selection: Binding(get: { .brave }, set: { changes.append($0) })
         ).disabled(false)
         host.render()
-        let updated = try host.element(label: "Brave")
+        let updated = try host.element(label: L10n.string("Brave"))
         #expect(updated.isAccessibilityEnabled())
         #expect(updated.object.isAccessibilitySelected?() == true)
         #expect(updated.accessibilityPerformPress())

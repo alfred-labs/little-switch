@@ -10,15 +10,15 @@ struct MenuApplyButton: View {
         Button {
             action()
         } label: {
-            Label("Apply changes", systemImage: "return")
+            Label(L10n.resource("Apply changes"), systemImage: "return")
                 .labelStyle(.iconOnly)
                 .font(.system(size: 12, weight: .medium))
         }
         .buttonStyle(MenuApplyKeycapStyle())
         .keyboardShortcut(.return, modifiers: [])
         .disabled(!action.isEnabled)
-        .help("Apply changes (Return)")
-        .accessibilityHint("Applies changes in this tab")
+        .help(L10n.resource("Apply changes (Return)"))
+        .accessibilityHint(L10n.string("Applies changes in this tab"))
     }
 }
 

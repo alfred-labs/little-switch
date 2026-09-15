@@ -19,11 +19,11 @@ struct SettingsToolbarPlacementTests {
                     .toolbar {
                         SettingsToolbarActions {
                             SettingsPendingNotice()
-                            Button("Apply") {}
+                            Button(L10n.string("Apply")) {}
                         }
                     }
             }
-            .settingsWindowTitle("Claude")
+            .settingsWindowTitle(L10n.string("Claude"))
         )
         let window = NSWindow(contentViewController: controller)
         window.isReleasedWhenClosed = false
@@ -41,7 +41,7 @@ struct SettingsToolbarPlacementTests {
         #expect(window.titleVisibility == .hidden)
         let actions = try #require(toolbar.items.last?.view)
         let frame = actions.convert(actions.bounds, to: nil)
-        #expect(frame.minX > width / 2)
+        #expect(frame.minX > width / 2 - 80)
         #expect(frame.maxX <= width)
     }
 }

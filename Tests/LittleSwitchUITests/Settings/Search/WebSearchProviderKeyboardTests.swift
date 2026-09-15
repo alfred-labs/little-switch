@@ -15,7 +15,8 @@ struct WebSearchProviderKeyboardTests {
         let forward: UInt16 = rightToLeft ? 123 : 124
         let backward: UInt16 = rightToLeft ? 124 : 123
         let names: [WebSearchProvider: String] = [
-            .disabled: "None", .firecrawl: "Firecrawl", .tavily: "Tavily", .brave: "Brave", .exa: "Exa",
+            .disabled: L10n.string("None"), .firecrawl: L10n.string("Firecrawl"), .tavily: L10n.string("Tavily"),
+            .brave: L10n.string("Brave"), .exa: L10n.string("Exa"),
         ]
         for step in [
             Move(from: .firecrawl, key: forward, to: .tavily),

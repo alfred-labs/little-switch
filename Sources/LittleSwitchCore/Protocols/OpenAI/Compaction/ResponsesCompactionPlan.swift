@@ -7,6 +7,7 @@ package enum ResponsesCompactionError: Error, Equatable {
     case invalidSelection(String)
     case invalidPayload
     case unsupportedCompaction
+    case responseTooLarge
 }
 
 /// Request-scoped compaction state never converts an original Responses item to a provider dialect.
@@ -14,6 +15,7 @@ package struct ResponsesCompactionPlan: Sendable {
     package let originalModel: String
     let requestJSON: Data
     let items: [Data]
+    let imageItemIndices: Set<Int>
     let retention: ResponsesCompactionRetention
     let preservedStateIndices: Set<Int>
     private(set) var retainedStateIndices: Set<Int>
@@ -34,7 +36,9 @@ package struct ResponsesCompactionPlan: Sendable {
     /// the number of removed items, or zero when no progress is possible.
     /// Ported from Ollama's `TrimForContextLimit`.
     package mutating func trimForContextLimit() throws -> Int {
-        var protected = preservedStateIndices
+        // No image has been successfully inspected by this summary attempt yet.
+        // Protect its complete dependency group even before an image rejection arrives.
+        var protected = preservedStateIndices.union(retention.retaining(imageItemIndices))
         if let latest = items.indices.last { protected.insert(latest) }
         var callByID: [String: Int] = [:]
         var outputByID: [String: Int] = [:]
@@ -60,7 +64,7 @@ package struct ResponsesCompactionPlan: Sendable {
         var removedBytes = 0
         for index in items.indices {
             if removedBytes >= (total + 4) / 5 { break }
-            if protected.contains(index) || omitted.contains(index) { continue }
+            if protected.contains(index) || omitted.contains(index) || omittedIndices.contains(index) { continue }
             if kinds[index] == "function_call" || kinds[index] == "function_call_output" {
                 // Half-finished tool state is never shed.
                 guard let peer = peers[index], !protected.contains(peer) else { continue }
@@ -115,6 +119,7 @@ package struct ResponsesCompactionPlan: Sendable {
             originalModel: model,
             requestJSON: body,
             items: try expanded.map(ResponsesCompactionJSON.data),
+            imageItemIndices: try ResponsesCompactionImageRetention.indices(in: expanded),
             retention: try ResponsesCompactionRetention(
                 items: expanded,
                 preservedStateIndices: preservedStateIndices

@@ -90,7 +90,7 @@ struct SettingsLayoutTests {
 
         #expect(window.styleMask.contains(.fullSizeContentView))
         #expect(window.styleMask.contains(.unifiedTitleAndToolbar))
-        #expect(window.title == "LittleSwitch")
+        #expect(window.title == L10n.string("LittleSwitch"))
         #expect(window.titleVisibility == .hidden)
         #expect(window.titlebarAppearsTransparent)
         #expect(window.titlebarSeparatorStyle == .none)
@@ -152,7 +152,7 @@ extension SettingsLayoutTests {
                 separatedBy: ".settingsMenuPicker(width: SettingsLayout.mappingControlWidth)"
             ).count == 2
         )
-        #expect(pageSource.contains("LabeledContent(\"Default model\")"))
+        #expect(pageSource.contains("LabeledContent(L10n.string(\"Default model\"))"))
     }
 
     @Test("Claude exposes one shared Apply action without connection badges")

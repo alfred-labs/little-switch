@@ -90,6 +90,8 @@ public actor GatewayState {
     /// responder, so verdicts survive gateway restarts and stay readable by
     /// the UI while the server runs.
     nonisolated public let responsesCapabilities: ResponsesCapabilityLedger
+    package nonisolated let imageInputRegistry: ModelImageInputRegistry?
+    package nonisolated let customToolCapabilities: CustomToolCapabilityCache?
     private let requestPool: any ProviderRequestPooling
     private var requestPoolReconfigurationTask: Task<Void, Never>?
     private var requestPoolReconfigurationGeneration: UInt64 = 0
@@ -116,36 +118,23 @@ public actor GatewayState {
 
     package init(
         snapshot: RoutingSnapshot,
-        routingMutationGuard: GatewayRoutingMutationGuard,
-        responsesCapabilities: ResponsesCapabilityLedger
+        requestPool: (any ProviderRequestPooling)? = nil,
+        routingMutationGuard: GatewayRoutingMutationGuard = GatewayRoutingMutationGuard(),
+        responsesCapabilities: ResponsesCapabilityLedger = ResponsesCapabilityLedger(),
+        imageInputRegistry: ModelImageInputRegistry? = nil,
+        customToolCapabilities: CustomToolCapabilityCache? = nil
     ) {
         self.snapshot = snapshot
         let revisions = Dictionary(
-            uniqueKeysWithValues: snapshot.providers.map { ($0.id, UInt64(0)) }
-        )
+            uniqueKeysWithValues: snapshot.providers.map { ($0.id, UInt64(0)) })
         providerRevisions = revisions
         self.routingMutationGuard = routingMutationGuard
         self.responsesCapabilities = responsesCapabilities
-        let initialConfiguration = snapshot.providerRequestPoolConfiguration(
-            providerRevisions: revisions
-        )
-        requestPool = ProviderRequestPool(configuration: initialConfiguration)
-        appliedPoolConfiguration = initialConfiguration
-    }
-
-    package init(
-        snapshot: RoutingSnapshot,
-        requestPool: any ProviderRequestPooling,
-        routingMutationGuard: GatewayRoutingMutationGuard = GatewayRoutingMutationGuard(),
-        responsesCapabilities: ResponsesCapabilityLedger = ResponsesCapabilityLedger()
-    ) {
-        self.snapshot = snapshot
-        providerRevisions = Dictionary(
-            uniqueKeysWithValues: snapshot.providers.map { ($0.id, UInt64(0)) }
-        )
-        self.routingMutationGuard = routingMutationGuard
-        self.responsesCapabilities = responsesCapabilities
-        self.requestPool = requestPool
+        self.imageInputRegistry = imageInputRegistry
+        self.customToolCapabilities = customToolCapabilities
+        let initial = snapshot.providerRequestPoolConfiguration(providerRevisions: revisions)
+        self.requestPool = requestPool ?? ProviderRequestPool(configuration: initial)
+        appliedPoolConfiguration = requestPool == nil ? initial : nil
     }
 
     public var sessionRequestCount: Int {
@@ -169,6 +158,10 @@ public actor GatewayState {
             snapshot: snapshot,
             providerRevisions: providerRevisions
         )
+    }
+
+    package func requireCustomToolRevision(_ revision: UInt64, providerID: UUID) throws {
+        guard providerRevisions[providerID] == revision else { throw GatewayAdmissionError.invalidated }
     }
 
     package func providerCredential(
@@ -207,6 +200,9 @@ public actor GatewayState {
             webSearch: webSearch ?? snapshot.webSearch,
             modelIndicator: modelIndicator ?? snapshot.modelIndicator
         )
+        let changedProviders = Set(providerRevisions.keys).union(revisions.keys).filter {
+            providerRevisions[$0] != revisions[$0]
+        }
         snapshot = replacement
         providerRevisions = revisions
 
@@ -216,14 +212,21 @@ public actor GatewayState {
         )
         if configuration == appliedPoolConfiguration, requestPoolReconfigurationTask == nil {
             appliedPoolConfiguration = configuration
+            if !changedProviders.isEmpty {
+                await customToolCapabilities?.invalidate(providerIDs: Set(changedProviders))
+            }
             return replacement
         }
         appliedPoolConfiguration = configuration
         let previousTask = requestPoolReconfigurationTask
         requestPoolReconfigurationGeneration &+= 1
         let reconfigurationGeneration = requestPoolReconfigurationGeneration
+        let customToolCapabilities = self.customToolCapabilities
         let reconfigurationTask = Task {
             await previousTask?.value
+            if !changedProviders.isEmpty {
+                await customToolCapabilities?.invalidate(providerIDs: Set(changedProviders))
+            }
             await requestPool.reconfigure(configuration)
         }
         requestPoolReconfigurationTask = reconfigurationTask
@@ -300,6 +303,30 @@ public actor GatewayState {
         await requestPool.finish(eventID: eventID)
     }
 
+    /// Diagnostic work shares capacity and invalidation with traffic, but never increments conversation counters.
+    package func admitImageProbe(eventID: UUID, provider: Provider, modelID: String) async throws {
+        await requestPoolReconfigurationTask?.value
+        guard acceptingRequests else { throw GatewayAdmissionError.notAcceptingRequests }
+        guard let current = snapshot.providers.first(where: { $0.id == provider.id }),
+            current.hasSameImageInputIdentity(as: provider),
+            let revision = providerRevisions[provider.id]
+        else { throw GatewayAdmissionError.invalidated }
+        try await requestPool.admit(
+            ProviderRequestAdmission(
+                eventID: eventID,
+                providerID: provider.id,
+                providerRevision: revision,
+                client: .codex,
+                modelIdentifier: modelID,
+                targetModelID: modelID,
+                retainedBodyBytes: 16 * 1_024,
+                purpose: .imageProbe))
+        guard acceptingRequests, providerRevisions[provider.id] == revision else {
+            await requestPool.finish(eventID: eventID)
+            throw GatewayAdmissionError.invalidated
+        }
+    }
+
     public func requestPoolSnapshot() async -> ProviderRequestPoolSnapshot {
         var stableSnapshot: ProviderRequestPoolSnapshot?
         repeat {
@@ -356,9 +383,7 @@ public actor GatewayState {
                 continue
             }
             let invalidatesCapture =
-                provider.baseURL != previousProvider.baseURL
-                || provider.authMode != previousProvider.authMode
-                || provider.credentialSource != previousProvider.credentialSource
+                !provider.hasSameImageInputIdentity(as: previousProvider)
                 || credentialChangedProviderIDs.contains(provider.id)
             if invalidatesCapture {
                 let revision = revisions[provider.id].unsafelyUnwrapped

@@ -74,6 +74,6 @@ struct MonitoringPollingTests {
         #expect(model.monitoringTestResult == result)
         #expect(model.configuration == current)
         #expect(model.monitoringDraft?.configuration == pending)
-        #expect(model.pendingChangeNames == ["Monitoring"])
+        #expect(model.pendingChangeNames == [L10n.string("Monitoring")])
     }
 }

@@ -16,13 +16,14 @@ struct ProvidersSettingsView: View {
 
     var body: some View {
         SettingsPage {
-            SettingsSection("Model providers") {
+            SettingsSection(L10n.resource("Model providers")) {
                 SettingsCard {
                     if model.providers.isEmpty {
                         ContentUnavailableView(
-                            "No providers",
+                            L10n.string("No providers"),
                             systemImage: "server.rack",
-                            description: Text("Add Ollama, oMLX, LM Studio, OpenRouter, or another provider.")
+                            description: Text(
+                                L10n.resource("Add Ollama, oMLX, LM Studio, OpenRouter, or another provider."))
                         )
                     } else {
                         ForEach(model.providers) { provider in
@@ -32,13 +33,16 @@ struct ProvidersSettingsView: View {
                                 } label: {
                                     ProviderSettingsRow(
                                         provider: provider,
-                                        scriptFailure: model.credentialRefreshFailures[provider.id]
+                                        scriptFailure: model.credentialRefreshFailures[provider.id],
+                                        imageProgress: model.imageInputState.progress[provider.id],
+                                        imagePersistenceFailed: model.imageInputState.persistenceFailures.contains(
+                                            provider.id)
                                     )
                                     .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
                                 .focused($focusedProvider, equals: provider.id)
-                                .accessibilityHint("Edit \(provider.name) settings")
+                                .accessibilityHint(L10n.string("Edit \(provider.name) settings"))
                                 Menu {
                                     providerActions(provider)
                                 } label: {
@@ -48,20 +52,20 @@ struct ProvidersSettingsView: View {
                                 .menuIndicator(.hidden)
                                 .menuStyle(.borderlessButton)
                                 .fixedSize()
-                                .accessibilityLabel("Actions for \(provider.name)")
+                                .accessibilityLabel(L10n.resource("Actions for \(provider.name)"))
                             }
                             .disabled(model.isBusy)
                             .contextMenu { providerActions(provider) }
                         }
                     }
                 }
-                Text("Local and cloud models available to your apps.")
+                Text(L10n.resource("Local and cloud models available to your apps."))
                     .settingsSupportingText()
             }
         }
         .toolbar {
             SettingsToolbarActions {
-                Button("Add Provider", systemImage: "plus") {
+                Button(L10n.resource("Add Provider"), systemImage: "plus") {
                     returnFocusID = nil
                     draft = ProviderDraft()
                 }
@@ -77,6 +81,7 @@ struct ProvidersSettingsView: View {
                     ? draft.providerID.flatMap { model.responsesWireVerdicts[$0] } : nil,
                 lastScriptOutput: draft.intent == .edit
                     ? draft.providerID.flatMap { model.lastScriptOutputs[$0] } : nil,
+                imageDiagnostics: model.imageInputState.diagnostics,
                 onTest: onTest
             ) { input in
                 let outcome = await onSave(input)
@@ -85,34 +90,34 @@ struct ProvidersSettingsView: View {
             }
         }
         .alert(
-            "Delete “\(providerToDelete?.name ?? "provider")”?",
+            L10n.string("Delete “\(providerToDelete?.name ?? L10n.string("provider"))”?"),
             isPresented: Binding(
                 get: { providerToDelete != nil },
                 set: { if !$0 { providerToDelete = nil } }
             ),
             presenting: providerToDelete
         ) { provider in
-            Button("Cancel", role: .cancel) { focusedProvider = provider.id }
-            Button("Delete Provider", role: .destructive) {
+            Button(L10n.resource("Cancel"), role: .cancel) { focusedProvider = provider.id }
+            Button(L10n.resource("Delete Provider"), role: .destructive) {
                 delete(provider)
             }
         } message: { _ in
-            Text("Its models will be removed and routes using them will be cleared.")
+            Text(L10n.resource("Its models will be removed and routes using them will be cleared."))
         }
     }
 
     @ViewBuilder
     private func providerActions(_ provider: Provider) -> some View {
-        Button("Edit…", systemImage: "pencil") { edit(provider) }
-        Button("Duplicate…", systemImage: "plus.square.on.square") {
+        Button(L10n.resource("Edit…"), systemImage: "pencil") { edit(provider) }
+        Button(L10n.resource("Duplicate…"), systemImage: "plus.square.on.square") {
             returnFocusID = provider.id
             draft = ProviderDraft(duplicating: provider, providers: model.providers)
         }
-        Button("Refresh Models", systemImage: "arrow.clockwise") {
+        Button(L10n.resource("Refresh Models"), systemImage: "arrow.clockwise") {
             Task { await onRefresh(provider.id) }
         }
         Divider()
-        Button("Delete…", systemImage: "trash", role: .destructive) {
+        Button(L10n.resource("Delete…"), systemImage: "trash", role: .destructive) {
             providerToDelete = provider
         }
     }

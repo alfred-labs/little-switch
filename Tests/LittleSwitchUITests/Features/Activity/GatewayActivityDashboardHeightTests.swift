@@ -15,7 +15,7 @@ struct GatewayActivityDashboardHeightTests {
     @Test("The declared height matches the laid-out height in every composition")
     func declaredHeightMatchesLayout() {
         let stats = GatewayUsageStatsPresentation(summary: busySummary())
-        let webSearch = GatewayWebSearchRow(engineName: "Firecrawl", callCount: 12)
+        let webSearch = GatewayWebSearchRow(engineName: L10n.string("Firecrawl"), callCount: 12)
 
         for statsValue in [nil, stats] {
             expectMatchingHeight(stats: statsValue, webSearch: webSearch)
@@ -34,10 +34,10 @@ struct GatewayActivityDashboardHeightTests {
         defer { host.close() }
         try await host.activateAccessibility()
         #expect(
-            try host.element(label: "Token history").accessibilityValueDescription()
+            try host.element(label: L10n.string("Token history")).accessibilityValueDescription()
                 == stats.period(at: nil).accessibilityValue
         )
-        #expect(try host.element(label: "Requests").accessibilityValueDescription() == "30")
+        #expect(try host.element(label: L10n.string("Requests")).accessibilityValueDescription() == "30")
         #expect(!host.textContent.contains("Top model"))
         #expect(!host.textContent.contains("Details"))
     }

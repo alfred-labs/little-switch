@@ -78,6 +78,13 @@ extension GatewayResponder {
         } catch {
             return openAIError(status: .badRequest, message: "Invalid Responses request")
         }
+        guard prepared.body.count <= maximumRequestBytes else {
+            return openAIError(status: .contentTooLarge, message: "Expanded history is too large")
+        }
+        var responder = self
+        responder.customToolRoutingCapture = capture
+        responder.responsesImageGeneration = await state.imageInputRegistry?.generation(
+            providerID: metadata.target.provider.id)
         let secret: String?
         do {
             secret = try await state.providerCredential(
@@ -94,6 +101,8 @@ extension GatewayResponder {
                 message: "Could not read provider credential"
             )
         }
+
+        try await responder.probeResponsesImageInput(body: prepared.body, target: metadata.target, credential: secret)
 
         trafficRecorder.record(
             eventID: eventID,
@@ -119,7 +128,7 @@ extension GatewayResponder {
             errorStyle: .openAI
         )
         try Task.checkCancellation()
-        return try await admittedResponsesResponse(
+        return try await responder.admittedResponsesResponse(
             TransparentResponsesContext(
                 body: incomingBody,
                 model: metadata.model,
@@ -135,19 +144,28 @@ extension GatewayResponder {
     }
 
     package func transparentResponsesResponse(
-        _ context: TransparentResponsesContext
+        _ context: TransparentResponsesContext,
+        attempt: Int = 0,
+        forceText: Bool = false,
+        preferredWire: ModelImageInputWire? = nil
     ) async throws -> Response {
-        let needsChatCompletionsAdapter = await resolvesChatCompletionsAdapter(
-            context.target.provider
-        )
-        if needsChatCompletionsAdapter {
-            return try await chatCompletionsResponsesResponse(context)
+        let wire: ModelImageInputWire
+        if let preferredWire {
+            wire = preferredWire
+        } else {
+            wire = await resolvesChatCompletionsAdapter(context.target.provider) ? .chatCompletions : .responses
         }
+        let needsChatCompletionsAdapter = wire == .chatCompletions
+        if needsChatCompletionsAdapter {
+            return try await chatCompletionsResponsesResponse(context, attempt: attempt, forceText: forceText)
+        }
+        let imageProjection = try await responsesImageInput(
+            body: context.body, target: context.target, wire: .responses, forceText: forceText)
         let upstreamBody: Data
         let normalized: OpenAIResponsesNativeNamespacing.Normalized
         do {
             let rewritten = try dependencies.serializer.rewriteResponses(
-                context.body,
+                imageProjection.body,
                 modelID: context.target.model.id
             )
             // Admission already routes owned history through its adapter.
@@ -171,20 +189,15 @@ extension GatewayResponder {
         }
         try Task.checkCancellation()
 
-        trafficRecorder.record(
-            eventID: context.eventID,
-            action: .upstreamRequest(
-                trafficUpstreamRequest(
-                    attempt: 0,
-                    route: ResponsesTrafficRoute(
-                        claudeRoute: context.model,
-                        target: context.target
-                    ),
-                    request: upstreamRequest,
-                    body: upstreamBody,
-                    streaming: context.streaming
-                )
-            )
+        let upstreamTraffic = trafficUpstreamRequest(
+            attempt: attempt,
+            route: ResponsesTrafficRoute(
+                claudeRoute: context.model,
+                target: context.target
+            ),
+            request: upstreamRequest,
+            body: upstreamBody,
+            streaming: context.streaming
         )
 
         let exchange: GatewayModelExchange
@@ -193,9 +206,10 @@ extension GatewayResponder {
             exchange = try await executeModelRequest(
                 upstreamRequest,
                 body: upstreamBody,
+                traffic: upstreamTraffic,
                 wire: .responses,
                 eventID: context.eventID,
-                attempt: 0,
+                attempt: attempt,
                 declaredToolBindings: normalized.declaredToolBindings,
                 toolNameCatalog: normalized.toolNameCatalog
             )
@@ -222,10 +236,25 @@ extension GatewayResponder {
             // succeeds instead of surfacing the provider's 404. Providers
             // pinned to a wire relay the failure instead. The retry records
             // under its own attempt so the traffic log keeps both exchanges.
-            return try await chatCompletionsResponsesResponse(context, attempt: 1)
+            return try await chatCompletionsResponsesResponse(context, attempt: attempt + 1, forceText: forceText)
+        }
+        let sentImages = !imageProjection.imageItemIndices.isEmpty && imageProjection.omittedImageCount == 0
+        if sentImages, [400, 422].contains(upstreamResponse.status.code) {
+            let bytes = try await exchange.trace.collect(upstreamResponse.body, upTo: maximumErrorBytes)
+            let rejected = await learnResponsesImageRejection(
+                status: upstreamResponse.status.code,
+                body: bytes,
+                target: context.target,
+                wire: .responses,
+                hasImageInput: true)
+            if rejected && !forceText {
+                return try await transparentResponsesResponse(
+                    context, attempt: attempt + 1, forceText: true, preferredWire: .responses)
+            }
+            return bufferedResponse(upstreamResponse, body: bytes)
         }
         return streamingResponse(
-            upstreamResponse, eventID: context.eventID, attempt: 0, errorStyle: .openAI, trace: exchange.trace)
+            upstreamResponse, eventID: context.eventID, attempt: attempt, errorStyle: .openAI, trace: exchange.trace)
     }
 
     private enum ResponsesBodyError: Swift.Error {

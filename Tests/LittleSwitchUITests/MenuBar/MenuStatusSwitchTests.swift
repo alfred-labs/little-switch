@@ -51,10 +51,10 @@ struct MenuStatusSwitchTests {
         let host = MenuControlTestHost(
             MenuStatusView(
                 model: model,
-                onToggleClaude: { actions.append("Claude Desktop") },
-                onToggleClaudeCode: { actions.append("Claude Code") },
-                onToggleCodex: { actions.append("Codex") },
-                onToggleOpenCode: { actions.append("OpenCode") }
+                onToggleClaude: { actions.append(L10n.string("Claude Desktop")) },
+                onToggleClaudeCode: { actions.append(L10n.string("Claude Code")) },
+                onToggleCodex: { actions.append(L10n.string("Codex")) },
+                onToggleOpenCode: { actions.append(L10n.string("OpenCode")) }
             )
             .environment(\.appearsActive, false),
             width: StatusMenuLayout.width,
@@ -62,9 +62,11 @@ struct MenuStatusSwitchTests {
         )
         defer { host.close() }
         try await host.activateAccessibility()
-        let names = ["Claude Desktop", "Claude Code", "Codex", "OpenCode"]
+        let names = [
+            L10n.string("Claude Desktop"), L10n.string("Claude Code"), L10n.string("Codex"), L10n.string("OpenCode"),
+        ]
         for name in names {
-            let toggle = try host.element(label: "\(name) connection")
+            let toggle = try host.element(label: L10n.string("\(name) connection"))
             #expect(toggle.accessibilityRole() == .checkBox)
             #expect(toggle.accessibilityValue() as? Int == 1)
             #expect(toggle.isAccessibilityEnabled())
@@ -75,12 +77,14 @@ struct MenuStatusSwitchTests {
         model.isBusy = true
         host.render()
         for name in names {
-            #expect(try !host.element(label: "\(name) connection").isAccessibilityEnabled())
+            #expect(try !host.element(label: L10n.string("\(name) connection")).isAccessibilityEnabled())
         }
         model.apply(CoordinatorSnapshot(configuration: AppConfiguration()))
         host.render()
         for name in names {
-            #expect(try host.element(label: "\(name) connection").accessibilityValue() as? Int == 0)
+            #expect(
+                try host.element(label: L10n.string("\(name) connection")).accessibilityValue() as? Int == 0
+            )
         }
     }
 

@@ -61,22 +61,24 @@ public struct GatewayActivityPresentation: Equatable, Sendable {
         switch activity {
         case .starting:
             menu = Self.makeMenu(
-                title: "Starting gateway…",
+                title: L10n.string("Starting gateway…"),
                 symbolName: "hourglass",
-                accessibilityValue: "Starting gateway…"
+                accessibilityValue: L10n.string("Starting gateway…")
             )
         case .unavailable:
             menu = Self.makeMenu(
-                title: "Gateway unavailable",
+                title: L10n.string("Gateway unavailable"),
                 symbolName: "exclamationmark.triangle",
-                accessibilityValue: "Gateway unavailable"
+                accessibilityValue: L10n.string("Gateway unavailable")
             )
         case .running(let snapshot):
             let hasActivity = snapshot.totalRunning > 0 || snapshot.totalWaiting > 0
             let text =
                 hasActivity
-                ? "\(snapshot.totalRunning) running · \(snapshot.totalWaiting) waiting"
-                : "Gateway idle"
+                ? L10n.string(
+                    "\(snapshot.totalRunning) running · \(snapshot.totalWaiting) waiting"
+                )
+                : L10n.string("Gateway idle")
             menu = Self.runningMenu(
                 snapshot: snapshot,
                 providers: providers,
@@ -94,11 +96,12 @@ public struct GatewayActivityPresentation: Equatable, Sendable {
         dashboard: Menu.Dashboard? = nil
     ) -> Menu {
         Menu(
+
             title: title,
             symbolName: symbolName,
-            accessibilityLabel: "Gateway activity",
+            accessibilityLabel: L10n.string("Gateway activity"),
             accessibilityValue: accessibilityValue,
-            accessibilityHint: "Gateway requests and usage",
+            accessibilityHint: L10n.string("Gateway requests and usage"),
             dashboard: dashboard
         )
     }

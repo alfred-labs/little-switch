@@ -15,9 +15,11 @@ struct GatewayQueueSummaryTests {
             defer { host.close() }
             try await host.activateAccessibility()
 
-            let queue = try host.element(label: "Request queue")
-            let formatted = count.formatted(.number)
-            #expect(queue.accessibilityValueDescription() == "\(formatted) running, \(formatted) pending")
+            let queue = try host.element(label: L10n.string("Request queue"))
+            #expect(
+                queue.accessibilityValueDescription()
+                    == L10n.string("\(count) running, \(count) pending")
+            )
             #expect(queue.accessibilityRole() != .button)
             #expect(host.hosting.fittingSize.height == 32)
             #expect(host.hosting.fittingSize.width <= 296)

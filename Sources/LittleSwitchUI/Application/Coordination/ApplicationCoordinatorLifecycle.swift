@@ -65,6 +65,9 @@ extension ApplicationCoordinator {
             operation.task.cancel()
         }
         providerRefreshOperations.removeAll()
+        suspendImageInputProbes()
+        await imageInputRegistry.shutdown()
+        await imageProbeAdmission.bind(nil)
         await credentialRefresher.cancelAll()
         await stopGateway()
         await monitoringExporter.shutdown()

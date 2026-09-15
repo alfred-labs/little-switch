@@ -7,6 +7,7 @@ extension ApplicationCoordinator {
     /// chat-completions adapter took over. Empty while the gateway is down or
     /// nothing has been probed yet.
     public func responsesWireVerdicts() async -> [UUID: Bool] {
-        await gatewayState?.responsesCapabilityVerdicts() ?? [:]
+        catalogResponsesWireVerdicts = await gatewayState?.responsesCapabilityVerdicts() ?? [:]
+        return catalogResponsesWireVerdicts
     }
 }

@@ -12,16 +12,16 @@ struct MonitoringExportPresentationTests {
     @Test("Export titles describe the actual signal state and pending changes")
     func stateTitles() {
         let states: [(MonitoringSignalExportStatus, String)] = [
-            (.init(), "Disabled"),
-            (.init(state: .idle), "Waiting"),
-            (.init(state: .idle, lastAccepted: Date(timeIntervalSince1970: 1)), "Ready"),
-            (.init(state: .sending), "Sending…"),
-            (.init(state: .retrying), "Retry scheduled"),
-            (.init(state: .failed), "Export failed"),
+            (.init(), L10n.string("Disabled")),
+            (.init(state: .idle), L10n.string("Waiting")),
+            (.init(state: .idle, lastAccepted: Date(timeIntervalSince1970: 1)), L10n.string("Ready")),
+            (.init(state: .sending), L10n.string("Sending…")),
+            (.init(state: .retrying), L10n.string("Retry scheduled")),
+            (.init(state: .failed), L10n.string("Export failed")),
         ]
         for (status, title) in states {
             #expect(MonitoringExportPresentation.title(for: status, pending: false) == title)
-            #expect(MonitoringExportPresentation.title(for: status, pending: true) == "Pending")
+            #expect(MonitoringExportPresentation.title(for: status, pending: true) == L10n.string("Pending"))
         }
     }
 
@@ -70,7 +70,7 @@ struct MonitoringExportPresentationTests {
         #expect(!disabled.isPending)
         #expect(disabled.httpURL == "http://127.0.0.1:11436/metrics")
         #expect(disabled.httpsURL == nil)
-        #expect(disabled.copyHelp == "Enable this endpoint and apply changes to make it available.")
+        #expect(disabled.copyHelp == L10n.string("Enable this endpoint and apply changes to make it available."))
         let activation = MonitoringLocalEndpointPresentation(
             path: "/logs", enabled: true, appliedEnabled: false, httpsAvailable: true
         )
@@ -78,19 +78,45 @@ struct MonitoringExportPresentationTests {
         #expect(activation.isPending)
         #expect(activation.httpURL == "http://127.0.0.1:11436/logs")
         #expect(activation.httpsURL == "https://127.0.0.1:11436/logs")
-        #expect(activation.copyHelp == "Apply changes to make this endpoint available.")
+        #expect(activation.copyHelp == L10n.string("Apply changes to make this endpoint available."))
         let deactivation = MonitoringLocalEndpointPresentation(
             path: "/metrics", enabled: false, appliedEnabled: true, httpsAvailable: false
         )
         #expect(deactivation.canCopy)
         #expect(deactivation.isPending)
-        #expect(deactivation.copyHelp == "Available until you apply this change.")
+        #expect(deactivation.copyHelp == L10n.string("Available until you apply this change."))
         let available = MonitoringLocalEndpointPresentation(
             path: "/logs", enabled: true, appliedEnabled: true, httpsAvailable: true
         )
         #expect(available.canCopy)
         #expect(!available.isPending)
-        #expect(available.copyHelp == "Copy a local endpoint URL.")
+        #expect(available.copyHelp == L10n.string("Copy a local endpoint URL."))
+    }
+
+    @MainActor
+    @Test("Delivery details use the singular form for one queued byte")
+    func singularQueuedByte() async throws {
+        let host = MenuControlTestHost(
+            MonitoringExportStatusView(
+                title: L10n.string("Metrics"),
+                status: MonitoringSignalExportStatus(
+                    state: .sending,
+                    queuedCount: 1,
+                    queuedBytes: 1
+                ),
+                testResult: nil
+            ),
+            width: 688,
+            height: 240
+        )
+        defer { host.close() }
+        try await host.activateAccessibility()
+
+        let disclosure = try host.element(label: L10n.string("Delivery details"))
+        #expect(disclosure.accessibilityPerformPress())
+        host.render()
+        let expected = L10n.string("\(1) queued · \(1) byte · \(UInt64(0)) dropped")
+        #expect(host.textContent.contains { $0.contains(expected) })
     }
 
     @MainActor
@@ -109,11 +135,13 @@ struct MonitoringExportPresentationTests {
         defer { host.close() }
         let picker = try host.nativeView(of: NSPopUpButton.self)
         let presets: [(title: String, seconds: Int)] = [
-            ("5 s", 5), ("10 s", 10), ("15 s", 15), ("30 s", 30),
-            ("1 min", 60), ("2 min", 120), ("5 min", 300),
+            (L10n.string("\(5) s"), 5), (L10n.string("\(10) s"), 10),
+            (L10n.string("\(15) s"), 15), (L10n.string("\(30) s"), 30),
+            (L10n.string("1 min"), 60), (L10n.string("2 min"), 120), (L10n.string("5 min"), 300),
         ]
-        #expect(picker.itemTitles == presets.map(\.title) + ["17 s (current)"])
-        #expect(picker.titleOfSelectedItem == "17 s (current)")
+        let currentTitle = L10n.string("\(17) s (current)")
+        #expect(picker.itemTitles == presets.map(\.title) + [currentTitle])
+        #expect(picker.titleOfSelectedItem == currentTitle)
         #expect(selection.value == 17)
         #expect(changes.isEmpty)
 

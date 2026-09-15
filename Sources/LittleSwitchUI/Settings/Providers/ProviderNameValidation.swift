@@ -7,11 +7,11 @@ enum ProviderNameValidation {
     static func message(_ name: String, providers: [Provider], excluding providerID: UUID?) -> String? {
         let normalized = normalized(name)
         guard !normalized.isEmpty else {
-            return "Enter a provider name."
+            return L10n.string("Enter a provider name.")
         }
         return providers.contains {
             $0.id != providerID && self.normalized($0.name).caseInsensitiveCompare(normalized) == .orderedSame
-        } ? "A provider with this name already exists." : nil
+        } ? L10n.string("A provider with this name already exists.") : nil
     }
 
     static func availableCopyName(of name: String, providers: [Provider]) -> String {

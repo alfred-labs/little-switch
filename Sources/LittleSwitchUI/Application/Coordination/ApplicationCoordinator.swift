@@ -34,6 +34,17 @@ public actor ApplicationCoordinator {
     private let gatewayTransportBuilder: any GatewayTransportBuilding
     package let providerClient: ProviderClient
     package let providerWireProber: any ProviderWireProbing
+    package let imageInputRegistry: ModelImageInputRegistry
+    package let imageProbeAdmission: ModelImageProbeAdmission
+    var imageProbeHandlersInstalled = false
+    var imageProbesReady = false
+    var imageProbeGenerations: [UUID: UUID] = [:]
+    var imageProbeProviders: [UUID: Provider] = [:]
+    var imageProbeBatches: [UUID: ProviderImageProbeBatch] = [:]
+    var pendingImageProbeProviders: Set<UUID> = []
+    var imageProbeProgress: [UUID: ProviderImageProbeProgress] = [:]
+    var imageInputDiagnostics: [ModelImageInputProbeDiagnostic] = []
+    var imageInputPersistenceFailures: Set<UUID> = []
     private let gatewayListenPort: Int
     private let gatewayRequiredAuthorityPort: Int?
     private let gatewayServerOverride: (any GatewayServing)?
@@ -43,6 +54,9 @@ public actor ApplicationCoordinator {
     /// the freshly built gateway state. Package-visible so provider saves
     /// can seed it from the save-time endpoint probe.
     package let responsesCapabilities: ResponsesCapabilityLedger
+    package let customToolCapabilities: CustomToolCapabilityCache?
+    /// One captured wire snapshot for synchronous catalog, pending and Apply comparisons.
+    package var catalogResponsesWireVerdicts: [UUID: Bool] = [:]
     package let gatewayRoutingMutationGuard: GatewayRoutingMutationGuard
     private let gatewayFactory: any GatewayFactory
     private let gatewayStartupObserver: any GatewayStartupObserving
@@ -124,10 +138,15 @@ public actor ApplicationCoordinator {
             gatewayStateOverride?.routingMutationGuard ?? GatewayRoutingMutationGuard()
         self.responsesCapabilities = responsesCapabilities
         gatewayFactory = LiveGatewayFactory(builder: gatewayBuilder)
+        customToolCapabilities = nil
         gatewayStartupObserver = LiveGatewayStartupObserver()
         self.trafficRecorder = trafficRecorder
         providerClient = ProviderClient(transport: discoveryTransport)
         providerWireProber = ProviderWireProber(transport: discoveryTransport)
+        let probeAdmission = ModelImageProbeAdmission()
+        imageProbeAdmission = probeAdmission
+        imageInputRegistry = ModelImageInputRegistry(
+            prober: ModelImageInputProber(transport: discoveryTransport), admission: probeAdmission)
         configuration = AppConfiguration()
     }
 
@@ -154,7 +173,9 @@ public actor ApplicationCoordinator {
         credentialRefresher: CredentialRefresher? = nil,
         tlsProvisioner: (any GatewayTLSProvisioning)? = nil,
         monitoringExporter: MonitoringExportService? = nil,
-        providerWireProber: (any ProviderWireProbing)? = nil
+        providerWireProber: (any ProviderWireProbing)? = nil,
+        imageInputProber: (any ModelImageInputProbing)? = nil,
+        customToolCapabilities: CustomToolCapabilityCache? = nil
     ) {
         self.configurationStore = configurationStore
         self.secretStore = secretStore
@@ -183,14 +204,20 @@ public actor ApplicationCoordinator {
             gatewayStateOverride?.routingMutationGuard ?? GatewayRoutingMutationGuard()
         self.responsesCapabilities = responsesCapabilities
         self.gatewayFactory = gatewayFactory
+        self.customToolCapabilities = customToolCapabilities
         self.gatewayStartupObserver = gatewayStartupObserver
         self.trafficRecorder = trafficRecorder
         providerClient = ProviderClient(transport: discoveryTransport)
         self.providerWireProber = providerWireProber ?? ProviderWireProber(transport: discoveryTransport)
+        let probeAdmission = ModelImageProbeAdmission()
+        imageProbeAdmission = probeAdmission
+        imageInputRegistry = ModelImageInputRegistry(
+            prober: imageInputProber ?? ModelImageInputProber(transport: discoveryTransport), admission: probeAdmission)
         configuration = AppConfiguration()
     }
 
     public func snapshot() async -> CoordinatorSnapshot {
+        _ = await responsesWireVerdicts()
         reconcileCodexDraft()
         reconcileOpenCodeDraft()
         // The mapping draft reconciles first: the Claude Code draft below
@@ -224,7 +251,7 @@ public actor ApplicationCoordinator {
         effectiveConfiguration =
             pendingOpenCodeSettings?.applying(to: effectiveConfiguration)
             ?? effectiveConfiguration
-        return CoordinatorSnapshot(
+        var result = CoordinatorSnapshot(
             configuration: effectiveConfiguration,
             requestCount: count,
             claudeRequestCount: claudeCount,
@@ -253,8 +280,13 @@ public actor ApplicationCoordinator {
                 && tlsProvisioner?.isTrusted(secretStore: secretStore) == true,
             monitoringSnapshotSequence: monitoringSnapshotSequence,
             credentialRefreshFailures: refreshFailures,
-            lastScriptOutputs: scriptOutputs
+            lastScriptOutputs: scriptOutputs,
+            imageProbeProgress: imageProbeProgress
         )
+        result.imageInputDiagnostics = imageInputDiagnostics
+        result.imageInputPersistenceFailures = imageInputPersistenceFailures
+        result.responsesWireVerdicts = catalogResponsesWireVerdicts
+        return result
     }
 }
 
@@ -326,7 +358,9 @@ extension ApplicationCoordinator {
             ?? GatewayState(
                 snapshot: snapshot,
                 routingMutationGuard: gatewayRoutingMutationGuard,
-                responsesCapabilities: responsesCapabilities
+                responsesCapabilities: responsesCapabilities,
+                imageInputRegistry: imageInputRegistry,
+                customToolCapabilities: customToolCapabilities
             )
         let operation = GatewayStartupOperation(
             state: startupState,
@@ -410,6 +444,7 @@ extension ApplicationCoordinator {
                 gatewayStartup = nil
                 gatewayStartupWaiters.removeAll()
             }
+            await activateImageInputProbing()
         } catch {
             gatewayStartupWaiters.remove(waiterID)
             let ownsStartup =
@@ -472,6 +507,7 @@ extension ApplicationCoordinator {
     private func beginDeadGatewayCleanup(
         _ server: any GatewayServing
     ) -> GatewayStop {
+        suspendImageInputProbes()
         gatewayLifecycleGeneration &+= 1
         gatewayServer = nil
         gatewayState = nil
@@ -489,6 +525,7 @@ extension ApplicationCoordinator {
 
     package func stopGateway() async {
         gatewayStopEpoch &+= 1
+        suspendImageInputProbes()
         if let gatewayStop {
             let explicitStop: GatewayStop
             if gatewayStop.permitsRestart {

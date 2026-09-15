@@ -9,6 +9,11 @@ import Testing
 @testable import LittleSwitchCore
 @testable import LittleSwitchUI
 
+private func scriptFailure(status: Int32, standardError: String) -> String {
+    let prefix = CoreL10n.string("The credential script exited with status \(status).")
+    return CoreL10n.string("\(prefix) \(standardError)")
+}
+
 private final class TestScriptRunner: CredentialScriptRunning, @unchecked Sendable {
     private let lock = NSLock()
     private var scripts: [String] = []
@@ -232,7 +237,7 @@ struct CoordinatorProviderTestTests {
         let failures = await fixture.coordinator.snapshot().credentialRefreshFailures
         #expect(
             failures[fixture.providerID]
-                == "The credential script exited with status 5. denied"
+                == scriptFailure(status: 5, standardError: "denied")
         )
         await fixture.coordinator.shutdown(mode: .handoff)
     }
@@ -405,7 +410,10 @@ struct CoordinatorCredentialScriptFailureTests {
         }
 
         let failures = await fixture.coordinator.snapshot().credentialRefreshFailures
-        #expect(failures[fixture.providerID] == "The credential script exited with status 3. vault: permission denied")
+        #expect(
+            failures[fixture.providerID]
+                == scriptFailure(status: 3, standardError: "vault: permission denied")
+        )
         await fixture.coordinator.shutdown(mode: .handoff)
 
         // A non-LocalizedError falls back to its description.

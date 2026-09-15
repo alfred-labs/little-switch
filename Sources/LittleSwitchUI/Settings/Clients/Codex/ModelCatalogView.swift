@@ -22,7 +22,9 @@ struct ModelCatalogView: View {
                         }
                         .disclosureGroupStyle(
                             SettingsDisclosureGroupStyle(
-                                accessibilityHint: "Show or hide models for this provider."
+                                accessibilityHint: L10n.string(
+                                    "Show or hide models for this provider."
+                                )
                             ) {
                                 providerControls(group)
                             }
@@ -31,7 +33,7 @@ struct ModelCatalogView: View {
                     }
                 }
             }
-            Text("Shared with OpenCode. New models are enabled automatically.")
+            Text(L10n.resource("Shared with OpenCode. New models are enabled automatically."))
                 .settingsSupportingText()
         }
     }
@@ -53,11 +55,12 @@ struct ModelCatalogView: View {
         let exposedCount = group.options.count { model.isCodexModelExposed($0.mapping) }
         let providerName = ModelCatalogProviderName.title(group.providerName)
         return HStack(alignment: .center, spacing: 10) {
-            Text("\(exposedCount) of \(group.options.count)")
+            Text(L10n.resource("\(exposedCount) of \(group.options.count)"))
                 .monospacedDigit()
                 .font(SettingsLayout.Typography.supporting)
                 .foregroundStyle(.secondary)
             Toggle(
+
                 providerName,
                 isOn: Binding(
                     get: { group.options.allSatisfy { model.isCodexModelExposed($0.mapping) } },
@@ -76,9 +79,13 @@ struct ModelCatalogView: View {
                         $0.mapping == model.configuration.codex.defaultModel
                     }
             )
-            .accessibilityLabel("Enable all models from \(providerName)")
-            .accessibilityValue("\(exposedCount) of \(group.options.count) models enabled")
-            .help("Enable or hide all listed models. The default model stays available.")
+            .accessibilityLabel(L10n.resource("Enable all models from \(providerName)"))
+            .accessibilityValue(
+                group.options.count == 1
+                    ? L10n.resource("\(exposedCount) of \(group.options.count) model enabled")
+                    : L10n.resource("\(exposedCount) of \(group.options.count) models enabled")
+            )
+            .help(L10n.resource("Enable or hide all listed models. The default model stays available."))
         }
         .fixedSize()
     }
@@ -92,11 +99,12 @@ struct ModelCatalogView: View {
                 .help(option.label)
             Spacer(minLength: 8)
             if isDefault {
-                Text("Default")
+                Text(L10n.resource("Default"))
                     .font(SettingsLayout.Typography.supporting)
                     .foregroundStyle(.secondary)
             }
             Toggle(
+
                 option.modelID,
                 isOn: Binding(
                     get: { model.isCodexModelExposed(option.mapping) },
@@ -107,10 +115,19 @@ struct ModelCatalogView: View {
             .toggleStyle(.switch)
             .controlSize(.small)
             .disabled(model.isBusy || isDefault)
-            .help(isDefault ? "Choose another default model before hiding this model." : option.label)
+            .help(
+                isDefault
+                    ? L10n.string("Choose another default model before hiding this model.")
+                    : option.label
+            )
             .accessibilityLabel(option.label)
             .accessibilityHint(
-                isDefault ? "Choose another default model before hiding this model." : "Available to Codex and OpenCode"
+
+                isDefault
+                    ? L10n.resource(
+                        "Choose another default model before hiding this model."
+                    )
+                    : L10n.resource("Available to Codex and OpenCode")
             )
         }
         .font(SettingsLayout.Typography.rowLabel)

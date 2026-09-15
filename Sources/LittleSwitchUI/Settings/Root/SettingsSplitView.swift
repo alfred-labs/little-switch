@@ -91,7 +91,15 @@ struct SettingsSplitView<Sidebar: View, Detail: View>: View {
         .buttonStyle(.borderless)
         .padding(.leading, SettingsLayout.sidebarToggleToolbarLeadingPadding)
         .foregroundStyle(.secondary)
-        .help(isSidebarVisible ? "Hide sidebar" : "Show sidebar")
-        .accessibilityLabel(isSidebarVisible ? "Hide sidebar" : "Show sidebar")
+        .help(
+            isSidebarVisible
+                ? L10n.resource("Hide sidebar")
+                : L10n.resource("Show sidebar")
+        )
+        .accessibilityLabel(
+            isSidebarVisible
+                ? L10n.resource("Hide sidebar")
+                : L10n.resource("Show sidebar")
+        )
     }
 }

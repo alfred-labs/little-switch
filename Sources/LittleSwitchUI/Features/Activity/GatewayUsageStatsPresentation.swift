@@ -10,9 +10,24 @@ public struct GatewayUsageStatsPresentation: Equatable, Sendable {
         public let title: String
         public let value: String
         public let isLeading: Bool
+        public let accessibilityValue: String
 
-        var accessibilityValue: String {
-            value == GatewayUsageFormat.placeholder ? "Unavailable for this period" : value
+        init(
+            id: String,
+            title: String,
+            value: String,
+            isLeading: Bool,
+            accessibilityValue: String? = nil
+        ) {
+            self.id = id
+            self.title = title
+            self.value = value
+            self.isLeading = isLeading
+            self.accessibilityValue =
+                accessibilityValue
+                ?? (value == GatewayUsageFormat.placeholder
+                    ? L10n.string("Unavailable for this period")
+                    : value)
         }
     }
 
@@ -28,13 +43,22 @@ public struct GatewayUsageStatsPresentation: Equatable, Sendable {
 
     private let aggregate: Period
     private let days: [GatewayUsageSummary.DayDetail]
+    private let locale: Locale
 
-    public init(summary: GatewayUsageSummary) {
+    public init(summary: GatewayUsageSummary, locale: Locale = .current) {
+        self.locale = locale
         points = summary.points.map(\.tokens)
         days = summary.dayDetails
-        aggregate = Period(label: "\(summary.points.count) days", days: summary.dayDetails)
+        aggregate = Period(
+            label: L10n.string("\(summary.points.count) days", locale: locale),
+            days: summary.dayDetails,
+            locale: locale
+        )
         dayDetails = summary.points.enumerated().map { index, point in
-            let label = index == summary.points.count - 1 ? "Today" : Self.dayLabel(point.day)
+            let label =
+                index == summary.points.count - 1
+                ? L10n.string("Today", locale: locale)
+                : Self.dayLabel(point.day, locale: locale)
             return DayDetail(
                 id: point.day,
                 label: label
@@ -42,7 +66,9 @@ public struct GatewayUsageStatsPresentation: Equatable, Sendable {
         }
         let lastIndex = summary.points.count - 1
         // GatewayUsageSummary always supplies thirty slots, including quiet days.
-        axisLabels = [0, lastIndex / 2, lastIndex].map { Self.dayLabel(summary.points[$0].day) }
+        axisLabels = [0, lastIndex / 2, lastIndex].map {
+            Self.dayLabel(summary.points[$0].day, locale: locale)
+        }
     }
 
     /// A nil selection restores the full period. Clamping keeps an accessible
@@ -50,10 +76,14 @@ public struct GatewayUsageStatsPresentation: Equatable, Sendable {
     public func period(at index: Int?) -> Period {
         guard let index, !days.isEmpty else { return aggregate }
         let selected = min(max(index, 0), days.count - 1)
-        return Period(label: dayDetails[selected].label, days: [days[selected]])
+        return Period(
+            label: dayDetails[selected].label,
+            days: [days[selected]],
+            locale: locale
+        )
     }
 
-    static func dayLabel(_ key: String) -> String {
+    static func dayLabel(_ key: String, locale: Locale = .current) -> String {
         guard
             let date = try? Date(
                 key,
@@ -65,7 +95,7 @@ public struct GatewayUsageStatsPresentation: Equatable, Sendable {
         // A day key names a calendar day, not an instant. Keep both parsing
         // and formatting in UTC so western time zones do not read it early.
         var style = Date.FormatStyle.dateTime
-            .locale(Locale(identifier: "en_US"))
+            .locale(locale)
             .month(.abbreviated)
             .day()
         style.timeZone = .gmt

@@ -184,7 +184,7 @@ struct CredentialRefresherTests {
         let message = try await eventually(description: "failure message") {
             await refresher.failureMessages()[providerID]
         }
-        #expect(message == "The credential script exited with status 2. vault down")
+        #expect(message == scriptFailure(status: 2, standardError: "vault down"))
 
         await refresher.schedule(
             providerID: providerID,
@@ -214,7 +214,7 @@ struct CredentialRefresherTests {
         let message = try await eventually(description: "missing script message") {
             await refresher.failureMessages()[providerID]
         }
-        #expect(message == "No credential script is chosen.")
+        #expect(message == CoreL10n.string("No credential script is chosen."))
         await refresher.cancel(providerID: providerID)
     }
 
@@ -403,4 +403,9 @@ struct CredentialRefresherTests {
         await refresher.cancel(providerID: providerID)
         #expect(await refresher.lastScriptOutputs().isEmpty)
     }
+}
+
+private func scriptFailure(status: Int32, standardError: String) -> String {
+    let prefix = CoreL10n.string("The credential script exited with status \(status).")
+    return CoreL10n.string("\(prefix) \(standardError)")
 }

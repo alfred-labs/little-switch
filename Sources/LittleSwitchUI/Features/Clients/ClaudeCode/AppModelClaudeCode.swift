@@ -36,9 +36,9 @@ extension AppModel {
     public var claudeCodePrimaryActionTitle: String {
         switch claudeCodePrimaryAction {
         case .connect, .apply:
-            "Apply"
+            L10n.string("Apply")
         case .restore:
-            "Restore settings"
+            L10n.string("Restore settings")
         }
     }
 
@@ -61,42 +61,46 @@ extension AppModel {
 
     public var claudeCodePrimaryActionAccessibilityHint: String {
         if isBusy {
-            return "An operation is in progress"
+            return L10n.string("An operation is in progress")
         }
         switch claudeCodePrimaryAction {
         case .connect:
             return claudeCodeMappedRouteOptions.isEmpty
-                ? "Map at least one Claude model before connecting Claude Code"
-                : "Configures new Claude Code terminal sessions"
+                ? L10n.string("Map at least one Claude model before connecting Claude Code")
+                : L10n.string("Configures new Claude Code terminal sessions")
         case .apply:
             guard !claudeCodeMappedRouteOptions.isEmpty else {
-                return "Map at least one Claude model before applying Claude Code"
+                return L10n.string("Map at least one Claude model before applying Claude Code")
             }
             if claudeCodeStatus == .needsAttention {
-                return "Reapplies LittleSwitch settings for new Claude Code sessions"
+                return L10n.string("Reapplies LittleSwitch settings for new Claude Code sessions")
             }
             return hasPendingClaudeCodeChanges
-                ? "Applies pending settings to new Claude Code terminal sessions"
-                : "No pending settings"
+                ? L10n.string("Applies pending settings to new Claude Code terminal sessions")
+                : L10n.string("No pending settings")
         case .restore:
             return claudeCodeStatus == .recoveryAvailable
-                ? "Restores the previous user-level Claude Code settings"
-                : "Recovery data is unavailable"
+                ? L10n.string("Restores the previous user-level Claude Code settings")
+                : L10n.string("Recovery data is unavailable")
         }
     }
 
     public var claudeCodePrimaryActionAccessibilityValue: String {
         switch claudeCodeStatus {
         case .disconnected:
-            "Claude Code disconnected"
+            L10n.string("Claude Code disconnected")
         case .connected:
-            hasPendingClaudeCodeChanges ? "Changes pending" : "No pending changes"
+            if hasPendingClaudeCodeChanges {
+                L10n.string("Changes pending")
+            } else {
+                L10n.string("No pending changes")
+            }
         case .needsAttention:
-            "Needs attention"
+            L10n.string("Needs attention")
         case .recoveryAvailable:
-            "Recovery available"
+            L10n.string("Recovery available")
         case .recoveryUnavailable:
-            "Recovery unavailable"
+            L10n.string("Recovery unavailable")
         }
     }
 
@@ -135,7 +139,7 @@ extension AppModel {
                     ClaudeCodeDefaultModelOption(
                         routeID: route.id,
                         contextMode: .extended1M,
-                        label: "\(route.displayName) [1m]"
+                        label: L10n.string("\(route.displayName) [1m]")
                     )
                 )
             }

@@ -63,7 +63,7 @@ struct CodexAutoReviewUpgradeTests {
             height: MenuCodexTabView.height)
         defer { host.close() }
         try await host.activateAccessibility()
-        #expect(try host.element(label: "Apply changes").isAccessibilityEnabled())
+        #expect(try host.element(label: L10n.string("Apply changes")).isAccessibilityEnabled())
 
         if failingSave {
             store.failNextSave()

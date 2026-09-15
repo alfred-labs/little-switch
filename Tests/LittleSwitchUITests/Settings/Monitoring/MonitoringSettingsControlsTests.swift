@@ -37,7 +37,7 @@ struct MonitoringSettingsControlsTests {
         #expect(secretsEmpty)
         #expect(
             Set(fields.compactMap(\.placeholderString)) == [
-                "Leave blank to keep the saved token", "Bearer token",
+                L10n.string("Leave blank to keep the saved token"), L10n.string("Bearer token"),
             ])
     }
 
@@ -105,16 +105,18 @@ struct MonitoringSettingsControlsTests {
         let window = window(hosting)
         defer { window.close() }
         let picker = try #require(
-            descendants(NSPopUpButton.self, in: hosting).first { $0.itemTitles.contains("17 s (current)") }
+            descendants(NSPopUpButton.self, in: hosting).first {
+                $0.itemTitles.contains(L10n.string("\(17) s (current)"))
+            }
         )
-        #expect(picker.titleOfSelectedItem == "17 s (current)")
+        #expect(picker.titleOfSelectedItem == L10n.string("\(17) s (current)"))
         #expect(model.monitoringDraft == nil)
         model.monitoringStatus.metrics = .init(state: .sending)
         hosting.layoutSubtreeIfNeeded()
-        #expect(picker.titleOfSelectedItem == "17 s (current)")
+        #expect(picker.titleOfSelectedItem == L10n.string("\(17) s (current)"))
         #expect(model.configuration.monitoring.metricIntervalSeconds == 17)
 
-        for (title, seconds) in [("1 min", 60), ("5 s", 5), ("5 min", 300)] {
+        for (title, seconds) in [(L10n.string("1 min"), 60), ("5 s", 5), (L10n.string("5 min"), 300)] {
             let menu = try #require(picker.menu)
             menu.performActionForItem(at: picker.indexOfItem(withTitle: title))
             hosting.layoutSubtreeIfNeeded()
@@ -126,7 +128,7 @@ struct MonitoringSettingsControlsTests {
             model.monitoringStatus.metrics = .init(state: .idle, lastAccepted: Date())
             hosting.layoutSubtreeIfNeeded()
             let updated = try #require(
-                descendants(NSPopUpButton.self, in: hosting).first { $0.itemTitles.contains("5 min") }
+                descendants(NSPopUpButton.self, in: hosting).first { $0.itemTitles.contains(L10n.string("5 min")) }
             )
             #expect(updated === picker)
             #expect(updated.titleOfSelectedItem == title)
@@ -213,12 +215,12 @@ struct MonitoringSettingsControlsTests {
     private func settingsView(_ model: AppModel) -> SettingsView {
         SettingsView(
             model: model,
-            updater: DisabledSoftwareUpdateController(availability: .disabled(reason: "Preview")),
+            updater: DisabledSoftwareUpdateController(availability: .disabled(reason: L10n.string("Preview"))),
             onLaunchAtLoginEnabled: { _ in },
             onOpenLoginItems: {},
             onModelIndicator: { _ in },
-            onSaveProvider: { _ in .failed("Preview") },
-            onTestProvider: { _ in .authenticationFailed("Preview") },
+            onSaveProvider: { _ in .failed(L10n.string("Preview")) },
+            onTestProvider: { _ in .authenticationFailed(L10n.string("Preview")) },
             onSaveWebSearch: { _ in false },
             onWebSearchDraft: { _ in },
             onRefreshProvider: { _ in },

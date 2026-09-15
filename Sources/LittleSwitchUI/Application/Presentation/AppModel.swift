@@ -36,7 +36,6 @@ final class AppModel {
         case apps = "Apps"
 
         var id: String { rawValue }
-        var title: String { rawValue }
 
         var sections: [Section] {
             switch self {
@@ -89,6 +88,7 @@ final class AppModel {
     private(set) var responsesWireVerdicts: [UUID: Bool] = [:]
     private(set) var credentialRefreshFailures: [UUID: String] = [:]
     private(set) var lastScriptOutputs: [UUID: String] = [:]
+    var imageInputState = ProviderImageInputState()
     private(set) var gatewayUsage: GatewayUsageSummary?
     /// Per-client consumption behind the menu's Claude and Codex tabs.
     private(set) var gatewayClientUsage: [GatewayClient: GatewayUsageSummary] = [:]
@@ -119,6 +119,8 @@ final class AppModel {
         monitoringSnapshotSequence = snapshot.monitoringSnapshotSequence
         credentialRefreshFailures = snapshot.credentialRefreshFailures
         lastScriptOutputs = snapshot.lastScriptOutputs
+        imageInputState = ProviderImageInputState(snapshot: snapshot)
+        responsesWireVerdicts = snapshot.responsesWireVerdicts
     }
 
     var providers: [Provider] {
@@ -151,26 +153,26 @@ final class AppModel {
     var launchAtLoginAccessibilityValue: String {
         switch launchAtLoginStatus {
         case .disabled:
-            "Launch at login disabled"
+            L10n.string("Launch at login disabled")
         case .enabled:
-            "Launch at login enabled"
+            L10n.string("Launch at login enabled")
         case .requiresApproval:
-            "Approval required"
+            L10n.string("Approval required")
         case .unavailable:
-            "Launch at login unavailable"
+            L10n.string("Launch at login unavailable")
         }
     }
 
     var launchAtLoginAccessibilityHint: String {
         switch launchAtLoginStatus {
         case .disabled:
-            "LittleSwitch does not open automatically"
+            L10n.string("LittleSwitch does not open automatically")
         case .enabled:
-            "LittleSwitch opens in the menu bar when you log in"
+            L10n.string("LittleSwitch opens in the menu bar when you log in")
         case .requiresApproval:
-            "Approve LittleSwitch in Login Items"
+            L10n.string("Approve LittleSwitch in Login Items")
         case .unavailable:
-            "LittleSwitch is not registered with Login Items"
+            L10n.string("LittleSwitch is not registered with Login Items")
         }
     }
 
@@ -185,7 +187,7 @@ final class AppModel {
     }
 
     var claudePrimaryActionTitle: String {
-        "Apply"
+        L10n.string("Apply")
     }
 
     var canPerformClaudePrimaryAction: Bool {
@@ -198,25 +200,25 @@ final class AppModel {
     var claudePrimaryActionAccessibilityHint: String {
         if !hasValidRouting {
             return connected
-                ? "Choose at least one available model to restore live routing"
-                : "Assign at least one available model before applying settings"
+                ? L10n.string("Choose at least one available model to restore live routing")
+                : L10n.string("Assign at least one available model before applying settings")
         }
         if isBusy {
-            return "An operation is in progress"
+            return L10n.string("An operation is in progress")
         }
         switch claudePrimaryAction {
         case .connect:
-            return "Applies LittleSwitch settings to Claude Desktop"
+            return L10n.string("Applies LittleSwitch settings to Claude Desktop")
         case nil:
-            return "Model routing edits wait for Apply"
+            return L10n.string("Model routing edits wait for Apply")
         }
     }
 
     var claudePrimaryActionAccessibilityValue: String {
         guard connected else {
-            return "Claude disconnected"
+            return L10n.string("Claude disconnected")
         }
-        return hasPendingClaudeMappings ? "Changes pending" : "No pending changes"
+        return hasPendingClaudeMappings ? L10n.string("Changes pending") : L10n.string("No pending changes")
     }
 
     var codexPrimaryAction: CodexPrimaryAction {
@@ -224,7 +226,7 @@ final class AppModel {
     }
 
     var codexPrimaryActionTitle: String {
-        "Apply"
+        L10n.string("Apply")
     }
 
     var canPerformCodexPrimaryAction: Bool {
@@ -241,31 +243,31 @@ final class AppModel {
 
     var codexPrimaryActionAccessibilityHint: String {
         if hasUnavailableCodexAutoReviewModel {
-            return "Choose an available approval review model before applying changes"
+            return L10n.string("Choose an available approval review model before applying changes")
         }
         if codexExposedModelOptions.isEmpty {
             return codexConnected
-                ? "Expose at least one available model before applying changes"
-                : "Expose at least one available model before connecting Codex"
+                ? L10n.string("Expose at least one available model before applying changes")
+                : L10n.string("Expose at least one available model before connecting Codex")
         }
         if isBusy {
-            return "An operation is in progress"
+            return L10n.string("An operation is in progress")
         }
         switch codexPrimaryAction {
         case .connect:
-            return "Connects Codex to LittleSwitch"
+            return L10n.string("Connects Codex to LittleSwitch")
         case .apply:
             return hasPendingCodexChanges
-                ? "Applies pending settings"
-                : "No pending settings"
+                ? L10n.string("Applies pending settings")
+                : L10n.string("No pending settings")
         }
     }
 
     var codexPrimaryActionAccessibilityValue: String {
         guard codexConnected else {
-            return "Codex disconnected"
+            return L10n.string("Codex disconnected")
         }
-        return hasPendingCodexChanges ? "Changes pending" : "No pending changes"
+        return hasPendingCodexChanges ? L10n.string("Changes pending") : L10n.string("No pending changes")
     }
 
     var claudeCustomModelCount: Int {
@@ -312,6 +314,8 @@ final class AppModel {
         monitoringSnapshotSequence = snapshot.monitoringSnapshotSequence
         credentialRefreshFailures = snapshot.credentialRefreshFailures
         lastScriptOutputs = snapshot.lastScriptOutputs
+        imageInputState = ProviderImageInputState(snapshot: snapshot)
+        responsesWireVerdicts = snapshot.responsesWireVerdicts
         isBusy = false
         errorMessage = nil
     }

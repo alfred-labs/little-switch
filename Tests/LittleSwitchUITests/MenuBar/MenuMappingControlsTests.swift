@@ -26,13 +26,13 @@ struct MenuMappingControlsTests {
         try await host.activateAccessibility()
 
         #expect(host.textContent.contains("Alpha"))
-        #expect(try host.element(label: "Next model for Sonnet").accessibilityPerformPress())
+        #expect(try host.element(label: nextLabel("Sonnet")).accessibilityPerformPress())
         host.render()
         #expect(host.textContent.contains("Beta"))
-        #expect(try host.element(label: "Next model for Sonnet").accessibilityPerformPress())
+        #expect(try host.element(label: nextLabel("Sonnet")).accessibilityPerformPress())
         host.render()
         #expect(host.textContent.contains("Gamma"))
-        #expect(try host.element(label: "Next model for Sonnet").accessibilityPerformPress())
+        #expect(try host.element(label: nextLabel("Sonnet")).accessibilityPerformPress())
         host.render()
         #expect(host.textContent.contains("Alpha"))
         #expect(changes == [options[1], options[2], options[0]])
@@ -42,7 +42,7 @@ struct MenuMappingControlsTests {
         host.hosting.rootView = content()
         host.render()
         #expect(host.textContent.contains("Beta"))
-        #expect(try host.element(label: "Previous model for Sonnet").accessibilityPerformPress())
+        #expect(try host.element(label: previousLabel("Sonnet")).accessibilityPerformPress())
         host.render()
         #expect(host.textContent.contains("Alpha"))
         #expect(changes == [options[1], options[2], options[0], options[0]])
@@ -53,7 +53,7 @@ struct MenuMappingControlsTests {
         var changes: [MenuModelOption?] = []
         let host = MenuControlTestHost(
             MenuModelStepper(
-                name: "Codex",
+                name: L10n.string("Codex"),
                 options: options,
                 selection: Binding(get: { nil }, set: { changes.append($0) }),
                 width: 170
@@ -62,7 +62,7 @@ struct MenuMappingControlsTests {
         defer { host.close() }
         try await host.activateAccessibility()
         #expect(host.textContent.contains("—"))
-        #expect(try host.element(label: "Previous model for Codex").accessibilityPerformPress())
+        #expect(try host.element(label: previousLabel("Codex")).accessibilityPerformPress())
         host.render()
         #expect(host.textContent.contains("Gamma"))
         #expect(changes == [options[2]])
@@ -81,7 +81,7 @@ struct MenuMappingControlsTests {
         )
         defer { host.close() }
         try await host.activateAccessibility()
-        for label in ["Previous model for Opus", "Next model for Opus"] {
+        for label in [previousLabel("Opus"), nextLabel("Opus")] {
             let button = try host.element(label: label)
             #expect(!button.isAccessibilityEnabled())
             _ = button.accessibilityPerformPress()
@@ -99,8 +99,16 @@ struct MenuMappingControlsTests {
         )
         defer { host.close() }
         try await host.activateAccessibility()
-        #expect(host.textContent.contains("Loading models…"))
+        #expect(host.textContent.contains(L10n.string("Loading models…")))
         #expect(!host.accessibilityElements.contains { $0.accessibilityRole() == .button })
         #expect(!host.accessibilityElements.contains { $0.accessibilityRole() == .image })
+    }
+
+    private func nextLabel(_ name: String) -> String {
+        L10n.string("Next model for \(name)")
+    }
+
+    private func previousLabel(_ name: String) -> String {
+        L10n.string("Previous model for \(name)")
     }
 }

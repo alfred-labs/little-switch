@@ -7,7 +7,7 @@ struct MenuSettingsSectionHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Divider().frame(height: 1)
-            Text("Settings")
+            Text(L10n.resource("Settings"))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
                 .frame(height: 14)

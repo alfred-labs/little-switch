@@ -53,17 +53,20 @@ package struct ProviderRequestPoolProviderConfiguration: Equatable, Sendable {
     package var displayName: String
     package var maximumParallelRequests: Int
     package var revision: UInt64
+    package var diagnosticModelIDs: Set<String>
 
     package init(
         id: UUID,
         displayName: String,
         maximumParallelRequests: Int,
-        revision: UInt64
+        revision: UInt64,
+        diagnosticModelIDs: Set<String> = []
     ) {
         self.id = id
         self.displayName = displayName
         self.maximumParallelRequests = maximumParallelRequests
         self.revision = revision
+        self.diagnosticModelIDs = diagnosticModelIDs
     }
 }
 
@@ -80,6 +83,10 @@ package struct ProviderRequestPoolConfiguration: Equatable, Sendable {
     }
 }
 
+package enum ProviderRequestPurpose: Equatable, Sendable {
+    case conversation, imageProbe
+}
+
 package struct ProviderRequestAdmission: Equatable, Sendable {
     package var eventID: UUID
     package var providerID: UUID
@@ -88,6 +95,7 @@ package struct ProviderRequestAdmission: Equatable, Sendable {
     package var modelIdentifier: String
     package var targetModelID: String
     package var retainedBodyBytes: Int
+    package var purpose: ProviderRequestPurpose
 
     package init(
         eventID: UUID,
@@ -96,7 +104,8 @@ package struct ProviderRequestAdmission: Equatable, Sendable {
         client: GatewayClient,
         modelIdentifier: String,
         targetModelID: String,
-        retainedBodyBytes: Int
+        retainedBodyBytes: Int,
+        purpose: ProviderRequestPurpose = .conversation
     ) {
         self.eventID = eventID
         self.providerID = providerID
@@ -105,6 +114,7 @@ package struct ProviderRequestAdmission: Equatable, Sendable {
         self.modelIdentifier = modelIdentifier
         self.targetModelID = targetModelID
         self.retainedBodyBytes = retainedBodyBytes
+        self.purpose = purpose
     }
 
     package static func == (lhs: Self, rhs: Self) -> Bool {
@@ -116,6 +126,7 @@ package struct ProviderRequestAdmission: Equatable, Sendable {
             && lhs.modelIdentifier == rhs.modelIdentifier
             && lhs.targetModelID == rhs.targetModelID
             && lhs.retainedBodyBytes == rhs.retainedBodyBytes
+            && lhs.purpose == rhs.purpose
     }
 }
 

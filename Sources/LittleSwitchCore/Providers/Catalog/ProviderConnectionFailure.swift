@@ -8,15 +8,19 @@ import Foundation
 public enum ProviderConnectionFailure {
     public static func message(for error: any Swift.Error) -> String? {
         if let clientError = error as? HTTPClientError {
-            return "The provider connection failed: \(clientError.shortDescription)."
+            return CoreL10n.string(
+                "The provider connection failed: \(clientError.shortDescription)."
+            )
         }
         if case .httpStatus(let code) = error as? ProviderClient.Error {
-            return "The endpoint answered with HTTP \(code) instead of a model catalog. "
-                + "Check the Base URL and the credential."
+            return CoreL10n.string(
+                "The endpoint answered with HTTP \(code) instead of a model catalog. Check the Base URL and the credential."
+            )
         }
         if error is DecodingError {
-            return "The endpoint answered, but not with a model catalog. "
-                + "Check the Base URL points at an OpenAI-compatible API root."
+            return CoreL10n.string(
+                "The endpoint answered, but not with a model catalog. Check the Base URL points at an OpenAI-compatible API root."
+            )
         }
         return nil
     }

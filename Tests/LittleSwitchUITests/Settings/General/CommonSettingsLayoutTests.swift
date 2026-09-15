@@ -29,7 +29,7 @@ struct CommonSettingsLayoutTests {
         let source = try source(named: "Settings/General/CommonSettingsView.swift")
 
         #expect(source.contains("model.launchAtLoginRequiresApproval"))
-        #expect(source.contains("Button(\"Open Login Items…\")"))
+        #expect(source.contains("L10n.resource(\"Open Login Items…\")"))
         #expect(source.contains("onOpenLoginItems"))
         #expect(source.contains("model.launchAtLoginAccessibilityValue"))
         #expect(source.contains("model.launchAtLoginAccessibilityHint"))

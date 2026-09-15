@@ -6,7 +6,7 @@ import AppKit
 enum StatusMenuCommands {
     static func makeItems(target: AnyObject?) -> [NSMenuItem] {
         let settings = item(
-            "Settings…",
+            L10n.string("Settings…"),
             symbol: "gearshape",
             key: ",",
             action: #selector(LittleSwitchApplicationDelegate.showMainWindow),
@@ -17,19 +17,19 @@ enum StatusMenuCommands {
             settings,
             .separator(),
             item(
-                "About LittleSwitch",
+                L10n.string("About LittleSwitch"),
                 symbol: "info.circle",
                 action: #selector(LittleSwitchApplicationDelegate.showAbout),
                 target: target
             ),
             item(
-                "Check for Updates…",
+                L10n.string("Check for Updates…"),
                 symbol: "arrow.triangle.2.circlepath",
                 action: #selector(LittleSwitchApplicationDelegate.checkForUpdates(_:)),
                 target: target
             ),
             item(
-                "Quit LittleSwitch",
+                L10n.string("Quit LittleSwitch"),
                 symbol: "rectangle.portrait.and.arrow.right",
                 key: "q",
                 action: #selector(LittleSwitchApplicationDelegate.quit),

@@ -87,11 +87,6 @@ package enum GatewayResponsesWebSearchError: Swift.Error {
     case responseTooLarge
 }
 
-private struct BufferedResponsesModelTurn {
-    let response: HTTPClientResponse
-    let body: Data
-}
-
 package struct ResponsesModelTurnRequest {
     let body: Data
     let attempt: Int
@@ -107,6 +102,8 @@ package struct PreparedResponsesModelRequest {
 private struct ResponsesWebSearchLoopState {
     var upstreamBody: Data
     var modelAttempt = 0
+    var requestAttempt = 0
+    var forceText = false
     var successfulSearches = 0
     var forceFinalTurn = false
     var traces: [ResponsesWebSearchTrace] = []
@@ -165,7 +162,11 @@ extension GatewayResponder {
         context: GatewayResponsesWebSearchContext
     ) async throws -> Response {
         try Task.checkCancellation()
-        switch responsesWebSearchPreflight(context: context) {
+        let projected = try await responsesImageInput(
+            body: context.prepared.upstreamBody,
+            target: context.target,
+            wire: context.needsChatCompletionsAdapter ? .chatCompletions : .responses)
+        switch responsesWebSearchPreflight(context: context, body: projected.body) {
         case .ready:
             break
         case .rejected(let response):
@@ -181,9 +182,12 @@ extension GatewayResponder {
 
     private func bufferedResponsesWebSearchResponse(
         context: GatewayResponsesWebSearchContext,
-        attemptOffset: Int = 0
+        attemptOffset: Int = 0,
+        forceText: Bool = false
     ) async throws -> Response {
         var loop = ResponsesWebSearchLoopState(upstreamBody: context.prepared.upstreamBody)
+        loop.requestAttempt = attemptOffset
+        loop.forceText = forceText
         let result: Response
         responseLoop: while true {
             try Task.checkCancellation()
@@ -192,10 +196,12 @@ extension GatewayResponder {
                 buffered = try await executeResponsesModelTurn(
                     ResponsesModelTurnRequest(
                         body: loop.upstreamBody,
-                        attempt: attemptOffset + loop.modelAttempt,
+                        attempt: loop.requestAttempt,
                         context: context
-                    )
+                    ), forceText: loop.forceText
                 )
+                loop.requestAttempt = buffered.nextAttempt
+                loop.forceText = buffered.imageFallbackUsed
                 try Task.checkCancellation()
             } catch is CancellationError {
                 throw CancellationError()
@@ -223,7 +229,8 @@ extension GatewayResponder {
                     // keeps both exchanges.
                     return try await bufferedResponsesWebSearchResponse(
                         context: context.usingChatCompletionsAdapter(),
-                        attemptOffset: 1
+                        attemptOffset: buffered.nextAttempt,
+                        forceText: loop.forceText
                     )
                 }
                 if loop.modelAttempt == 0 {
@@ -355,94 +362,6 @@ extension GatewayResponder {
             mode: .terminalError
         )
         state.forceFinalTurn = true
-    }
-
-    private func executeResponsesModelTurn(
-        _ turnRequest: ResponsesModelTurnRequest
-    ) async throws -> BufferedResponsesModelTurn {
-        guard turnRequest.body.count <= maximumRequestBytes else {
-            throw GatewayResponsesWebSearchError.requestTooLarge
-        }
-        let context = turnRequest.context
-        let preparation = try responsesModelRequest(turnRequest)
-        let adapted = preparation.adapted
-        let requestBody = preparation.body
-        let request = preparation.request
-        trafficRecorder.record(
-            eventID: context.eventID,
-            action: .upstreamRequest(
-                trafficUpstreamRequest(
-                    attempt: turnRequest.attempt,
-                    route: ResponsesTrafficRoute(
-                        claudeRoute: context.prepared.originalModel,
-                        target: context.target
-                    ),
-                    request: request,
-                    body: requestBody,
-                    streaming: false
-                )
-            )
-        )
-
-        let exchange: GatewayModelExchange
-        do {
-            try Task.checkCancellation()
-            exchange = try await executeModelRequest(
-                request,
-                body: requestBody,
-                wire: context.needsChatCompletionsAdapter ? .chatCompletions : .responses,
-                eventID: context.eventID,
-                attempt: turnRequest.attempt,
-                declaredToolBindings: adapted?.declaredToolBindings ?? context.prepared.declaredToolBindings,
-                toolNameCatalog: adapted?.toolNameCatalog ?? context.prepared.toolNameCatalog
-            )
-            try Task.checkCancellation()
-        } catch is CancellationError {
-            throw CancellationError()
-        } catch is ProviderToolContract.Error {
-            throw GatewayResponsesWebSearchError.invalidProviderResponse
-        } catch {
-            throw GatewayResponsesWebSearchError.providerFailed
-        }
-        let response = exchange.response
-        defer { exchange.trace.finish() }
-        await recordResponsesCapability(context: context, status: response.status.code)
-        // The adapter's own route missing is the mirror lesson: only native
-        // can be left, so a stale adapter verdict relearns instead of
-        // relaying the 404 forever.
-        if context.needsChatCompletionsAdapter {
-            await recordChatCompletionsRouteAbsent(
-                providerID: context.target.provider.id,
-                status: response.status.code
-            )
-        }
-
-        let responseBody: Data
-        do {
-            try Task.checkCancellation()
-            responseBody = try await exchange.trace.collect(response.body, upTo: maximumErrorBytes)
-            try Task.checkCancellation()
-        } catch is CancellationError {
-            throw CancellationError()
-        } catch is NIOTooManyBytesError {
-            throw GatewayResponsesWebSearchError.responseTooLarge
-        } catch {
-            throw GatewayResponsesWebSearchError.providerFailed
-        }
-        guard let adapted, (200..<300).contains(response.status.code) else {
-            return BufferedResponsesModelTurn(response: response, body: responseBody)
-        }
-        do {
-            return BufferedResponsesModelTurn(
-                response: response,
-                body: try OpenAIResponsesChatCompletions.project(
-                    responseBody: responseBody,
-                    prepared: adapted
-                )
-            )
-        } catch {
-            throw GatewayResponsesWebSearchError.invalidProviderResponse
-        }
     }
 
     private func projectedResponsesWebSearchResponse(

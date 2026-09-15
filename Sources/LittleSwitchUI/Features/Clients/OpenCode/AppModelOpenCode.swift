@@ -30,9 +30,9 @@ extension AppModel {
     public var openCodePrimaryActionTitle: String {
         switch openCodePrimaryAction {
         case .connect, .apply:
-            "Apply"
+            L10n.string("Apply")
         case .restore:
-            "Restore settings"
+            L10n.string("Restore settings")
         }
     }
 
@@ -55,48 +55,52 @@ extension AppModel {
 
     public var openCodePrimaryActionAccessibilityHint: String {
         if isBusy {
-            return "An operation is in progress"
+            return L10n.string("An operation is in progress")
         }
         switch openCodePrimaryAction {
         case .connect:
             if hasPendingCodexChanges {
-                return "Apply Codex changes first"
+                return L10n.string("Apply Codex changes first")
             }
             return openCodeDefaultModelOptions.isEmpty
-                ? "Expose at least one model in Codex before connecting OpenCode"
-                : "Configures OpenCode to use LittleSwitch"
+                ? L10n.string("Expose at least one model in Codex before connecting OpenCode")
+                : L10n.string("Configures OpenCode to use LittleSwitch")
         case .apply:
             if hasPendingCodexChanges {
-                return "Apply Codex changes first"
+                return L10n.string("Apply Codex changes first")
             }
             guard !openCodeDefaultModelOptions.isEmpty else {
-                return "Expose at least one model in Codex before applying OpenCode"
+                return L10n.string("Expose at least one model in Codex before applying OpenCode")
             }
             if openCodeStatus == .needsAttention {
-                return "Reapplies LittleSwitch settings to OpenCode"
+                return L10n.string("Reapplies LittleSwitch settings to OpenCode")
             }
             return hasPendingOpenCodeChanges
-                ? "Applies pending settings to OpenCode"
-                : "No pending settings"
+                ? L10n.string("Applies pending settings to OpenCode")
+                : L10n.string("No pending settings")
         case .restore:
             return openCodeStatus == .recoveryAvailable
-                ? "Restores the previous user-level OpenCode settings"
-                : "Recovery data is unavailable"
+                ? L10n.string("Restores the previous user-level OpenCode settings")
+                : L10n.string("Recovery data is unavailable")
         }
     }
 
     public var openCodePrimaryActionAccessibilityValue: String {
         switch openCodeStatus {
         case .disconnected:
-            "OpenCode disconnected"
+            L10n.string("OpenCode disconnected")
         case .connected:
-            hasPendingOpenCodeChanges ? "Changes pending" : "No pending changes"
+            if hasPendingOpenCodeChanges {
+                L10n.string("Changes pending")
+            } else {
+                L10n.string("No pending changes")
+            }
         case .needsAttention:
-            "Needs attention"
+            L10n.string("Needs attention")
         case .recoveryAvailable:
-            "Recovery available"
+            L10n.string("Recovery available")
         case .recoveryUnavailable:
-            "Recovery unavailable"
+            L10n.string("Recovery unavailable")
         }
     }
 

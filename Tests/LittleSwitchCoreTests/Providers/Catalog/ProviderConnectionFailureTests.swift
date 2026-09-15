@@ -11,11 +11,15 @@ struct ProviderConnectionFailureTests {
     func transportFailuresDescribe() {
         #expect(
             ProviderConnectionFailure.message(for: HTTPClientError.remoteConnectionClosed)
-                == "The provider connection failed: Remote connection closed."
+                == CoreL10n.string(
+                    "The provider connection failed: \(HTTPClientError.remoteConnectionClosed.shortDescription)."
+                )
         )
         #expect(
             ProviderConnectionFailure.message(for: HTTPClientError.readTimeout)
-                == "The provider connection failed: Read timeout."
+                == CoreL10n.string(
+                    "The provider connection failed: \(HTTPClientError.readTimeout.shortDescription)."
+                )
         )
     }
 
@@ -23,8 +27,9 @@ struct ProviderConnectionFailureTests {
     func responseFailuresDescribe() {
         #expect(
             ProviderConnectionFailure.message(for: ProviderClient.Error.httpStatus(401))
-                == "The endpoint answered with HTTP 401 instead of a model catalog. "
-                + "Check the Base URL and the credential."
+                == CoreL10n.string(
+                    "The endpoint answered with HTTP \(401) instead of a model catalog. Check the Base URL and the credential."
+                )
         )
         let decodingError = DecodingError.typeMismatch(
             Int.self,
@@ -32,8 +37,9 @@ struct ProviderConnectionFailureTests {
         )
         #expect(
             ProviderConnectionFailure.message(for: decodingError)
-                == "The endpoint answered, but not with a model catalog. "
-                + "Check the Base URL points at an OpenAI-compatible API root."
+                == CoreL10n.string(
+                    "The endpoint answered, but not with a model catalog. Check the Base URL points at an OpenAI-compatible API root."
+                )
         )
     }
 

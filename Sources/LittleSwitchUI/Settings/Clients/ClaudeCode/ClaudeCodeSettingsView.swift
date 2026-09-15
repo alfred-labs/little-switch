@@ -7,9 +7,9 @@ struct ClaudeCodeSettingsView: View {
     let onDefault: @MainActor (String?, ClaudeCodeContextMode) async -> Void
 
     var body: some View {
-        SettingsSection("Terminal") {
+        SettingsSection(L10n.resource("Terminal")) {
             SettingsCard {
-                LabeledContent("Default model") {
+                LabeledContent(L10n.string("Default model")) {
                     defaultModelPicker
                 }
                 .settingsRow()
@@ -18,11 +18,11 @@ struct ClaudeCodeSettingsView: View {
                 statusNotice
                 if model.claudeCodeMappedRouteOptions.isEmpty {
                     Label(
-                        "Map at least one Claude route before connecting Claude Code.",
+                        L10n.resource("Map at least one Claude route before connecting Claude Code."),
                         systemImage: "info.circle"
                     )
                 }
-                Text("Applies to new terminal sessions.")
+                Text(L10n.resource("Applies to new terminal sessions."))
             }
             .settingsSupportingText()
         }
@@ -30,7 +30,7 @@ struct ClaudeCodeSettingsView: View {
 
     private var defaultModelPicker: some View {
         Picker(
-            "Default model",
+            L10n.resource("Default model"),
             selection: Binding<ClaudeCodeDefaultModelOption?>(
                 get: { model.claudeCodeDefaultModelSelection },
                 set: { option in
@@ -63,18 +63,21 @@ struct ClaudeCodeSettingsView: View {
             EmptyView()
         case .recoveryAvailable:
             notice(
-                "Previous user-level settings can be restored.",
+                L10n.resource("Previous user-level settings can be restored."),
                 systemImage: "clock.arrow.circlepath"
             )
         case .recoveryUnavailable:
             notice(
-                "Recovery data is unavailable.",
+                L10n.resource("Recovery data is unavailable."),
                 systemImage: "exclamationmark.octagon"
             )
         }
     }
 
-    private func notice(_ text: String, systemImage: String) -> some View {
+    private func notice(
+        _ text: LocalizedStringResource,
+        systemImage: String
+    ) -> some View {
         Label(text, systemImage: systemImage)
             .settingsSupportingText()
     }

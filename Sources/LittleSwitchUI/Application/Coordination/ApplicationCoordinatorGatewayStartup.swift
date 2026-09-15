@@ -125,6 +125,11 @@ extension ApplicationCoordinator {
     package func replaceGatewayRoutingIfNeeded(
         credentialChangedProviderIDs: Set<UUID> = []
     ) async {
+        // The ledger survives gateway shutdown too; credential changes while
+        // stopped must not resurrect old evidence at the next start.
+        if !credentialChangedProviderIDs.isEmpty {
+            await customToolCapabilities?.invalidate(providerIDs: credentialChangedProviderIDs)
+        }
         var states: [GatewayState] = []
         if let gatewayState {
             states.append(gatewayState)

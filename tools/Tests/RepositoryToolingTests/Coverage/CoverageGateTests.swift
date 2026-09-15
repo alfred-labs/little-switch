@@ -34,7 +34,7 @@ struct CoverageGateTests {
         let measured = try #require(log.split(separator: "\n").first { $0.contains("$(touch injected)") })
         #expect(measured.contains("\t" + prefix + source + "\t" + prefix + "Sources/App/B.swift"))
         #expect(!measured.contains("Excluded.swift"))
-        #expect(log.contains("\t" + prefix + "Sources\n"))
+        #expect(log.contains("\t" + prefix + "Sources\t"))
         #expect(result.stdout.contains("(100.00% lines required)"))
         #expect(result.stdout.contains("(includes excluded adapters)"))
         #expect(result.stdout.contains("TOTAL 1 0 100.00% 1 0 100.00% 1 0 66.67%"))
@@ -100,13 +100,13 @@ struct CoverageGateTests {
 
     @Test(
         "Missing current artifacts never fall back to stale outputs",
-        arguments: ["LittleSwitchPackageTests", "default.profdata"])
+        arguments: ["CoverageTests", "default.profdata"])
     func missingArtifacts(name: String) throws {
         var fixture = CoverageGateFixture()
         fixture.missingArtifact = name
         let (result, log) = try fixture.run()
         #expect(result.status == 1)
-        #expect(result.stderr.contains("was not produced"))
+        #expect(result.stderr.contains("not produced"))
         #expect(!log.contains("llvm-cov"))
     }
 

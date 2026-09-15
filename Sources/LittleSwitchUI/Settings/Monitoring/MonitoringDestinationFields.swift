@@ -53,12 +53,14 @@ struct MonitoringDestinationFields<Options: View>: View {
                 }
                 .disclosureGroupStyle(
                     SettingsDisclosureGroupStyle(
-                        accessibilityHint: "Show or hide \(title.lowercased()) export settings."
+                        accessibilityHint: L10n.string(
+                            "Show or hide \(title.lowercased()) export settings."
+                        )
                     ) {
                         headerControls
                     }
                 )
-                .accessibilityLabel("\(title) export settings")
+                .accessibilityLabel(L10n.resource("\(title) export settings"))
                 MonitoringExportStatusView(title: title, status: status, testResult: testResult)
                     .padding(.leading, 20)
             }
@@ -71,66 +73,78 @@ struct MonitoringDestinationFields<Options: View>: View {
             Text(MonitoringExportPresentation.title(for: status, pending: pending))
                 .font(SettingsLayout.Typography.supporting)
                 .foregroundStyle(.secondary)
-            Toggle("Export \(title.lowercased())", isOn: $destination.enabled)
+            Toggle(L10n.resource("Export \(title.lowercased())"), isOn: $destination.enabled)
                 .labelsHidden()
                 .toggleStyle(.switch)
                 .controlSize(.small)
-                .accessibilityHint("Apply changes to update this export.")
+                .accessibilityHint(L10n.string("Apply changes to update this export."))
         }
         .fixedSize()
     }
 
     private var receiverURL: some View {
-        LabeledContent("Receiver URL") {
-            TextField("Receiver URL", text: $destination.endpoint, prompt: Text(placeholder))
+        LabeledContent(L10n.string("Receiver URL")) {
+            TextField(L10n.string("Receiver URL"), text: $destination.endpoint, prompt: Text(placeholder))
                 .labelsHidden()
                 .textFieldStyle(.plain)
                 .textContentType(.URL)
                 .multilineTextAlignment(.trailing)
                 .frame(maxWidth: .infinity)
-                .accessibilityLabel("\(title) receiver URL")
-                .help("Use the complete OTLP receiver URL, including its \(title.lowercased()) path.")
+                .accessibilityLabel(L10n.resource("\(title) receiver URL"))
+                .help(L10n.resource("Use the complete OTLP receiver URL, including its \(title.lowercased()) path."))
         }
         .frame(minHeight: SettingsLayout.disclosureRowMinimumHeight)
     }
 
     @ViewBuilder private var authentication: some View {
-        LabeledContent("Authentication") {
-            Picker("Authentication", selection: $destination.authentication) {
-                Text("None").tag(MonitoringAuthentication.none)
-                Text("Bearer token").tag(MonitoringAuthentication.bearer)
+        LabeledContent(L10n.string("Authentication")) {
+            Picker(L10n.resource("Authentication"), selection: $destination.authentication) {
+                Text(L10n.resource("None")).tag(MonitoringAuthentication.none)
+                Text(L10n.resource("Bearer token")).tag(MonitoringAuthentication.bearer)
             }
             .labelsHidden()
             .settingsMenuPicker()
             .monitoringControlColumn()
-            .accessibilityLabel("\(title) authentication")
+            .accessibilityLabel(L10n.resource("\(title) authentication"))
         }
         .frame(minHeight: SettingsLayout.disclosureRowMinimumHeight)
         if destination.authentication == .bearer {
-            LabeledContent("Token") {
-                SecureField("Token", text: $token, prompt: Text(tokenPlaceholder))
+            LabeledContent(L10n.string("Token")) {
+                SecureField(L10n.string("Token"), text: $token, prompt: Text(tokenPlaceholder))
                     .labelsHidden()
                     .textFieldStyle(.roundedBorder)
                     .multilineTextAlignment(.leading)
                     .monitoringControlColumn()
                     .disabled(removeToken)
-                    .accessibilityLabel("\(title) token")
+                    .accessibilityLabel(L10n.resource("\(title) token"))
             }
         }
         if destination.credentialID != nil {
-            LabeledContent("Saved token") {
-                Button(removeToken ? "Keep saved token" : "Remove saved token") {
+            LabeledContent(L10n.string("Saved token")) {
+                Button(
+                    removeToken
+                        ? L10n.string("Keep saved token")
+                        : L10n.string("Remove saved token")
+                ) {
                     removeToken.toggle()
                     token = ""
                 }
                 .controlSize(.small)
-                .accessibilityLabel("\(title): \(removeToken ? "keep" : "remove") saved token")
+                .accessibilityLabel(
+                    L10n.resource(
+                        "\(title): \(removeToken ? L10n.string("keep") : L10n.string("remove")) saved token"
+                    )
+                )
             }
         }
     }
 
     private var tokenPlaceholder: String {
-        if removeToken { return "Saved token will be removed on Apply" }
-        return destination.credentialID == nil ? "Bearer token" : "Leave blank to keep the saved token"
+        if removeToken {
+            return L10n.string("Saved token will be removed on Apply")
+        }
+        return destination.credentialID == nil
+            ? L10n.string("Bearer token")
+            : L10n.string("Leave blank to keep the saved token")
     }
 }

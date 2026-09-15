@@ -8,28 +8,12 @@ public enum MonitoringExportWarning: Equatable, Sendable {
     case partialRejection
     case receiverWarning
     case deliveryUncertain
-
-    public var message: String {
-        switch self {
-        case .partialRejection: "The receiver accepted the batch with some rejected items."
-        case .receiverWarning: "The receiver accepted the batch with a warning."
-        case .deliveryUncertain: "The interrupted batch may already have reached the receiver."
-        }
-    }
 }
 
 public enum MonitoringExportConfigurationIssue: Equatable, Sendable {
     case invalidInterval
     case invalidEndpoint
     case missingCredential
-
-    public var message: String {
-        switch self {
-        case .invalidInterval: "Choose an export interval between 5 and 300 seconds."
-        case .invalidEndpoint: "Enter a valid receiver URL."
-        case .missingCredential: "The receiver's saved token is missing or invalid."
-        }
-    }
 }
 
 public struct MonitoringSignalExportStatus: Equatable, Sendable {
@@ -93,19 +77,6 @@ public enum MonitoringExportTestOutcome: Equatable, Sendable {
     case failed(OTLPExportFailure)
     case invalidConfiguration(MonitoringExportConfigurationIssue)
     case cancelled
-
-    public var message: String {
-        switch self {
-        case .disabled: "Disabled"
-        case .accepted: "Accepted"
-        case .partial(let rejected): "Accepted with \(rejected) rejected items."
-        case .warning: "Accepted with a receiver warning."
-        case .retrying(let failure): "Retry scheduled. \(failure.message)"
-        case .failed(let failure): failure.message
-        case .invalidConfiguration(let issue): issue.message
-        case .cancelled: "The test was interrupted; delivery is uncertain."
-        }
-    }
 }
 
 public struct MonitoringExportTestResult: Equatable, Sendable {

@@ -16,7 +16,7 @@ struct ClaudeSettingsView: View {
     var body: some View {
         SettingsPage {
             routingSection
-            SettingsSection("Desktop") {
+            SettingsSection(L10n.resource("Desktop")) {
                 SettingsCard {
                     autoModeRow
                         .padding(.vertical, 6)
@@ -34,23 +34,27 @@ struct ClaudeSettingsView: View {
                         title: connectionTitle
                     )
                 }
-                Button(model.isBusy ? "Applying…" : "Apply", systemImage: "checkmark") {
+                Button(
+                    model.isBusy ? L10n.string("Applying…") : L10n.string("Apply"),
+                    systemImage: "checkmark"
+                ) {
                     Task { await applyAllClaudeSettings() }
                 }
                 .keyboardShortcut("s", modifiers: .command)
                 .disabled(!model.canApplyClaudeProducts)
-                .accessibilityHint("Applies pending settings and connects Claude apps")
+                .accessibilityHint(L10n.string("Applies pending settings and connects Claude apps"))
             }
         }
     }
 
     private var routingSection: some View {
-        SettingsSection("Model routing") {
+        SettingsSection(L10n.resource("Model routing")) {
             SettingsCard {
                 Grid(horizontalSpacing: 14, verticalSpacing: 0) {
                     ForEach(ClaudeRoute.all) { route in
                         SettingsMappingRow(route.displayName) {
                             Picker(
+
                                 route.displayName,
                                 selection: Binding<String?>(
                                     get: { model.optionID(for: route.id) },
@@ -60,7 +64,7 @@ struct ClaudeSettingsView: View {
                                     }
                                 )
                             ) {
-                                Text("Not assigned").tag(String?.none)
+                                Text(L10n.resource("Not assigned")).tag(String?.none)
                                 ForEach(model.codexExposureGroups) { group in
                                     Section(group.providerName) {
                                         ForEach(group.options) { option in
@@ -75,26 +79,30 @@ struct ClaudeSettingsView: View {
                 }
             }
             if model.modelOptions.isEmpty {
-                Button("Add a Provider…") { model.selectedSection = .providers }
+                Button(L10n.resource("Add a Provider…")) { model.selectedSection = .providers }
             }
         }
     }
 
     private var connectionTitle: String {
-        if model.connected && model.claudeCodeStatus == .connected { return "Connected" }
-        if model.connected { return "Desktop connected" }
-        if model.claudeCodeStatus == .connected { return "Terminal connected" }
-        return "Not connected"
+        if model.connected && model.claudeCodeStatus == .connected {
+            return L10n.string("Connected")
+        }
+        if model.connected { return L10n.string("Desktop connected") }
+        if model.claudeCodeStatus == .connected {
+            return L10n.string("Terminal connected")
+        }
+        return L10n.string("Not connected")
     }
 
     private var autoModeRow: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 14) {
-                Text("Auto mode")
+                Text(L10n.resource("Auto mode"))
                     .font(SettingsLayout.Typography.rowLabel)
                 Spacer(minLength: 12)
                 Toggle(
-                    "Enable auto mode",
+                    L10n.resource("Enable auto mode"),
                     isOn: Binding(
                         get: { model.autoMode },
                         set: { enabled in Task { await onAutoMode(enabled) } }
@@ -105,7 +113,7 @@ struct ClaudeSettingsView: View {
                 .controlSize(.small)
                 .disabled(model.isBusy)
             }
-            Text("Let Claude decide when to ask before making changes.")
+            Text(L10n.resource("Let Claude decide when to ask before making changes."))
                 .settingsSupportingText()
         }
         .frame(maxWidth: .infinity, alignment: .leading)

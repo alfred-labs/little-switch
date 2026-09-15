@@ -35,11 +35,11 @@ struct ModelCatalogProviderToggleTests {
         defer { host.close() }
         try await host.activateAccessibility()
         let control = try host.nativeView(of: NSSwitch.self)
-        let toggle = try host.element(label: "Enable all models from Ollama")
+        let toggle = try host.element(label: groupLabel("Ollama"))
         let exposedCount = values.count { $0 }
         #expect(control.state == (values.allSatisfy(\.self) ? .on : .off))
-        #expect(toggle.accessibilityValueDescription() == "\(exposedCount) of 2 models enabled")
-        #expect(host.textContent.contains("\(exposedCount) of 2"))
+        #expect(toggle.accessibilityValueDescription() == L10n.string("\(exposedCount) of \(2) models enabled"))
+        #expect(host.textContent.contains(L10n.string("\(exposedCount) of \(2)")))
 
         #expect(toggle.accessibilityPerformPress())
         try await recorder.waitForCall()
@@ -75,8 +75,8 @@ struct ModelCatalogProviderToggleTests {
         host.hosting.rootView = ModelCatalogView(model: model, onExposure: newRecorder.record)
         host.render()
 
-        let toggle = try host.element(label: "Enable all models from Current provider")
-        #expect(toggle.accessibilityValueDescription() == "1 of 1 models enabled")
+        let toggle = try host.element(label: groupLabel("Current provider"))
+        #expect(toggle.accessibilityValueDescription() == L10n.string("\(1) of \(1) model enabled"))
         #expect(try host.nativeView(of: NSSwitch.self).state == .on)
         #expect(toggle.accessibilityPerformPress())
         try await newRecorder.waitForCall()
@@ -104,7 +104,7 @@ struct ModelCatalogProviderToggleTests {
             model.isBusy = !inherited
             host.hosting.rootView = content(disabled: inherited)
             host.render()
-            let toggle = try host.element(label: "Enable all models from Ollama")
+            let toggle = try host.element(label: groupLabel("Ollama"))
             #expect(!toggle.isAccessibilityEnabled())
             _ = toggle.accessibilityPerformPress()
             #expect(try host.nativeView(of: NSSwitch.self).state == .off)
@@ -115,7 +115,7 @@ struct ModelCatalogProviderToggleTests {
         model.isBusy = false
         host.hosting.rootView = content(disabled: false)
         host.render()
-        let toggle = try host.element(label: "Enable all models from Ollama")
+        let toggle = try host.element(label: groupLabel("Ollama"))
         #expect(toggle.isAccessibilityEnabled())
         #expect(toggle.accessibilityPerformPress())
         try await recorder.waitForCall()
@@ -138,7 +138,7 @@ struct ModelCatalogProviderToggleTests {
         )
         defer { host.close() }
         try await host.activateAccessibility()
-        let toggle = try host.element(label: "Enable all models from Ollama")
+        let toggle = try host.element(label: groupLabel("Ollama"))
         #expect(!toggle.isAccessibilityEnabled())
         _ = toggle.accessibilityPerformPress()
         #expect(try host.nativeView(of: NSSwitch.self).state == .on)
@@ -155,7 +155,7 @@ struct ModelCatalogProviderToggleTests {
         )
         defer { host.close() }
         try await host.activateAccessibility()
-        #expect(!host.accessibilityElements.contains { $0.accessibilityLabel() == "Enable all models from Ollama" })
+        #expect(!host.accessibilityElements.contains { $0.accessibilityLabel() == groupLabel("Ollama") })
         #expect(recorder.calls.isEmpty)
     }
 
@@ -177,6 +177,10 @@ struct ModelCatalogProviderToggleTests {
             ],
             codex: CodexConfiguration(excludedModels: excluded)
         )
+    }
+
+    private func groupLabel(_ providerName: String) -> String {
+        L10n.string("Enable all models from \(providerName)")
     }
 }
 

@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "LittleSwitch",
+    defaultLocalization: "en",
     platforms: [.macOS(.v14)],
     products: [
         .library(name: "LittleSwitchWire", targets: ["LittleSwitchWire"]),
@@ -113,6 +114,7 @@ let package = Package(
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
             ],
+            resources: [.process("Resources")],
             linkerSettings: [.linkedFramework("Security")]
         ),
         .target(
@@ -124,7 +126,8 @@ let package = Package(
                 "LittleSwitchSearch",
                 .product(name: "Sparkle", package: "Sparkle"),
                 .product(name: "GRDB", package: "GRDB.swift"),
-            ]
+            ],
+            resources: [.process("Resources")]
         ),
         .executableTarget(
             name: "LittleSwitch",

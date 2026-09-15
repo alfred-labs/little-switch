@@ -13,13 +13,16 @@ struct MenuUsageStatsBlockTests {
         let stats = Self.stats
         #expect(
             stats.period(at: nil).metrics.map(\.title)
-                == ["Input tokens (est.)", "Cached tokens", "Output tokens", "Requests", "Errors", "Web searches"]
+                == [
+                    L10n.string("Input tokens (est.)"), L10n.string("Cached tokens"), L10n.string("Output tokens"),
+                    L10n.string("Requests"), L10n.string("Errors"), L10n.string("Web searches"),
+                ]
         )
         let host = MenuControlTestHost(MenuUsageStatsBlock(stats: stats), height: MenuUsageStatsBlock.fixedHeight)
         defer { host.close() }
         try await host.activateAccessibility()
-        #expect(try host.element(label: "Errors").accessibilityValueDescription() == "0%")
-        #expect(try host.element(label: "Web searches").accessibilityValueDescription() == "0")
+        #expect(try host.element(label: L10n.string("Errors")).accessibilityValueDescription() == "0\u{00a0}%")
+        #expect(try host.element(label: L10n.string("Web searches")).accessibilityValueDescription() == "0")
     }
 
     @Test("The client history opens with its complete thirty-day total and the Overview chart height")
@@ -30,8 +33,12 @@ struct MenuUsageStatsBlockTests {
         try await host.activateAccessibility()
 
         #expect(
-            try host.element(label: "Token history").accessibilityValueDescription()
-                == "30 days, \(1_650_000.formatted(.number)) tokens, includes estimates"
+            try host.element(label: L10n.string("Token history")).accessibilityValueDescription()
+                == accessibility(
+                    label: L10n.string("\(30) days"),
+                    tokens: 1_650_000,
+                    estimated: true
+                )
         )
         #expect(
             MenuUsageStatsBlock.fixedHeight
@@ -92,14 +99,15 @@ struct MenuUsageStatsBlockTests {
         defer { host.close() }
         try await host.activateAccessibility()
 
-        #expect(try host.element(label: "Token history").accessibilityPerformDecrement())
+        #expect(try host.element(label: L10n.string("Token history")).accessibilityPerformDecrement())
         try await expectPeriod(stats.period(at: 28), in: host)
         for _ in 0..<2 {
-            #expect(try host.element(label: "Token history").accessibilityPerformIncrement())
+            #expect(try host.element(label: L10n.string("Token history")).accessibilityPerformIncrement())
             try await expectPeriod(stats.period(at: 29), in: host)
         }
-        let actions = try #require(try host.element(label: "Token history").object.accessibilityCustomActions?())
-        let reset = try #require(actions.first { $0.name == "Show 30 days" })
+        let actions = try #require(
+            try host.element(label: L10n.string("Token history")).object.accessibilityCustomActions?())
+        let reset = try #require(actions.first { $0.name == L10n.string("Show 30 days") })
         let performReset = try #require(reset.handler)
         #expect(performReset())
         try await expectPeriod(stats.period(at: nil), in: host)
@@ -119,8 +127,10 @@ struct MenuUsageStatsBlockTests {
         )
         defer { host.close() }
         try await host.activateAccessibility()
-        for label in ["Errors", "Web searches"] {
-            #expect(try host.element(label: label).accessibilityValueDescription() == "Unavailable for this period")
+        for label in [L10n.string("Errors"), L10n.string("Web searches")] {
+            #expect(
+                try host.element(label: label).accessibilityValueDescription()
+                    == L10n.string("Unavailable for this period"))
         }
         #expect(host.hosting.fittingSize.height == MenuUsageStatsBlock.fixedHeight)
     }
@@ -132,7 +142,7 @@ struct MenuUsageStatsBlockTests {
         _ = try await eventually(description: "the client token period and six insights") {
             try await MainActor.run {
                 host.render()
-                let chart = try host.element(label: "Token history")
+                let chart = try host.element(label: L10n.string("Token history"))
                 let values = try period.metrics.map {
                     try host.element(label: $0.title).accessibilityValueDescription()
                 }
@@ -170,4 +180,13 @@ struct MenuUsageStatsBlockTests {
             )
         )
     }
+}
+
+private func accessibility(label: String, tokens: Int, estimated: Bool = false) -> String {
+    let localizedTotal = L10n.string(
+        "\(label), \(GatewayUsageFormat.count(tokens)) tokens"
+    )
+    return estimated
+        ? L10n.string("\(localizedTotal), includes estimates")
+        : localizedTotal
 }

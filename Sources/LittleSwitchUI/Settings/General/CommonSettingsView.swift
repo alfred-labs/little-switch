@@ -11,17 +11,17 @@ struct CommonSettingsView: View {
 
     var body: some View {
         SettingsPage {
-            SettingsSection("Startup") {
+            SettingsSection(L10n.resource("Startup")) {
                 SettingsCard {
                     launchAtLoginRow
                         .padding(.vertical, 6)
                 }
             }
-            SettingsSection("Model indicator") {
+            SettingsSection(L10n.resource("Model indicator")) {
                 SettingsCard {
                     modelIndicatorRow
                         .settingsRow()
-                    LabeledContent("Preview") {
+                    LabeledContent(L10n.string("Preview")) {
                         Text(
                             ["Opus", model.configuration.modelIndicator.symbol].compactMap(\.self).joined(
                                 separator: " ")
@@ -30,11 +30,11 @@ struct CommonSettingsView: View {
                     }
                     .settingsRow()
                 }
-                Text("Mark routed models in Claude's model picker.")
+                Text(L10n.resource("Mark routed models in Claude's model picker."))
                     .settingsSupportingText()
-                    .help("The symbol changes display names only. Routing is unchanged.")
+                    .help(L10n.resource("The symbol changes display names only. Routing is unchanged."))
             }
-            SettingsSection("Software updates") {
+            SettingsSection(L10n.resource("Software updates")) {
                 SettingsCard {
                     softwareUpdateRow
                         .padding(.vertical, 6)
@@ -44,9 +44,9 @@ struct CommonSettingsView: View {
     }
 
     private var modelIndicatorRow: some View {
-        LabeledContent("Catalog symbol") {
+        LabeledContent(L10n.string("Catalog symbol")) {
             Picker(
-                "Catalog symbol",
+                L10n.resource("Catalog symbol"),
                 selection: Binding(
                     get: { model.configuration.modelIndicator },
                     set: { indicator in
@@ -55,7 +55,7 @@ struct CommonSettingsView: View {
                 )
             ) {
                 ForEach(ModelIndicator.allCases, id: \.self) { indicator in
-                    Text(indicator.label).tag(indicator)
+                    Text(indicator.localizedLabel).tag(indicator)
                 }
             }
             .labelsHidden()
@@ -67,13 +67,13 @@ struct CommonSettingsView: View {
     private var launchAtLoginRow: some View {
         HStack(alignment: .top, spacing: 14) {
             VStack(alignment: .leading, spacing: 3) {
-                Text("Launch at login")
+                Text(L10n.resource("Launch at login"))
                     .font(SettingsLayout.Typography.rowLabel)
-                Text("Open LittleSwitch automatically when you log in to your Mac.")
+                Text(L10n.resource("Open LittleSwitch automatically when you log in to your Mac."))
                     .font(SettingsLayout.Typography.supporting)
                     .foregroundStyle(.secondary)
                 if model.launchAtLoginRequiresApproval {
-                    Button("Open Login Items…") {
+                    Button(L10n.resource("Open Login Items…")) {
                         onOpenLoginItems()
                     }
                     .buttonStyle(.link)
@@ -87,7 +87,7 @@ struct CommonSettingsView: View {
                         .controlSize(.small)
                 }
                 Toggle(
-                    "Launch at login",
+                    L10n.resource("Launch at login"),
                     isOn: Binding(
                         get: { model.launchAtLoginEnabled },
                         set: { enabled in
@@ -110,21 +110,24 @@ struct CommonSettingsView: View {
     private var softwareUpdateRow: some View {
         HStack(alignment: .top, spacing: 14) {
             VStack(alignment: .leading, spacing: 3) {
-                Text("Install updates automatically")
+                Text(L10n.resource("Install updates automatically"))
                     .font(SettingsLayout.Typography.rowLabel)
                 switch updater.availability {
                 case .enabled:
                     Text(
-                        "Download and install updates in the background."
+                        L10n.resource("Download and install updates in the background.")
                     )
                     .font(SettingsLayout.Typography.supporting)
                     .foregroundStyle(.secondary)
                     if let lastChecked = updater.lastUpdateCheckDate {
-                        Text("Last checked \(lastChecked.formatted(date: .abbreviated, time: .shortened)).")
-                            .font(SettingsLayout.Typography.supporting)
-                            .foregroundStyle(.secondary)
+                        Text(
+                            L10n.resource(
+                                "Last checked \(lastChecked.formatted(date: .abbreviated, time: .shortened)).")
+                        )
+                        .font(SettingsLayout.Typography.supporting)
+                        .foregroundStyle(.secondary)
                     }
-                    Button("Check for Updates Now…") {
+                    Button(L10n.resource("Check for Updates Now…")) {
                         updater.checkForUpdates(nil)
                     }
                     .buttonStyle(.link)
@@ -138,7 +141,7 @@ struct CommonSettingsView: View {
             Spacer(minLength: 12)
             if case .enabled = updater.availability {
                 Toggle(
-                    "Install updates automatically",
+                    L10n.resource("Install updates automatically"),
                     isOn: Binding(
                         get: {
                             updater.automaticallyChecksForUpdates

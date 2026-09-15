@@ -25,8 +25,8 @@ extension LittleSwitchApplicationDelegate {
     func restoreOpenCodeSettings() async {
         guard
             confirmDiscardingPendingChanges(
-                "Restore the previous user-level OpenCode settings?",
-                actionTitle: "Restore"
+                L10n.string("Restore the previous user-level OpenCode settings?"),
+                actionTitle: L10n.string("Restore")
             )
         else {
             return

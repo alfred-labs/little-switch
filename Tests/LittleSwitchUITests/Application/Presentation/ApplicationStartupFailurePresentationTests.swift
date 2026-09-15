@@ -44,8 +44,8 @@ struct StartupFailurePresentationTests {
         #expect(model.gatewayActivity == .unavailable)
         #expect(model.errorMessage == "Gateway failed")
         #expect(!model.isBusy)
-        #expect(synchronizedMenu?.title == "Gateway unavailable")
-        #expect(synchronizedMenu?.accessibilityValue == "Gateway unavailable")
+        #expect(synchronizedMenu?.title == L10n.string("Gateway unavailable"))
+        #expect(synchronizedMenu?.accessibilityValue == L10n.string("Gateway unavailable"))
     }
 
     @Test("An early startup failure preserves the shell model and synchronizes unavailable state")

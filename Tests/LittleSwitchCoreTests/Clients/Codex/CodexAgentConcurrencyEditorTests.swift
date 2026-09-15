@@ -9,28 +9,33 @@ struct CodexAgentConcurrencyEditorTests {
         let expected: [(CodexAgentConcurrencyEditor.Error, String)] = [
             (
                 .inlineAgentsTable,
-                "The `agents` entry in ~/.codex/config.toml is an inline table. "
-                    + "Rewrite it as an `[agents]` section and try again."
+                CoreL10n.string(
+                    "The `agents` entry in ~/.codex/config.toml is an inline table. Rewrite it as an `[agents]` section and try again."
+                )
             ),
             (
                 .unsupportedAgentsSyntax,
-                "The `agents` entry in ~/.codex/config.toml is not a table. "
-                    + "Rewrite it as an `[agents]` section and try again."
+                CoreL10n.string(
+                    "The `agents` entry in ~/.codex/config.toml is not a table. Rewrite it as an `[agents]` section and try again."
+                )
             ),
             (
                 .legacyAlias,
-                "The legacy `agents.max_threads` key in ~/.codex/config.toml conflicts "
-                    + "with the managed concurrency limit. Remove it and try again."
+                CoreL10n.string(
+                    "The legacy `agents.max_threads` key in ~/.codex/config.toml conflicts with the managed concurrency limit. Remove it and try again."
+                )
             ),
             (
                 .nonIntegerManagedValue,
-                "The `agents.max_concurrent_threads_per_session` value in ~/.codex/config.toml "
-                    + "is not an integer. Fix it and try again."
+                CoreL10n.string(
+                    "The `agents.max_concurrent_threads_per_session` value in ~/.codex/config.toml is not an integer. Fix it and try again."
+                )
             ),
             (
                 .unsupportedManagedSyntax,
-                "The `agents.max_concurrent_threads_per_session` assignments in ~/.codex/config.toml "
-                    + "conflict. Keep a single one and try again."
+                CoreL10n.string(
+                    "The `agents.max_concurrent_threads_per_session` assignments in ~/.codex/config.toml conflict. Keep a single one and try again."
+                )
             ),
         ]
 

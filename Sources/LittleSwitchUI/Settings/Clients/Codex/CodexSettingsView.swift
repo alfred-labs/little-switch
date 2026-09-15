@@ -15,11 +15,11 @@ struct CodexSettingsView: View {
             routingSection
             if model.modelOptions.isEmpty {
                 ContentUnavailableView {
-                    Label("No models", systemImage: "square.stack.3d.up")
+                    Label(L10n.resource("No models"), systemImage: "square.stack.3d.up")
                 } description: {
-                    Text("Add and refresh a provider to make its models available.")
+                    Text(L10n.resource("Add and refresh a provider to make its models available."))
                 } actions: {
-                    Button("Add a Provider…") { model.selectedSection = .providers }
+                    Button(L10n.resource("Add a Provider…")) { model.selectedSection = .providers }
                 }
             } else {
                 ModelCatalogView(model: model, onExposure: onExposure)
@@ -32,7 +32,12 @@ struct CodexSettingsView: View {
                 } else {
                     SettingsConnectionStatus(connected: model.codexConnected)
                 }
-                Button(model.isBusy ? "Applying…" : model.codexPrimaryActionTitle, systemImage: "checkmark") {
+                Button(
+                    model.isBusy
+                        ? L10n.string("Applying…")
+                        : model.codexPrimaryActionTitle,
+                    systemImage: "checkmark"
+                ) {
                     let action = model.codexPrimaryAction
                     Task {
                         switch action {
@@ -50,12 +55,12 @@ struct CodexSettingsView: View {
     }
 
     private var routingSection: some View {
-        SettingsSection("Model routing", subtitle: "For Codex Desktop and CLI.") {
+        SettingsSection(L10n.resource("Model routing"), subtitle: L10n.resource("For Codex Desktop and CLI.")) {
             SettingsCard {
                 Grid(horizontalSpacing: 14, verticalSpacing: 0) {
-                    SettingsMappingRow("Default model") {
+                    SettingsMappingRow(L10n.string("Default model")) {
                         Picker(
-                            "Default model",
+                            L10n.resource("Default model"),
                             selection: Binding<String?>(
                                 get: { model.codexDefaultOptionID },
                                 set: { optionID in
@@ -70,36 +75,38 @@ struct CodexSettingsView: View {
                         }
                         .disabled(model.isBusy || model.codexExposedModelOptions.isEmpty)
                     }
-                    SettingsMappingRow("Custom approval review") {
+                    SettingsMappingRow(L10n.string("Custom approval review")) {
                         Picker(
-                            "Custom approval review model",
+                            L10n.resource("Custom approval review model"),
                             selection: Binding<ModelMapping?>(
                                 get: { model.configuration.codex.autoReviewModel },
                                 set: { mapping in Task { await onAutoReview(mapping) } }
                             )
                         ) {
-                            Text("Same as default").tag(nil as ModelMapping?)
+                            Text(L10n.resource("Same as default")).tag(nil as ModelMapping?)
                             ForEach(model.modelOptions) { option in
                                 Text(option.label).tag(Optional(option.mapping))
                             }
                             if let mapping = model.configuration.codex.autoReviewModel {
                                 if model.hasUnavailableCodexAutoReviewModel {
-                                    Text("Unavailable: \(mapping.modelID)").tag(Optional(mapping))
+                                    Text(L10n.resource("Unavailable: \(mapping.modelID)")).tag(Optional(mapping))
                                 }
                             }
                         }
                         .disabled(model.isBusy || model.modelOptions.isEmpty)
-                        .help("Reviews requests from custom models for permissions outside the sandbox.")
+                        .help(L10n.resource("Reviews requests from custom models for permissions outside the sandbox."))
                     }
                 }
             }
-            Text("Native OpenAI models keep Codex's own approval reviewer.")
+            Text(L10n.resource("Native OpenAI models keep Codex's own approval reviewer."))
                 .font(SettingsLayout.Typography.supporting)
                 .foregroundStyle(.secondary)
             if model.hasUnavailableCodexAutoReviewModel {
-                Label("Choose an available approval review model.", systemImage: "exclamationmark.triangle")
-                    .font(SettingsLayout.Typography.supporting)
-                    .foregroundStyle(.orange)
+                Label(
+                    L10n.resource("Choose an available approval review model."), systemImage: "exclamationmark.triangle"
+                )
+                .font(SettingsLayout.Typography.supporting)
+                .foregroundStyle(.orange)
             }
         }
     }

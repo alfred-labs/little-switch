@@ -159,12 +159,8 @@ struct GatewaySemanticsTests {
         #expect(route.catalogDisplayName(indicator: .none) == "Opus")
     }
 
-    @Test("Model indicator options expose every label and symbol")
+    @Test("Model indicator options expose every symbol")
     func modelIndicatorOptions() {
-        #expect(
-            ModelIndicator.allCases.map(\.label) == [
-                "None", "Swap ⇄", "Equilibrium ⇌", "Routed ⇢", "Maps to ↦",
-            ])
         let symbols: [String?] = ModelIndicator.allCases.map(\.symbol)
         #expect(symbols == [nil, "⇄", "⇌", "⇢", "↦"])
     }

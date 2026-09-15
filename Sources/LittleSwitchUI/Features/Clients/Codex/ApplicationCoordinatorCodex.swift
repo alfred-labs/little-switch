@@ -27,6 +27,7 @@ extension ApplicationCoordinator {
     }
 
     public func connectCodex() async throws -> CoordinatorSnapshot {
+        _ = await responsesWireVerdicts()
         let profileManager = try codexProfileDependency()
         var candidate = pendingCodexSettings?.applying(to: configuration) ?? configuration
         candidate.codex.connected = true
@@ -36,7 +37,8 @@ extension ApplicationCoordinator {
         }
         let signature = try CodexManagedProfileSignature.resolve(
             providers: candidate.providers,
-            configuration: candidate.codex
+            configuration: candidate.codex,
+            responsesWireVerdicts: catalogResponsesWireVerdicts
         )
 
         let previous = configuration
@@ -52,6 +54,7 @@ extension ApplicationCoordinator {
                 signature: signature
             )
             await replaceGatewayRouting(with: candidate)
+            candidate = retainingCurrentImageObservations(in: candidate)
             try configurationStore.save(candidate)
             configuration = candidate
             pendingCodexSettings = nil
@@ -86,6 +89,7 @@ extension ApplicationCoordinator {
     }
 
     public func applyCodexSettings() async throws -> CoordinatorSnapshot {
+        _ = await responsesWireVerdicts()
         guard configuration.codex.connected, hasPendingCodexChanges else {
             return await snapshot()
         }
@@ -98,7 +102,8 @@ extension ApplicationCoordinator {
         }
         let signature = try CodexManagedProfileSignature.resolve(
             providers: candidate.providers,
-            configuration: candidate.codex
+            configuration: candidate.codex,
+            responsesWireVerdicts: catalogResponsesWireVerdicts
         )
 
         let previous = configuration
@@ -113,6 +118,7 @@ extension ApplicationCoordinator {
                 signature: signature
             )
             await replaceGatewayRouting(with: candidate)
+            candidate = retainingCurrentImageObservations(in: candidate)
             try configurationStore.save(candidate)
             configuration = candidate
             pendingCodexSettings = nil
@@ -246,6 +252,7 @@ extension ApplicationCoordinator {
         profileManager: any CodexProfileManaging
     ) async -> Bool {
         var succeeded = true
+        let previous = retainingCurrentImageObservations(in: previous)
         configuration = previous
         do {
             try configurationStore.save(previous)
@@ -300,7 +307,8 @@ extension ApplicationCoordinator {
         }
         let currentSignature = try? CodexManagedProfileSignature.resolve(
             providers: configuration.providers,
-            configuration: configuration.codex
+            configuration: configuration.codex,
+            responsesWireVerdicts: catalogResponsesWireVerdicts
         )
         return currentSignature != appliedSnapshot.signature
     }

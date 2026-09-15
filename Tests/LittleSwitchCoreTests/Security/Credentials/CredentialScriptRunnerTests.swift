@@ -245,40 +245,47 @@ struct CredentialScriptRunnerTests {
         #expect(
             CredentialScriptError(reason: .missingScriptPath, standardError: "")
                 .errorDescription
-                == "No credential script is chosen."
+                == CoreL10n.string("No credential script is chosen.")
         )
         #expect(
             CredentialScriptError(reason: .missingScriptFile, standardError: "")
                 .errorDescription
-                == "The credential script file could not be found. "
-                + "Re-choose it in the provider editor."
+                == CoreL10n.string(
+                    "The credential script file could not be found. Re-choose it in the provider editor."
+                )
         )
         #expect(
             CredentialScriptError(reason: .emptyOutput, standardError: "")
                 .errorDescription
-                == "The credential script printed no token."
+                == CoreL10n.string("The credential script printed no token.")
         )
         #expect(
             CredentialScriptError(reason: .timedOut, standardError: "")
                 .errorDescription
-                == "The credential script did not finish in time."
+                == CoreL10n.string("The credential script did not finish in time.")
         )
         #expect(
             CredentialScriptError(reason: .exit(status: 2), standardError: "")
                 .errorDescription
-                == "The credential script exited with status 2."
+                == scriptFailure(status: 2)
         )
         #expect(
             CredentialScriptError(reason: .exit(status: 2), standardError: "vault down")
                 .errorDescription
-                == "The credential script exited with status 2. vault down"
+                == scriptFailure(status: 2, standardError: "vault down")
         )
         #expect(
             CredentialScriptError(reason: .interrupted, standardError: "killed")
                 .errorDescription
-                == "The credential script was interrupted."
+                == CoreL10n.string("The credential script was interrupted.")
         )
     }
+}
+
+private func scriptFailure(status: Int32, standardError: String = "") -> String {
+    let prefix = CoreL10n.string("The credential script exited with status \(status).")
+    guard !standardError.isEmpty else { return prefix }
+    return CoreL10n.string("\(prefix) \(standardError)")
 }
 
 /// Collects one async result for polling, so a test can bound how long it

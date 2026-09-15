@@ -14,24 +14,24 @@ struct AppModelLaunchAtLoginTests {
                 enabled: false,
                 canChange: true,
                 requiresApproval: false,
-                accessibilityValue: "Launch at login disabled",
-                accessibilityHint: "LittleSwitch does not open automatically"
+                accessibilityValue: L10n.string("Launch at login disabled"),
+                accessibilityHint: L10n.string("LittleSwitch does not open automatically")
             ),
             LaunchAtLoginPresentationExpectation(
                 status: .enabled,
                 enabled: true,
                 canChange: true,
                 requiresApproval: false,
-                accessibilityValue: "Launch at login enabled",
-                accessibilityHint: "LittleSwitch opens in the menu bar when you log in"
+                accessibilityValue: L10n.string("Launch at login enabled"),
+                accessibilityHint: L10n.string("LittleSwitch opens in the menu bar when you log in")
             ),
             LaunchAtLoginPresentationExpectation(
                 status: .requiresApproval,
                 enabled: false,
                 canChange: true,
                 requiresApproval: true,
-                accessibilityValue: "Approval required",
-                accessibilityHint: "Approve LittleSwitch in Login Items"
+                accessibilityValue: L10n.string("Approval required"),
+                accessibilityHint: L10n.string("Approve LittleSwitch in Login Items")
             ),
             LaunchAtLoginPresentationExpectation(
                 status: .unavailable,
@@ -41,8 +41,8 @@ struct AppModelLaunchAtLoginTests {
                 // possible, so the control must stay actionable.
                 canChange: true,
                 requiresApproval: false,
-                accessibilityValue: "Launch at login unavailable",
-                accessibilityHint: "LittleSwitch is not registered with Login Items"
+                accessibilityValue: L10n.string("Launch at login unavailable"),
+                accessibilityHint: L10n.string("LittleSwitch is not registered with Login Items")
             ),
         ]
 

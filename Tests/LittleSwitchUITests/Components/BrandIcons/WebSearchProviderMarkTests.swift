@@ -10,10 +10,10 @@ struct WebSearchProviderMarkTests {
     @Test("Each provider mark parses into a 24 point template image")
     func templateImages() throws {
         let images = [
-            ("Firecrawl", try #require(FirecrawlIcon.templateImage())),
-            ("Tavily", try #require(TavilyIcon.templateImage())),
-            ("Brave", try #require(BraveIcon.templateImage())),
-            ("Exa", try #require(ExaIcon.templateImage())),
+            (L10n.string("Firecrawl"), try #require(FirecrawlIcon.templateImage())),
+            (L10n.string("Tavily"), try #require(TavilyIcon.templateImage())),
+            (L10n.string("Brave"), try #require(BraveIcon.templateImage())),
+            (L10n.string("Exa"), try #require(ExaIcon.templateImage())),
         ]
 
         for (name, image) in images {
@@ -25,10 +25,10 @@ struct WebSearchProviderMarkTests {
     @Test("Rendered marks draw ink in the mark area and stay clear in the corners")
     func renderedInk() throws {
         let images = [
-            ("Firecrawl", try #require(FirecrawlIcon.templateImage())),
-            ("Tavily", try #require(TavilyIcon.templateImage())),
-            ("Brave", try #require(BraveIcon.templateImage())),
-            ("Exa", try #require(ExaIcon.templateImage())),
+            (L10n.string("Firecrawl"), try #require(FirecrawlIcon.templateImage())),
+            (L10n.string("Tavily"), try #require(TavilyIcon.templateImage())),
+            (L10n.string("Brave"), try #require(BraveIcon.templateImage())),
+            (L10n.string("Exa"), try #require(ExaIcon.templateImage())),
         ]
 
         for (name, image) in images {

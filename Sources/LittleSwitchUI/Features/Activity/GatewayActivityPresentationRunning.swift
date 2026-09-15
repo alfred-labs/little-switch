@@ -22,8 +22,8 @@ extension GatewayActivityPresentation {
         }
         let accessibilityValue =
             snapshot.totalRunning == 0 && snapshot.totalWaiting == 0
-            ? "Gateway idle"
-            : "\(snapshot.totalRunning) running, \(snapshot.totalWaiting) waiting"
+            ? L10n.string("Gateway idle")
+            : L10n.string("\(snapshot.totalRunning) running, \(snapshot.totalWaiting) waiting")
         let dashboard: Menu.Dashboard?
         if !providers.isEmpty || snapshot.providers.contains(where: \.isRemoved) {
             dashboard = Menu.Dashboard(
@@ -64,11 +64,11 @@ extension GatewayActivityPresentation {
 
     private static func engineName(_ provider: WebSearchProvider) -> String {
         switch provider {
-        case .firecrawl: "Firecrawl"
-        case .tavily: "Tavily"
-        case .brave: "Brave"
-        case .exa: "Exa"
-        case .disabled: "Off"
+        case .firecrawl: L10n.string("Firecrawl")
+        case .tavily: L10n.string("Tavily")
+        case .brave: L10n.string("Brave")
+        case .exa: L10n.string("Exa")
+        case .disabled: L10n.string("Off")
         }
     }
 }

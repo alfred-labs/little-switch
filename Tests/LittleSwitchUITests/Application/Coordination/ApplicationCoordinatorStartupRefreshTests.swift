@@ -53,14 +53,14 @@ extension ApplicationCoordinatorTests {
         let startup = try await coordinator.start()
         #expect(startup.configuration.providers.first?.models == [DiscoveredModel(id: "fresh")])
         #expect(startup.proxyRunning)
-        #expect(await transport.requestCount == 2)
+        #expect(await transport.discoveryRequestCount == 2)
         #expect(await transport.catalogRequestCount == 1)
 
         async let first = coordinator.refreshProvider(id: providerID)
         async let second = coordinator.refreshProvider(id: providerID)
         _ = try await (first, second)
 
-        #expect(await transport.requestCount == 4)
+        #expect(await transport.discoveryRequestCount == 4)
         #expect(await transport.catalogRequestCount == 2)
         #expect(await transport.requestURLs.filter { $0.hasSuffix("/api/version") }.count == 2)
 
@@ -76,7 +76,10 @@ actor DelayedCatalogTransport: UpstreamTransport {
     private(set) var requestURLs: [String] = []
     private(set) var didShutdown = false
 
-    var requestCount: Int { requestURLs.count }
+    // Background capability probes are not catalog refresh exchanges.
+    var discoveryRequestCount: Int {
+        requestURLs.filter { $0.hasSuffix("/api/version") || $0.hasSuffix("/v1/models") }.count
+    }
     var catalogRequestCount: Int {
         requestURLs.filter { $0.hasSuffix("/v1/models") }.count
     }

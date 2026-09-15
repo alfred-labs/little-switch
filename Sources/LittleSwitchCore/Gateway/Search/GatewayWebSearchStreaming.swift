@@ -113,24 +113,24 @@ extension GatewayResponder {
         } catch {
             throw GatewayAnthropicLiveError.providerNotReady
         }
-        trafficRecorder.record(
-            eventID: context.eventID,
-            action: .upstreamRequest(
-                trafficUpstreamRequest(
-                    attempt: attempt,
-                    target: context.target,
-                    request: request,
-                    body: body,
-                    streaming: true
-                )
-            )
+        let upstreamTraffic = trafficUpstreamRequest(
+            attempt: attempt,
+            target: context.target,
+            request: request,
+            body: body,
+            streaming: true
         )
 
         let response: GatewayModelExchange
         do {
             try Task.checkCancellation()
             response = try await executeModelRequest(
-                request, body: body, wire: .anthropic, eventID: context.eventID, attempt: attempt
+                request,
+                body: body,
+                traffic: upstreamTraffic,
+                wire: .anthropic,
+                eventID: context.eventID,
+                attempt: attempt
             )
             try Task.checkCancellation()
         } catch is CancellationError {

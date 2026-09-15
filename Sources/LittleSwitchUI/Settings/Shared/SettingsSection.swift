@@ -2,11 +2,15 @@ import SwiftUI
 
 /// Peer headings always sit above their cards, including routing and app settings.
 struct SettingsSection<Content: View>: View {
-    let title: String
-    let subtitle: String?
+    let title: LocalizedStringResource
+    let subtitle: LocalizedStringResource?
     let content: Content
 
-    init(_ title: String, subtitle: String? = nil, @ViewBuilder content: () -> Content) {
+    init(
+        _ title: LocalizedStringResource,
+        subtitle: LocalizedStringResource? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
         self.title = title
         self.subtitle = subtitle
         self.content = content()
@@ -21,10 +25,10 @@ struct SettingsSection<Content: View>: View {
 }
 
 struct SettingsSectionHeader: View {
-    let title: String
-    let subtitle: String?
+    let title: LocalizedStringResource
+    let subtitle: LocalizedStringResource?
 
-    init(_ title: String, subtitle: String? = nil) {
+    init(_ title: LocalizedStringResource, subtitle: LocalizedStringResource? = nil) {
         self.title = title
         self.subtitle = subtitle
     }

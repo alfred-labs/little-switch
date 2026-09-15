@@ -33,7 +33,12 @@ struct MonitoringDraftRetentionTests {
         )
         let pending = MonitoringPendingSettings(configuration: .init(), hasTypedToken: true)
         let model = AppModel(snapshot: await coordinator.setMonitoringDraft(pending))
-        #expect(model.pendingChangesWarning == "Unapplied changes for Monitoring will be discarded.")
+        #expect(
+            model.pendingChangesWarning
+                == L10n.string(
+                    "Unapplied changes for \(L10n.string("Monitoring")) will be discarded."
+                )
+        )
         #expect(model.monitoringDraft == pending)
         model.apply(await coordinator.setMonitoringDraft(.init(configuration: .init())))
         #expect(!model.hasPendingChanges)

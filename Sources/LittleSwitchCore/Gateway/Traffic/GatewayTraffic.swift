@@ -84,22 +84,22 @@ extension GatewayResponder {
         } catch {
             return anthropicError(status: .badGateway, message: "Provider retry failed")
         }
-        trafficRecorder.record(
-            eventID: context.eventID,
-            action: .upstreamRequest(
-                trafficUpstreamRequest(
-                    attempt: 1,
-                    target: context.target,
-                    request: retryRequest,
-                    body: replacement.body,
-                    streaming: context.streaming
-                )
-            )
+        let upstreamTraffic = trafficUpstreamRequest(
+            attempt: 1,
+            target: context.target,
+            request: retryRequest,
+            body: replacement.body,
+            streaming: context.streaming
         )
         do {
             try Task.checkCancellation()
             let retryResponse = try await executeModelRequest(
-                retryRequest, body: replacement.body, wire: .anthropic, eventID: context.eventID, attempt: 1
+                retryRequest,
+                body: replacement.body,
+                traffic: upstreamTraffic,
+                wire: .anthropic,
+                eventID: context.eventID,
+                attempt: 1
             )
             try Task.checkCancellation()
             return anthropicInitialUsageResponse(

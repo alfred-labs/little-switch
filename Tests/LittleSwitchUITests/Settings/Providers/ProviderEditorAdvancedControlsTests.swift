@@ -16,12 +16,12 @@ struct ProviderEditorAdvancedControlsTests {
         defer { host.close() }
         try await host.activateAccessibility()
 
-        #expect(host.textContent.contains("Compatibility"))
-        #expect(!host.textContent.contains("Native /v1/responses · learned"))
-        let disclosure = try host.element(label: "Connection details")
+        #expect(host.textContent.contains(L10n.string("Compatibility")))
+        #expect(!host.textContent.contains(L10n.string("Native /v1/responses · learned")))
+        let disclosure = try host.element(label: L10n.string("Connection details"))
         #expect(disclosure.accessibilityPerformPress())
         host.render()
-        #expect(host.textContent.contains("Native /v1/responses · learned"))
+        #expect(host.textContent.contains(L10n.string("Native /v1/responses · learned")))
     }
 
     @Test("Folding advanced settings preserves a model's manual context declaration")
@@ -31,9 +31,9 @@ struct ProviderEditorAdvancedControlsTests {
         defer { host.close() }
         try await host.activateAccessibility()
 
-        let unavailable = try host.element(label: "Expose 1M context for large")
+        let unavailable = try host.element(label: contextLabel("large"))
         #expect(!unavailable.isAccessibilityEnabled())
-        let manual = try host.element(label: "Expose 1M context for unknown")
+        let manual = try host.element(label: contextLabel("unknown"))
         #expect(manual.isAccessibilityEnabled())
         // The Grid publishes an AX proxy; dispatch through its native switch.
         let enabledSwitch = nativeSwitches(in: host.hosting).first(where: \.isEnabled)
@@ -44,12 +44,16 @@ struct ProviderEditorAdvancedControlsTests {
 
         state.expanded = false
         host.render()
-        #expect(!host.textContent.contains("Model context"))
+        #expect(!host.textContent.contains(L10n.string("Model context")))
         state.expanded = true
         host.render()
         #expect(state.draft.contextOverrides == ["unknown": 1_000_000])
-        let restored = try host.element(label: "Expose 1M context for unknown")
+        let restored = try host.element(label: contextLabel("unknown"))
         #expect((restored.accessibilityValue() as? NSNumber)?.boolValue == true)
+    }
+
+    private func contextLabel(_ modelID: String) -> String {
+        L10n.string("Expose 1M context for \(modelID)")
     }
 
     private func nativeSwitches(in view: NSView) -> [NSSwitch] {

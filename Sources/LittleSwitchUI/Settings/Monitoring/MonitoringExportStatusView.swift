@@ -11,25 +11,33 @@ struct MonitoringExportStatusView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let accepted = status.lastAccepted {
-                LabeledContent("Last accepted", value: accepted.formatted(date: .omitted, time: .standard))
+                LabeledContent(L10n.string("Last accepted"), value: accepted.formatted(date: .omitted, time: .standard))
             }
-            if let message = status.configurationIssue?.message ?? status.failure?.message ?? status.warning?.message {
+            if let message = MonitoringExportStatusCopy.message(for: status) {
                 Label(message, systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
             }
             if let testResult, testResult != .disabled {
-                Text("Last test: \(testResult.message)")
+                Text(L10n.resource("Last test: \(MonitoringExportStatusCopy.message(for: testResult))"))
                     .textSelection(.enabled)
-                    .help("Result of the last synthetic export using the applied settings.")
+                    .help(L10n.resource("Result of the last synthetic export using the applied settings."))
             }
             if status.nextRetry != nil || status.queuedCount > 0 || status.droppedCount > 0 {
-                DisclosureGroup("Delivery details", isExpanded: $showsDeliveryDetails) {
+                DisclosureGroup(
+                    L10n.string("Delivery details"),
+                    isExpanded: $showsDeliveryDetails
+                ) {
                     VStack(alignment: .leading, spacing: 6) {
                         if let retry = status.nextRetry {
-                            LabeledContent("Next retry", value: retry.formatted(date: .omitted, time: .standard))
+                            LabeledContent(
+                                L10n.string("Next retry"), value: retry.formatted(date: .omitted, time: .standard))
                         }
                         Text(
-                            "\(status.queuedCount) queued · \(status.queuedBytes) bytes · \(status.droppedCount) dropped"
+                            queueSummary(
+                                queued: status.queuedCount,
+                                bytes: status.queuedBytes,
+                                dropped: status.droppedCount
+                            )
                         )
                         .monospacedDigit()
                     }
@@ -37,14 +45,23 @@ struct MonitoringExportStatusView: View {
                 }
                 .disclosureGroupStyle(
                     SettingsDisclosureGroupStyle(
-                        accessibilityHint: "Show or hide \(title.lowercased()) delivery details.",
+                        accessibilityHint: L10n.string(
+                            "Show or hide \(title.lowercased()) delivery details."
+                        ),
                         minimumHeaderHeight: SettingsLayout.disclosureDetailRowMinimumHeight
                     ) {}
                 )
-                .accessibilityLabel("\(title) delivery details")
+                .accessibilityLabel(L10n.resource("\(title) delivery details"))
             }
         }
         .font(SettingsLayout.Typography.supporting)
         .foregroundStyle(.secondary)
+    }
+
+    private func queueSummary(queued: Int, bytes: Int, dropped: UInt64) -> String {
+        if bytes == 1 {
+            return L10n.string("\(queued) queued · \(bytes) byte · \(dropped) dropped")
+        }
+        return L10n.string("\(queued) queued · \(bytes) bytes · \(dropped) dropped")
     }
 }

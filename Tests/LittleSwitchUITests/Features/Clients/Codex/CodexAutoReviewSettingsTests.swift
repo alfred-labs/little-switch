@@ -105,7 +105,7 @@ struct CodexAutoReviewSettingsTests {
         #expect(!model.canPerformCodexPrimaryAction)
         #expect(
             model.codexPrimaryActionAccessibilityHint
-                == "Choose an available approval review model before applying changes")
+                == L10n.string("Choose an available approval review model before applying changes"))
         model.configuration.codex.autoReviewModel = nil
         #expect(!model.hasUnavailableCodexAutoReviewModel)
         #expect(model.canPerformCodexPrimaryAction)

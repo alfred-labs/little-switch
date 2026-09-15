@@ -10,10 +10,11 @@ package enum GatewayResponsesWebSearchPreflight {
 
 extension GatewayResponder {
     package func responsesWebSearchPreflight(
-        context: GatewayResponsesWebSearchContext
+        context: GatewayResponsesWebSearchContext,
+        body: Data? = nil
     ) -> GatewayResponsesWebSearchPreflight {
         do {
-            let retainedBytes = try validatedResponsesWebSearchBytes(context: context)
+            let retainedBytes = try validatedResponsesWebSearchBytes(context: context, body: body)
             return .ready(retainedUpstreamBytes: retainedBytes)
         } catch {
             trafficRecorder.record(
@@ -85,15 +86,17 @@ extension GatewayResponder {
     }
 
     private func validatedResponsesWebSearchBytes(
-        context: GatewayResponsesWebSearchContext
+        context: GatewayResponsesWebSearchContext,
+        body: Data?
     ) throws -> Int {
-        guard context.prepared.upstreamBody.count <= maximumRequestBytes else {
+        let upstreamBody = body ?? context.prepared.upstreamBody
+        guard upstreamBody.count <= maximumRequestBytes else {
             throw GatewayResponsesWebSearchError.requestTooLarge
         }
         let bodyCount: Int
         if context.prepared.streaming {
             let live = try responsesLiveModelRequest(
-                body: context.prepared.upstreamBody,
+                body: upstreamBody,
                 context: context
             )
             recordDroppedAgentMail(
@@ -104,7 +107,7 @@ extension GatewayResponder {
         } else {
             let model = try responsesModelRequest(
                 ResponsesModelTurnRequest(
-                    body: context.prepared.upstreamBody,
+                    body: upstreamBody,
                     attempt: 0,
                     context: context
                 )

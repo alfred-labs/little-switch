@@ -212,9 +212,13 @@ public struct SettingsView: View {
                 set: { if !$0 { model.errorMessage = nil } }
             )
         ) {
-            Button("OK") { model.errorMessage = nil }
+            Button(L10n.resource("OK")) { model.errorMessage = nil }
         } message: {
-            Text(model.errorMessage ?? "Unknown error")
+            if let errorMessage = model.errorMessage {
+                Text(errorMessage)
+            } else {
+                Text(L10n.resource("Unknown error"))
+            }
         }
     }
 

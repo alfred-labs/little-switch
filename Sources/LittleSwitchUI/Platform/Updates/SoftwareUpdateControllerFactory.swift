@@ -16,14 +16,14 @@ enum SoftwareUpdateControllerFactory {
         guard url.pathExtension == "app" else {
             return makeDisabledController(
                 .disabled(
-                    reason: "Software updates run in the installed application."
+                    reason: L10n.string("Software updates run in the installed application.")
                 )
             )
         }
         guard isDeveloperIDSigned(url) else {
             return makeDisabledController(
                 .disabled(
-                    reason: "Software updates require the Developer ID signed release build."
+                    reason: L10n.string("Software updates require the Developer ID signed release build.")
                 )
             )
         }

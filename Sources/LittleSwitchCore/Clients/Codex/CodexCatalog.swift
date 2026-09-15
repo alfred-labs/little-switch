@@ -65,9 +65,10 @@ public enum CodexCatalog {
         target.provider.reference(to: target.model.id).lowercased()
     }
 
-    public static func make(
+    package static func make(
         providers: [Provider],
-        configuration: CodexConfiguration
+        configuration: CodexConfiguration,
+        responsesWireVerdicts: [UUID: Bool] = [:]
     ) throws -> CodexModelCatalog {
         var targets = configuration.exposedModels(in: providers)
         guard !targets.isEmpty else {
@@ -78,8 +79,8 @@ public enum CodexCatalog {
                 targets.insert(targets.remove(at: index), at: 0)
             }
         }
-        var models = targets.enumerated().map { index, target in
-            makeModel(target: target, priority: index)
+        var models = try targets.enumerated().map { index, target in
+            try makeModel(target: target, priority: index, learnedNative: responsesWireVerdicts[target.provider.id])
         }
         guard let reviewerTarget = configuration.resolvedAutoReviewTarget(in: providers) else {
             throw Error.unavailableAutoReviewModel
@@ -87,7 +88,10 @@ public enum CodexCatalog {
         // Codex selects the reviewer separately from the task. Its hidden entry
         // carries the actual review model's capabilities and identity so profile
         // signatures also detect reviewer changes between equal-capacity models.
-        var reviewer = makeModel(target: reviewerTarget, priority: models.count)
+        var reviewer = try makeModel(
+            target: reviewerTarget,
+            priority: models.count,
+            learnedNative: responsesWireVerdicts[reviewerTarget.provider.id])
         reviewer.slug = managedAutoReviewModel
         reviewer.displayName = managedAutoReviewModel
         reviewer.description = "Approval reviews via \(reviewerTarget.displayName)"
@@ -98,11 +102,14 @@ public enum CodexCatalog {
 
     package static func encode(
         providers: [Provider],
-        configuration: CodexConfiguration
+        configuration: CodexConfiguration,
+        responsesWireVerdicts: [UUID: Bool] = [:]
     ) throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-        var data = try encoder.encode(make(providers: providers, configuration: configuration))
+        var data = try encoder.encode(
+            make(
+                providers: providers, configuration: configuration, responsesWireVerdicts: responsesWireVerdicts))
         data.append(UInt8(ascii: "\n"))
         return data
     }
@@ -113,10 +120,12 @@ public enum CodexCatalog {
     package static func encode(
         providers: [Provider],
         configuration: CodexConfiguration,
-        nativeCatalogData: Data?
+        nativeCatalogData: Data?,
+        responsesWireVerdicts: [UUID: Bool] = [:]
     ) throws -> Data {
         try mergedData(
-            managedData: encode(providers: providers, configuration: configuration),
+            managedData: encode(
+                providers: providers, configuration: configuration, responsesWireVerdicts: responsesWireVerdicts),
             nativeCatalogData: nativeCatalogData
         )
     }
@@ -191,9 +200,15 @@ public enum CodexCatalog {
 
     private static func makeModel(
         target: CodexModelTarget,
-        priority: Int
-    ) -> CodexCatalogModel {
+        priority: Int,
+        learnedNative: Bool?
+    ) throws -> CodexCatalogModel {
         let contextWindow = target.model.effectiveContextWindow ?? 128_000
+        let acceptsImages = try ModelImageInputPolicyResolver.acceptsImages(
+            provider: target.provider,
+            model: target.model,
+            wire: ProviderResponsesWireResolver.resolve(provider: target.provider, learnedNative: learnedNative),
+            observations: target.provider.imageInputObservations)
         return CodexCatalogModel(
             slug: slug(for: target),
             displayName: target.displayName,
@@ -223,7 +238,7 @@ public enum CodexCatalog {
             autoCompactTokenLimit: nil,
             effectiveContextWindowPercent: 95,
             experimentalSupportedTools: [],
-            inputModalities: target.provider.imageInputsAccepted(for: target.model)
+            inputModalities: acceptsImages
                 ? ["text", "image"]
                 : ["text"],
             supportsSearchTool: false,

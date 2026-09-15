@@ -26,7 +26,7 @@ struct WebSearchProviderPicker: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, SettingsLayout.SearchProvider.verticalInset)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Search provider")
+        .accessibilityLabel(L10n.resource("Search provider"))
         .onMoveCommand(perform: moveSelection)
     }
 
@@ -80,7 +80,7 @@ struct WebSearchProviderPicker: View {
 extension WebSearchProvider {
     fileprivate var settingsTitle: String {
         switch self {
-        case .disabled: "None"
+        case .disabled: L10n.string("None")
         case .firecrawl: "Firecrawl"
         case .tavily: "Tavily"
         case .brave: "Brave"

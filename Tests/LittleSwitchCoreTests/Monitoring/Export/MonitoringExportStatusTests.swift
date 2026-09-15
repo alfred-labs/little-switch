@@ -6,34 +6,8 @@ import Testing
 
 @Suite("Monitoring export presentation contracts")
 struct MonitoringExportStatusTests {
-    @Test("Product status messages never contain remote text or endpoint data")
-    func safeMessages() {
-        let warnings: [MonitoringExportWarning] = [.partialRejection, .receiverWarning, .deliveryUncertain]
-        #expect(
-            warnings.map(\.message) == [
-                "The receiver accepted the batch with some rejected items.",
-                "The receiver accepted the batch with a warning.",
-                "The interrupted batch may already have reached the receiver.",
-            ])
-        let issues: [MonitoringExportConfigurationIssue] = [.invalidInterval, .invalidEndpoint, .missingCredential]
-        #expect(
-            issues.map(\.message) == [
-                "Choose an export interval between 5 and 300 seconds.",
-                "Enter a valid receiver URL.",
-                "The receiver's saved token is missing or invalid.",
-            ])
-        let outcomes: [MonitoringExportTestOutcome] = [
-            .disabled, .accepted, .partial(rejected: 2), .warning, .retrying(.network), .failed(.tls),
-            .invalidConfiguration(.invalidInterval), .cancelled,
-        ]
-        #expect(
-            outcomes.map(\.message) == [
-                "Disabled", "Accepted", "Accepted with 2 rejected items.", "Accepted with a receiver warning.",
-                "Retry scheduled. The receiver could not be reached.",
-                "The receiver's secure connection could not be verified.",
-                "Choose an export interval between 5 and 300 seconds.",
-                "The test was interrupted; delivery is uncertain.",
-            ])
+    @Test("Dropped event counts saturate instead of overflowing")
+    func droppedCountsSaturate() {
         let status = MonitoringSignalExportStatus(drops: [.expired: .max, .queueFull: 1])
         #expect(status.droppedCount == UInt64(Int64.max))
     }

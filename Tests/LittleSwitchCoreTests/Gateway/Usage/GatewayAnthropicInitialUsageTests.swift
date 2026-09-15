@@ -317,25 +317,23 @@ struct GatewayAnthropicInitialUsageTests {
     }
 
     private var zeroStartFrame: Data {
-        Data(
-            ("event: message_start\ndata: {\"type\":\"message_start\","
-                + "\"message\":{\"id\":\"msg_zai\",\"type\":\"message\","
-                + "\"role\":\"assistant\",\"content\":[],\"model\":\"glm\","
-                + "\"stop_reason\":null,\"stop_sequence\":null,"
-                + "\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}}\n\n")
-                .utf8
-        )
+        var text = ""
+        text += "event: message_start\ndata: {\"type\":\"message_start\","
+        text += "\"message\":{\"id\":\"msg_zai\",\"type\":\"message\","
+        text += "\"role\":\"assistant\",\"content\":[],\"model\":\"glm\","
+        text += "\"stop_reason\":null,\"stop_sequence\":null,"
+        text += "\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}}\n\n"
+        return Data(text.utf8)
     }
 
     private var terminalFrame: Data {
-        Data(
-            ("event: message_delta\ndata: {\"type\":\"message_delta\","
-                + "\"delta\":{\"stop_reason\":\"end_turn\",\"stop_sequence\":null},"
-                + "\"usage\":{\"input_tokens\":41,\"cache_read_input_tokens\":1472,"
-                + "\"output_tokens\":7}}\n\n"
-                + "event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n")
-                .utf8
-        )
+        var text = ""
+        text += "event: message_delta\ndata: {\"type\":\"message_delta\","
+        text += "\"delta\":{\"stop_reason\":\"end_turn\",\"stop_sequence\":null},"
+        text += "\"usage\":{\"input_tokens\":41,\"cache_read_input_tokens\":1472,"
+        text += "\"output_tokens\":7}}\n\n"
+        text += "event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n"
+        return Data(text.utf8)
     }
 
     private var zeroWire: Data {
@@ -343,18 +341,17 @@ struct GatewayAnthropicInitialUsageTests {
     }
 
     private var nativeWire: Data {
-        Data(
-            (": keepalive\r\nevent: message_start\r\n"
-                + "data: {\"type\":\"message_start\",\"message\":{\"usage\":"
-                + "{\"output_tokens\":0,\"input_tokens\":23},\"content\":[]}}\r\n\r\n"
-                + "event: content_block_delta\r\n"
-                + "data: {\"type\":\"content_block_delta\",\"delta\":"
-                + "{\"type\":\"text_delta\",\"text\":\"OK\"}}\r\n\r\n"
-                + "event: message_delta\r\n"
-                + "data: {\"type\":\"message_delta\",\"usage\":{\"output_tokens\":1}}"
-                + "\r\n\r\n")
-                .utf8
-        )
+        var text = ""
+        text += ": keepalive\r\nevent: message_start\r\n"
+        text += "data: {\"type\":\"message_start\",\"message\":{\"usage\":"
+        text += "{\"output_tokens\":0,\"input_tokens\":23},\"content\":[]}}\r\n\r\n"
+        text += "event: content_block_delta\r\n"
+        text += "data: {\"type\":\"content_block_delta\",\"delta\":"
+        text += "{\"type\":\"text_delta\",\"text\":\"OK\"}}\r\n\r\n"
+        text += "event: message_delta\r\n"
+        text += "data: {\"type\":\"message_delta\",\"usage\":{\"output_tokens\":1}}"
+        text += "\r\n\r\n"
+        return Data(text.utf8)
     }
 
     private var streamingRequestBody: Data {

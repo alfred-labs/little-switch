@@ -40,24 +40,30 @@ public struct ModelContextDraft: Equatable, Identifiable, Sendable {
 
     public var detail: String {
         guard isValid else {
-            return "Invalid context override"
+            return L10n.string("Invalid context override")
         }
-        let detected = detectedContextWindow.map(Self.format) ?? "Unknown"
+        let detected = detectedContextWindow.map(Self.format) ?? L10n.string("Unknown")
         let effectiveContext = (try? parsedOverride()) ?? detectedContextWindow
-        let effective = effectiveContext.map(Self.format) ?? "Unknown"
-        let claude = effectiveContext.map { $0 >= 1_000_000 } == true ? "200K or 1M" : "200K"
-        return "Detected \(detected) · Effective \(effective) · Claude \(claude)"
+        let effective = effectiveContext.map(Self.format) ?? L10n.string("Unknown")
+        let claude =
+            effectiveContext.map { $0 >= 1_000_000 } == true
+            ? L10n.string("200K or 1M")
+            : L10n.string("200K")
+        return L10n.string("Detected \(detected) · Effective \(effective) · Claude \(claude)")
     }
 
     var capacityText: String {
-        guard isValid else { return "Invalid override" }
-        return ((try? parsedOverride()) ?? detectedContextWindow).map(Self.format) ?? "Unknown"
+        guard isValid else { return L10n.string("Invalid override") }
+        return ((try? parsedOverride()) ?? detectedContextWindow).map(Self.format)
+            ?? L10n.string("Unknown")
     }
 
     /// Only a differing manual value needs a second line in the compact table.
     var capacityNote: String? {
         guard isValid, let override = try? parsedOverride(), override != detectedContextWindow else { return nil }
-        return detectedContextWindow.map { "Detected \(Self.format($0))" } ?? "Manual override"
+        return detectedContextWindow.map {
+            L10n.string("Detected \(Self.format($0))")
+        } ?? L10n.string("Manual override")
     }
 
     public static func contextOverrides(from drafts: [ModelContextDraft]) throws -> [String: Int] {
@@ -70,10 +76,10 @@ public struct ModelContextDraft: Equatable, Identifiable, Sendable {
 
     public static func format(_ tokens: Int) -> String {
         if tokens.isMultiple(of: 1_000_000) {
-            return "\(tokens / 1_000_000)M"
+            return L10n.string("\(tokens / 1_000_000)M")
         }
         if tokens.isMultiple(of: 1_000) {
-            return "\(tokens / 1_000)K"
+            return L10n.string("\(tokens / 1_000)K")
         }
         return String(tokens)
     }

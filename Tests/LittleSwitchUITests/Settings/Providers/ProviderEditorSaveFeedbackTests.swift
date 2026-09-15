@@ -66,8 +66,10 @@ struct ProviderEditorSaveFeedbackTests {
     func saveGatesOnTest() throws {
         let source = try loadSource("Settings/Providers/ProviderEditor.swift")
 
-        #expect(source.contains("Button(testing ? \"Testing…\" : \"Test Connection\")"))
-        #expect(source.contains("Button(saving ? \"Saving…\" : \"Save\")"))
+        #expect(source.contains("L10n.string(\"Testing…\")"))
+        #expect(source.contains("L10n.string(\"Test Connection\")"))
+        #expect(source.contains("L10n.string(\"Saving…\")"))
+        #expect(source.contains("L10n.string(\"Save\")"))
         #expect(
             source.contains(".disabled(saving || testing || !testPassed || !formIsValid)")
         )

@@ -11,9 +11,9 @@ struct MonitoringLocalEndpointsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: SettingsLayout.sectionContentSpacing) {
             HStack {
-                SettingsSectionHeader("Local access")
+                SettingsSectionHeader(L10n.resource("Local access"))
                 Spacer()
-                Text("127.0.0.1:11436")
+                Text(verbatim: "127.0.0.1:11436")
                     .font(SettingsLayout.Typography.monospacedValue)
                     .foregroundStyle(.secondary)
             }
@@ -26,7 +26,7 @@ struct MonitoringLocalEndpointsView: View {
                 )
                 endpoint("Logs", path: "/logs", enabled: $configuration.exposeLogs, applied: applied.exposeLogs)
             }
-            Text("Available to apps on this Mac while LittleSwitch is running.")
+            Text(L10n.resource("Available to apps on this Mac while LittleSwitch is running."))
                 .settingsSupportingText()
         }
     }
@@ -42,28 +42,28 @@ struct MonitoringLocalEndpointsView: View {
                 .foregroundStyle(.secondary)
             Spacer(minLength: 8)
             if presentation.isPending {
-                Text("Pending")
+                Text(L10n.resource("Pending"))
                     .font(SettingsLayout.Typography.supporting)
                     .foregroundStyle(.secondary)
                     .help(presentation.copyHelp)
             }
-            Menu("Copy URL") {
-                Button("Copy HTTP URL") { copy(presentation.httpURL) }
+            Menu(L10n.resource("Copy URL")) {
+                Button(L10n.resource("Copy HTTP URL")) { copy(presentation.httpURL) }
                 if let httpsURL = presentation.httpsURL {
-                    Button("Copy HTTPS URL") { copy(httpsURL) }
+                    Button(L10n.resource("Copy HTTPS URL")) { copy(httpsURL) }
                 }
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
             .disabled(!presentation.canCopy)
             .help(presentation.copyHelp)
-            .accessibilityLabel("Copy \(title.lowercased()) URL")
+            .accessibilityLabel(L10n.resource("Copy \(title.lowercased()) URL"))
             .accessibilityHint(presentation.copyHelp)
-            Toggle("Expose \(title.lowercased())", isOn: enabled)
+            Toggle(L10n.resource("Expose \(title.lowercased())"), isOn: enabled)
                 .labelsHidden()
                 .toggleStyle(.switch)
                 .controlSize(.small)
-                .accessibilityHint("Apply changes to update local access.")
+                .accessibilityHint(L10n.string("Apply changes to update local access."))
         }
         .font(SettingsLayout.Typography.rowLabel)
         .frame(minHeight: SettingsLayout.disclosureRowMinimumHeight)

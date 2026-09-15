@@ -41,20 +41,25 @@ public enum CodexAgentConcurrencyEditor {
         var errorDescription: String? {
             switch self {
             case .inlineAgentsTable:
-                "The `agents` entry in ~/.codex/config.toml is an inline table. "
-                    + "Rewrite it as an `[agents]` section and try again."
+                CoreL10n.string(
+                    "The `agents` entry in ~/.codex/config.toml is an inline table. Rewrite it as an `[agents]` section and try again."
+                )
             case .unsupportedAgentsSyntax:
-                "The `agents` entry in ~/.codex/config.toml is not a table. "
-                    + "Rewrite it as an `[agents]` section and try again."
+                CoreL10n.string(
+                    "The `agents` entry in ~/.codex/config.toml is not a table. Rewrite it as an `[agents]` section and try again."
+                )
             case .legacyAlias:
-                "The legacy `agents.max_threads` key in ~/.codex/config.toml conflicts "
-                    + "with the managed concurrency limit. Remove it and try again."
+                CoreL10n.string(
+                    "The legacy `agents.max_threads` key in ~/.codex/config.toml conflicts with the managed concurrency limit. Remove it and try again."
+                )
             case .nonIntegerManagedValue:
-                "The `agents.max_concurrent_threads_per_session` value in ~/.codex/config.toml "
-                    + "is not an integer. Fix it and try again."
+                CoreL10n.string(
+                    "The `agents.max_concurrent_threads_per_session` value in ~/.codex/config.toml is not an integer. Fix it and try again."
+                )
             case .unsupportedManagedSyntax:
-                "The `agents.max_concurrent_threads_per_session` assignments in ~/.codex/config.toml "
-                    + "conflict. Keep a single one and try again."
+                CoreL10n.string(
+                    "The `agents.max_concurrent_threads_per_session` assignments in ~/.codex/config.toml conflict. Keep a single one and try again."
+                )
             }
         }
     }
