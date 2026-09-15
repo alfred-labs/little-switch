@@ -5,6 +5,21 @@
         <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
         <description>LittleSwitch releases</description>
         <item>
+            <title>0.6.0</title>
+            <pubDate>Tue, 15 Sep 2026 17:08:21 +0000</pubDate>
+            <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
+            <sparkle:version>24</sparkle:version>
+            <sparkle:shortVersionString>0.6.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Breaking changes</h2>
+<ul><li><strong>Apply the Codex configuration again after upgrading.</strong> The updated configuration lets Codex choose its own tool mode instead of forcing direct calls. Applying it restarts Codex Desktop, so finish active work first.</li></ul>
+<h2>Improvements</h2>
+<ul><li><strong>LittleSwitch is available in French and English.</strong> Menus, settings, dialogs, status messages and help follow the application language, with locale-aware numbers and usage summaries.</li><li><strong>Image support reflects observed model capabilities.</strong> Eligible models are checked in the background, and provider details distinguish advertised support from verified, refused, inconclusive and manually forced results. Check details include duration and token usage when available. Fresh results are reused for seven days, and manual overrides are preserved.</li><li>Capability checks send small synthetic requests and can consume provider tokens. New image-check results do not restart clients or rewrite their active catalogs; apply the Codex or OpenCode configuration to publish updated capabilities.</li></ul>
+<h2>Fixes</h2>
+<ul><li><strong>Custom tools such as exec work with providers that require function calls.</strong> The gateway uses capability checks to select a compatible format while preserving free-form input, namespaces, conversation history and streaming output. Tool execution remains with the client, and native custom calls remain unchanged when supported.</li><li><strong>Image conversations survive text-only models and compaction.</strong> The gateway omits unsupported attachments from the outgoing request while retaining received images for a later image-capable model. A precise image rejection triggers one retry without attachments rather than losing the conversation.</li><li>Images returned by tools reach the model as image attachments and remain associated with the correct tool result, including parallel calls.</li><li>An image-compatibility retry reuses completed web searches instead of executing them again.</li></ul>]]></description>
+            <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.6.0/LittleSwitch-0.6.0-arm64.dmg" length="20978088" type="application/octet-stream" sparkle:edSignature="zZ6OczPcs72WTct8WCpgH80eEptUDCyhagvkL7NP/LSQB/v026olfzYCDq+R5MAli4qdwEozIESz1Gginf2pCA=="/>
+        </item>
+        <item>
             <title>0.5.1</title>
             <pubDate>Mon, 14 Sep 2026 08:54:24 +0000</pubDate>
             <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
