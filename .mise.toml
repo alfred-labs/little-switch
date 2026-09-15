@@ -41,15 +41,16 @@ run = "./tools/ci/check-swift-coverage.sh"
 description = "Require Periphery to find no unreferenced code"
 run = """
 set -eu
-mkdir -p "{{config_root}}/.build/home" "{{config_root}}/.build/clang-cache" .build/cache .build/config .build/security
-env HOME="{{config_root}}/.build/home" \
-  CLANG_MODULE_CACHE_PATH="{{config_root}}/.build/clang-cache" \
-  xcrun swift package --disable-sandbox \
+mkdir -p .build/cache .build/config .build/security
+xcrun swift package --disable-sandbox \
   --cache-path .build/cache --config-path .build/config --security-path .build/security \
   describe --type json > .build/package-describe.json
+# Periphery 3.8 needs the native driver's index store with Xcode 27.
 xcrun swift build --disable-sandbox --build-system native --enable-index-store \
-  --scratch-path .build/periphery \
-  --cache-path .build/cache --config-path .build/config --security-path .build/security \
+  --scratch-path "{{config_root}}/.build/periphery" \
+  --cache-path "{{config_root}}/.build/cache" \
+  --config-path "{{config_root}}/.build/config" \
+  --security-path "{{config_root}}/.build/security" \
   -Xswiftc -warnings-as-errors
 periphery scan --strict --baseline .periphery-baseline.yml --skip-build \
   --index-store-path "{{config_root}}/.build/periphery/debug/index/store" \
@@ -116,20 +117,23 @@ description = "Require no unused production declarations in repository tooling"
 dir = "tools"
 run = """
 set -eu
-mkdir -p "{{config_root}}/.build/home" "{{config_root}}/.build/clang-cache" \
-  .build/tooling-cache .build/tooling-config .build/tooling-security
-env HOME="{{config_root}}/.build/home" \
-  CLANG_MODULE_CACHE_PATH="{{config_root}}/.build/clang-cache" \
-  xcrun swift package --disable-sandbox \
-  --cache-path .build/tooling-cache --config-path .build/tooling-config --security-path .build/tooling-security \
-  describe --type json > "{{config_root}}/.build/tooling/package-describe.json"
+mkdir -p "{{config_root}}/.build/tooling-cache" \
+  "{{config_root}}/.build/tooling-config" "{{config_root}}/.build/tooling-security"
+xcrun swift package --disable-sandbox \
+  --cache-path "{{config_root}}/.build/tooling-cache" \
+  --config-path "{{config_root}}/.build/tooling-config" \
+  --security-path "{{config_root}}/.build/tooling-security" \
+  describe --type json > "{{config_root}}/.build/tooling-package-describe.json"
+# Periphery 3.8 needs the native driver's index store with Xcode 27.
 xcrun swift build --disable-sandbox --build-system native --enable-index-store \
-  --scratch-path .build/tooling-periphery \
-  --cache-path .build/tooling-cache --config-path .build/tooling-config --security-path .build/tooling-security \
+  --scratch-path "{{config_root}}/.build/tooling-periphery" \
+  --cache-path "{{config_root}}/.build/tooling-cache" \
+  --config-path "{{config_root}}/.build/tooling-config" \
+  --security-path "{{config_root}}/.build/tooling-security" \
   -Xswiftc -warnings-as-errors
 periphery scan --strict --config .periphery.yml --skip-build \
   --index-store-path "{{config_root}}/.build/tooling-periphery/debug/index/store" \
-  --json-package-manifest-path "{{config_root}}/.build/tooling/package-describe.json"
+  --json-package-manifest-path "{{config_root}}/.build/tooling-package-describe.json"
 """
 
 [tasks."tools:coverage"]

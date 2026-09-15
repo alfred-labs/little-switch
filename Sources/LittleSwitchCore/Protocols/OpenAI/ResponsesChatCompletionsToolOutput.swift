@@ -63,10 +63,6 @@ enum ResponsesChatCompletionsToolOutput {
 
     private static func stringFragment(_ value: Any) throws -> String {
         if let string = value as? String { return string }
-        let data = try WireJSONCompatibility.data(value)
-        guard let text = String(data: data, encoding: .utf8) else {
-            throw OpenAIResponsesChatCompletions.Error.invalidRequest
-        }
-        return text
+        return try WireJSONCompatibility.value(value).serialized()
     }
 }

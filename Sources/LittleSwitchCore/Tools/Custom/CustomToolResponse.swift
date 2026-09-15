@@ -62,8 +62,8 @@ private struct CustomToolResponseStream: AsyncSequence, Sendable {
                 while !finished {
                     try Task.checkCancellation()
                     if let ready = try takeReady() {
-                        if ready.readableBytes > 0 { return ready }
-                        continue
+                        // Decoded records include a separator, retained even when their data is suppressed.
+                        return ready
                     }
                     if eof {
                         try projection.finish()
@@ -83,9 +83,10 @@ private struct CustomToolResponseStream: AsyncSequence, Sendable {
                     }
                     let length = Swift.min(chunk.readableBytes, maximumBytes + 4 - pending.count)
                     guard length > 0 else { throw CustomToolProjection.Error.limitExceeded }
-                    guard let slice = chunk.readSlice(length: length) else {
-                        throw CustomToolProjection.Error.invalidResponse
-                    }
+                    // The bound above keeps both indices inside the readable region without copying its storage.
+                    var slice = chunk
+                    slice.moveWriterIndex(to: chunk.readerIndex + length)
+                    chunk.moveReaderIndex(forwardBy: length)
                     incoming = chunk.readableBytes == 0 ? nil : chunk
                     pending.append(contentsOf: slice.readableBytesView)
                     frames = ArraySlice(try decoder.append(slice))

@@ -7,6 +7,27 @@ import Testing
 
 @Suite("Custom bridge routing revisions")
 struct GatewayCustomToolRevisionTests {
+    @Test("Only provider revisions invalidate cached custom capability evidence", arguments: [false, true])
+    func replacementCacheInvalidation(credentialChanged: Bool) async throws {
+        let provider = Provider(name: "Test", baseURL: "https://unit.example/v1", authMode: .none)
+        let key = customCapabilityKey(providerID: provider.id)
+        let cache = CustomToolCapabilityCache()
+        let state = GatewayState(
+            snapshot: RoutingSnapshot(generation: 0, providers: [provider], mappings: [:]),
+            customToolCapabilities: cache)
+        await state.replace(providers: [provider], mappings: [:])
+        #expect(try await cache.mode(for: key) { .native } == .native)
+
+        await state.replace(
+            providers: [provider],
+            mappings: [:],
+            credentialChangedProviderIDs: credentialChanged ? [provider.id] : [])
+
+        let mode = try await cache.mode(for: key) { .functionEnvelope }
+        #expect(mode == (credentialChanged ? .functionEnvelope : .native))
+        #expect(await state.routingCapture().providerRevision(for: provider.id) == (credentialChanged ? 1 : 0))
+    }
+
     @Test("A stale provider capture fails before probing or sending content", arguments: [false, true])
     func staleCapture(deleted: Bool) async throws {
         let provider = Provider(name: "Test", baseURL: "https://unit.example/v1", authMode: .none)

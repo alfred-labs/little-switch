@@ -19,6 +19,7 @@ struct CoverageGateFixture {
     var rawStatus = 0
     var testStatus = 0
     var missingArtifact = ""
+    var additionalTestProducts: [String] = []
 
     func run(package: Package = .app) throws -> (result: RepositoryProcess.Result, invocations: String) {
         try withTemporaryDirectory { root in
@@ -32,8 +33,11 @@ struct CoverageGateFixture {
             let bin = root.appendingPathComponent("current-coverage-bin", isDirectory: true)
             let testProduct = package.testProduct
             let binary = bin.appendingPathComponent("\(testProduct).xctest/Contents/MacOS/\(testProduct)")
+            let binaries = ([testProduct] + additionalTestProducts).sorted().map {
+                bin.appendingPathComponent("\($0).xctest/Contents/MacOS/\($0)")
+            }
             let profile = bin.appendingPathComponent("codecov/default.profdata")
-            for artifact in [binary, profile] where artifact.lastPathComponent != missingArtifact {
+            for artifact in binaries + [profile] where artifact.lastPathComponent != missingArtifact {
                 try FileManager.default.createDirectory(
                     at: artifact.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try Data("current fixture".utf8).write(to: artifact)
@@ -59,6 +63,8 @@ struct CoverageGateFixture {
             try Data(measuredReport.utf8).write(to: measured)
             try Data(rawReport.utf8).write(to: raw)
             let log = root.appendingPathComponent("invocations.txt")
+            let expectedObjects = root.appendingPathComponent("expected-objects.txt")
+            try Data((binaries.map(\.path).joined(separator: "\n") + "\n").utf8).write(to: expectedObjects)
             var environment = ProcessInfo.processInfo.environment
             environment.merge([
                 "PATH": fakeBin.path + ":" + environment["PATH", default: ""],
@@ -68,6 +74,8 @@ struct CoverageGateFixture {
                 "FAKE_MEASURED_WARNING": measuredWarning, "FAKE_RAW_WARNING": rawWarning,
                 "FAKE_MEASURED_STATUS": String(measuredStatus), "FAKE_RAW_STATUS": String(rawStatus),
                 "FAKE_TEST_STATUS": String(testStatus),
+                "FAKE_OBJECTS": expectedObjects.path,
+                "FAKE_ACTUAL_OBJECTS": root.appendingPathComponent("actual-objects.txt").path,
             ]) { _, new in new }
             let result = try RepositoryProcess.run(
                 URL(fileURLWithPath: "/bin/sh"),
@@ -98,11 +106,21 @@ struct CoverageGateFixture {
         fi
         if [ "$1" = "swift" ]; then exit "$FAKE_TEST_STATUS"; fi
         if [ "$1" != "llvm-cov" ] || [ "$2" != "report" ]; then exit 2; fi
+        printf '%s\n' "$3" > "$FAKE_ACTUAL_OBJECTS"
+        profile_seen=
         for argument in "$@"; do
             case "$argument" in
-                -instr-profile=*) [ "$argument" = "-instr-profile=$FAKE_PROFILE" ] || exit 3 ;;
+                -instr-profile=*)
+                    [ "$argument" = "-instr-profile=$FAKE_PROFILE" ] || exit 3
+                    profile_seen=1 ;;
+                -object=*) printf '%s\n' "${argument#-object=}" >> "$FAKE_ACTUAL_OBJECTS" ;;
             esac
         done
+        [ -n "$profile_seen" ] || exit 3
+        if ! cmp -s "$FAKE_OBJECTS" "$FAKE_ACTUAL_OBJECTS"; then
+            echo 'coverage gate omitted a test bundle from the coverage objects' >&2
+            exit 3
+        fi
         if [ "$3" != "$FAKE_BINARY" ]; then
             echo 'coverage gate selected stale or mismatched artifacts' >&2
             exit 3

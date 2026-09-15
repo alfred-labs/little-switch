@@ -8,7 +8,6 @@ extension GatewayUsageStatsPresentation {
         public let tokenTotal: String
         public let accessibilityValue: String
         public let metrics: [Metric]
-        private let locale: Locale
 
         init(
             label: String,
@@ -16,7 +15,6 @@ extension GatewayUsageStatsPresentation {
             locale: Locale = .current
         ) {
             self.label = label
-            self.locale = locale
             let estimated = days.contains(where: \.tokensAreEstimated)
             let tokens = Self.sum(days, \.tokens)
             tokenTotal = GatewayUsageFormat.tokenTotal(tokens, locale: locale)

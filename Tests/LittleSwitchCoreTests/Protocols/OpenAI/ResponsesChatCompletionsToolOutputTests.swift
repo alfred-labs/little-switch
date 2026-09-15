@@ -68,9 +68,10 @@ struct ResponsesChatCompletionsToolOutputTests {
         }
     }
 
-    @Test("An incomplete parallel exchange cannot silently drop or misplace an image")
-    func incompleteParallelExchange() {
-        let input: [[String: Any]] = [
+    @Test(
+        "An incomplete parallel exchange cannot silently drop or misplace an image", arguments: [false, true])
+    func incompleteParallelExchange(nextTurn: Bool) {
+        var input: [[String: Any]] = [
             ["type": "function_call", "call_id": "a", "name": "read", "arguments": "{}"],
             ["type": "function_call", "call_id": "b", "name": "read", "arguments": "{}"],
             [
@@ -78,10 +79,48 @@ struct ResponsesChatCompletionsToolOutputTests {
                 "output": [["type": "input_image", "image_url": Self.imageURL]],
             ],
         ]
+        if nextTurn { input.append(["type": "message", "role": "user", "content": "Continue"]) }
         #expect(throws: OpenAIResponsesChatCompletions.Error.invalidRequest) {
             var messages: [[String: Any]] = []
             _ = try ResponsesChatCompletionsHistory.append(input, to: &messages, bindings: [:])
         }
+    }
+
+    @Test("Image output cannot hide a malformed text part", arguments: ["input_text", "output_text"])
+    func invalidMultimodalText(type: String) {
+        #expect(throws: OpenAIResponsesChatCompletions.Error.invalidRequest) {
+            try ResponsesChatCompletionsToolOutput.project(item: [
+                "call_id": "a",
+                "output": [["type": "input_image", "image_url": Self.imageURL], ["type": type, "text": 42]],
+            ])
+        }
+    }
+
+    @Test("Opaque parts accompanying an image preserve their JSON and Unicode in the tool result")
+    func opaqueMultimodalPart() throws {
+        let result = try ResponsesChatCompletionsToolOutput.project(item: [
+            "call_id": "a",
+            "output": [
+                ["type": "provider_result", "value": "été 🐈"],
+                ["type": "input_image", "image_url": Self.imageURL],
+                ["type": "output_text", "text": "Visible output"],
+            ],
+        ])
+        #expect(
+            result.toolMessage as NSDictionary == [
+                "role": "tool", "tool_call_id": "a",
+                "content": #"{"type":"provider_result","value":"été 🐈"}"# + "\nVisible output",
+            ] as NSDictionary)
+        let expected: [[String: Any]] = [
+            [
+                "role": "user",
+                "content": [
+                    ["type": "text", "text": "Image from tool call a"],
+                    ["type": "image_url", "image_url": ["url": Self.imageURL]],
+                ],
+            ]
+        ]
+        #expect(result.imageMessages as NSArray == expected as NSArray)
     }
 
     private static let imageURL = "data:image/png;base64,aGVsbG8="

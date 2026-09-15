@@ -45,9 +45,9 @@ struct GatewayResponsesImageInputTests {
 
     @Test(
         "Auth, quota and unrelated validation errors never learn unsupported or retry",
-        arguments: [400, 401, 403, 429, 500])
-    func unrelatedErrors(status: Int) async throws {
-        let fixture = try await GatewayImageFixture.make(wire: .chatCompletions)
+        arguments: [400, 401, 403, 429, 500], [ModelImageInputWire.responses, .chatCompletions])
+    func unrelatedErrors(status: Int, wire: ModelImageInputWire) async throws {
+        let fixture = try await GatewayImageFixture.make(wire: wire)
         let transport = RecordingGatewayTransport(responses: [
             response(
                 status: .init(statusCode: status),

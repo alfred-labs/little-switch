@@ -21,7 +21,7 @@ extension ProviderModelImageInputPresentation {
             anthropicBaseURL: draft.anthropicBaseURL.isEmpty ? nil : draft.anthropicBaseURL,
             wireProbe: draft.wireProbe)
         let sameIdentity = stored?.hasSameImageInputIdentity(as: provider) == true && draft.credential.isEmpty
-        if sameIdentity { provider.imageInputObservations = stored?.imageInputObservations ?? [] }
+        if let stored, sameIdentity { provider.imageInputObservations = stored.imageInputObservations }
         return Dictionary(
             uniqueKeysWithValues: provider.models.map { model in
                 (

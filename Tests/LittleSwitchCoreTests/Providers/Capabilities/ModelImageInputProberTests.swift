@@ -54,6 +54,22 @@ struct ModelImageInputProberTests {
         #expect(await transport.timeouts == [.seconds(15)])
     }
 
+    @Test(
+        "HTTP client read and request deadlines remain timeouts rather than connection failures",
+        arguments: [HTTPClientError.deadlineExceeded, .readTimeout])
+    func httpClientTimeout(error: HTTPClientError) async throws {
+        let instant = Date(timeIntervalSince1970: 1_000)
+        let now: @Sendable () -> Date = { instant }
+        let prober = ModelImageInputProber(
+            transport: ImageHTTPFailureTransport(error: error), challenge: Self.challenge, now: now)
+        let result = try await prober.probe(
+            provider: provider, model: DiscoveredModel(id: "model"), wire: .responses, secret: nil)
+        #expect(
+            result
+                == ModelImageInputProbeResult(
+                    outcome: .inconclusive(.timeout), usage: nil, startedAt: instant, durationSeconds: 0))
+    }
+
     @Test("Oversized response is inconclusive and cancellation propagates")
     func failureBounds() async throws {
         let large = RecordingGatewayTransport(responses: [
@@ -143,4 +159,10 @@ private actor ImageTimeoutTransport: UpstreamTransport {
         timeouts.append(timeout)
         throw URLError(.timedOut)
     }
+}
+
+private struct ImageHTTPFailureTransport: UpstreamTransport {
+    let error: HTTPClientError
+
+    func execute(_ request: HTTPClientRequest) async throws -> HTTPClientResponse { throw error }
 }

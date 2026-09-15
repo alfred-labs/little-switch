@@ -46,6 +46,45 @@ extension GatewayTests {
         #expect(await transport.requests.count == (responseLimit ? 1 : 0))
     }
 
+    @Test("An oversized selected summary fails without a repair or partial response")
+    func compactionSelectedSummaryLimit() async throws {
+        let fixture = try makeFixture()
+        let summary = compactionSummaryResponse().replacingOccurrences(
+            of: "Continue the implementation; the file was read.", with: String(repeating: "summary ", count: 2_000))
+        let transport = RecordingGatewayTransport(responses: [response(status: .ok, body: summary)])
+        let application = makeApplication(fixture: fixture, transport: transport, maximumRequestBytes: 4_096)
+        try await application.test(.router) { client in
+            let result = try await client.execute(
+                uri: "/v1/responses", method: .post, body: ByteBuffer(bytes: compactionRequest(model: "z.ai/glm-5.2")))
+            #expect(result.status == .contentTooLarge)
+            #expect(String(buffer: result.body).contains("Compacted response is too large"))
+            #expect(!String(buffer: result.body).contains("little_switch_compaction"))
+        }
+        #expect(await transport.requests.count == 1)
+    }
+
+    @Test("An unspecified compaction wire follows the learned native capability")
+    func compactionDefaultWire() async throws {
+        let fixture = try makeFixture()
+        let target = try #require(fixture.snapshot.resolveCodex(model: "z.ai/glm-5.2"))
+        await fixture.state.responsesCapabilities.record(providerID: target.provider.id, supportsNative: true)
+        let transport = RecordingGatewayTransport(responses: [response(status: .ok, body: compactionSummaryResponse())])
+        let responder = GatewayResponder(
+            state: fixture.state, transport: transport, secretStore: fixture.secrets, requiredAuthorityPort: nil)
+        let plan = try #require(try ResponsesCompactionPlan.prepare(body: compactionRequest(model: "z.ai/glm-5.2")))
+        let turn = try await responder.compactionModelTurn(
+            body: plan.summaryRequest(model: target.model.id, stream: false, repair: nil),
+            target: GatewayCompactionTarget(route: target, credential: nil),
+            incomingHeaders: [:],
+            eventID: UUID(),
+            attempt: 0)
+        #expect(turn.usage.inputTokens == 20)
+        #expect(turn.usage.outputTokens == 5)
+        let sent = try #require(await transport.requests.first)
+        #expect(sent.url.hasSuffix("/responses"))
+        #expect(await transport.requests.count == 1)
+    }
+
     @Test("Opaque native state cannot be quoted to a custom summary model")
     func compactionRequiresNativeCheckpointDecoder() async throws {
         let fixture = try makeFixture()

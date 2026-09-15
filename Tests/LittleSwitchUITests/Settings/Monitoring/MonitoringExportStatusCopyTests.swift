@@ -5,6 +5,20 @@ import Testing
 
 @Suite("Monitoring export status copy")
 struct MonitoringExportStatusCopyTests {
+    @Test("A delivery failure takes priority over a receiver warning until it is cleared")
+    func failureAndWarningPriority() {
+        var status = MonitoringSignalExportStatus(failure: .network, warning: .partialRejection)
+        #expect(
+            MonitoringExportStatusCopy.message(for: status)
+                == L10n.string("The receiver could not be reached."))
+        status.failure = nil
+        #expect(
+            MonitoringExportStatusCopy.message(for: status)
+                == L10n.string("The receiver accepted the batch with some rejected items."))
+        status.warning = nil
+        #expect(MonitoringExportStatusCopy.message(for: status) == nil)
+    }
+
     @Test("Every monitoring export state has localized product copy")
     func everyStateHasLocalizedProductCopy() {
         let warnings: [MonitoringExportWarning] = [

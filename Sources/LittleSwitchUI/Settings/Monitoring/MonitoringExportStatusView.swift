@@ -6,6 +6,7 @@ struct MonitoringExportStatusView: View {
     let title: String
     let status: MonitoringSignalExportStatus
     let testResult: MonitoringExportTestOutcome?
+    // periphery:ignore - Native SwiftUI state is referenced through $showsDeliveryDetails.
     @State private var showsDeliveryDetails = false
 
     var body: some View {

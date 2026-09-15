@@ -3,6 +3,24 @@ import Testing
 @Suite("Coverage gate orchestration")
 struct CoverageGateTests {
     @Test(
+        "Every per-target test bundle is passed as a coverage object in both reports",
+        arguments: CoverageGateFixture.Package.allCases)
+    func multipleTestBundles(package: CoverageGateFixture.Package) throws {
+        var fixture = CoverageGateFixture()
+        fixture.additionalTestProducts = ["Secondary coverageTests"]
+        let (result, log) = try fixture.run(package: package)
+        #expect(result.status == 0, "\(result.stdout)\n\(result.stderr)")
+        let reports = log.split(separator: "\n").filter { $0.hasPrefix("llvm-cov\t") }
+        #expect(reports.count == 2)
+        for report in reports {
+            let objects = report.split(separator: "\t").filter { $0.hasPrefix("-object=") }
+            let suffix = "Secondary coverageTests.xctest/Contents/MacOS/Secondary coverageTests"
+            #expect(objects.count == 1)
+            #expect(objects.first?.hasSuffix(suffix) == true)
+        }
+    }
+
+    @Test(
         "Both packages use current SwiftPM artifacts, a strict build and atomic profile counters",
         arguments: CoverageGateFixture.Package.allCases)
     func currentArtifacts(package: CoverageGateFixture.Package) throws {

@@ -29,7 +29,7 @@ package actor ModelImageInputRegistry {
     var cooldowns: [ModelImageInputKey: Date] = [:]
     var jobs: [UUID: Job] = [:]
     var jobsByKey: [ModelImageInputKey: UUID] = [:]
-    var queue: [UUID] = []
+    var queue: [(id: UUID, providerID: UUID)] = []
     var stopped = false
     var onObservation: @Sendable (ModelImageInputObservation, UUID) async -> Void = { _, _ in }
     var onDiagnostic: @Sendable (ModelImageInputProbeDiagnostic, UUID) async -> Void = { _, _ in }

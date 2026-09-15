@@ -49,6 +49,29 @@ struct ModelImageProbeScheduleTests {
             ).isEmpty)
     }
 
+    @Test("The newest observation controls revalidation even when older facts disagree")
+    func latestObservation() throws {
+        var provider = imageProbeProvider()
+        provider.models[0].supportsImageInput = true
+        let key = try ModelImageInputPolicyResolver.key(provider: provider, modelID: "model", wire: .responses)
+        let old = ModelImageInputObservation(
+            key: key, verdict: .verified, source: .visualProbe, observedAt: Date(timeIntervalSince1970: 0))
+        let latest = ModelImageInputObservation(
+            key: key, verdict: .unsupported, source: .providerRejection, observedAt: Date(timeIntervalSince1970: 100))
+        for observations in [[old, latest], [latest, old]] {
+            #expect(try candidates(provider, observations, at: 604_800).isEmpty)
+            #expect(try candidates(provider, observations, at: 604_900) == provider.models)
+        }
+    }
+
+    @Test("Repeated catalog IDs consume only one probe slot")
+    func duplicateModels() throws {
+        let provider = imageProbeProvider(models: ["b", "a", "a"])
+        #expect(
+            try candidates(provider, [], at: 0)
+                == [DiscoveredModel(id: "a"), DiscoveredModel(id: "b")])
+    }
+
     private func candidates(
         _ provider: Provider, _ observations: [ModelImageInputObservation], at seconds: TimeInterval
     ) throws -> [DiscoveredModel] {

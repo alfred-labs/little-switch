@@ -128,6 +128,28 @@ struct ModelImageProbeResponseTests {
         #expect(classify(Data((completed + "data: [DONE]\n\n").utf8), wire: .responses) == .verified)
     }
 
+    @Test("Responses deltas do not verify an answer before its completed event")
+    func responsesDeltas() throws {
+        let answer = try #require(String(data: ModelImageProbeFixture.answer(wire: .responses), encoding: .utf8))
+            .replacingOccurrences(of: "\n", with: "")
+        let delta =
+            #"data: {"type":"response.output_text.delta","delta":"white white yellow black"}"# + "\n\n"
+        #expect(classify(Data(delta.utf8), wire: .responses) == .inconclusive(.incompleteResponse))
+        let completed = "data: {\"type\":\"response.completed\",\"response\":\(answer)}\n\n"
+        #expect(classify(Data((delta + completed).utf8), wire: .responses) == .verified)
+    }
+
+    @Test(
+        "A completed assistant message without content never verifies the image",
+        arguments: [ModelImageInputWire.responses, .chatCompletions])
+    func missingAssistantContent(wire: ModelImageInputWire) {
+        let body =
+            wire == .responses
+            ? #"{"status":"completed","output":[{"type":"message","role":"assistant"}]}"#
+            : #"{"choices":[{"finish_reason":"stop","message":{"role":"assistant"}}]}"#
+        #expect(classify(Data(body.utf8), wire: wire) == .inconclusive(.wrongAnswer))
+    }
+
     private func classify(_ body: Data, status: Int = 200, wire: ModelImageInputWire) -> ModelImageInputProbeOutcome {
         ModelImageProbeResponse.classify(
             body: body, status: status, wire: wire, expectedColors: ModelImageProbeFixture.colors)

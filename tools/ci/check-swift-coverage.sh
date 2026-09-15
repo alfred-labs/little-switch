@@ -47,7 +47,12 @@ while IFS= read -r test_binary; do
         echo "Coverage test binary disappeared: $test_binary" >&2
         exit 1
     fi
-    set -- "$@" "$test_binary"
+    # Only the first positional argument is a binary; the others are sources.
+    if [ "$#" -eq 0 ]; then
+        set -- "$test_binary"
+    else
+        set -- "$@" "-object=$test_binary"
+    fi
 done <<COVERAGE_TEST_BINARIES
 $coverage_test_binaries
 COVERAGE_TEST_BINARIES
@@ -73,7 +78,11 @@ mise run --quiet tools:run -- coverage verify --measured-list "$measured_list" -
 
 set --
 while IFS= read -r test_binary; do
-    set -- "$@" "$test_binary"
+    if [ "$#" -eq 0 ]; then
+        set -- "$test_binary"
+    else
+        set -- "$@" "-object=$test_binary"
+    fi
 done <<COVERAGE_TEST_BINARIES
 $coverage_test_binaries
 COVERAGE_TEST_BINARIES

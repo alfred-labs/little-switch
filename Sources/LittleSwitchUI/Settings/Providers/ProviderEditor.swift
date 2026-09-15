@@ -23,6 +23,7 @@ struct ProviderEditor: View {
     @State private var saving = false
     @State private var scriptStage = ProviderTestStage.idle
     @State private var authenticationStage = ProviderTestStage.idle
+    // periphery:ignore - Native SwiftUI state is referenced through $isChoosingScript.
     @State private var isChoosingScript = false
     @State private var testedScriptOutput: String?
     @State private var advancedExpanded: Bool

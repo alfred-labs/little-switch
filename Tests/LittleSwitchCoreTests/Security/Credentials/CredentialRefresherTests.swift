@@ -282,9 +282,11 @@ struct CredentialRefresherTests {
             immediate: true,
             scriptPath: "echo token"
         )
-        _ = try await eventually(description: "immediate run under the default sleep") {
-            (runner.callCount == 1) ? true : nil
+        // Entering the runner does not mean its result has reached the store yet.
+        _ = try await eventually(description: "immediate credential stored under the default sleep") {
+            try store.read(providerID: providerID) == "token" ? true : nil
         }
+        #expect(runner.callCount == 1)
         #expect(try store.read(providerID: providerID) == "token")
         // The loop parks in the real interval sleep right after the run;
         // give it a beat to enter the default closure before cancelling.

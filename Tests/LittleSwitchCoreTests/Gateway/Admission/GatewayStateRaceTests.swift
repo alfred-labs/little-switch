@@ -102,6 +102,34 @@ struct GatewayStateRaceTests {
         #expect(await state.sessionRequestCount == 0)
     }
 
+    @Test("An image probe invalidated after its pool grant releases the permit", arguments: [false, true])
+    func imageProbeInvalidationAfterPoolGrant(stopping: Bool) async throws {
+        let fixture = try GatewayTests().makeFixture()
+        let provider = try #require(fixture.snapshot.providers.first)
+        let model = try #require(provider.models.first)
+        let pool = ControlledGatewayRequestPool(blockFirstAdmission: true)
+        let state = GatewayState(snapshot: fixture.snapshot, requestPool: pool)
+        let eventID = UUID()
+        let admission = Task {
+            try await state.admitImageProbe(eventID: eventID, provider: provider, modelID: model.id)
+        }
+        try await waitForGatewayRequestPool(pool) { await $0.admissionCallCount == 1 }
+
+        if stopping {
+            await state.stopAdmissions()
+        } else {
+            await state.replace(
+                providers: fixture.snapshot.providers,
+                mappings: fixture.snapshot.mappings,
+                credentialChangedProviderIDs: [provider.id])
+        }
+        await pool.releaseAdmission()
+
+        await #expect(throws: GatewayAdmissionError.invalidated) { try await admission.value }
+        #expect(await pool.finishedEventIDs == [eventID])
+        #expect(await state.sessionRequestCount == 0)
+    }
+
     @Test("A capture without a provider revision is invalidated before reaching the pool")
     func missingProviderRevision() async throws {
         let fixture = try GatewayTests().makeFixture()

@@ -14,7 +14,7 @@ struct CustomToolResponsesStreamState {
     struct Call {
         let item: JSONValue
         let outputIndex: Int
-        var arguments = ""
+        var arguments: String
         var input: String?
         var itemDone = false
     }

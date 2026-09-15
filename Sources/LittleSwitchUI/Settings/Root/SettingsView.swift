@@ -4,6 +4,7 @@ import SwiftUI
 
 public struct SettingsView: View {
     @Bindable private var model: AppModel
+    // periphery:ignore - Native SwiftUI state is referenced through $isSidebarVisible.
     @State private var isSidebarVisible = true
     private let onLaunchAtLoginEnabled: @MainActor (Bool) async -> Void
     private let onOpenLoginItems: @MainActor () -> Void

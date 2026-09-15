@@ -28,6 +28,14 @@ struct CoverageRepositoryScopeTests {
     private static let reviewedExclusions = [
         // Common/domain splits verified absent from the full llvm-cov raw report.
         "Sources/LittleSwitchCommon/Domain/Clients/GatewayClient.swift",
+        "Sources/LittleSwitchCommon/Domain/Monitoring/Export/OTLPExportFailure.swift",
+        "Sources/LittleSwitchCommon/Domain/Providers/Capabilities/CustomToolCapabilityMode.swift",
+        "Sources/LittleSwitchCommon/Domain/Providers/Capabilities/ModelImageInputWire.swift",
+        "Sources/LittleSwitchCore/Protocols/OpenAI/Compaction/ResponsesCompactionContract.swift",
+        "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesImagePartContract.swift",
+        "Sources/LittleSwitchCore/Providers/Capabilities/ModelImageInputProbing.swift",
+        "Sources/LittleSwitchCore/Tools/Custom/CustomToolChatContract.swift",
+        "Sources/LittleSwitchCore/Tools/Custom/CustomToolDeclarationContract.swift",
         "Sources/LittleSwitchCommon/Domain/Traffic/TrafficAction.swift",
         "Sources/LittleSwitchCore/Monitoring/Export/OTLP/OTLPHTTPResponse.swift",
         "Sources/LittleSwitchCore/Protocols/Anthropic/AnthropicModelTurn.swift",
@@ -40,6 +48,7 @@ struct CoverageRepositoryScopeTests {
         "Sources/LittleSwitch/main.swift",
         "Sources/LittleSwitchCore/Security/Keychain/KeychainSecretStore.swift",
         "Sources/LittleSwitchCore/Security/TLS/GatewayTLSTrust.swift",
+        "Sources/LittleSwitchCore/Providers/Capabilities/ModelImageProbePNGEncoder.swift",
         "Sources/LittleSwitchTransport/HTTP/AsyncHTTPTransport.swift",
         "Sources/LittleSwitchUI/Application/Lifecycle/LittleSwitchApplicationDelegate.swift",
         "Sources/LittleSwitchUI/Application/Presentation/LittleSwitchApplicationDelegateConnections.swift",

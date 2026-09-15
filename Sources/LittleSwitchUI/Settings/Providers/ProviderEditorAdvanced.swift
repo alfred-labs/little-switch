@@ -3,6 +3,7 @@ import SwiftUI
 struct ProviderEditorAdvanced: View {
     @Binding var draft: ProviderDraft
     @Binding var isExpanded: Bool
+    // periphery:ignore - Native SwiftUI state is referenced through $connectionDetailsExpanded.
     @State private var connectionDetailsExpanded = false
     let responsesWireVerdict: Bool?
     var imagePresentations: [String: ProviderModelImageInputPresentation] = [:]

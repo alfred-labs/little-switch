@@ -74,4 +74,11 @@ struct ProviderToolRequestPolicyTests {
             try ProviderToolRequestPolicy.anthropic(["mcp_servers": "remote"])
         }
     }
+
+    @Test("Hosted tool search history is rejected", arguments: ["tool_search_call", "tool_search_output"])
+    func hostedToolSearchHistory(type: String) {
+        #expect(throws: ProviderToolContract.Error.invalidRequest) {
+            try ProviderToolRequestPolicy.responses(["input": [["type": type]]])
+        }
+    }
 }

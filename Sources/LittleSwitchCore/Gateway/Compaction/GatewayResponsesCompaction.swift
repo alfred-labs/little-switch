@@ -59,6 +59,7 @@ extension GatewayResponder {
         var attempt = CompactionAttempt(
             plan: plan,
             wire: await resolvesChatCompletionsAdapter(target.route.provider) ? .chatCompletions : .responses)
+        let result: ResponsesCompactionResult
         while true {
             try Task.checkCancellation()
             let acceptsImages = try await acceptsResponsesImages(
@@ -77,9 +78,10 @@ extension GatewayResponder {
                     preferredWire: attempt.wire == .chatCompletions ? .chatCompletions : .native)
                 attempt.usage.add(turn.usage)
                 do {
-                    let result = try attempt.plan.complete(
+                    let completed = try attempt.plan.complete(
                         responseBody: turn.rootJSON, maximumBytes: maximumRequestBytes)
-                    return ResponsesCompactionResult(itemJSON: result.itemJSON, usage: attempt.usage)
+                    result = ResponsesCompactionResult(itemJSON: completed.itemJSON, usage: attempt.usage)
+                    break
                 } catch let error as ResponsesCompactionError {
                     guard case .invalidSelection(let reason) = error else { throw error }
                     guard let budget = try? attempt.budget.taking(.selectionRepair) else {
@@ -94,6 +96,7 @@ extension GatewayResponder {
                 }
             }
         }
+        return result
     }
 
     private struct CompactionAttempt {

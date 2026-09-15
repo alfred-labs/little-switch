@@ -1,5 +1,14 @@
 Sources/LittleSwitch/main.swift	Executable entry point and AppKit application launch boundary.
 Sources/LittleSwitchCommon/Domain/Clients/GatewayClient.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
+Sources/LittleSwitchCommon/Domain/Monitoring/Export/OTLPExportFailure.swift	Enum cases emit no executable coverage regions after localized copy moved to MonitoringExportStatusCopy; exporter behavior and the UI message mapper remain measured.
+Sources/LittleSwitchCommon/Domain/Providers/Capabilities/CustomToolCapabilityMode.swift	Raw-value enum cases emit no executable coverage regions; capability probing, caching and custom tool projection remain measured.
+Sources/LittleSwitchCommon/Domain/Providers/Capabilities/ModelImageInputWire.swift	Raw-value enum cases emit no executable coverage regions; image policy, probing and wire projection remain measured.
+Sources/LittleSwitchCore/Protocols/OpenAI/Compaction/ResponsesCompactionContract.swift	Nested raw-value key enums emit no executable coverage regions; compaction planning, request construction and payload conversion remain measured.
+Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesImagePartContract.swift	Nested raw-value key enums emit no executable coverage regions; ResponsesImageInputProjection and the Chat image adapter remain measured.
+Sources/LittleSwitchCore/Providers/Capabilities/ModelImageInputProbing.swift	Protocol signature emits no executable coverage regions; ModelImageInputProber and ModelImageInputRegistry remain measured.
+Sources/LittleSwitchCore/Providers/Capabilities/ModelImageProbePNGEncoder.swift	CoreGraphics/ImageIO allocation and PNG-finalization boundary has system-only failure paths; palette validation and pixel construction remain measured, and real PNG output is decoded and verified by ModelImageProbeChallengeTests.
+Sources/LittleSwitchCore/Tools/Custom/CustomToolChatContract.swift	Nested raw-value key enums emit no executable coverage regions; buffered and streaming custom tool projections remain measured.
+Sources/LittleSwitchCore/Tools/Custom/CustomToolDeclarationContract.swift	Nested raw-value key enums emit no executable coverage regions; CustomToolRequestProjection and CustomToolProjection remain measured.
 Sources/LittleSwitchCommon/Domain/Traffic/TrafficAction.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
 Sources/LittleSwitchCore/Monitoring/Export/OTLP/OTLPHTTPResponse.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.
 Sources/LittleSwitchCore/Protocols/Anthropic/AnthropicModelTurn.swift	Extracted value, enum, or protocol declarations emit no llvm-cov regions; existing consuming implementations remain measured.

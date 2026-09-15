@@ -211,10 +211,8 @@ public actor GatewayState {
             providerRevisions: revisions
         )
         if configuration == appliedPoolConfiguration, requestPoolReconfigurationTask == nil {
-            appliedPoolConfiguration = configuration
-            if !changedProviders.isEmpty {
-                await customToolCapabilities?.invalidate(providerIDs: Set(changedProviders))
-            }
+            // Every current provider revision is part of this configuration;
+            // changed or removed providers necessarily take the invalidation path below.
             return replacement
         }
         appliedPoolConfiguration = configuration

@@ -53,7 +53,7 @@ extension ModelImageInputRegistry {
                     secret: secret,
                     waiters: [waiterID: continuation])
                 jobsByKey[key] = id
-                queue.append(id)
+                queue.append((id: id, providerID: provider.id))
             }
             startAvailableJobs()
         }
@@ -65,11 +65,9 @@ extension ModelImageInputRegistry {
         while active.count < 2 {
             let busyProviders = Set(active.map(\.key.providerID))
             guard
-                let index = queue.firstIndex(where: { id in
-                    jobs[id].map { !busyProviders.contains($0.key.providerID) } ?? false
-                })
+                let index = queue.firstIndex(where: { !busyProviders.contains($0.providerID) })
             else { return }
-            let id = queue.remove(at: index)
+            let id = queue.remove(at: index).id
             guard var job = jobs[id] else { continue }
             let request = job
             job.task = Task { await self.run(request, id: id) }
@@ -144,7 +142,7 @@ extension ModelImageInputRegistry {
         for waiter in job.waiters.values { waiter.resume(throwing: CancellationError()) }
         job.waiters.removeAll()
         if jobsByKey[job.key] == id { jobsByKey[job.key] = nil }
-        queue.removeAll { $0 == id }
+        queue.removeAll { $0.id == id }
         jobs[id] = job.task == nil ? nil : job
     }
 }

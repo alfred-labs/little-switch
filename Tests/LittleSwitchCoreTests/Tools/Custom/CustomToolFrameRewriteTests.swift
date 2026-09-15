@@ -67,6 +67,20 @@ struct CustomToolFrameRewriteTests {
         #expect(try CustomToolFrameRewrite.apply(.keep, frame: frame, source: source, offset: 93) == source)
     }
 
+    @Test("Suppression handles a final source line without a line ending")
+    func suppressUnterminatedLine() throws {
+        let frame = ServerSentEventFrame(event: nil, data: Data("{}".utf8), terminal: false)
+        let fixtures = [
+            ("event: arguments.delta\ndata: {}", ""),
+            ("data: {}\nid: retained", "id: retained"),
+        ]
+        for (source, expected) in fixtures {
+            #expect(
+                try CustomToolFrameRewrite.apply(
+                    .suppress, frame: frame, source: Data(source.utf8), offset: 0) == Data(expected.utf8))
+        }
+    }
+
     private func decode(_ source: Data) throws -> [ServerSentEventFrame] {
         var decoder = ServerSentEventDecoder(maximumFrameBytes: 4_096)
         return try decoder.append(ByteBuffer(bytes: source)) + decoder.finish()

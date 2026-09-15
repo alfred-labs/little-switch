@@ -3,7 +3,7 @@ import Foundation
 package struct ModelImageProbeChallenge: Sendable {
     enum Error: Swift.Error { case invalidColors, imageEncoding }
 
-    static let palette = ["red", "green", "blue", "yellow", "black", "white"]
+    static let palette = ModelImageProbeColor.allCases.map(\.rawValue)
     package let png: Data
     package let expectedColors: [String]
 
@@ -19,9 +19,10 @@ package struct ModelImageProbeChallenge: Sendable {
     }
 
     package static func make(colors: [String]) throws -> Self {
-        guard colors.count == 4, Set(colors).count >= 3, colors.allSatisfy(palette.contains) else {
+        let palette = colors.compactMap(ModelImageProbeColor.init(rawValue:))
+        guard colors.count == 4, Set(palette).count >= 3, palette.count == colors.count else {
             throw Error.invalidColors
         }
-        return Self(png: try ModelImageProbePNG.encode(colors: colors), expectedColors: colors)
+        return Self(png: try ModelImageProbePNG.encode(colors: palette), expectedColors: colors)
     }
 }
