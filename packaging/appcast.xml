@@ -5,6 +5,17 @@
         <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
         <description>LittleSwitch releases</description>
         <item>
+            <title>0.6.1</title>
+            <pubDate>Tue, 15 Sep 2026 20:41:01 +0000</pubDate>
+            <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
+            <sparkle:version>25</sparkle:version>
+            <sparkle:shortVersionString>0.6.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Fixes</h2>
+<ul><li><strong>Fixes the immediate startup crash introduced in version 0.6.0.</strong> LittleSwitch opens normally after installing this update.</li></ul>]]></description>
+            <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.6.1/LittleSwitch-0.6.1-arm64.dmg" length="22531848" type="application/octet-stream" sparkle:edSignature="yQEWqo0bDSi/X06F2wJEtd90ItxPIl2OckUJuQ0tjhHlN3bCX/Q+HmHvMKo6fEogTZyNC72uisxgwzkZXvXZCw=="/>
+        </item>
+        <item>
             <title>0.6.0</title>
             <pubDate>Tue, 15 Sep 2026 17:08:21 +0000</pubDate>
             <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
