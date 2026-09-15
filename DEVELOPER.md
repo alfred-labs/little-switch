@@ -21,6 +21,26 @@ open "build/LittleSwitch.app"
 
 `mise run build` produces an unsigned arm64 Apple Silicon app. To codesign locally, set `LITTLE_SWITCH_SIGN_IDENTITY` to your desired identity before building.
 
+Every release entry point (`swift:build`, `app:build`, `build`, and `release:dmg`)
+uses `tools/swift-release.sh`. It pins the `swiftbuild` driver and the repository's
+`.build` scratch directory; the current release products are in
+`.build/out/Products/Release`. The assembler queries that same configuration with
+`--show-bin-path`, then copies its executable and resource bundles into the single
+application bundle, `build/LittleSwitch.app`. It never reads the legacy
+`.build/arm64-apple-macosx/release` output or falls back to an older executable.
+
+`mise run check` compiles the release once, as part of `app:build`.
+`verify:bundle` compares the app's Mach-O UUID and resource bundles with that
+release product, so a fresh Git tag cannot hide a stale executable. Coverage,
+Thread Sanitizer, repository tooling and Periphery retain their test or analysis
+builds; none of those products are eligible for application packaging.
+
+`release:verify` runs the same executable and resource checks on the application
+mounted from the final DMG, so a valid signature cannot hide missing resources.
+The assembler also embeds the compatibility runtimes identified by Apple's
+`swift-stdlib-tool` and signs them before the application. Bundle verification
+requires these libraries even when the development machine already provides them.
+
 ## Architecture
 
 LittleSwitch is a single Swift process that owns the AppKit/SwiftUI interface, the Claude profile transaction, and the Anthropic-compatible gateway on `127.0.0.1:11436`.

@@ -16,7 +16,9 @@ enum ProductIdentityPolicy {
                 required: [
                     #"name: "LittleSwitch""#, #"name: "LittleSwitchCore""#, #"name: "LittleSwitchUI""#,
                 ]),
-            RepositoryTextRule("tools/build-app.sh", required: [#"LittleSwitch\.app"#, "release/LittleSwitch"]),
+            RepositoryTextRule(
+                "tools/build-app.sh", required: [#"LittleSwitch\.app"#, #"\$binary_path/LittleSwitch"#]),
+            RepositoryTextRule("tools/swift-release.sh", required: ["--product LittleSwitch"]),
             RepositoryTextRule(
                 "tools/ci/verify-bundle.sh", required: [#"LittleSwitch\.app"#, #"com\.alfredlabs\.littleswitch"#]),
         ]

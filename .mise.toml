@@ -69,12 +69,7 @@ xcrun swift test --disable-sandbox --sanitize=thread --no-parallel \
 
 [tasks."swift:build"]
 description = "Build the arm64 release executable with strict warnings"
-run = """
-xcrun swift build --disable-sandbox --configuration release \
-  --triple arm64-apple-macosx14.0 \
-  --cache-path .build/cache --config-path .build/config --security-path .build/security \
-  -Xswiftc -warnings-as-errors
-"""
+run = "./tools/swift-release.sh"
 
 [tasks."repo:test"]
 description = "Run repository policy tests"
@@ -227,7 +222,7 @@ mise run swift:test
 mise run swift:coverage
 mise run swift:deadcode
 mise run swift:thread-sanitizer
-mise run swift:build
+# app:build includes the strict release build through swift-release.sh.
 mise run app:build
 mise run verify:bundle
 """

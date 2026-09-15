@@ -35,6 +35,8 @@ delivered_executable=$delivered_app/Contents/MacOS/LittleSwitch
 require_release_file "$delivered_app" "application inside release DMG"
 require_release_file "$delivered_executable" "application executable inside release DMG"
 
+"$bundle_verifier" "$delivered_app"
+
 "$codesign" --verify --deep --strict --verbose=2 "$delivered_app"
 app_signature=$("$codesign" -dvvv "$delivered_app" 2>&1)
 require_signature_metadata "$delivered_app" com.alfredlabs.littleswitch "$app_signature"

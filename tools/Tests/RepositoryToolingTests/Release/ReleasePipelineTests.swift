@@ -116,8 +116,8 @@ struct ReleasePipelineTests {
         }
     }
 
-    @Test("The delivered app is mounted read-only, assessed and detached")
-    func deliveredArtifact() throws {
+    @Test("The delivered app is validated and detached even when incomplete", arguments: [false, true])
+    func deliveredArtifact(incomplete: Bool) throws {
         try withTemporaryDirectory { root in
             let fixture = try ReleaseFixture(root: root)
             try fixture.tool(
@@ -148,20 +148,39 @@ struct ReleasePipelineTests {
             try fixture.tool("xcrun", "printf 'xcrun %s\\n' \"$*\" >> \"$FAKE_ROOT/calls\"")
             try fixture.tool("spctl", "printf 'spctl %s\\n' \"$*\" >> \"$FAKE_ROOT/calls\"")
             try fixture.tool("lipo", "echo arm64")
-            var overrides = ["TMPDIR": root.path + "/"]
+            try fixture.tool(
+                "verify-bundle",
+                #"""
+                printf 'verify-bundle %s\n' "$1" >> "$FAKE_ROOT/calls"
+                case "$1" in "$FAKE_ROOT"/little-switch-mount.*/LittleSwitch.app) ;; *) exit 9 ;; esac
+                if [ "$FAKE_INCOMPLETE_BUNDLE" = 1 ]; then
+                    echo 'missing bundle resources' >&2
+                    exit 8
+                fi
+                """#)
+            var overrides = [
+                "TMPDIR": root.path,
+                "FAKE_INCOMPLETE_BUNDLE": incomplete ? "1" : "0",
+                "LITTLE_SWITCH_RELEASE_BUNDLE_VERIFIER": root.appendingPathComponent("bin/verify-bundle").path,
+            ]
             for name in ["hdiutil", "codesign", "xcrun", "spctl", "lipo"] {
                 overrides["LITTLE_SWITCH_RELEASE_" + name.uppercased()] =
                     root.appendingPathComponent("bin/" + name).path
             }
             let result = try fixture.run("verify-dmg.sh", overrides: overrides)
-            #expect(result.status == 0, "\(result.stderr)")
+            #expect((result.status == 0) == !incomplete, "\(result.stderr)")
             let calls = try fixture.read("calls")
+            #expect(calls.contains("verify-bundle \(root.path)/little-switch-mount."))
             #expect(calls.contains("hdiutil verify"))
             #expect(calls.contains("codesign --verify --strict"))
-            #expect(calls.contains("codesign --verify --deep --strict"))
             #expect(calls.contains("xcrun stapler validate"))
             #expect(calls.contains("spctl --assess --type open"))
-            #expect(calls.contains("spctl --assess --type exec"))
+            if incomplete {
+                #expect(result.stderr.contains("missing bundle resources"))
+            } else {
+                #expect(calls.contains("codesign --verify --deep --strict"))
+                #expect(calls.contains("spctl --assess --type exec"))
+            }
             #expect(calls.contains("hdiutil detach"))
             #expect(
                 try FileManager.default.contentsOfDirectory(atPath: root.path).allSatisfy {

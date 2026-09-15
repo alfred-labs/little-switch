@@ -4,7 +4,6 @@ set -eu
 project_root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 build_root="$project_root/build"
 bundle="$build_root/LittleSwitch.app"
-executable="$project_root/.build/arm64-apple-macosx/release/LittleSwitch"
 icon="$build_root/AppIcon.icns"
 version_env="$project_root/packaging/version.env"
 sparkle_framework="$project_root/.build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
@@ -17,16 +16,30 @@ if [ -z "${MARKETING_VERSION:-}" ] || [ -z "${BUILD_NUMBER:-}" ]; then
 fi
 
 cd "$project_root"
-xcrun swift build --disable-sandbox --configuration release \
-    --triple arm64-apple-macosx14.0 \
-    --cache-path .build/cache --config-path .build/config --security-path .build/security \
-    -Xswiftc -warnings-as-errors
+"$project_root/tools/swift-release.sh"
+binary_path=$("$project_root/tools/swift-release.sh" --show-bin-path)
+executable="$binary_path/LittleSwitch"
+if [ ! -x "$executable" ]; then
+    echo "Swift release product not found at $executable" >&2
+    exit 1
+fi
+for target in LittleSwitchCore LittleSwitchUI; do
+    resource_bundle="$binary_path/LittleSwitch_$target.bundle"
+    if [ ! -d "$resource_bundle" ]; then
+        echo "Swift release resource bundle not found at $resource_bundle" >&2
+        exit 1
+    fi
+done
 
 rm -rf "$bundle"
 mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources" "$bundle/Contents/Frameworks"
 "$project_root/tools/generate-app-icon.sh" "$icon"
 cp "$executable" "$bundle/Contents/MacOS/LittleSwitch"
 chmod 0755 "$bundle/Contents/MacOS/LittleSwitch"
+for resource_bundle in "$binary_path"/*.bundle; do
+    test -d "$resource_bundle" || continue
+    /usr/bin/ditto "$resource_bundle" "$bundle/Contents/Resources/${resource_bundle##*/}"
+done
 
 # Sparkle.framework must ride inside the bundle; the executable's rpath has
 # to find it there (SwiftPM only emits build-directory rpaths).
@@ -36,10 +49,14 @@ if [ ! -d "$sparkle_framework" ]; then
 fi
 /usr/bin/ditto "$sparkle_framework" "$bundle/Contents/Frameworks/Sparkle.framework"
 bundled_executable="$bundle/Contents/MacOS/LittleSwitch"
-if ! /usr/bin/otool -l "$bundled_executable" | /usr/bin/grep -Fq 'path @executable_path/../Frameworks'; then
-    /usr/bin/install_name_tool \
+if ! xcrun otool -l "$bundled_executable" | /usr/bin/grep -Fq 'path @executable_path/../Frameworks'; then
+    xcrun install_name_tool \
         -add_rpath '@executable_path/../Frameworks' "$bundled_executable"
 fi
+xcrun swift-stdlib-tool --copy --platform macosx \
+    --scan-executable "$bundled_executable" \
+    --scan-folder "$bundle/Contents/Frameworks" \
+    --destination "$bundle/Contents/Frameworks"
 
 cp "$project_root/packaging/Info.plist" "$bundle/Contents/Info.plist"
 build_tag=$(git -C "$project_root" describe --tags --always --dirty 2>/dev/null || true)
@@ -89,6 +106,11 @@ if [ ! -f "$signing_env" ]; then
 fi
 sign_identity=$("$project_root/tools/resolve-signing-identity.sh" "$signing_env")
 if [ -n "$sign_identity" ]; then
+    for library in "$bundle/Contents/Frameworks/"*.dylib; do
+        test -f "$library" || continue
+        /usr/bin/codesign --force --options runtime --timestamp \
+            --sign "$sign_identity" "$library"
+    done
     # Nested code signs innermost-first — Apple's notary validates every
     # helper separately, and codesign does not descend into nested bundles.
     set -- \
