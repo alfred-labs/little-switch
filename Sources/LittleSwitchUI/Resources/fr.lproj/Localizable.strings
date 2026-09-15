@@ -171,7 +171,7 @@
 "Credential type" = "Type d’identifiants";
 "Credentials" = "Identifiants";
 "Custom" = "Custom";
-"Custom approval review" = "Révision personnalisée des approbations";
+"Custom approval review" = "Modèle pour l’approbation";
 "Custom approval review model" = "Modèle personnalisé de révision des approbations";
 "Custom review" = "Révision personnalisée";
 "Cut" = "Couper";
@@ -346,7 +346,7 @@
 "OpenRouter" = "OpenRouter";
 "Optional" = "Facultatif";
 "Output tokens" = "Jetons de sortie";
-"Overview" = "Vue d’ensemble";
+"Overview" = "Aperçu";
 "Parallel requests" = "Requêtes parallèles";
 "Pass through" = "Transparence";
 "Pass through preserves the caller's thinking parameters." = "La transparence conserve les paramètres de réflexion de l’appelant.";

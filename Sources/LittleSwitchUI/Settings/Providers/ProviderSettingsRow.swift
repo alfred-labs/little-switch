@@ -51,9 +51,9 @@ struct ProviderSettingsRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Label(statusTitle, systemImage: statusSymbol)
-                .font(.caption)
+                .font(SettingsLayout.Typography.toolbarLabel)
                 .foregroundStyle(statusColor)
-                .frame(width: 92, alignment: .leading)
+                .frame(width: 104, alignment: .leading)
             Text(
                 provider.models.count == 1
                     ? L10n.resource("\(provider.models.count) model")
