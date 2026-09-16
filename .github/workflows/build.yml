@@ -1,4 +1,4 @@
-name: Build
+name: CI
 
 on:
   push:
@@ -16,10 +16,10 @@ concurrency:
 
 jobs:
   build:
-    name: Release (Apple Silicon)
+    name: Checks and release (Apple Silicon)
     # GitHub's ARM64 preview image provides the Xcode 27 toolchain we require.
     runs-on: xcode-27
-    timeout-minutes: 45
+    timeout-minutes: 90
 
     steps:
       - name: Check out repository
@@ -31,7 +31,55 @@ jobs:
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
 
       - name: Verify toolchain
-        run: mise run toolchains
+        id: toolchain
+        shell: bash
+        run: |
+          mise run toolchains
+          xcode_build=$(xcrun xcodebuild -version | awk '/^Build version / { print $3 }')
+          test -n "$xcode_build"
+          echo "xcode-build=$xcode_build" >> "$GITHUB_OUTPUT"
 
-      - name: Build release executable
-        run: mise run swift:build
+      - name: Restore SwiftPM dependencies
+        id: swift-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          # All scratch builds share these download and manifest caches.
+          # Keep app/test products, coverage profiles, and security state out.
+          path: |
+            .build/cache
+            .build/tooling-cache
+          key: swiftpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.toolchain.outputs.xcode-build }}-${{ hashFiles('Package.resolved', 'tools/Package.resolved', 'Vendor/OrderedJSON/Package.resolved') }}
+          restore-keys: |
+            swiftpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.toolchain.outputs.xcode-build }}-
+
+      - name: Restore npm downloads
+        id: npm-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: .cache/sdk-contracts-npm/_cacache
+          key: npm-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tools/sdk-contracts/package-lock.json') }}
+          restore-keys: |
+            npm-v1-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Install schema test dependencies
+        run: mise run schemas:install
+
+      - name: Run lint, tests, coverage, and build checks
+        run: mise run check
+
+      # Preserve downloaded dependencies when a check fails, to speed up fixes.
+      - name: Save SwiftPM dependencies
+        if: ${{ !cancelled() && steps.swift-cache.outcome == 'success' && steps.swift-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            .build/cache
+            .build/tooling-cache
+          key: ${{ steps.swift-cache.outputs.cache-primary-key }}
+
+      - name: Save npm downloads
+        if: ${{ !cancelled() && steps.npm-cache.outcome == 'success' && steps.npm-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: .cache/sdk-contracts-npm/_cacache
+          key: ${{ steps.npm-cache.outputs.cache-primary-key }}

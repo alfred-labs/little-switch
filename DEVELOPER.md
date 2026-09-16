@@ -12,6 +12,7 @@ This guide covers building, verifying, and contributing to LittleSwitch. For pro
 
 ```sh
 mise install
+mise run schemas:install
 mise run check
 mise run build
 open "build/LittleSwitch.app"
@@ -43,14 +44,33 @@ requires these libraries even when the development machine already provides them
 
 ## CI
 
-The [Build workflow](.github/workflows/build.yml) runs on pushes and pull requests
+The [CI workflow](.github/workflows/build.yml) runs on pushes and pull requests
 targeting `main`, and can also be started manually from GitHub Actions. It installs
-the pinned mise tools, verifies the toolchain, and runs `mise run swift:build` to
-compile the ARM64 release executable with warnings treated as errors.
+the pinned mise tools and schema dependencies, then runs the same `mise run check`
+gate as local development: format, SwiftLint, repository and schema checks, Swift
+tests, exact coverage, Periphery, Thread Sanitizer, release build, and bundle
+verification. The release executable is compiled once, through `app:build`.
 
 It uses GitHub's [Xcode 27 ARM64 preview image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md),
-which provides the Xcode version required by `mise run toolchains`. This first CI
-iteration covers compilation only; `mise run check` remains the full local gate.
+which provides the Xcode version required by `mise run toolchains`.
+
+### Dependency caches
+
+Mise caches its pinned tools. SwiftPM's shared caches at `.build/cache` and
+`.build/tooling-cache` retain downloaded repositories, binary artifacts, prebuilts,
+and manifests across the separate test and analysis builds. Their cache key
+includes the runner OS, architecture, exact Xcode build, and all three tracked
+`Package.resolved` files. A changed lockfile can reuse a cache from the same
+toolchain; SwiftPM still resolves the requested versions.
+
+The schema tools cache npm's downloaded packages under
+`.cache/sdk-contracts-npm/_cacache`, keyed by `tools/sdk-contracts/package-lock.json`.
+`mise run schemas:install` always runs `npm ci`, including on cache hits.
+
+Dependency caches are saved even when checks fail. Application and test build
+products, coverage profiles, credentials, and `node_modules` are not cached, and
+every quality check still runs on a cache hit. See the [GitHub caching strategies](https://github.com/actions/cache/blob/main/caching-strategies.md)
+and [SwiftPM cache locations](https://github.com/swiftlang/swift-package-manager/blob/main/Sources/Workspace/Workspace%2BConfiguration.swift).
 
 ## Architecture
 
