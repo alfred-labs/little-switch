@@ -58,6 +58,7 @@ final class MenuControlTestHost<Content: View> {
         }
         let wasActive = NSApp.isActive
         try #require(window.canBecomeKey, "The test panel must accept keyboard focus. \(focusDiagnostics)")
+        if NSApp.isRunning, NSApp.isActive { window.makeKey() }
         try #require(window.makeFirstResponder(hosting), "The hosting view rejected focus. \(focusDiagnostics)")
         render()
         try #require(NSApp.isActive == wasActive, "Preparing focus activated the application. \(focusDiagnostics)")
@@ -146,7 +147,7 @@ final class MenuControlTestHost<Content: View> {
             render()
             matched = condition()
             if matched { break }
-            await Task.yield()
+            try await Task.sleep(for: .milliseconds(16))
         } while ContinuousClock.now < deadline
         try #require(matched, "\(description). \(focusDiagnostics)")
     }
@@ -174,6 +175,7 @@ private enum MenuControlTestApplication {
     private static var didFinishLaunching = false
 
     static func finishLaunching() {
+        guard !NSApplication.shared.isRunning else { return }
         guard !didFinishLaunching else { return }
         let application = NSApplication.shared
         let originalPolicy = application.activationPolicy()

@@ -164,7 +164,7 @@ struct MenuApplyButtonTests {
     private func renders(_ view: NSView, matching condition: (Data) -> Bool) async throws -> Bool {
         let deadline = ContinuousClock.now.advanced(by: .seconds(2))
         repeat {
-            await Task.yield()
+            try await Task.sleep(for: .milliseconds(16))
             if try condition(pixels(of: view)) { return true }
         } while ContinuousClock.now < deadline
         return false
@@ -173,7 +173,7 @@ struct MenuApplyButtonTests {
     private func remainsStable(_ view: NSView, pixels expected: Data) async throws -> Bool {
         let deadline = ContinuousClock.now.advanced(by: .milliseconds(200))
         repeat {
-            await Task.yield()
+            try await Task.sleep(for: .milliseconds(16))
             if try pixels(of: view) != expected { return false }
         } while ContinuousClock.now < deadline
         return true
