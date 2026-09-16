@@ -18,7 +18,7 @@ struct ClaudeCodeCoordinatorTests {
         #expect(connected.claudeCodeStatus == .connected)
         #expect(connected.proxyRunning)
         #expect(fixture.profile.activations.count == 1)
-        #expect(fixture.profile.activations.last?.model == "claude-sonnet-5")
+        #expect(fixture.profile.activations.last?.model == "sonnet")
         #expect(fixture.claudeController.quitCount == 0)
         #expect(fixture.claudeController.openCount == 0)
         #expect(fixture.codexController.quitCount == 0)
@@ -189,7 +189,7 @@ struct ClaudeCodeCoordinatorTests {
         let reapplied = try await fixture.coordinator.applyClaudeCode()
 
         #expect(fixture.profile.activations.count == 1)
-        #expect(fixture.profile.activations.last?.model == "claude-sonnet-5")
+        #expect(fixture.profile.activations.last?.model == "sonnet")
         #expect(reapplied.claudeCodeStatus == .connected)
         #expect(!reapplied.hasPendingClaudeCodeChanges)
         #expect(fixture.store.saves.isEmpty)
@@ -296,8 +296,8 @@ struct ClaudeCodeCoordinatorTests {
         #expect(fixture.profile.activations.count == 1)
     }
 
-    @Test("Changing a physical provider target keeps the route-based profile stable")
-    func changingPhysicalProviderTargetKeepsProfileStable() async throws {
+    @Test("Changing physical capacity refreshes the profile without changing the selected family")
+    func changingPhysicalCapacityUpdatesProfile() async throws {
         let fixture = try await ClaudeCodeCoordinatorFixture.make()
         _ = try await fixture.coordinator.connectClaudeCode()
 
@@ -312,13 +312,14 @@ struct ClaudeCodeCoordinatorTests {
                 modelID: "replacement"
             )
         )
-        #expect(!changed.hasPendingClaudeCodeChanges)
+        #expect(changed.hasPendingClaudeCodeChanges)
         #expect(fixture.profile.activations.count == 1)
 
         let applied = try await fixture.coordinator.applyClaudeCode()
         #expect(!applied.hasPendingClaudeCodeChanges)
-        #expect(fixture.profile.activations.count == 1)
-        #expect(fixture.profile.activations.last?.model == "claude-sonnet-5")
+        #expect(fixture.profile.activations.count == 2)
+        #expect(fixture.profile.activations.last?.model == "sonnet")
+        #expect(fixture.profile.activations.last?.environment["ANTHROPIC_DEFAULT_SONNET_MODEL"] == "claude-sonnet-5")
     }
 
     @Test("Returning or reconciling a CLI draft to applied values clears the draft")

@@ -4,7 +4,7 @@ import LittleSwitchCommon
 public enum ClaudeCatalog {
     package enum ContextPresentation: Equatable, Sendable {
         case capabilities
-        case explicitChoices
+        case canonicalFamilyChoices
     }
 
     package static func make(
@@ -12,11 +12,11 @@ public enum ClaudeCatalog {
         contextPresentation: ContextPresentation = .capabilities
     ) -> ClaudeCatalogResponse {
         let targets = snapshot.validTargets
-        let models = ClaudeRoute.all.flatMap { route -> [ClaudeCatalogModel] in
+        let models = ClaudeRoute.all.compactMap { route -> ClaudeCatalogModel? in
             guard let target = targets[route.id] else {
-                return []
+                return nil
             }
-            let standard = ClaudeCatalogModel(
+            var model = ClaudeCatalogModel(
                 id: route.id,
                 type: "model",
                 displayName: route.catalogDisplayName(indicator: snapshot.modelIndicator),
@@ -27,18 +27,20 @@ public enum ClaudeCatalog {
                 family: route.family,
                 isFamilyDefault: route.isFamilyDefault
             )
-            guard contextPresentation == .explicitChoices, target.supports1MContext else {
-                return [standard]
+            guard contextPresentation == .canonicalFamilyChoices else {
+                return model
             }
-            // Claude Code discovery retains IDs and labels but discards
-            // supports_1m. Publish the selectable reference explicitly.
-            var extended = standard
-            extended.id += "[1m]"
-            extended.displayName = route.catalogDisplayName(indicator: snapshot.modelIndicator, extendedContext: true)
-            extended.maxInputTokens = 1_000_000
-            extended.supports1M = false
-            extended.isFamilyDefault = false
-            return [standard, extended]
+            // Code discovery accepts only IDs containing `claude` or
+            // `anthropic`, then maps canonical family references to its native
+            // picker aliases. Context variants would bypass that mapping and
+            // survive as separate `From gateway` rows.
+            let choice = ClaudeCodeModelChoice(
+                route: route, supports1MContext: target.supports1MContext, indicator: snapshot.modelIndicator
+            )
+            model.displayName = choice.label
+            model.description = choice.description
+            model.maxInputTokens = target.supports1MContext ? 1_000_000 : 200_000
+            return model
         }
         return ClaudeCatalogResponse(
             data: models,

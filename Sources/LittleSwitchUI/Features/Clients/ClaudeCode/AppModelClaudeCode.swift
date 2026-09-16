@@ -117,34 +117,17 @@ extension AppModel {
     }
 
     public var claudeCodeDefaultModelOptions: [ClaudeCodeDefaultModelOption] {
-        claudeCodeMappedRouteOptions.flatMap { route -> [ClaudeCodeDefaultModelOption] in
-            guard let mapping = configuration.mappings[route.id],
-                let provider = configuration.providers.first(
-                    where: { $0.id == mapping.providerID }
-                ),
-                let model = provider.models.first(where: { $0.id == mapping.modelID })
-            else {
-                return []
-            }
-
-            var options = [
+        ClaudeCodeModelChoice.available(providers: configuration.providers, mappings: configuration.mappings)
+            .filter { claudeCodeMappedRouteIDs.contains($0.route.id) }
+            .map { choice in
                 ClaudeCodeDefaultModelOption(
-                    routeID: route.id,
-                    contextMode: .standard,
-                    label: route.displayName
-                )
-            ]
-            if model.supports1MContext {
-                options.append(
-                    ClaudeCodeDefaultModelOption(
-                        routeID: route.id,
-                        contextMode: .extended1M,
-                        label: L10n.string("\(route.displayName) [1m]")
-                    )
+                    routeID: choice.route.id,
+                    contextMode: choice.contextMode,
+                    label: choice.contextMode == .extended1M
+                        ? L10n.string("\(choice.route.displayName) [1m]")
+                        : choice.route.displayName
                 )
             }
-            return options
-        }
     }
 
     public var claudeCodeDefaultModelSelection: ClaudeCodeDefaultModelOption? {
@@ -153,9 +136,6 @@ extension AppModel {
         }
         return claudeCodeDefaultModelOptions.first {
             $0.routeID == routeID
-                && $0.contextMode == configuration.claudeCode.contextMode
-        } ?? claudeCodeDefaultModelOptions.first {
-            $0.routeID == routeID && $0.contextMode == .standard
         } ?? claudeCodeDefaultModelOptions.first
     }
 

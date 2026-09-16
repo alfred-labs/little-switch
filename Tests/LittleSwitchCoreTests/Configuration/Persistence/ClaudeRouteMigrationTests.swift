@@ -31,8 +31,8 @@ struct ClaudeRouteMigrationTests {
         #expect(migrated == expected)
         let managed = try ClaudeCodeManagedSettings.resolve(
             providers: migrated.providers, mappings: migrated.mappings, configuration: migrated.claudeCode)
-        #expect(managed.model == "claude-fable-5-1[1m]")
-        #expect(managed.environment["ANTHROPIC_DEFAULT_FABLE_MODEL"] == "claude-fable-5-1")
+        #expect(managed.model == "fable")
+        #expect(managed.environment["ANTHROPIC_DEFAULT_FABLE_MODEL"] == "claude-fable-5-1[1m]")
     }
 
     @Test("An explicit Fable 5.1 mapping takes precedence over a legacy mapping")

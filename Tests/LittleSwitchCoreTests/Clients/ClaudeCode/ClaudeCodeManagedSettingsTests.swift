@@ -6,7 +6,7 @@ import Testing
 
 @Suite("Claude Code managed settings")
 struct ClaudeCodeManagedSettingsTests {
-    @Test("Resolver applies the 1M suffix only to the selected default route")
+    @Test("Resolver uses a native default alias and gives eligible families their 1M reference")
     func extendedContextEnvironment() throws {
         let fixture = fixture()
 
@@ -19,10 +19,10 @@ struct ClaudeCodeManagedSettingsTests {
             )
         )
 
-        #expect(managed.model == "claude-sonnet-5[1m]")
+        #expect(managed.model == "sonnet")
         #expect(managed.environment["ANTHROPIC_DEFAULT_FABLE_MODEL"] == "claude-fable-5-1")
         #expect(managed.environment["ANTHROPIC_DEFAULT_OPUS_MODEL"] == "claude-opus-5")
-        #expect(managed.environment["ANTHROPIC_DEFAULT_SONNET_MODEL"] == "claude-sonnet-5")
+        #expect(managed.environment["ANTHROPIC_DEFAULT_SONNET_MODEL"] == "claude-sonnet-5[1m]")
         #expect(
             managed.environment["ANTHROPIC_DEFAULT_HAIKU_MODEL"]
                 == "claude-haiku-4-5-20251001"
@@ -42,15 +42,24 @@ struct ClaudeCodeManagedSettingsTests {
         #expect(
             managed
                 == ClaudeCodeManagedSettings(
-                    model: "claude-sonnet-5",
+                    model: "sonnet",
                     environment: [
+                        "ANTHROPIC_DEFAULT_MODEL": "sonnet",
                         "ANTHROPIC_BASE_URL": "http://127.0.0.1:11436",
                         "ANTHROPIC_API_KEY": "",
                         "ANTHROPIC_AUTH_TOKEN": ProductIdentity.gatewayAPIKey,
                         "ANTHROPIC_DEFAULT_FABLE_MODEL": "claude-fable-5-1",
                         "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5",
-                        "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5",
+                        "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5[1m]",
                         "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5-20251001",
+                        "ANTHROPIC_DEFAULT_FABLE_MODEL_NAME": "Fable 5.1 ↦",
+                        "ANTHROPIC_DEFAULT_OPUS_MODEL_NAME": "Opus 5 ↦",
+                        "ANTHROPIC_DEFAULT_SONNET_MODEL_NAME": "Sonnet 5 ↦ (1M context)",
+                        "ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME": "Haiku 4.5 ↦",
+                        "ANTHROPIC_DEFAULT_FABLE_MODEL_DESCRIPTION": "Via LittleSwitch",
+                        "ANTHROPIC_DEFAULT_OPUS_MODEL_DESCRIPTION": "Via LittleSwitch",
+                        "ANTHROPIC_DEFAULT_SONNET_MODEL_DESCRIPTION": "Via LittleSwitch",
+                        "ANTHROPIC_DEFAULT_HAIKU_MODEL_DESCRIPTION": "Via LittleSwitch",
                         "CLAUDE_CODE_USE_ANTHROPIC_AWS": "",
                         "CLAUDE_CODE_USE_BEDROCK": "",
                         "CLAUDE_CODE_USE_FOUNDRY": "",
@@ -141,11 +150,11 @@ struct ClaudeCodeManagedSettingsTests {
             configuration: ClaudeCodeConfiguration(defaultModel: "claude-opus-5")
         )
 
-        #expect(managed.model == "claude-sonnet-5")
+        #expect(managed.model == "sonnet")
         #expect(managed.environment["ANTHROPIC_DEFAULT_OPUS_MODEL"] == "claude-opus-5")
     }
 
-    @Test("Changing a physical target preserves the managed Claude route signature")
+    @Test("Changing physical capacity preserves the family and updates only its context presentation")
     func physicalTargetChangePreservesSignature() throws {
         let fixture = fixture()
         let configuration = ClaudeCodeConfiguration(defaultModel: "claude-sonnet-5")
@@ -166,7 +175,10 @@ struct ClaudeCodeManagedSettingsTests {
             configuration: configuration
         )
 
-        #expect(replacement == original)
+        var expected = original
+        expected.environment["ANTHROPIC_DEFAULT_SONNET_MODEL"] = "claude-sonnet-5"
+        expected.environment["ANTHROPIC_DEFAULT_SONNET_MODEL_NAME"] = "Sonnet 5 ↦"
+        #expect(replacement == expected)
     }
 
     @Test("Resolver rejects empty mappings for a valid catalog")
@@ -198,6 +210,12 @@ struct ClaudeCodeManagedSettingsTests {
         // betas, including the [1m] feature, and silently forces standard
         // mode over ENABLE_TOOL_SEARCH (§4.1).
         #expect(environment["CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS"] == nil)
+    }
+
+    @Test("Relabeling a sparse legacy signature never invents family mappings")
+    func sparsePresentationUpdate() {
+        let legacy = ClaudeCodeManagedSettings(model: "claude-sonnet-5", environment: ["CUSTOM_SETTING": "keep"])
+        #expect(legacy.withModelIndicator(.none) == legacy)
     }
 
     private func fixture() -> (provider: Provider, mappings: [String: ModelMapping]) {

@@ -64,6 +64,9 @@ extension RoutingSnapshot {
                         == baseModel
                     || target.route.catalogDisplayName(indicator: modelIndicator, extendedContext: usesExtendedContext)
                         == model
+                    || ClaudeCodeModelChoice(
+                        route: target.route, supports1MContext: target.supports1MContext, indicator: modelIndicator
+                    ).label == model
             }
         guard let target else {
             return nil

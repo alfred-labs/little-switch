@@ -22,7 +22,7 @@ extension GatewayTests {
         ]
     )
     func catalogClientContextChoices(fixture clientFixture: (String?, Bool)) async throws {
-        let (userAgent, explicitChoices) = clientFixture
+        let (userAgent, claudeCodeCatalog) = clientFixture
         let fixture = try makeFixture()
         let transport = RecordingGatewayTransport(responses: [])
         let app = makeApplication(fixture: fixture, transport: transport)
@@ -35,12 +35,14 @@ extension GatewayTests {
             let catalog = try JSONDecoder().decode(ClaudeCatalogResponse.self, from: data(response.body))
             #expect(
                 catalog.data.map(\.id)
-                    == (explicitChoices ? ["claude-opus-5", "claude-opus-5[1m]"] : ["claude-opus-5"]))
+                    == ["claude-opus-5"])
             #expect(catalog.data.first?.supports1M == true)
-            if explicitChoices {
-                #expect(catalog.data.last?.displayName == "Opus ↦ [1m]")
+            if claudeCodeCatalog {
+                #expect(catalog.data.last?.displayName == "Opus 5 ↦ (1M context)")
                 #expect(catalog.data.last?.maxInputTokens == 1_000_000)
-                #expect(catalog.data.last?.supports1M == false)
+                #expect(catalog.data.last?.isFamilyDefault == true)
+                #expect(catalog.data.last?.family == "opus")
+                #expect(catalog.data.last?.description == "Via LittleSwitch")
             } else {
                 // Desktop generates its own extended choice from supports_1m.
                 let desktopIDs = catalog.data.flatMap { model in

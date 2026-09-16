@@ -36,6 +36,22 @@ public struct ClaudeRoute: Codable, Equatable, Hashable, Identifiable, Sendable 
         ),
     ]
 
+    public var modelDisplayName: String {
+        switch id {
+        case "claude-fable-5-1": "Fable 5.1"
+        case "claude-opus-5": "Opus 5"
+        case "claude-sonnet-5": "Sonnet 5"
+        case "claude-haiku-4-5-20251001": "Haiku 4.5"
+        default: displayName
+        }
+    }
+
+    /// Claude Desktop gates its Ultra Code workflow on an xhigh-or-higher
+    /// effort contract. Current Haiku models offer thinking modes, not efforts.
+    public var offersMaxEffort: Bool {
+        family != "haiku"
+    }
+
     /// Label served as the catalog `display_name` to clients. The indicator
     /// arrow marks the slot as a live-switchable alias in client model
     /// pickers; the mapping UI shows the plain name beside its own arrow.

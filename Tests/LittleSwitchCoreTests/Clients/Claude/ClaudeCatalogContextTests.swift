@@ -6,8 +6,8 @@ import Testing
 
 @Suite("Claude catalog context choices")
 struct ClaudeCatalogContextTests {
-    @Test("Discovery exposes explicit standard and 1M choices for every eligible route")
-    func explicitContextChoices() throws {
+    @Test("Discovery exposes one canonical family choice when every mapped model supports 1M")
+    func familyContextChoices() throws {
         let provider = Provider(
             name: "Gateway",
             baseURL: "https://example.com",
@@ -22,25 +22,26 @@ struct ClaudeCatalogContextTests {
                     ($0.id, ModelMapping(providerID: provider.id, modelID: "flash"))
                 })
         )
-        let catalog = ClaudeCatalog.make(from: snapshot, contextPresentation: .explicitChoices)
+        let catalog = ClaudeCatalog.make(from: snapshot, contextPresentation: .canonicalFamilyChoices)
         #expect(
             catalog.data.map(\.id) == [
-                "claude-fable-5-1", "claude-fable-5-1[1m]",
-                "claude-opus-5", "claude-opus-5[1m]",
-                "claude-sonnet-5", "claude-sonnet-5[1m]",
-                "claude-haiku-4-5-20251001", "claude-haiku-4-5-20251001[1m]",
+                "claude-fable-5-1", "claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5-20251001",
             ])
         #expect(catalog.firstID == "claude-fable-5-1")
-        #expect(catalog.lastID == "claude-haiku-4-5-20251001[1m]")
+        #expect(catalog.lastID == "claude-haiku-4-5-20251001")
         #expect(!catalog.hasMore)
 
-        // Claude Code strips capability fields during discovery. Each option
-        // must therefore exist as an ID, independently of the selected default.
+        // Discovery retains a Claude-compatible canonical ID even when it
+        // discards capabilities. Managed defaults select the concrete context.
         let discovery = try JSONDecoder().decode(
             DiscoveredCatalog.self, from: ClaudeCatalog.encode(catalog))
         #expect(discovery.data.map(\.id) == catalog.data.map(\.id))
-        #expect(discovery.data.contains(DiscoveredOption(id: "claude-sonnet-5[1m]", displayName: "Sonnet ↦ [1m]")))
+        #expect(
+            discovery.data.contains(
+                DiscoveredOption(id: "claude-sonnet-5", displayName: "Sonnet 5 ↦ (1M context)")))
         for option in catalog.data {
+            #expect(option.maxInputTokens == 1_000_000)
+            #expect(option.isFamilyDefault)
             #expect(snapshot.resolve(model: option.id)?.modelID == "flash")
             #expect(snapshot.resolve(model: option.displayName)?.modelID == "flash")
         }
@@ -77,23 +78,14 @@ struct ClaudeCatalogContextTests {
             family: "sonnet",
             isFamilyDefault: true
         )
-        var expected = [base]
-        if supports1M {
-            expected.append(
-                ClaudeCatalogModel(
-                    id: "claude-sonnet-5[1m]",
-                    type: "model",
-                    displayName: "\(base.displayName) [1m]",
-                    createdAt: route.createdAt,
-                    maxTokens: 64_000,
-                    maxInputTokens: 1_000_000,
-                    supports1M: false,
-                    family: "sonnet",
-                    isFamilyDefault: false
-                ))
-        }
-        let catalog = ClaudeCatalog.make(from: snapshot, contextPresentation: .explicitChoices)
-        #expect(catalog.data == expected)
+        #expect(ClaudeCatalog.make(from: snapshot).data == [base])
+        var expected = base
+        let name = indicator.symbol.map { "Sonnet 5 \($0)" } ?? "Sonnet 5"
+        expected.displayName = supports1M ? "\(name) (1M context)" : name
+        expected.description = "Via LittleSwitch"
+        expected.maxInputTokens = supports1M ? 1_000_000 : 200_000
+        let catalog = ClaudeCatalog.make(from: snapshot, contextPresentation: .canonicalFamilyChoices)
+        #expect(catalog.data == [expected])
         for option in catalog.data {
             #expect(snapshot.resolve(model: option.displayName) == snapshot.resolve(model: option.id))
         }

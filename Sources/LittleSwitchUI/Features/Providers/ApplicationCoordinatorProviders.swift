@@ -408,20 +408,6 @@ extension ApplicationCoordinator {
         return await snapshot()
     }
 
-    /// The catalog indicator is a presentation preference: persist it and
-    /// hot-swap the gateway catalog, nothing else to touch. Deliberately
-    /// unguarded — re-applying the current value also repairs a gateway
-    /// whose indicator has drifted.
-    public func setModelIndicator(
-        _ indicator: ModelIndicator
-    ) async throws -> CoordinatorSnapshot {
-        try await persistingConfigurationChange {
-            $0.modelIndicator = indicator
-        }
-        await replaceGatewayRoutingIfNeeded()
-        return await snapshot()
-    }
-
     /// Persists a configuration mutation with in-memory rollback; returns the
     /// configuration as it was, for callers with further committed layers to
     /// unwind.

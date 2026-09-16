@@ -38,11 +38,13 @@ struct ClaudeCodeContextModeCoordinatorTests {
         )
         #expect(pending.configuration.claudeCode.defaultModel == "claude-sonnet-5")
         #expect(pending.configuration.claudeCode.contextMode == .extended1M)
-        #expect(pending.hasPendingClaudeCodeChanges)
+        #expect(!pending.hasPendingClaudeCodeChanges)
 
         let applied = try await connected.coordinator.applyClaudeCode()
         #expect(!applied.hasPendingClaudeCodeChanges)
-        #expect(connected.profile.activations.last?.model == "claude-sonnet-5[1m]")
+        #expect(connected.profile.activations.last?.model == "sonnet")
+        #expect(
+            connected.profile.activations.last?.environment["ANTHROPIC_DEFAULT_SONNET_MODEL"] == "claude-sonnet-5[1m]")
 
         let changedRoute = try await connected.coordinator.setClaudeCodeDefaultModel(
             "claude-opus-5",
@@ -50,5 +52,6 @@ struct ClaudeCodeContextModeCoordinatorTests {
         )
         #expect(changedRoute.configuration.claudeCode.defaultModel == "claude-opus-5")
         #expect(changedRoute.configuration.claudeCode.contextMode == .standard)
+        #expect(changedRoute.hasPendingClaudeCodeChanges)
     }
 }

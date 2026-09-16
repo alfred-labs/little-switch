@@ -271,14 +271,15 @@ extension ApplicationCoordinator {
                 configuration: configuration.claudeCode,
                 tlsEnabled: tlsProvisioner.map {
                     $0.isTrusted(secretStore: secretStore)
-                } ?? false
+                } ?? false,
+                modelIndicator: configuration.modelIndicator
             )
         } catch ClaudeCodeManagedSettings.Error.noMappedModel {
             throw Error.noMappedClaudeCodeModel
         }
     }
 
-    private func claudeCodeDependencies() throws -> any ClaudeCodeProfileManaging {
+    package func claudeCodeDependencies() throws -> any ClaudeCodeProfileManaging {
         guard let claudeCodeProfileManager else {
             throw Error.claudeCodeUnavailable
         }

@@ -11,7 +11,7 @@ extension GatewayResponder {
         let cliPrefix = "claude-code/"
         let contextPresentation: ClaudeCatalog.ContextPresentation
         if let product, product.lowercased().hasPrefix(cliPrefix), product.count > cliPrefix.count {
-            contextPresentation = .explicitChoices
+            contextPresentation = .canonicalFamilyChoices
         } else {
             contextPresentation = .capabilities
         }

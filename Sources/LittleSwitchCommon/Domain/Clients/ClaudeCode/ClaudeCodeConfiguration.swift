@@ -74,12 +74,11 @@ public struct ClaudeCodeConfiguration: Codable, Equatable, Sendable {
                         && routesByID[routeID]?.isFamilyDefault == true
                 } ?? available.first
         }
-        if !result.defaultModelSupports1MContext(
-            providers: providers,
-            mappings: mappings
-        ) {
-            result.contextMode = .standard
-        }
+        result.contextMode =
+            result.defaultModelSupports1MContext(
+                providers: providers,
+                mappings: mappings
+            ) ? .extended1M : .standard
         return result
     }
 

@@ -6,6 +6,6 @@ public struct ClaudeCodeDefaultModelOption: Equatable, Hashable, Identifiable, S
     public var label: String
 
     public var id: String {
-        "\(routeID)|\(contextMode.rawValue)"
+        routeID
     }
 }

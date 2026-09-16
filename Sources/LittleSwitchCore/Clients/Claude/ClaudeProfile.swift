@@ -192,7 +192,13 @@ public struct ClaudeProfileManager: Sendable {
         var thirdParty = try fileStore.readObject(paths.thirdPartyConfig)
         var normal = try fileStore.readObject(paths.normalConfig)
 
-        configureProfile(&profile, autoMode: autoMode, tlsEnabled: tlsEnabled)
+        let inferenceModels = managedInferenceModels()
+        configureProfile(
+            &profile,
+            autoMode: autoMode,
+            tlsEnabled: tlsEnabled,
+            inferenceModels: inferenceModels
+        )
         configureMetadata(&metadata)
         thirdParty["deploymentMode"] = "3p"
         normal["deploymentMode"] = "3p"
@@ -251,6 +257,10 @@ public struct ClaudeProfileManager: Sendable {
                 == ClaudeProfileIdentity.gatewayBaseURL
                 || profile["inferenceGatewayBaseUrl"] as? String
                     == ClaudeProfileIdentity.gatewayHTTPBaseURL,
+            profile["modelDiscoveryEnabled"] as? Bool == true,
+            isManagedInferenceModelsActive(
+                profile["inferenceModels"], expected: managedInferenceModels()
+            ),
             hasSupportedIdentity,
             profile["autoModeEnabled"] as? Bool == autoMode
         else {
@@ -280,7 +290,8 @@ public struct ClaudeProfileManager: Sendable {
     private func configureProfile(
         _ profile: inout [String: Any],
         autoMode: Bool,
-        tlsEnabled: Bool
+        tlsEnabled: Bool,
+        inferenceModels: [[String: Any]]?
     ) {
         profile["inferenceProvider"] = "gateway"
         profile["inferenceGatewayBaseUrl"] =
@@ -290,6 +301,7 @@ public struct ClaudeProfileManager: Sendable {
         profile["inferenceGatewayApiKey"] = ClaudeProfileIdentity.gatewayAPIKey
         profile["inferenceGatewayAuthScheme"] = "bearer"
         profile["deploymentDisplayName"] = ClaudeProfileIdentity.name
+        profile["modelDiscoveryEnabled"] = true
         profile["chatTabEnabled"] = true
         profile["disableDeploymentModeChooser"] = true
         profile["coworkEgressAllowedHosts"] = ["*"]
@@ -297,10 +309,64 @@ public struct ClaudeProfileManager: Sendable {
         profile["disableNonessentialTelemetry"] = true
         profile["autoModeEnabled"] = autoMode
         profile["allowedPluginMarketplaces"] = ClaudeProfileManager.defaultMarketplaces
-        profile.removeValue(forKey: "inferenceModels")
+        if let inferenceModels, !inferenceModels.isEmpty {
+            profile["inferenceModels"] = inferenceModels
+        } else {
+            profile.removeValue(forKey: "inferenceModels")
+        }
         // Migrate profiles written before the rename: the stale key is what
         // Desktop warned about at every launch.
         profile.removeValue(forKey: "marketplaces")
+    }
+
+    private func managedInferenceModels() -> [[String: Any]]? {
+        guard let object = try? fileStore.readObject(paths.littleSwitchConfig),
+            let data = try? JSONSerialization.data(withJSONObject: object),
+            let configuration = try? JSONDecoder().decode(AppConfiguration.self, from: data)
+        else {
+            return nil
+        }
+        let choices = ClaudeCodeModelChoice.available(
+            providers: configuration.providers,
+            mappings: configuration.mappings,
+            indicator: configuration.modelIndicator
+        )
+        return choices.map { choice in
+            var model: [String: Any] = [
+                "name": choice.route.id,
+                "labelOverride": choice.baseLabel,
+                "anthropicFamilyTier": choice.route.family,
+                "isFamilyDefault": choice.route.isFamilyDefault,
+            ]
+            if choice.contextMode == .extended1M {
+                model["supports1m"] = true
+            }
+            if choice.route.offersMaxEffort {
+                model["maxEffort"] = "max"
+            }
+            return model
+        }
+    }
+
+    private func isManagedInferenceModelsActive(
+        _ actual: Any?,
+        expected: [[String: Any]]?
+    ) -> Bool {
+        guard let expected else {
+            return true
+        }
+        guard let actual,
+            JSONSerialization.isValidJSONObject(actual),
+            let actualData = try? JSONSerialization.data(
+                withJSONObject: actual, options: [.sortedKeys]
+            ),
+            let expectedData = try? JSONSerialization.data(
+                withJSONObject: expected, options: [.sortedKeys]
+            )
+        else {
+            return false
+        }
+        return actualData == expectedData
     }
 
     private func configureMetadata(_ metadata: inout [String: Any]) {
@@ -338,6 +404,7 @@ public struct ClaudeProfileManager: Sendable {
             "inferenceGatewayAuthScheme",
             "deploymentDisplayName",
             "inferenceModels",
+            "modelDiscoveryEnabled",
             "coworkEgressAllowedHosts",
             "autoModeEnabled",
             "allowedPluginMarketplaces",

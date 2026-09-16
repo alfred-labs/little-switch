@@ -159,7 +159,7 @@ struct AppModelClaudeCodeTests {
         #expect(!model.canApplyClaudeProducts)
     }
 
-    @Test("Claude Code default options expose route aliases and eligible 1M variants")
+    @Test("Claude Code default options expose one automatically sized choice per family")
     func defaultModelOptions() {
         let providerID = UUID()
         let sonnetMapping = ModelMapping(providerID: providerID, modelID: "glm-5.3-flash")
@@ -201,7 +201,6 @@ struct AppModelClaudeCodeTests {
 
         #expect(
             model.claudeCodeDefaultModelOptions.map(\.label) == [
-                "Sonnet",
                 "Sonnet [1m]",
                 "Haiku",
             ]
@@ -209,22 +208,19 @@ struct AppModelClaudeCodeTests {
         #expect(
             model.claudeCodeDefaultModelOptions.map(\.routeID) == [
                 "claude-sonnet-5",
-                "claude-sonnet-5",
                 "claude-haiku-4-5-20251001",
             ]
         )
         #expect(
             model.claudeCodeDefaultModelOptions.map(\.contextMode) == [
-                .standard,
                 .extended1M,
                 .standard,
             ]
         )
         #expect(
             model.claudeCodeDefaultModelOptions.map(\.id) == [
-                "claude-sonnet-5|standard",
-                "claude-sonnet-5|1m",
-                "claude-haiku-4-5-20251001|standard",
+                "claude-sonnet-5",
+                "claude-haiku-4-5-20251001",
             ]
         )
         #expect(
@@ -235,7 +231,7 @@ struct AppModelClaudeCodeTests {
         model.configuration.claudeCode.contextMode = .standard
         #expect(
             model.claudeCodeDefaultModelSelection?.label
-                == "Sonnet"
+                == "Sonnet [1m]"
         )
 
         model.configuration.claudeCode.defaultModel = "claude-haiku-4-5-20251001"

@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import Testing
 
 @testable import LittleSwitchCore
@@ -79,6 +80,7 @@ struct ClaudeProfileTests {
         #expect(profile["allowedPluginMarketplaces"] as? [[String: String]] == ClaudeProfileManager.defaultMarketplaces)
         #expect(profile["marketplaces"] == nil)
         #expect(profile["inferenceModels"] == nil)
+        #expect(profile["modelDiscoveryEnabled"] as? Bool == true)
 
         let metadata = try fixture.object(at: fixture.paths.metadata)
         #expect(metadata["appliedId"] as? String == ClaudeProfileIdentity.id)
@@ -118,8 +120,71 @@ struct ClaudeProfileTests {
         #expect(profile["disableDeploymentModeChooser"] as? Bool == false)
         #expect(profile["marketplaces"] == nil)
         #expect(profile["allowedPluginMarketplaces"] == nil)
+        #expect(profile["modelDiscoveryEnabled"] == nil)
         let active = try manager.isActive(autoMode: true)
         #expect(!active)
+    }
+
+    @Test("Disabling managed model discovery marks the profile drifted")
+    func modelDiscoveryDrift() throws {
+        let fixture = try ProfileFixture()
+        defer { fixture.remove() }
+        try fixture.writeInitialFiles()
+        let manager = ClaudeProfileManager(paths: fixture.paths)
+        try manager.activate(autoMode: true, tlsEnabled: true)
+        var profile = try fixture.object(at: fixture.paths.profile)
+        profile["modelDiscoveryEnabled"] = false
+        try fixture.writeJSON(profile, to: fixture.paths.profile)
+
+        #expect(try !manager.isActive(autoMode: true))
+    }
+
+    @Test("Managed model labels override Desktop's native catalog")
+    func managedInferenceModels() throws {
+        let fixture = try ProfileFixture()
+        defer { fixture.remove() }
+        try fixture.writeInitialFiles()
+        let provider = Provider(
+            name: "Gateway",
+            baseURL: "https://example.com",
+            authMode: .bearer,
+            models: [
+                DiscoveredModel(id: "large", detectedContextWindow: 1_000_000),
+                DiscoveredModel(id: "small"),
+            ]
+        )
+        let configuration = AppConfiguration(
+            providers: [provider],
+            mappings: [
+                "claude-opus-5": ModelMapping(providerID: provider.id, modelID: "large"),
+                "claude-sonnet-5": ModelMapping(providerID: provider.id, modelID: "small"),
+            ]
+        )
+        let configurationObject = try #require(
+            JSONSerialization.jsonObject(
+                with: JSONEncoder().encode(configuration)
+            ) as? [String: Any]
+        )
+        try fixture.writeJSON(configurationObject, to: fixture.paths.littleSwitchConfig)
+        let manager = ClaudeProfileManager(paths: fixture.paths)
+
+        try manager.activate(autoMode: true, tlsEnabled: true)
+
+        let models = try #require(
+            try fixture.object(at: fixture.paths.profile)["inferenceModels"] as? [[String: Any]]
+        )
+        #expect(models.map(\.name) == ["claude-opus-5", "claude-sonnet-5"])
+        #expect(models.map(\.labelOverride) == ["Opus 5 ↦", "Sonnet 5 ↦"])
+        #expect(models.map(\.supports1M) == [true, nil])
+        #expect(models.map(\.maxEffort) == ["max", "max"])
+        #expect(models.map(\.familyTier) == ["opus", "sonnet"])
+        #expect(models.map(\.isFamilyDefault) == [true, true])
+        #expect(try manager.isActive(autoMode: true))
+
+        var profile = try fixture.object(at: fixture.paths.profile)
+        profile.removeValue(forKey: "inferenceModels")
+        try fixture.writeJSON(profile, to: fixture.paths.profile)
+        #expect(try !manager.isActive(autoMode: true))
     }
 
     @Test("A partial activation rolls every managed file back byte for byte")
@@ -510,4 +575,13 @@ private final class RecordingProfileFileStore: ClaudeProfileFileStore, @unchecke
         }
         try disk.restore(data, to: url)
     }
+}
+
+extension [String: Any] {
+    fileprivate var name: String? { self["name"] as? String }
+    fileprivate var labelOverride: String? { self["labelOverride"] as? String }
+    fileprivate var supports1M: Bool? { self["supports1m"] as? Bool }
+    fileprivate var maxEffort: String? { self["maxEffort"] as? String }
+    fileprivate var familyTier: String? { self["anthropicFamilyTier"] as? String }
+    fileprivate var isFamilyDefault: Bool? { self["isFamilyDefault"] as? Bool }
 }

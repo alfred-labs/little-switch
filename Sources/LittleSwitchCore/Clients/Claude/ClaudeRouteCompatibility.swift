@@ -4,7 +4,10 @@ import LittleSwitchCommon
 /// mappings and new catalogs use the current route identity.
 package enum ClaudeRouteCompatibility {
     package static func canonicalID(_ identifier: String) -> String {
-        identifier == "claude-fable-5" ? "claude-fable-5-1" : identifier
+        if identifier == "claude-fable-5" {
+            return "claude-fable-5-1"
+        }
+        return ClaudeRoute.all.first { $0.family == identifier }?.id ?? identifier
     }
 
     package static func migrate(_ mappings: [String: ModelMapping]) -> [String: ModelMapping] {
