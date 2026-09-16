@@ -92,7 +92,9 @@ xcrun swift build --disable-sandbox --package-path tools \
 [tasks."tools:test"]
 description = "Test the standalone Swift repository tools"
 run = """
-xcrun swift test --disable-sandbox --package-path tools \
+# Synchronous CLI fixtures must not starve the async loopback HTTP fixtures on
+# small CI runners. Match tools:coverage's serial test scheduling.
+xcrun swift test --disable-sandbox --package-path tools --no-parallel \
   --scratch-path .build/tooling \
   --cache-path .build/tooling-cache --config-path .build/tooling-config --security-path .build/tooling-security \
   -Xswiftc -warnings-as-errors

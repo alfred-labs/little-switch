@@ -79,6 +79,12 @@ and [SwiftPM cache locations](https://github.com/swiftlang/swift-package-manager
 
 ### Concurrency test fixtures
 
+The tooling tests run sequentially, both in `tools:test` and `tools:coverage`.
+Many CLI fixtures synchronously wait for subprocesses; running them alongside
+the asynchronous loopback HTTP fixtures can exhaust the cooperative workers on
+small CI runners and cause unrelated request timeouts. No HTTP deadline or
+assertion is relaxed. The application's `swift:test` suites remain parallel.
+
 Fixtures that deliberately block synchronous credential or configuration APIs
 use dedicated task executors rather than occupy Swift's cooperative worker pool.
 These four tests require macOS 15's task-executor API; the required Xcode 27 host
