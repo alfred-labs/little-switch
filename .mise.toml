@@ -209,6 +209,16 @@ depends = ["app:build"]
 description = "Run every local Swift quality gate"
 run = """
 set -eu
+mise run check:repository
+mise run check:tests
+mise run check:analysis
+mise run check:bundle
+"""
+
+[tasks."check:repository"]
+description = "Check source style, repository tools, schemas, and vendored JSON"
+run = """
+set -eu
 mise run toolchains
 mise run swift:format
 mise run swift:lint
@@ -220,10 +230,25 @@ mise run ordered-json:tools:test
 mise run ordered-json:test
 mise run tools:coverage
 mise run tools:deadcode
-mise run swift:test
+"""
+
+[tasks."check:tests"]
+description = "Run all application Swift Testing suites"
+run = "mise run swift:test"
+
+[tasks."check:analysis"]
+description = "Check application coverage, dead code, and thread safety"
+run = """
+set -eu
 mise run swift:coverage
 mise run swift:deadcode
 mise run swift:thread-sanitizer
+"""
+
+[tasks."check:bundle"]
+description = "Build and verify the strict release application bundle"
+run = """
+set -eu
 # app:build includes the strict release build through swift-release.sh.
 mise run app:build
 mise run verify:bundle

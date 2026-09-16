@@ -63,6 +63,9 @@ private final class BlockingSleep: @unchecked Sendable {
         lock.withLock { durations.append(seconds) }
         while true {
             if lock.withLock({ open }) {
+                // A released fake still suspends so the refresh loop cannot
+                // starve the test that observes its next run and cancels it.
+                await Task.yield()
                 return
             }
             try Task.checkCancellation()

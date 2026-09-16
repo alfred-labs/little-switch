@@ -8,7 +8,7 @@ import Testing
 @testable import LittleSwitchUI
 
 @MainActor
-@Suite("Search provider keyboard navigation", .serialized)
+@Suite("Search provider keyboard navigation", .appKitIsolation)
 struct WebSearchProviderKeyboardTests {
     @Test("Native arrow commands respect direction, bounds and disabled state", arguments: [false, true])
     func arrowNavigation(rightToLeft: Bool) async throws {
@@ -35,22 +35,37 @@ struct WebSearchProviderKeyboardTests {
             let selection = SearchProviderSelectionState()
             selection.provider = step.from
             let binding = Binding(get: { selection.provider }, set: { selection.provider = $0 })
-            let host = MenuControlTestHost(
+            func content(disabled: Bool) -> some View {
                 WebSearchProviderPicker(selection: binding)
                     .environment(\.layoutDirection, rightToLeft ? .rightToLeft : .leftToRight)
-                    .disabled(step.disabled),
+                    .disabled(disabled)
+            }
+            let wasActive = NSApplication.shared.isActive
+            let host = MenuControlTestHost(
+                content(disabled: false),
                 width: 600,
                 height: 120
             )
-            defer { host.close() }
+            defer {
+                host.close()
+                #expect(NSApp.isActive == wasActive)
+            }
             try await host.activateAccessibility()
-            #expect(host.window.makeFirstResponder(host.hosting))
+            try host.prepareForKeyboardFocus()
+            let name = try #require(names[step.from])
             if step.focused {
-                let name = try #require(names[step.from])
-                let button = try host.element(label: name)
-                button.object.setAccessibilityFocused?(true)
+                try await host.focus(label: name)
+            } else {
+                try await host.clearFocus()
+            }
+            if step.disabled {
+                // Acquire focus while enabled, then exercise the disabled transition.
+                host.hosting.rootView = content(disabled: true)
+                host.render()
+                try #require(!host.element(label: name).isAccessibilityEnabled())
             }
             host.render()
+            #expect(selection.provider == step.from)
             // Each fresh host exercises one native command, including the
             // unfocused case, without stealing the user's application focus.
             host.hosting.keyDown(with: try keyEvent(step.key, window: host.window))

@@ -104,21 +104,18 @@ struct MonitoringSettingsControlsTests {
         let hosting = host(model) { model.monitoringDraft = $0 }
         let window = window(hosting)
         defer { window.close() }
-        let picker = try #require(
-            descendants(NSPopUpButton.self, in: hosting).first {
-                $0.itemTitles.contains(L10n.string("\(17) s (current)"))
-            }
-        )
-        #expect(picker.titleOfSelectedItem == L10n.string("\(17) s (current)"))
+        let picker = NativeMenuPickerTestControl(root: hosting, identifyingTitle: L10n.string("5 min"))
+        let originalControl = try picker.nativeView
+        #expect(try picker.selectedTitle == L10n.string("\(17) s (current)"))
         #expect(model.monitoringDraft == nil)
         model.monitoringStatus.metrics = .init(state: .sending)
         hosting.layoutSubtreeIfNeeded()
-        #expect(picker.titleOfSelectedItem == L10n.string("\(17) s (current)"))
+        #expect(try picker.nativeView === originalControl)
+        #expect(try picker.selectedTitle == L10n.string("\(17) s (current)"))
         #expect(model.configuration.monitoring.metricIntervalSeconds == 17)
 
-        for (title, seconds) in [(L10n.string("1 min"), 60), ("5 s", 5), (L10n.string("5 min"), 300)] {
-            let menu = try #require(picker.menu)
-            menu.performActionForItem(at: picker.indexOfItem(withTitle: title))
+        for (title, seconds) in [(L10n.string("1 min"), 60), (L10n.string("\(5) s"), 5), (L10n.string("5 min"), 300)] {
+            try picker.select(title)
             hosting.layoutSubtreeIfNeeded()
             _ = try await eventually(description: "the selected monitoring interval") {
                 await MainActor.run {
@@ -127,12 +124,9 @@ struct MonitoringSettingsControlsTests {
             }
             model.monitoringStatus.metrics = .init(state: .idle, lastAccepted: Date())
             hosting.layoutSubtreeIfNeeded()
-            let updated = try #require(
-                descendants(NSPopUpButton.self, in: hosting).first { $0.itemTitles.contains(L10n.string("5 min")) }
-            )
-            #expect(updated === picker)
-            #expect(updated.titleOfSelectedItem == title)
-            #expect(!updated.itemTitles.contains("17 s (current)"))
+            #expect(try picker.nativeView === originalControl)
+            #expect(try picker.selectedTitle == title)
+            #expect(try !picker.titles.contains(L10n.string("\(17) s (current)")))
             let draft = MonitoringSettingsDraft(configuration: configuration, pending: model.monitoringDraft)
             #expect(draft.configuration.metricIntervalSeconds == seconds)
             #expect(draft.validationMessage == nil)

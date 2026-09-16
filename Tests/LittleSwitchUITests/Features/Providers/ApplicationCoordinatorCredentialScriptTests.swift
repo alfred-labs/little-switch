@@ -443,6 +443,9 @@ private final class HeldSleepGate: @unchecked Sendable {
                 throw CancellationError()
             }
             if lock.withLock({ open }) {
+                // Keep the released fake cooperative so the observer can run
+                // and shut down the refresh loop even on a single worker.
+                await Task.yield()
                 return
             }
             try? await Task.sleep(for: .milliseconds(10))

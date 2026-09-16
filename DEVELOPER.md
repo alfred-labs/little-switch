@@ -50,6 +50,10 @@ the pinned mise tools and schema dependencies, then runs the same `mise run chec
 gate as local development: format, SwiftLint, repository and schema checks, Swift
 tests, exact coverage, Periphery, Thread Sanitizer, release build, and bundle
 verification. The release executable is compiled once, through `app:build`.
+Both entry points compose the same four ordered phases: `check:repository`,
+`check:tests`, `check:analysis`, and `check:bundle`. Actions displays each phase
+separately with a bounded timeout, so a stuck test is identifiable without
+waiting for the entire job to expire.
 The checkout includes the complete Git history because the repository policies
 validate the history of the committed magic-string baseline.
 
@@ -94,6 +98,16 @@ suites (11 tests) with just one cooperative worker:
 
 ```sh
 LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 mise run swift:test -- --filter 'CoordinatorProviderEdgeCoverageTests|ProviderRoutingSecurityTests|CoordinatorSupersededDeleteTests'
+```
+
+Credential refresher fixtures that deliberately outlive cancellation wait on
+continuations rather than retry a cancelled `Task.sleep`, which throws without
+suspending. An already-released fake sleep still yields to let its caller cancel
+the refresh loop, including coordinator fixtures. The full application suite
+can be exercised on one worker:
+
+```sh
+LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 mise run swift:test
 ```
 
 ## Architecture

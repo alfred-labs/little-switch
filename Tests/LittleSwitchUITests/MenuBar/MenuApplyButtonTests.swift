@@ -5,7 +5,7 @@ import Testing
 @testable import LittleSwitchUI
 
 @MainActor
-@Suite("Menu Apply button")
+@Suite("Menu Apply button", .appKitIsolation)
 struct MenuApplyButtonTests {
     @Test("The accessible Return button dispatches and follows its live disabled state")
     func activationAndDisabledState() async throws {
@@ -77,21 +77,23 @@ struct MenuApplyButtonTests {
         defer { host.close() }
         try await host.activateAccessibility()
         let wasActive = NSApp.isActive
+        try host.prepareForKeyboardFocus()
+        try await host.clearFocus()
         let resting = try pixels(of: host.hosting)
         let button = try host.element(label: L10n.string("Apply changes"))
         #expect(button.object.isAccessibilityFocused?() == false)
 
         // The native accessibility action focuses this control even when
         // keyboard navigation is off in the user's system preferences.
-        button.object.setAccessibilityFocused?(true)
+        try await host.focus(label: L10n.string("Apply changes"))
         let didRenderFocus = try await renders(host.hosting) { $0 != resting }
         #expect(didRenderFocus)
-        #expect(button.object.isAccessibilityFocused?() == true)
+        #expect(try host.element(label: L10n.string("Apply changes")).object.isAccessibilityFocused?() == true)
 
-        #expect(host.window.makeFirstResponder(nil))
+        try await host.clearFocus()
         let didClearFocus = try await renders(host.hosting) { $0 == resting }
         #expect(didClearFocus)
-        #expect(button.object.isAccessibilityFocused?() == false)
+        #expect(try host.element(label: L10n.string("Apply changes")).object.isAccessibilityFocused?() == false)
         #expect(NSApp.isActive == wasActive)
     }
 

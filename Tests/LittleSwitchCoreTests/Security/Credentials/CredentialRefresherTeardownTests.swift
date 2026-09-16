@@ -3,29 +3,42 @@ import Testing
 
 @testable import LittleSwitchCore
 
-/// Blocks every run until the gate opens, ignoring task cancellation so
-/// an in-flight run can be observed outliving its cancelled loop.
-private final class GatedRunner: CredentialScriptRunning, @unchecked Sendable {
-    private let lock = NSLock()
-    private var gateOpen = false
-    private var count = 0
-
-    var callCount: Int {
-        lock.withLock { count }
-    }
+/// Models work that outlives cancellation without polling a cancelled sleep,
+/// which throws immediately and can monopolize the cooperative worker pool.
+private actor TeardownTestGate {
+    private var isOpen = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
 
     func open() {
-        lock.withLock { gateOpen = true }
+        isOpen = true
+        let pending = waiters
+        waiters.removeAll()
+        for waiter in pending { waiter.resume() }
+    }
+
+    func wait() async {
+        // An open fake must still yield: otherwise the refresh loop can keep
+        // returning immediately and starve the test that needs to cancel it.
+        await Task.yield()
+        guard !isOpen else { return }
+        await withCheckedContinuation { waiters.append($0) }
+    }
+}
+
+/// Blocks every run until the gate opens, ignoring task cancellation so
+/// an in-flight run can be observed outliving its cancelled loop.
+private actor GatedRunner: CredentialScriptRunning {
+    private let gate = TeardownTestGate()
+    private(set) var callCount = 0
+
+    func open() async {
+        await gate.open()
     }
 
     func run(scriptPath: String) async throws -> CredentialScriptRun {
-        lock.withLock { count += 1 }
-        while true {
-            if lock.withLock({ gateOpen }) {
-                return CredentialScriptRun(token: "gated", standardError: "")
-            }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
+        callCount += 1
+        await gate.wait()
+        return CredentialScriptRun(token: "gated", standardError: "")
     }
 }
 
@@ -62,60 +75,36 @@ private final class CancellingRunner: CredentialScriptRunning, @unchecked Sendab
 /// Throws a plain error once opened, ignoring cancellation — the shape of a
 /// run whose failure was already decided while its loop got torn down
 /// underneath it (an exited script, a lost pipe).
-private final class LateFailingRunner: CredentialScriptRunning, @unchecked Sendable {
-    private let lock = NSLock()
-    private var opened = false
-    private var count = 0
+private actor LateFailingRunner: CredentialScriptRunning {
+    private let gate = TeardownTestGate()
+    private(set) var callCount = 0
 
-    var callCount: Int {
-        lock.withLock { count }
-    }
-
-    func open() {
-        lock.withLock { opened = true }
+    func open() async {
+        await gate.open()
     }
 
     func run(scriptPath: String) async throws -> CredentialScriptRun {
-        lock.withLock { count += 1 }
-        while true {
-            if lock.withLock({ opened }) {
-                throw PlainRefreshError()
-            }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
+        callCount += 1
+        await gate.wait()
+        throw PlainRefreshError()
     }
 }
 
 /// Returns the first sleep call immediately, then holds every later caller
 /// until released — so a replacement loop can be observed parking between
 /// passes while an earlier run is still in flight.
-private final class FirstThenHeldSleep: @unchecked Sendable {
-    private let lock = NSLock()
-    private var open = false
-    private var count = 0
+private actor FirstThenHeldSleep {
+    private let gate = TeardownTestGate()
+    private(set) var callCount = 0
 
-    var callCount: Int {
-        lock.withLock { count }
-    }
-
-    func release() {
-        lock.withLock { open = true }
+    func release() async {
+        await gate.open()
     }
 
     func sleep(seconds: TimeInterval) async throws {
-        let isFirst = lock.withLock { () -> Bool in
-            count += 1
-            return count == 1
-        }
-        if isFirst {
-            return
-        }
-        while true {
-            if lock.withLock({ open }) {
-                return
-            }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
+        callCount += 1
+        guard callCount > 1 else { return }
+        await gate.wait()
     }
 }
 
@@ -155,7 +144,7 @@ struct CredentialRefresherTeardownTests {
             scriptPath: "echo token"
         )
         _ = try await eventually(description: "gated run entered") {
-            (runner.callCount == 1) ? true : nil
+            (await runner.callCount == 1) ? true : nil
         }
 
         // The replacement loop is not immediate, so it sleeps first; its
@@ -168,16 +157,16 @@ struct CredentialRefresherTeardownTests {
             scriptPath: "echo token"
         )
         _ = try await eventually(description: "replacement loop parked past the in-flight run") {
-            (sleep.callCount >= 2) ? true : nil
+            (await sleep.callCount >= 2) ? true : nil
         }
-        #expect(runner.callCount == 1)
+        #expect(await runner.callCount == 1)
 
-        runner.open()
-        sleep.release()
+        await runner.open()
+        await sleep.release()
         _ = try await eventually(description: "gated token stored") {
             (try? store.read(providerID: providerID)) == "gated" ? true : nil
         }
-        sleep.release()
+        await sleep.release()
         await refresher.cancelAll()
     }
 
@@ -200,7 +189,7 @@ struct CredentialRefresherTeardownTests {
             scriptPath: "echo token"
         )
         _ = try await eventually(description: "stale run entered") {
-            (runner.callCount == 1) ? true : nil
+            (await runner.callCount == 1) ? true : nil
         }
 
         // The save flow's reschedule: the old task is cancelled and the
@@ -212,15 +201,15 @@ struct CredentialRefresherTeardownTests {
             scriptPath: "echo token"
         )
         _ = try await eventually(description: "replacement loop parked") {
-            (sleep.callCount >= 2) ? true : nil
+            (await sleep.callCount >= 2) ? true : nil
         }
 
-        runner.open()
+        await runner.open()
         try await Task.sleep(for: .milliseconds(300))
         // The just-saved token stands; the stale run must not clobber it
         // for a full refresh interval.
         #expect(try store.read(providerID: providerID) == "fresh-token")
-        sleep.release()
+        await sleep.release()
         await refresher.cancelAll()
     }
 
@@ -263,11 +252,11 @@ struct CredentialRefresherTeardownTests {
             scriptPath: "echo token"
         )
         _ = try await eventually(description: "run entered") {
-            (runner.callCount == 1) ? true : nil
+            (await runner.callCount == 1) ? true : nil
         }
 
         await refresher.cancel(providerID: providerID)
-        runner.open()
+        await runner.open()
         try await Task.sleep(for: .milliseconds(300))
         // A failure that lands after teardown must not resurrect an outcome
         // for a provider whose loop is gone — its badge would persist until
@@ -289,11 +278,11 @@ struct CredentialRefresherTeardownTests {
             scriptPath: "echo token"
         )
         _ = try await eventually(description: "gated run entered") {
-            (runner.callCount == 1) ? true : nil
+            (await runner.callCount == 1) ? true : nil
         }
 
         await refresher.cancel(providerID: providerID)
-        runner.open()
+        await runner.open()
         try await Task.sleep(for: .milliseconds(150))
         #expect(try store.read(providerID: providerID) == nil)
         #expect(await refresher.failureMessages().isEmpty)

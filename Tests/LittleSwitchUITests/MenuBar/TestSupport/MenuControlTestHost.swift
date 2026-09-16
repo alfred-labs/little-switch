@@ -3,23 +3,28 @@ import ApplicationServices
 import SwiftUI
 import Testing
 
-/// Exercises native hosted controls without ordering a window onscreen or
-/// changing application focus, system preferences, or accessibility settings.
+/// Exercises native hosted controls without displaying a window onscreen or
+/// activating the application, changing preferences, or enabling accessibility.
 @MainActor
 final class MenuControlTestHost<Content: View> {
     let hosting: NSHostingView<Content>
     let window: NSWindow
+    private weak var previousKeyWindow: NSWindow?
+    private weak var previousFirstResponder: NSResponder?
+    private var preparedKeyboardFocus = false
 
     init(_ content: Content, width: CGFloat = 320, height: CGFloat = 80) {
         MenuControlTestApplication.finishLaunching()
         hosting = NSHostingView(rootView: content)
         hosting.frame = NSRect(x: 0, y: 0, width: width, height: height)
-        window = NSWindow(
+        let panel = MenuControlTestPanel(
             contentRect: hosting.frame,
-            styleMask: [.borderless],
+            styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
+        panel.hidesOnDeactivate = false
+        window = panel
         window.isReleasedWhenClosed = false
         window.contentView = hosting
         let leftEdge = NSScreen.screens.map(\.frame.minX).min() ?? 0
@@ -45,10 +50,54 @@ final class MenuControlTestHost<Content: View> {
         render()
     }
 
+    func prepareForKeyboardFocus() throws {
+        if !preparedKeyboardFocus {
+            previousKeyWindow = NSApp.keyWindow
+            previousFirstResponder = previousKeyWindow?.firstResponder
+            preparedKeyboardFocus = true
+        }
+        let wasActive = NSApp.isActive
+        try #require(window.canBecomeKey, "The test panel must accept keyboard focus. \(focusDiagnostics)")
+        try #require(window.makeFirstResponder(hosting), "The hosting view rejected focus. \(focusDiagnostics)")
+        render()
+        try #require(NSApp.isActive == wasActive, "Preparing focus activated the application. \(focusDiagnostics)")
+    }
+
+    func focus(label: String) async throws {
+        try #require(preparedKeyboardFocus, "Prepare the test panel before focusing \(label). \(focusDiagnostics)")
+        let wasActive = NSApp.isActive
+        let target = try element(label: label)
+        try #require(target.isAccessibilityEnabled(), "Cannot focus the disabled control \(label).")
+        target.object.setAccessibilityFocused?(true)
+        try await waitForFocus("Accessibility focus was not acquired by \(label)") {
+            self.accessibilityElements.first { $0.accessibilityLabel() == label }?
+                .object.isAccessibilityFocused?() == true
+        }
+        try #require(NSApp.isActive == wasActive, "Focusing \(label) activated the application. \(focusDiagnostics)")
+    }
+
+    func clearFocus() async throws {
+        try #require(window.makeFirstResponder(nil), "The test panel rejected clearing focus. \(focusDiagnostics)")
+        try await waitForFocus("Accessibility focus did not clear") {
+            self.accessibilityElements.allSatisfy { $0.object.isAccessibilityFocused?() != true }
+        }
+    }
+
     func close() {
+        let restorePreviousWindow = preparedKeyboardFocus && window.isKeyWindow
+        _ = window.makeFirstResponder(nil)
         window.orderOut(nil)
         window.contentView = nil
         window.close()
+        if restorePreviousWindow, let previousKeyWindow, previousKeyWindow.isVisible {
+            previousKeyWindow.makeKey()
+            if let previousFirstResponder {
+                _ = previousKeyWindow.makeFirstResponder(previousFirstResponder)
+            }
+        }
+        previousKeyWindow = nil
+        previousFirstResponder = nil
+        preparedKeyboardFocus = false
     }
 
     func render() {
@@ -89,9 +138,35 @@ final class MenuControlTestHost<Content: View> {
         try #require(Self.descendants(of: hosting).compactMap { $0 as? T }.first)
     }
 
+    private func waitForFocus(_ description: String, matching condition: () -> Bool) async throws {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+        var matched = false
+        repeat {
+            try Task.checkCancellation()
+            render()
+            matched = condition()
+            if matched { break }
+            await Task.yield()
+        } while ContinuousClock.now < deadline
+        try #require(matched, "\(description). \(focusDiagnostics)")
+    }
+
+    private var focusDiagnostics: String {
+        let focused = accessibilityElements.filter { $0.object.isAccessibilityFocused?() == true }
+            .map { $0.accessibilityLabel() ?? String(describing: type(of: $0.object)) }
+        return "active=\(NSApp.isActive), visible=\(window.isVisible), canBecomeKey=\(window.canBecomeKey), "
+            + "key=\(window.isKeyWindow), responder=\(String(describing: window.firstResponder)), focused=\(focused)"
+    }
+
     private static func descendants(of view: NSView) -> [NSView] {
         [view] + view.subviews.flatMap { descendants(of: $0) }
     }
+}
+
+@MainActor
+private final class MenuControlTestPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
 }
 
 @MainActor

@@ -11,8 +11,9 @@ struct MenuUsageStatsBlockTests {
     @Test("The client block exposes the six Overview insights")
     func sixInsights() async throws {
         let stats = Self.stats
+        let metrics = stats.period(at: nil).metrics
         #expect(
-            stats.period(at: nil).metrics.map(\.title)
+            metrics.map(\.title)
                 == [
                     L10n.string("Input tokens (est.)"), L10n.string("Cached tokens"), L10n.string("Output tokens"),
                     L10n.string("Requests"), L10n.string("Errors"), L10n.string("Web searches"),
@@ -21,8 +22,10 @@ struct MenuUsageStatsBlockTests {
         let host = MenuControlTestHost(MenuUsageStatsBlock(stats: stats), height: MenuUsageStatsBlock.fixedHeight)
         defer { host.close() }
         try await host.activateAccessibility()
-        #expect(try host.element(label: L10n.string("Errors")).accessibilityValueDescription() == "0\u{00a0}%")
-        #expect(try host.element(label: L10n.string("Web searches")).accessibilityValueDescription() == "0")
+        let accessibleValues = try metrics.map {
+            try host.element(label: $0.title).accessibilityValueDescription()
+        }
+        #expect(accessibleValues == metrics.map(\.accessibilityValue))
     }
 
     @Test("The client history opens with its complete thirty-day total and the Overview chart height")

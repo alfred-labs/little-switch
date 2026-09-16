@@ -133,27 +133,26 @@ struct MonitoringExportPresentationTests {
         )
         let host = MenuControlTestHost(MonitoringMetricIntervalPicker(value: binding), width: 600)
         defer { host.close() }
-        let picker = try host.nativeView(of: NSPopUpButton.self)
+        let picker = NativeMenuPickerTestControl(root: host.hosting, identifyingTitle: L10n.string("5 min"))
         let presets: [(title: String, seconds: Int)] = [
             (L10n.string("\(5) s"), 5), (L10n.string("\(10) s"), 10),
             (L10n.string("\(15) s"), 15), (L10n.string("\(30) s"), 30),
             (L10n.string("1 min"), 60), (L10n.string("2 min"), 120), (L10n.string("5 min"), 300),
         ]
         let currentTitle = L10n.string("\(17) s (current)")
-        #expect(picker.itemTitles == presets.map(\.title) + [currentTitle])
-        #expect(picker.titleOfSelectedItem == currentTitle)
+        #expect(try picker.titles == presets.map(\.title) + [currentTitle])
+        #expect(try picker.selectedTitle == currentTitle)
         #expect(selection.value == 17)
         #expect(changes.isEmpty)
 
         for preset in presets {
-            let menu = try #require(picker.menu)
-            menu.performActionForItem(at: picker.indexOfItem(withTitle: preset.title))
+            try picker.select(preset.title)
             host.hosting.rootView = MonitoringMetricIntervalPicker(value: binding)
             host.render()
 
             #expect(selection.value == preset.seconds)
-            #expect(picker.titleOfSelectedItem == preset.title)
-            #expect(picker.itemTitles == presets.map(\.title))
+            #expect(try picker.selectedTitle == preset.title)
+            #expect(try picker.titles == presets.map(\.title))
         }
         #expect(changes == presets.map(\.seconds))
     }

@@ -341,6 +341,12 @@ extension CoordinatorProviderCoverageTests {
                 credential: "old-secret",
                 transport: transport
             )
+            // Startup intentionally returns before image probes finish. Drain
+            // those unrelated requests before measuring this validation call.
+            _ = try await eventually(description: "startup image probes before provider validation") {
+                let progress = await fixture.coordinator.snapshot().imageProbeProgress[fixture.providerID]
+                return progress?.running == false ? true : nil
+            }
             let initialConfiguration = await fixture.coordinator.snapshot().configuration
             let initialExecutionCount = await transport.executeCount
             let initialSaves = fixture.store.saves

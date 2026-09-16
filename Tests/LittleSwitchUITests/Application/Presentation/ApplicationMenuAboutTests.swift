@@ -5,7 +5,7 @@ import Testing
 
 @testable import LittleSwitchUI
 
-@Suite("Application About surface")
+@Suite("Application About surface", .appKitIsolation)
 struct ApplicationMenuAboutTests {
     @Test("The app menu opens the same enlarged About window as the status menu")
     func aboutPanelCommand() throws {
@@ -53,6 +53,12 @@ struct ApplicationMenuAboutTests {
     @Test("The delegate fronts one reusable custom About window")
     @MainActor
     func showAboutFrontsCustomWindow() throws {
+        let originalWindow = LittleSwitchApplicationDelegate.aboutWindow
+        LittleSwitchApplicationDelegate.aboutWindow = nil
+        defer {
+            LittleSwitchApplicationDelegate.aboutWindow?.close()
+            LittleSwitchApplicationDelegate.aboutWindow = originalWindow
+        }
         let delegate = LittleSwitchApplicationDelegate()
         delegate.showAbout()
 
@@ -76,6 +82,7 @@ struct ApplicationMenuAboutTests {
     @MainActor
     func makeAboutWindowBuildsIndependentPanel() {
         let window = LittleSwitchApplicationDelegate().makeAboutWindow()
+        defer { window.close() }
 
         #expect(window.title == L10n.string("About LittleSwitch"))
         #expect(window.contentViewController != nil)
@@ -106,6 +113,8 @@ struct ApplicationMenuAboutTests {
             backing: .buffered,
             defer: false
         )
+        window.isReleasedWhenClosed = false
+        defer { window.close() }
         window.contentViewController = NSHostingController(
             rootView: AboutWindowContent(
                 displayName: L10n.string("LittleSwitch"),
