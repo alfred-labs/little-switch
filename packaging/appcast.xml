@@ -5,6 +5,19 @@
         <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
         <description>LittleSwitch releases</description>
         <item>
+            <title>0.6.2</title>
+            <pubDate>Wed, 16 Sep 2026 15:41:49 +0000</pubDate>
+            <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
+            <sparkle:version>26</sparkle:version>
+            <sparkle:shortVersionString>0.6.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Improvements</h2>
+<ul><li>Menu switches use more compact proportions.</li><li>The setup guide includes a video walkthrough.</li></ul>
+<h2>Fixes</h2>
+<ul><li>Fable 5.1 appears in the Claude model catalog without losing existing mappings or the selected default. Sessions using the previous Fable choice continue to work.</li><li><strong>Claude Code shows 1M context choices for every eligible route, including Sonnet.</strong> Choices follow the mapped model&apos;s capacity, and Claude Desktop keeps its existing context selection without duplicate entries.</li></ul>]]></description>
+            <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.6.2/LittleSwitch-0.6.2-arm64.dmg" length="22536705" type="application/octet-stream" sparkle:edSignature="ye8HQ09J3fnRMCiMAQMUQhuuycrzgVLPICXYz6nGjg/4jO2g3br7MY/28qFVnQhE3IYp28WjOYi6BfXauO8QBA=="/>
+        </item>
+        <item>
             <title>0.6.1</title>
             <pubDate>Tue, 15 Sep 2026 20:41:01 +0000</pubDate>
             <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
