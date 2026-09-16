@@ -5,7 +5,7 @@ This guide covers building, verifying, and contributing to LittleSwitch. For pro
 ## Prerequisites
 
 - macOS 14 or later
-- Xcode 26.6 with Swift 6.3.3 (license accepted)
+- Xcode 27.0 with Swift 6.4 (license accepted)
 - [mise](https://mise.jdx.dev/)
 
 ## Build
@@ -40,6 +40,17 @@ mounted from the final DMG, so a valid signature cannot hide missing resources.
 The assembler also embeds the compatibility runtimes identified by Apple's
 `swift-stdlib-tool` and signs them before the application. Bundle verification
 requires these libraries even when the development machine already provides them.
+
+## CI
+
+The [Build workflow](.github/workflows/build.yml) runs on pushes and pull requests
+targeting `main`, and can also be started manually from GitHub Actions. It installs
+the pinned mise tools, verifies the toolchain, and runs `mise run swift:build` to
+compile the ARM64 release executable with warnings treated as errors.
+
+It uses GitHub's [Xcode 27 ARM64 preview image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md),
+which provides the Xcode version required by `mise run toolchains`. This first CI
+iteration covers compilation only; `mise run check` remains the full local gate.
 
 ## Architecture
 
