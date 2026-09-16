@@ -5,6 +5,17 @@
         <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
         <description>LittleSwitch releases</description>
         <item>
+            <title>0.6.3</title>
+            <pubDate>Wed, 16 Sep 2026 22:29:27 +0000</pubDate>
+            <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
+            <sparkle:version>27</sparkle:version>
+            <sparkle:shortVersionString>0.6.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Fixes</h2>
+<ul><li><strong>Claude Code and Claude Desktop now show one coherent LittleSwitch choice for each Claude model family.</strong> Context variants follow the mapped provider model&apos;s capacity instead of adding duplicate gateway entries, and the selected default remains controlled by LittleSwitch.</li><li>Claude Code no longer shows Anthropic pricing on its default-model entry when LittleSwitch owns the default.</li><li>Changing the model indicator updates Claude Code model labels immediately without changing the selected model or routing.</li></ul>]]></description>
+            <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.6.3/LittleSwitch-0.6.3-arm64.dmg" length="22200447" type="application/octet-stream" sparkle:edSignature="rxXv8acnNvGAPAlaWCDfxtOxs0cQE1y1CC5UD7l2RIQE5jOIG2Sc+tidVtSTMlzAA8drt2tL7Bli/ENj7WKjBQ=="/>
+        </item>
+        <item>
             <title>0.6.2</title>
             <pubDate>Wed, 16 Sep 2026 15:41:49 +0000</pubDate>
             <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
