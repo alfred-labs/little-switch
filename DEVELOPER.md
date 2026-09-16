@@ -50,6 +50,8 @@ the pinned mise tools and schema dependencies, then runs the same `mise run chec
 gate as local development: format, SwiftLint, repository and schema checks, Swift
 tests, exact coverage, Periphery, Thread Sanitizer, release build, and bundle
 verification. The release executable is compiled once, through `app:build`.
+The checkout includes the complete Git history because the repository policies
+validate the history of the committed magic-string baseline.
 
 It uses GitHub's [Xcode 27 ARM64 preview image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md),
 which provides the Xcode version required by `mise run toolchains`.
