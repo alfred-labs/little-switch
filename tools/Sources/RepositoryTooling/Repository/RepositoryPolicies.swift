@@ -4,6 +4,7 @@ enum RepositoryPolicies {
             CoverageBoundaryPolicy.rules + BrandAssetPolicy.rules + ProductIdentityPolicy.rules + AppIconPolicy.rules
         var issues = rules.flatMap { $0.violations(in: files) }
         issues += CommonModulePolicy.violations(files: files)
+        issues += UserVisibleStringPolicy.violations(files: files)
         issues += ProductIdentityPolicy.legacyViolations(files: files, rootPath: rootPath)
         issues += ProductIdentityPolicy.bundleViolations(files["packaging/Info.plist"])
         issues += AppIconPolicy.sourceViolations(files["packaging/AppIcon.svg"])

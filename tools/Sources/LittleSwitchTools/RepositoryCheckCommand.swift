@@ -3,7 +3,8 @@ import RepositoryTooling
 
 struct RepositoryCheckCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "check", abstract: "Check product identity, brand resources and deterministic coverage boundaries."
+        commandName: "check",
+        abstract: "Check product identity, brand resources, UI localization and deterministic coverage boundaries."
     )
 
     @OptionGroup var options: RepositoryOptions

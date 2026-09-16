@@ -1,4 +1,5 @@
 import AppKit
+import LittleSwitchCore
 import SwiftUI
 
 @MainActor
@@ -20,7 +21,7 @@ enum SettingsWindowChrome {
             window.toolbar = toolbar
         }
 
-        window.title = "LittleSwitch"
+        window.title = ProductIdentity.displayName
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.titlebarSeparatorStyle = .none

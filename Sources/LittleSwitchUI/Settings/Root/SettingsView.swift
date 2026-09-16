@@ -207,7 +207,7 @@ public struct SettingsView: View {
             minHeight: SettingsLayout.minimumContentHeight
         )
         .alert(
-            "LittleSwitch",
+            ProductIdentity.displayName,
             isPresented: Binding(
                 get: { model.errorMessage != nil },
                 set: { if !$0 { model.errorMessage = nil } }

@@ -180,7 +180,7 @@ func userVisibleStringScannerCoversLabeledArgumentsAndAppKit() {
     #expect(
         findings.map(\.text) == [
             "Model routing", "For Codex Desktop and CLI.", "Settings", "All providers.",
-            "https://localhost", "Receiver URL", "https://localhost", "Edit", "About",
+            "Receiver URL", "https://localhost", "Edit", "About",
         ])
 }
 
@@ -207,8 +207,8 @@ func userVisibleFindingsRenderDescription() {
     #expect(findings.map(\.description) == [#"Presentation.swift:1:23: Text: "Settings""#])
 }
 
-@Test("User-visible scanner falls back to the unfolded tree when folding fails")
-func userVisibleScannerFallsBackWhenFoldingFails() {
+@Test("Known display calls survive unknown custom operators")
+func userVisibleScannerHandlesUnknownOperators() {
     let source = """
         func display(value: Int, label: String) {
             Text("Settings")
@@ -242,11 +242,13 @@ func userVisibleScannerWalksDirectories() throws {
         findings.map(\.description) == [
             #"A.swift:1:17: Text: "Alpha""#, #"sub/B.swift:1:17: Text: "Beta""#,
         ])
-    #expect(try UserVisibleStringScanner.scan(directory: root.appendingPathComponent("missing")).isEmpty)
+    #expect(throws: (any Error).self) {
+        try UserVisibleStringScanner.scan(directory: root.appendingPathComponent("missing"))
+    }
 }
 
-@Test("Unfolded title assignments still report through the sequence visitor")
-func userVisibleScannerHandlesUnfoldedSequences() {
+@Test("Unknown operators do not prevent folding unrelated title assignments")
+func userVisibleScannerFoldsIndependentSequences() {
     let source = """
         func render(flag: Bool, panel: Panel, alert: Alert) {
             let broken = 1 -*- 2
@@ -260,13 +262,11 @@ func userVisibleScannerHandlesUnfoldedSequences() {
 
     let findings = UserVisibleStringScanner.scan(source: source, filePath: "Unfolded.swift")
 
-    // Unfolded, the sequence visitor only reports the value adjacent to the
-    // assignment; the labeled path covers the remaining positions.
-    #expect(findings.map(\.api) == ["title", "messageText"])
-    #expect(findings.map(\.text) == ["Plain", "A"])
+    #expect(findings.map(\.api) == ["title", "messageText", "messageText"])
+    #expect(findings.map(\.text) == ["Plain", "A", "B"])
 }
 
-@Test("Empty and raw string literals never enter findings")
+@Test("Empty literals are ignored and raw string text is preserved")
 func userVisibleScannerSkipsEmptyAndRawLiterals() {
     let source = """
         func render(flag: Bool) {

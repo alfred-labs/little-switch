@@ -5,7 +5,7 @@ import RepositoryTooling
 struct UserVisibleStringScanCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "ui-strings",
-        abstract: "Scan for user-visible string literals that bypass localization entry points."
+        abstract: "Reject user-visible literals that bypass localization or an explicit verbatim choice."
     )
 
     @OptionGroup var options: RepositoryOptions
@@ -26,5 +26,6 @@ struct UserVisibleStringScanCommand: ParsableCommand {
             print(finding.description + (segments.isEmpty ? "" : " segments: \(segments)"))
         }
         print("\n\(findings.count) finding(s).")
+        throw ExitCode.failure
     }
 }

@@ -39,7 +39,7 @@ extension LittleSwitchApplicationDelegate {
         // the user cancelling something they were never asked about.
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
-        alert.messageText = "LittleSwitch"
+        alert.messageText = ProductIdentity.displayName
         alert.informativeText = message
         alert.alertStyle = .warning
         alert.addButton(withTitle: actionTitle)
