@@ -58,7 +58,7 @@ struct ProviderThinkingConfigurationTests {
 
     @Test(
         "Legacy and null provider settings default to low effort",
-        arguments: [1, 7, 8], [false, true])
+        arguments: [1, 7, 8, 9], [false, true])
     func legacyDefaultsToLowEffort(version: Int, explicitNull: Bool) throws {
         let field = explicitNull ? #", "disabledThinkingOverride":null"# : ""
         let json = #"""

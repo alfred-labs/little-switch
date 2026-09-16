@@ -39,7 +39,7 @@ struct ImageInputObservationPersistenceTests {
         configuration["providers"] = [object]
         let loaded = try JSONDecoder().decode(
             AppConfiguration.self, from: JSONSerialization.data(withJSONObject: configuration))
-        #expect(loaded.version == 8)
+        #expect(loaded.version == 9)
         #expect(loaded.providers.first?.imageInputObservations == [valid])
     }
 

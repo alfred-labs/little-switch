@@ -252,7 +252,7 @@ public struct GatewayResponder: HTTPResponder {
         case .webSearchMCP:
             return try await webSearchMCPResponse(request, eventID: eventID)
         case .models:
-            return try await modelsResponse()
+            return try await modelsResponse(request)
         case .countTokens:
             return try await countTokensResponse(request, eventID: eventID)
         case .messages:

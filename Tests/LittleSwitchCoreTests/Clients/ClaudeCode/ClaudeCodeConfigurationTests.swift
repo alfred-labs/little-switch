@@ -121,7 +121,7 @@ struct ClaudeCodeConfigurationTests {
         let fixture = fixture()
         let missingProvider = UUID()
         let mappings = fixture.mappings.merging([
-            "claude-fable-5": ModelMapping(
+            "claude-fable-5-1": ModelMapping(
                 providerID: fixture.provider.id,
                 modelID: "missing"
             ),

@@ -16,7 +16,7 @@ public struct AppConfiguration: Codable, Equatable, Sendable {
     public var modelIndicator: ModelIndicator
 
     public init(
-        version: Int = 8,
+        version: Int = 9,
         providers: [Provider] = [],
         mappings: [String: ModelMapping] = [:],
         autoMode: Bool = true,
@@ -196,7 +196,7 @@ public struct AppConfiguration: Codable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         let storedVersion = try values.decode(Int.self, forKey: .version)
-        version = (1...7).contains(storedVersion) ? 8 : storedVersion
+        version = (1...8).contains(storedVersion) ? 9 : storedVersion
         var storedProviders = try values.nestedUnkeyedContainer(forKey: .providers)
         var decodedProviders: [Provider] = []
         while !storedProviders.isAtEnd {
@@ -209,10 +209,8 @@ public struct AppConfiguration: Codable, Equatable, Sendable {
         }
         providers = decodedProviders
         let routeIDs = Set(ClaudeRoute.all.map(\.id))
-        mappings =
-            try values
-            .decode([String: ModelMapping].self, forKey: .mappings)
-            .filter { routeIDs.contains($0.key) }
+        let storedMappings = try values.decode([String: ModelMapping].self, forKey: .mappings)
+        mappings = ClaudeRouteCompatibility.migrate(storedMappings).filter { routeIDs.contains($0.key) }
         autoMode = try values.decode(Bool.self, forKey: .autoMode)
         connected = try values.decode(Bool.self, forKey: .connected)
         claudeCode =
@@ -220,6 +218,7 @@ public struct AppConfiguration: Codable, Equatable, Sendable {
                 ClaudeCodeConfiguration.self,
                 forKey: .claudeCode
             ) ?? .disconnected
+        claudeCode.defaultModel = claudeCode.defaultModel.map(ClaudeRouteCompatibility.canonicalID)
         codex = try values.decodeIfPresent(CodexConfiguration.self, forKey: .codex) ?? .disconnected
         openCode =
             try values.decodeIfPresent(

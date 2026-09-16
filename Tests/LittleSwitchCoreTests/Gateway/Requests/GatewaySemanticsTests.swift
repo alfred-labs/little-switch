@@ -198,13 +198,13 @@ struct GatewaySemanticsTests {
                 "claude-sonnet-5": ModelMapping(providerID: secondID, modelID: "qwen"),
             ]
         )
-        let response = ClaudeCatalog.make(from: snapshot)
-        #expect(response.data.map(\.id) == ["claude-opus-5", "claude-sonnet-5"])
-        #expect(response.data.map(\.displayName) == ["Opus ↦", "Sonnet ↦"])
-        #expect(response.data.map(\.maxTokens) == [64_000, 64_000])
-        #expect(response.data.map(\.maxInputTokens) == [200_000, 200_000])
+        let response = ClaudeCatalog.make(from: snapshot, contextPresentation: .explicitChoices)
+        #expect(response.data.map(\.id) == ["claude-opus-5", "claude-opus-5[1m]", "claude-sonnet-5"])
+        #expect(response.data.map(\.displayName) == ["Opus ↦", "Opus ↦ [1m]", "Sonnet ↦"])
+        #expect(response.data.map(\.maxTokens) == [64_000, 64_000, 64_000])
+        #expect(response.data.map(\.maxInputTokens) == [200_000, 1_000_000, 200_000])
         // Token limits are fixed; 1M support stays honest per mapped model.
-        #expect(response.data.map(\.supports1M) == [true, false])
+        #expect(response.data.map(\.supports1M) == [true, false, false])
         #expect(response.firstID == "claude-opus-5")
         #expect(response.lastID == "claude-sonnet-5")
         #expect(!response.hasMore)
@@ -217,7 +217,7 @@ struct GatewaySemanticsTests {
         #expect(entries.first?["supports_1m"] as? Bool == true)
     }
 
-    @Test("Catalog JSON is byte-identical after remapping routes to other providers")
+    @Test("Base catalog identities remain stable while 1M choices follow remapped capacity")
     func catalogInvariance() throws {
         let firstID = UUID()
         let secondID = UUID()
@@ -258,21 +258,25 @@ struct GatewaySemanticsTests {
             ]
         )
 
-        let originalResponse = ClaudeCatalog.make(from: original)
-        let remappedResponse = ClaudeCatalog.make(from: remapped)
+        let originalResponse = ClaudeCatalog.make(from: original, contextPresentation: .explicitChoices)
+        let remappedResponse = ClaudeCatalog.make(from: remapped, contextPresentation: .explicitChoices)
+        let originalBaseModels = originalResponse.data.filter(\.isFamilyDefault)
+        let remappedBaseModels = remappedResponse.data.filter(\.isFamilyDefault)
 
         // Identity covers what clients display: route IDs and advertised
         // names never move with the physical target.
         #expect(
-            remappedResponse.data.map(\.displayName)
-                == originalResponse.data.map(\.displayName)
+            remappedBaseModels.map(\.displayName)
+                == originalBaseModels.map(\.displayName)
         )
         #expect(
-            remappedResponse.data.map(\.id) == originalResponse.data.map(\.id)
+            remappedBaseModels.map(\.id) == originalBaseModels.map(\.id)
         )
         // Capabilities follow the physical targets they describe.
-        #expect(originalResponse.data.map(\.supports1M) == [true, false])
-        #expect(remappedResponse.data.map(\.supports1M) == [false, true])
+        #expect(originalBaseModels.map(\.supports1M) == [true, false])
+        #expect(remappedBaseModels.map(\.supports1M) == [false, true])
+        #expect(originalResponse.data.filter { !$0.isFamilyDefault }.map(\.id) == ["claude-opus-5[1m]"])
+        #expect(remappedResponse.data.filter { !$0.isFamilyDefault }.map(\.id) == ["claude-sonnet-5[1m]"])
     }
 
     private func imageRequest() -> Data {

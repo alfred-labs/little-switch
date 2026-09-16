@@ -35,7 +35,7 @@ public struct ConfigurationStore: Sendable {
         let data = try Data(contentsOf: fileURL)
         let decoder = JSONDecoder()
         let storedVersion = try decoder.decode(StoredConfigurationVersion.self, from: data).version
-        guard (1...8).contains(storedVersion) else {
+        guard (1...9).contains(storedVersion) else {
             throw Error.unsupportedVersion(storedVersion)
         }
         let configuration = try decoder.decode(

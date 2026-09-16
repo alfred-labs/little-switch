@@ -6,7 +6,7 @@ import Testing
 
 @Suite("Configuration migration recovery")
 struct ConfigurationMigrationBackupTests {
-    @Test("Every legacy format retains its original bytes outside rotating backups", arguments: 1...7)
+    @Test("Every legacy format retains its original bytes outside rotating backups", arguments: 1...8)
     func retainsOriginal(version: Int) throws {
         let fixture = try fixture()
         defer { try? FileManager.default.removeItem(at: fixture.root) }
@@ -14,7 +14,7 @@ struct ConfigurationMigrationBackupTests {
         try original.write(to: fixture.store.fileURL)
 
         var configuration = try fixture.store.load()
-        #expect(configuration.version == 8)
+        #expect(configuration.version == 9)
         #expect(try Data(contentsOf: fixture.store.fileURL) == original)
         for index in 0..<12 {
             configuration.autoMode = index.isMultiple(of: 2)
@@ -89,7 +89,7 @@ struct ConfigurationMigrationBackupTests {
         let fixture = try fixture()
         defer { try? FileManager.default.removeItem(at: fixture.root) }
         if currentFile {
-            try legacyData(version: 8).write(to: fixture.store.fileURL)
+            try legacyData(version: 9).write(to: fixture.store.fileURL)
         }
 
         #expect(try fixture.store.load() == AppConfiguration())
@@ -98,7 +98,7 @@ struct ConfigurationMigrationBackupTests {
 
     @Test(
         "Invalid and unsupported sources never establish a recovery snapshot",
-        arguments: [Data("invalid".utf8), Data(#"{"version":7}"#.utf8), Data(#"{"version":9}"#.utf8)]
+        arguments: [Data("invalid".utf8), Data(#"{"version":7}"#.utf8), Data(#"{"version":10}"#.utf8)]
     )
     func invalidSource(original: Data) throws {
         let fixture = try fixture()

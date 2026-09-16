@@ -2,13 +2,21 @@ import Foundation
 import LittleSwitchCommon
 
 public enum ClaudeCatalog {
-    public static func make(from snapshot: RoutingSnapshot) -> ClaudeCatalogResponse {
+    package enum ContextPresentation: Equatable, Sendable {
+        case capabilities
+        case explicitChoices
+    }
+
+    package static func make(
+        from snapshot: RoutingSnapshot,
+        contextPresentation: ContextPresentation = .capabilities
+    ) -> ClaudeCatalogResponse {
         let targets = snapshot.validTargets
-        let models = ClaudeRoute.all.compactMap { route -> ClaudeCatalogModel? in
+        let models = ClaudeRoute.all.flatMap { route -> [ClaudeCatalogModel] in
             guard let target = targets[route.id] else {
-                return nil
+                return []
             }
-            return ClaudeCatalogModel(
+            let standard = ClaudeCatalogModel(
                 id: route.id,
                 type: "model",
                 displayName: route.catalogDisplayName(indicator: snapshot.modelIndicator),
@@ -19,6 +27,18 @@ public enum ClaudeCatalog {
                 family: route.family,
                 isFamilyDefault: route.isFamilyDefault
             )
+            guard contextPresentation == .explicitChoices, target.supports1MContext else {
+                return [standard]
+            }
+            // Claude Code discovery retains IDs and labels but discards
+            // supports_1m. Publish the selectable reference explicitly.
+            var extended = standard
+            extended.id += "[1m]"
+            extended.displayName = route.catalogDisplayName(indicator: snapshot.modelIndicator, extendedContext: true)
+            extended.maxInputTokens = 1_000_000
+            extended.supports1M = false
+            extended.isFamilyDefault = false
+            return [standard, extended]
         }
         return ClaudeCatalogResponse(
             data: models,

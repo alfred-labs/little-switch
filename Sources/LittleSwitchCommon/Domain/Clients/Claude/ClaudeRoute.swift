@@ -7,7 +7,7 @@ public struct ClaudeRoute: Codable, Equatable, Hashable, Identifiable, Sendable 
 
     public static let all = [
         ClaudeRoute(
-            id: "claude-fable-5",
+            id: "claude-fable-5-1",
             displayName: "Fable",
             family: "fable",
             createdAt: "2026-06-09T00:00:00Z",
@@ -39,10 +39,8 @@ public struct ClaudeRoute: Codable, Equatable, Hashable, Identifiable, Sendable 
     /// Label served as the catalog `display_name` to clients. The indicator
     /// arrow marks the slot as a live-switchable alias in client model
     /// pickers; the mapping UI shows the plain name beside its own arrow.
-    public func catalogDisplayName(indicator: ModelIndicator) -> String {
-        guard let symbol = indicator.symbol else {
-            return displayName
-        }
-        return "\(displayName) \(symbol)"
+    public func catalogDisplayName(indicator: ModelIndicator, extendedContext: Bool = false) -> String {
+        let label = indicator.symbol.map { "\(displayName) \($0)" } ?? displayName
+        return extendedContext ? "\(label) [1m]" : label
     }
 }

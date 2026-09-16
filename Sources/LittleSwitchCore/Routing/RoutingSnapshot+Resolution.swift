@@ -53,7 +53,7 @@ extension RoutingSnapshot {
 
         let targets = validTargets
         let target =
-            targets[baseModel]
+            targets[ClaudeRouteCompatibility.canonicalID(baseModel)]
             ?? ClaudeRoute.all.lazy
             .compactMap { targets[$0.id] }
             .first { target in
@@ -62,6 +62,8 @@ extension RoutingSnapshot {
                 target.reference == baseModel
                     || target.route.catalogDisplayName(indicator: modelIndicator)
                         == baseModel
+                    || target.route.catalogDisplayName(indicator: modelIndicator, extendedContext: usesExtendedContext)
+                        == model
             }
         guard let target else {
             return nil

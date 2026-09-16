@@ -17,7 +17,7 @@ struct ConfigurationMigrationPersistenceTests {
         ).write(to: fixture.file)
 
         let migrated = try fixture.store.load()
-        #expect(migrated.version == 8)
+        #expect(migrated.version == 9)
         #expect(migrated.webSearch == .disabled)
         #expect(migrated.codex == .disconnected)
         #expect(migrated.claudeCode == .disconnected)
@@ -91,7 +91,7 @@ struct ConfigurationMigrationPersistenceTests {
         try Data(versionTwoJSON.utf8).write(to: fixture.file)
 
         let migrated = try fixture.store.load()
-        #expect(migrated.version == 8)
+        #expect(migrated.version == 9)
         #expect(migrated.connected)
         #expect(migrated.codex == .disconnected)
         #expect(migrated.claudeCode == .disconnected)
@@ -122,7 +122,7 @@ struct ConfigurationMigrationPersistenceTests {
         try Data(versionThree.utf8).write(to: fixture.file)
 
         let migrated = try fixture.store.load()
-        #expect(migrated.version == 8)
+        #expect(migrated.version == 9)
         #expect(migrated.claudeCode == .disconnected)
         #expect(migrated.openCode == .disconnected)
     }
@@ -152,7 +152,7 @@ struct ConfigurationMigrationPersistenceTests {
         try Data(versionFour.utf8).write(to: fixture.file)
 
         let migrated = try fixture.store.load()
-        #expect(migrated.version == 8)
+        #expect(migrated.version == 9)
         #expect(migrated.claudeCode == .disconnected)
         #expect(migrated.codex == .disconnected)
         #expect(migrated.openCode == .disconnected)
@@ -184,7 +184,7 @@ struct ConfigurationMigrationPersistenceTests {
         try Data(versionFive.utf8).write(to: fixture.file)
 
         let migrated = try fixture.store.load()
-        #expect(migrated.version == 8)
+        #expect(migrated.version == 9)
     }
 
     @Test(
@@ -199,7 +199,7 @@ struct ConfigurationMigrationPersistenceTests {
             modelID: "unrelated-model"
         )
 
-        #expect(migrated.version == 8)
+        #expect(migrated.version == 9)
         #expect(try #require(migrated.providers.first).maximumParallelRequests == 2)
     }
 
@@ -215,7 +215,7 @@ struct ConfigurationMigrationPersistenceTests {
             modelID: "glm"
         )
 
-        #expect(migrated.version == 8)
+        #expect(migrated.version == 9)
         #expect(try #require(migrated.providers.first).maximumParallelRequests == 4)
     }
 
@@ -248,7 +248,7 @@ struct ConfigurationMigrationPersistenceTests {
             maximumParallelRequests: "12"
         )
 
-        #expect(migrated.version == 8)
+        #expect(migrated.version == 9)
         #expect(try #require(migrated.providers.first).maximumParallelRequests == 12)
     }
 
@@ -266,8 +266,8 @@ struct ConfigurationMigrationPersistenceTests {
     }
 
     @Test(
-        "Versions 7 and 8 require a non-null in-range concurrency limit",
-        arguments: [7, 8], [nil, "null", "0", "33", "\"4\"", "true", "4.5"] as [String?]
+        "Versions 7 through 9 require a non-null in-range concurrency limit",
+        arguments: [7, 8, 9], [nil, "null", "0", "33", "\"4\"", "true", "4.5"] as [String?]
     )
     func currentInvalidConcurrency(storedVersion: Int, maximumParallelRequests: String?) {
         #expect(throws: DecodingError.self) {
@@ -339,7 +339,7 @@ struct ConfigurationMigrationPersistenceTests {
 }
 
 extension ConfigurationMigrationPersistenceTests {
-    @Test("A missing monitoring section defaults in every supported version", arguments: 1...8)
+    @Test("A missing monitoring section defaults in every supported version", arguments: 1...9)
     func missingMonitoringPreservesExistingSettings(storedVersion: Int) throws {
         let fixture = try fixture()
         defer { try? FileManager.default.removeItem(at: fixture.directory) }
@@ -372,12 +372,12 @@ extension ConfigurationMigrationPersistenceTests {
         var object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         object.removeValue(forKey: "monitoring")
         try JSONSerialization.data(withJSONObject: object).write(to: fixture.file)
-        expected.version = 8
+        expected.version = 9
 
         #expect(try fixture.store.load() == expected)
     }
 
-    @Test("Version 8 persists both configured destinations")
+    @Test("Current configurations persist both configured destinations")
     func configuredMonitoringRoundTrip() throws {
         let fixture = try fixture()
         defer { try? FileManager.default.removeItem(at: fixture.directory) }
@@ -401,7 +401,7 @@ extension ConfigurationMigrationPersistenceTests {
         #expect(try fixture.store.load() == configuration)
     }
 
-    @Test("Unsupported configuration versions fail before decoding fields", arguments: [Int.min, 0, 9, Int.max])
+    @Test("Unsupported configuration versions fail before decoding fields", arguments: [Int.min, 0, 10, Int.max])
     func unsupportedMonitoringVersion(storedVersion: Int) throws {
         let fixture = try fixture()
         defer { try? FileManager.default.removeItem(at: fixture.directory) }

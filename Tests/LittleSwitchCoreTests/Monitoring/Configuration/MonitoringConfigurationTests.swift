@@ -6,13 +6,13 @@ import Testing
 
 @Suite("Monitoring configuration")
 struct MonitoringConfigurationTests {
-    @Test("Current configurations persist a monitoring section in version 8")
+    @Test("Current configurations persist a monitoring section in version 9")
     func currentConfigurationIncludesMonitoring() throws {
         let configuration = AppConfiguration()
         let encoded = try JSONEncoder().encode(configuration)
         let object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
 
-        #expect(configuration.version == 8)
+        #expect(configuration.version == 9)
         #expect(object["monitoring"] is [String: Any])
     }
 
