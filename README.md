@@ -2,6 +2,15 @@
 
 A native macOS menu-bar app that routes **Claude Desktop**, **Claude Code**, **Codex**, and **OpenCode** to the model provider of your choice: Ollama, vLLM, z.ai, or any Anthropic-compatible gateway.
 
+[**Download for macOS**](https://github.com/alfred-labs/little-switch/releases/latest) · [Quick start](#quick-start) · [Build from source](DEVELOPER.md)
+
+<picture>
+  <source media="(max-width: 800px)" srcset="assets/readme/menu-bar-mobile.svg">
+  <img src="assets/readme/menu-bar.svg" alt="LittleSwitch menu-bar mockups: connect your apps and track usage in Overview, map Claude routes to models, and choose Codex's default and custom approval review models." width="1088">
+</picture>
+
+<p align="center"><sub>Overview, Claude, and Codex — right in your menu bar. Mockups with illustrative usage data.</sub></p>
+
 A local gateway on `127.0.0.1:11436` speaks Anthropic Messages and OpenAI Responses natively. Data stays on your Mac unless you point it elsewhere.
 
 Each Claude route (Fable 5, Opus 5, Sonnet 5, Haiku 4.5, Sonnet 4.6) maps independently to any model discovered from a connected provider. Catalogues are read from `<baseURL>/v1/models`, and Ollama, vLLM, z.ai, and compatible backends all use the same standard path.

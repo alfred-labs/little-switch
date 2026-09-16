@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum StatusMenuSwitchTrack {
-    static let width: CGFloat = 36
+    static let width: CGFloat = 28
     static let height: CGFloat = 16
     static let thumb: CGFloat = 14
     static let inset: CGFloat = 1

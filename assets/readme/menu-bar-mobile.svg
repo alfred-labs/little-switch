@@ -1,0 +1,320 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="2164" viewBox="0 0 384 2164" role="img" aria-labelledby="title description">
+  <title id="title">LittleSwitch — Overview, Claude, and Codex in the macOS menu bar</title>
+  <desc id="description">Illustrative mockups based on the LittleSwitch interface. Overview connects Claude Desktop, Claude Code, Codex, and OpenCode and shows request activity and token history. Claude maps each route to a provider and model. Codex selects a default model and a separate model for custom approval review. Usage figures are sample data.</desc>
+  <!-- Editable vector mockups. Keep panel definitions in sync with menu-bar.svg.
+       Brand geometry is reused from Sources/LittleSwitchUI/Components/BrandIcons.
+       LobeHub Icons, Copyright (c) 2023 LobeHub, MIT; see ../../THIRD_PARTY_NOTICES.md. -->
+
+  <defs>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #e3e3e6; font-size: 12px; font-variant-numeric: tabular-nums; }
+      .muted, .tab, .date, .metric-label, .section-label, .app-detail { fill: #a3a3a8; }
+      .selected { fill: #f0f0f2; font-weight: 600; }
+      .tab { font-size: 11.5px; }
+      .bar-time { font-size: 11px; font-weight: 500; }
+      .app-name { font-size: 13px; font-weight: 600; }
+      .app-detail { font-size: 10.8px; }
+      .queue-count { font-size: 14px; font-weight: 600; }
+      .total { font-size: 29px; font-weight: 600; letter-spacing: -0.7px; }
+      .date { font-size: 10px; }
+      .metric-label { font-size: 11px; }
+      .metric-value { font-size: 17px; font-weight: 600; }
+      .section-label { font-weight: 600; }
+      .mapping-label { font-size: 12px; font-weight: 600; }
+      .model { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 11.5px; font-weight: 500; }
+      .command { font-size: 13px; }
+    </style>
+    <filter id="shadow" x="-10%" y="-5%" width="120%" height="115%">
+      <feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#000000" flood-opacity=".24"/>
+    </filter>
+
+    <symbol id="claude" viewBox="0 0 24 24"><path fill="currentColor" d="M4.709 15.955l4.72-2.647.08-.23-.08-.128H9.2l-.79-.048-2.698-.073-2.339-.097-2.266-.122-.571-.121L0 11.784l.055-.352.48-.321 .686.06 1.52.103 2.278.158 1.652.097 2.449.255h.389l.055-.157-.134-.098-.103-.097-2.358-1.596-2.552-1.688-1.336-.972-.724-.491-.364-.462-.158-1.008.656-.722 .881.06.225.061.893.686 1.908 1.476 2.491 1.833.365.304.145-.103.019-.073-.164-.274-1.355-2.446-1.446-2.49-.644-1.032-.17-.619a2.97 2.97 0 01-.104-.729L6.283.134 6.696 0l.996.134.42.364.62 1.414 1.002 2.229 1.555 3.03.456.898.243.832.091.255h.158V9.01l.128-1.706.237-2.095.23-2.695.08-.76.376-.91.747-.492.584.28 .48.685-.067.444-.286 1.851-.559 2.903-.364 1.942h.212l.243-.242.985-1.306 1.652-2.064.73-.82.85-.904.547-.431h1.033l.76 1.129-.34 1.166-1.064 1.347-.881 1.142 -1.264 1.7-.79 1.36.073.11.188-.02 2.856-.606 1.543-.28 1.841-.315.833.388.091.395-.328.807-1.969.486-2.309.462-3.439.813-.042.03.049.061 1.549.146.662.036h1.622 l3.02.225.79.522.474.638-.079.485-1.215.62-1.64-.389-3.829-.91-1.312-.329h-.182v.11l1.093 1.068 2.006 1.81 2.509 2.33.127.578-.322.455-.34-.049-2.205-1.657 -.851-.747-1.926-1.62h-.128v.17l.444.649 2.345 3.521.122 1.08-.17.353-.608.213-.668-.122-1.374-1.925-1.415-2.167-1.143-1.943-.14.08-.674 7.254-.316.37-.729.28 -.607-.461-.322-.747.322-1.476.389-1.924.315-1.53.286-1.9.17-.632-.012-.042-.14.018-1.434 1.967-2.18 2.945-1.726 1.845-.414.164-.717-.37.067-.662.401-.589 2.388-3.036 1.44-1.882.93-1.086-.006-.158h-.055L4.132 18.56l-1.13.146-.487-.456.061-.746.231-.243 1.908-1.312-.006.006z"/></symbol>
+    <symbol id="codex" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M9.205 8.658v-2.26c0-.19.072-.333.238-.428l4.543-2.616c.619-.357 1.356-.523 2.117-.523 2.854 0 4.662 2.212 4.662 4.566 0 .167 0 .357-.024.547l-4.71-2.759a.797.797 0 00-.856 0l-5.97 3.473zm10.609 8.8V12.06c0-.333-.143-.57-.429-.737l-5.97-3.473 1.95-1.118a.433.433 0 01.476 0l4.543 2.617c1.309.76 2.189 2.378 2.189 3.948 0 1.808-1.07 3.473-2.76 4.163zM7.802 12.703l-1.95-1.142c-.167-.095-.239-.238-.239-.428V5.899c0-2.545 1.95-4.472 4.591-4.472 1 0 1.927.333 2.712.928L8.23 5.067c-.285.166-.428.404-.428.737v6.898zM12 15.128l-2.795-1.57v-3.33L12 8.658l2.795 1.57v3.33L12 15.128zm1.796 7.23c-1 0-1.927-.332-2.712-.927l4.686-2.712c.285-.166.428-.404.428-.737v-6.898l1.974 1.142c.167.095.238.238.238.428v5.233c0 2.545-1.974 4.472-4.614 4.472zm-5.637-5.303l-4.544-2.617c-1.308-.761-2.188-2.378-2.188-3.948A4.482 4.482 0 014.21 6.327v5.423c0 .333.143.571.428.738l5.947 3.449-1.95 1.118a.432.432 0 01-.476 0zm-.262 3.9c-2.688 0-4.662-2.021-4.662-4.519 0-.19.024-.38.047-.57l4.686 2.71c.286.167.571.167.856 0l5.97-3.448v2.26c0 .19-.07.333-.237.428l-4.543 2.616c-.619.357-1.356.523-2.117.523zm5.899 2.83a5.947 5.947 0 005.827-4.756C22.287 18.339 24 15.84 24 13.296c0-1.665-.713-3.282-1.998-4.448.119-.5.19-.999.19-1.498 0-3.401-2.759-5.947-5.946-5.947-.642 0-1.26.095-1.88.31A5.962 5.962 0 0010.205 0a5.947 5.947 0 00-5.827 4.757C1.713 5.447 0 7.945 0 10.49c0 1.666.713 3.283 1.998 4.448-.119.5-.19 1-.19 1.499 0 3.401 2.759 5.946 5.946 5.946.642 0 1.26-.095 1.88-.309a5.96 5.96 0 004.162 1.713z"/></symbol>
+    <symbol id="claude-code" viewBox="0 0 24 24">
+      <path fill="currentColor" fill-rule="evenodd" d="M20.998 10.949H24V14.051H21V17.079H19.513V20H18V17.079H16.513V20H15V17.079H9V20H7.488V17.079H6V20H4.487V17.079H3V14.05H0V10.95H3V5H20.998ZM6 10.949H7.488V8.102H6ZM16.51 10.949H18V8.102H16.51Z"/>
+    </symbol>
+    <symbol id="opencode" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M16 6H8V18H16ZM20 22H4V2H20Z"/></symbol>
+    <symbol id="tray" viewBox="0 0 18 18">
+      <rect x="1" y="1" width="6.5" height="14" rx="3.25" fill="none" stroke="currentColor"/>
+      <circle cx="4.25" cy="4.25" r="1.75" fill="currentColor"/>
+      <path fill="currentColor" fill-rule="evenodd" d="M13.75 2.5a3.75 3.75 0 0 1 3.75 3.75v7.5a3.75 3.75 0 0 1-7.5 0v-7.5a3.75 3.75 0 0 1 3.75-3.75Zm0 9.5a1.75 1.75 0 1 0 0 3.5 1.75 1.75 0 0 0 0-3.5Z"/>
+    </symbol>
+    <symbol id="overview" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.1"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="10" y="1" width="5" height="5" rx="1"/><rect x="1" y="10" width="5" height="5" rx="1"/><rect x="10" y="10" width="5" height="5" rx="1"/></g></symbol>
+    <symbol id="gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="m10 2-.6 3-2 .9-2.6-1.5-2 3.4L5 10v2l-2.2 2.2 2 3.4 2.6-1.5 2 .9.6 3h4l.6-3 2-.9 2.6 1.5 2-3.4L19 12v-2l2.2-2.2-2-3.4-2.6 1.5-2-.9L14 2Z"/><circle cx="12" cy="11" r="3.2"/></g></symbol>
+    <symbol id="arrow" viewBox="0 0 16 16"><path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="chevron" viewBox="0 0 10 16"><path d="m3 4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="return" viewBox="0 0 20 20"><path d="M12 4h5v5a3 3 0 0 1-3 3H3m4-4-4 4 4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="info" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="5.5"/><path d="M8 7v4"/><path d="M8 4.5v1"/></g></symbol>
+    <symbol id="refresh" viewBox="0 0 16 16"><path d="M2.5 7a5.6 5.6 0 0 1 9.8-2.5L14 6m0-3v3h-3M13.5 9a5.6 5.6 0 0 1-9.8 2.5L2 10m0 3v-3h3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="quit" viewBox="0 0 16 16"><path d="M9 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h6M7 8h7m-3-3 3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="clock" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="8" cy="8" r="6"/><path d="M8 3.5V8H4.5"/></g></symbol>
+    <symbol id="spinner" viewBox="0 0 16 16"><g stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4"/></g></symbol>
+    <symbol id="wifi" viewBox="0 0 18 14"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 4a12 12 0 0 1 16 0M4 7a7.5 7.5 0 0 1 10 0M7 10a3 3 0 0 1 4 0"/></g><circle cx="9" cy="12.4" r="1" fill="currentColor"/></symbol>
+    <symbol id="battery" viewBox="0 0 26 14"><rect x="1" y="2" width="21" height="10" rx="2.2" fill="none" stroke="currentColor"/><rect x="3" y="4" width="16" height="6" rx="1" fill="currentColor"/><path d="M24 5v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <g id="panel-overview" color="#e3e3e6">
+      <rect x="0" y="0" width="320" height="28" rx="6" fill="#292a2e"/>
+<rect x="170" y="2" width="30" height="24" rx="5" fill="#515257"/>
+<use href="#tray" x="176" y="5" width="18" height="18"/>
+<use href="#wifi" x="210" y="7" width="17" height="14"/>
+<use href="#battery" x="239" y="7" width="25" height="14"/>
+<text x="307" y="18" class="bar-time" text-anchor="end">9:41</text>
+      <g transform="translate(0 44)">
+        <rect x="0" y="0" width="320" height="664" rx="13" fill="#0c0c0e" stroke="#535358" stroke-width="1" filter="url(#shadow)"/>
+        <rect x="12" y="9" width="262" height="32" rx="7" fill="#18181a"/>
+<rect x="14" y="11" width="84" height="28" rx="5" fill="#303033"/>
+<use href="#overview" x="21" y="19" width="13" height="13" color="#eeeeef"/>
+<text x="39" y="29" class="tab selected">Overview</text>
+<use href="#claude" x="107" y="19" width="13" height="13" color="#a3a3a8"/>
+<text x="125" y="29" class="tab">Claude</text>
+<use href="#codex" x="193" y="19" width="13" height="13" color="#a3a3a8"/>
+<text x="211" y="29" class="tab">Codex</text>
+<use href="#gear" x="286" y="15" width="20" height="20" color="#a3a3a8"/>
+<use href="#claude" x="12" y="59" width="20" height="20" color="#d97757"/>
+<text x="41" y="65" class="app-name">Claude Desktop</text>
+<text x="41" y="80" class="app-detail">3 custom models</text>
+<rect x="280" y="60" width="28" height="16" rx="8" fill="#0a84ff"/><circle cx="300" cy="68" r="7" fill="#fff"/>
+<use href="#claude-code" x="12" y="103" width="20" height="20" color="#d97757"/>
+<text x="41" y="109" class="app-name">Claude Code</text>
+<text x="41" y="124" class="app-detail">Applies to new terminal sessions</text>
+<rect x="280" y="104" width="28" height="16" rx="8" fill="#0a84ff"/><circle cx="300" cy="112" r="7" fill="#fff"/>
+<use href="#codex" x="12" y="147" width="20" height="20" color="#e3e3e6"/>
+<text x="41" y="153" class="app-name">Codex</text>
+<text x="41" y="168" class="app-detail">6 custom models</text>
+<rect x="280" y="148" width="28" height="16" rx="8" fill="#0a84ff"/><circle cx="300" cy="156" r="7" fill="#fff"/>
+<use href="#opencode" x="12" y="191" width="20" height="20" color="#e3e3e6"/>
+<text x="41" y="197" class="app-name">OpenCode</text>
+<text x="41" y="212" class="app-detail">Applies to new terminal sessions</text>
+<rect x="280" y="192" width="28" height="16" rx="8" fill="#303033"/><circle cx="288" cy="200" r="7" fill="#fff"/>
+<path d="M16 238H304" fill="none" stroke="#303033" stroke-width="1"/>
+<rect x="12" y="254" width="296" height="32" rx="9" fill="#242426"/>
+<use href="#spinner" x="23" y="263" width="13" height="13" color="#a3a3a8"/>
+<text x="43" y="275" class="muted">Running</text>
+<text x="150" y="275" class="queue-count" text-anchor="end">1</text>
+<path d="M160 262v16" stroke="#424245"/>
+<use href="#clock" x="171" y="262" width="14" height="14" color="#a3a3a8"/>
+<text x="191" y="275" class="muted">Pending</text>
+<text x="298" y="275" class="queue-count muted" text-anchor="end">0</text>
+<text x="12" y="308" class="muted">Token history</text>
+<text x="308" y="308" class="muted" text-anchor="end">30 days</text>
+<text x="12" y="341" class="total">12.8M</text>
+<text x="106.5" y="341" class="muted">tokens</text>
+<path d="M12 448H308" fill="none" stroke="#303033" stroke-width="1"/>
+<rect x="152" y="446" width="7" height="2" rx="1.5" fill="#555558"/>
+<rect x="162" y="396" width="7" height="52" rx="1.5" fill="#707073"/>
+<rect x="172" y="411" width="7" height="37" rx="1.5" fill="#555558"/>
+<rect x="182" y="378" width="7" height="70" rx="1.5" fill="#555558"/>
+<rect x="192" y="398" width="7" height="50" rx="1.5" fill="#707073"/>
+<rect x="202" y="434" width="7" height="14" rx="1.5" fill="#555558"/>
+<rect x="212" y="395" width="7" height="53" rx="1.5" fill="#555558"/>
+<rect x="222" y="447" width="7" height="1" rx="1.5" fill="#707073"/>
+<rect x="232" y="445" width="7" height="3" rx="1.5" fill="#555558"/>
+<rect x="242" y="377" width="7" height="71" rx="1.5" fill="#555558"/>
+<rect x="252" y="411" width="7" height="37" rx="1.5" fill="#707073"/>
+<rect x="262" y="366" width="7" height="82" rx="1.5" fill="#555558"/>
+<rect x="272" y="420" width="7" height="28" rx="1.5" fill="#555558"/>
+<rect x="282" y="421" width="7" height="27" rx="1.5" fill="#707073"/>
+<rect x="292" y="425" width="7" height="23" rx="1.5" fill="#555558"/>
+<rect x="302" y="446" width="7" height="2" rx="1.5" fill="#0a84ff"/>
+<text x="12" y="466" class="date">18 Aug</text>
+<text x="160" y="466" class="date" text-anchor="middle">1 Sep</text>
+<text x="308" y="466" class="date" text-anchor="end">16 Sep</text>
+<text x="12" y="492" class="metric-label" text-anchor="start">Input tokens</text>
+<text x="12" y="514" class="metric-value" text-anchor="start">4.2M</text>
+<text x="160" y="492" class="metric-label" text-anchor="middle">Cached tokens</text>
+<text x="160" y="514" class="metric-value" text-anchor="middle">7.9M</text>
+<text x="308" y="492" class="metric-label" text-anchor="end">Output tokens</text>
+<text x="308" y="514" class="metric-value" text-anchor="end">700K</text>
+<text x="12" y="538" class="metric-label" text-anchor="start">Requests</text>
+<text x="12" y="560" class="metric-value" text-anchor="start">1,846</text>
+<text x="160" y="538" class="metric-label" text-anchor="middle">Errors</text>
+<text x="160" y="560" class="metric-value" text-anchor="middle">0.2%</text>
+<text x="308" y="538" class="metric-label" text-anchor="end">Web searches</text>
+<text x="308" y="560" class="metric-value" text-anchor="end">71</text>
+<path d="M16 582H304" fill="none" stroke="#303033" stroke-width="1"/>
+<use href="#info" x="16" y="594" width="15" height="15"/>
+<text x="38" y="606" class="command">About LittleSwitch</text>
+
+<use href="#refresh" x="16" y="618" width="15" height="15"/>
+<text x="38" y="630" class="command">Check for Updates…</text>
+
+<use href="#quit" x="16" y="642" width="15" height="15"/>
+<text x="38" y="654" class="command">Quit LittleSwitch</text>
+<text x="304" y="654" class="muted command" text-anchor="end">⌘ Q</text>
+      </g>
+    </g>
+    <g id="panel-claude" color="#e3e3e6">
+      <rect x="0" y="0" width="320" height="28" rx="6" fill="#292a2e"/>
+<rect x="170" y="2" width="30" height="24" rx="5" fill="#515257"/>
+<use href="#tray" x="176" y="5" width="18" height="18"/>
+<use href="#wifi" x="210" y="7" width="17" height="14"/>
+<use href="#battery" x="239" y="7" width="25" height="14"/>
+<text x="307" y="18" class="bar-time" text-anchor="end">9:41</text>
+      <g transform="translate(0 44)">
+        <rect x="0" y="0" width="320" height="672" rx="13" fill="#0c0c0e" stroke="#535358" stroke-width="1" filter="url(#shadow)"/>
+        <rect x="12" y="9" width="262" height="32" rx="7" fill="#18181a"/>
+<rect x="100" y="11" width="84" height="28" rx="5" fill="#303033"/>
+<use href="#overview" x="21" y="19" width="13" height="13" color="#a3a3a8"/>
+<text x="39" y="29" class="tab">Overview</text>
+<use href="#claude" x="107" y="19" width="13" height="13" color="#eeeeef"/>
+<text x="125" y="29" class="tab selected">Claude</text>
+<use href="#codex" x="193" y="19" width="13" height="13" color="#a3a3a8"/>
+<text x="211" y="29" class="tab">Codex</text>
+<use href="#gear" x="286" y="15" width="20" height="20" color="#a3a3a8"/>
+<text x="12" y="62" class="muted">Token history</text>
+<text x="308" y="62" class="muted" text-anchor="end">30 days</text>
+<text x="12" y="95" class="total">7.7M</text>
+<text x="89.2" y="95" class="muted">tokens</text>
+<path d="M12 202H308" fill="none" stroke="#303033" stroke-width="1"/>
+<rect x="152" y="200" width="7" height="2" rx="1.5" fill="#555558"/>
+<rect x="162" y="141" width="7" height="61" rx="1.5" fill="#707073"/>
+<rect x="172" y="158" width="7" height="44" rx="1.5" fill="#555558"/>
+<rect x="182" y="110" width="7" height="92" rx="1.5" fill="#555558"/>
+<rect x="192" y="136" width="7" height="66" rx="1.5" fill="#707073"/>
+<rect x="202" y="185" width="7" height="17" rx="1.5" fill="#555558"/>
+<rect x="212" y="131" width="7" height="71" rx="1.5" fill="#555558"/>
+<rect x="222" y="201" width="7" height="1" rx="1.5" fill="#707073"/>
+<rect x="232" y="200" width="7" height="2" rx="1.5" fill="#555558"/>
+<rect x="242" y="200" width="7" height="2" rx="1.5" fill="#555558"/>
+<rect x="252" y="196" width="7" height="6" rx="1.5" fill="#707073"/>
+<rect x="262" y="150" width="7" height="52" rx="1.5" fill="#555558"/>
+<rect x="272" y="171" width="7" height="31" rx="1.5" fill="#555558"/>
+<rect x="292" y="201" width="7" height="1" rx="1.5" fill="#555558"/>
+<rect x="302" y="201" width="7" height="1" rx="1.5" fill="#0a84ff"/>
+<text x="12" y="220" class="date">18 Aug</text>
+<text x="160" y="220" class="date" text-anchor="middle">1 Sep</text>
+<text x="308" y="220" class="date" text-anchor="end">16 Sep</text>
+<text x="12" y="246" class="metric-label" text-anchor="start">Input tokens</text>
+<text x="12" y="268" class="metric-value" text-anchor="start">2.8M</text>
+<text x="160" y="246" class="metric-label" text-anchor="middle">Cached tokens</text>
+<text x="160" y="268" class="metric-value" text-anchor="middle">4.5M</text>
+<text x="308" y="246" class="metric-label" text-anchor="end">Output tokens</text>
+<text x="308" y="268" class="metric-value" text-anchor="end">400K</text>
+<text x="12" y="292" class="metric-label" text-anchor="start">Requests</text>
+<text x="12" y="314" class="metric-value" text-anchor="start">1,128</text>
+<text x="160" y="292" class="metric-label" text-anchor="middle">Errors</text>
+<text x="160" y="314" class="metric-value" text-anchor="middle">—</text>
+<text x="308" y="292" class="metric-label" text-anchor="end">Web searches</text>
+<text x="308" y="314" class="metric-value" text-anchor="end">—</text>
+<path d="M12 333H308" fill="none" stroke="#303033" stroke-width="1"/>
+<text x="12" y="353" class="section-label">Settings</text>
+<text x="12" y="389" class="mapping-label">Fable</text>
+<use href="#arrow" x="92" y="378" width="14" height="14" color="#9d9da2"/>
+<rect x="138" y="370" width="170" height="28" rx="6" fill="#1a1a1c"/>
+<g transform="translate(153 376) scale(-1 1)"><use href="#chevron" x="0" y="0" width="10" height="16" color="#a3a3a8"/></g>
+<use href="#chevron" x="291" y="376" width="10" height="16" color="#a3a3a8"/>
+<text x="223" y="388.5" class="model" text-anchor="middle">z.ai/glm-5.3</text>
+<text x="12" y="433" class="mapping-label">Opus</text>
+<use href="#arrow" x="92" y="422" width="14" height="14" color="#9d9da2"/>
+<rect x="138" y="414" width="170" height="28" rx="6" fill="#1a1a1c"/>
+<g transform="translate(153 420) scale(-1 1)"><use href="#chevron" x="0" y="0" width="10" height="16" color="#a3a3a8"/></g>
+<use href="#chevron" x="291" y="420" width="10" height="16" color="#a3a3a8"/>
+<text x="223" y="432.5" class="model" text-anchor="middle">z.ai/glm-5.3</text>
+<text x="12" y="477" class="mapping-label">Sonnet</text>
+<use href="#arrow" x="92" y="466" width="14" height="14" color="#9d9da2"/>
+<rect x="138" y="458" width="170" height="28" rx="6" fill="#1a1a1c"/>
+<g transform="translate(153 464) scale(-1 1)"><use href="#chevron" x="0" y="0" width="10" height="16" color="#a3a3a8"/></g>
+<use href="#chevron" x="291" y="464" width="10" height="16" color="#a3a3a8"/>
+<text x="223" y="476.5" class="model" text-anchor="middle">ollama:glm5.3</text>
+<text x="12" y="521" class="mapping-label">Haiku</text>
+<use href="#arrow" x="92" y="510" width="14" height="14" color="#9d9da2"/>
+<rect x="138" y="502" width="170" height="28" rx="6" fill="#1a1a1c"/>
+<g transform="translate(153 508) scale(-1 1)"><use href="#chevron" x="0" y="0" width="10" height="16" color="#a3a3a8"/></g>
+<use href="#chevron" x="291" y="508" width="10" height="16" color="#a3a3a8"/>
+<text x="223" y="520.5" class="model" text-anchor="middle">z.ai/glm-4.7</text>
+<rect x="276" y="544" width="32" height="26" rx="6" fill="#242426" stroke="#353538"/><use href="#return" x="282" y="547" width="20" height="20" color="#76767b"/>
+<path d="M16 589H304" fill="none" stroke="#303033" stroke-width="1"/>
+<use href="#info" x="16" y="601" width="15" height="15"/>
+<text x="38" y="613" class="command">About LittleSwitch</text>
+
+<use href="#refresh" x="16" y="625" width="15" height="15"/>
+<text x="38" y="637" class="command">Check for Updates…</text>
+
+<use href="#quit" x="16" y="649" width="15" height="15"/>
+<text x="38" y="661" class="command">Quit LittleSwitch</text>
+<text x="304" y="661" class="muted command" text-anchor="end">⌘ Q</text>
+      </g>
+    </g>
+    <g id="panel-codex" color="#e3e3e6">
+      <rect x="0" y="0" width="320" height="28" rx="6" fill="#292a2e"/>
+<rect x="170" y="2" width="30" height="24" rx="5" fill="#515257"/>
+<use href="#tray" x="176" y="5" width="18" height="18"/>
+<use href="#wifi" x="210" y="7" width="17" height="14"/>
+<use href="#battery" x="239" y="7" width="25" height="14"/>
+<text x="307" y="18" class="bar-time" text-anchor="end">9:41</text>
+      <g transform="translate(0 44)">
+        <rect x="0" y="0" width="320" height="584" rx="13" fill="#0c0c0e" stroke="#535358" stroke-width="1" filter="url(#shadow)"/>
+        <rect x="12" y="9" width="262" height="32" rx="7" fill="#18181a"/>
+<rect x="186" y="11" width="84" height="28" rx="5" fill="#303033"/>
+<use href="#overview" x="21" y="19" width="13" height="13" color="#a3a3a8"/>
+<text x="39" y="29" class="tab">Overview</text>
+<use href="#claude" x="107" y="19" width="13" height="13" color="#a3a3a8"/>
+<text x="125" y="29" class="tab">Claude</text>
+<use href="#codex" x="193" y="19" width="13" height="13" color="#eeeeef"/>
+<text x="211" y="29" class="tab selected">Codex</text>
+<use href="#gear" x="286" y="15" width="20" height="20" color="#a3a3a8"/>
+<text x="12" y="62" class="muted">Token history</text>
+<text x="308" y="62" class="muted" text-anchor="end">30 days</text>
+<text x="12" y="95" class="total">5.1M</text>
+<text x="89.2" y="95" class="muted">tokens</text>
+<path d="M12 202H308" fill="none" stroke="#303033" stroke-width="1"/>
+<rect x="162" y="194" width="7" height="8" rx="1.5" fill="#707073"/>
+<rect x="172" y="197" width="7" height="5" rx="1.5" fill="#555558"/>
+<rect x="182" y="201" width="7" height="1" rx="1.5" fill="#555558"/>
+<rect x="192" y="201" width="7" height="1" rx="1.5" fill="#707073"/>
+<rect x="202" y="200" width="7" height="2" rx="1.5" fill="#555558"/>
+<rect x="232" y="200" width="7" height="2" rx="1.5" fill="#555558"/>
+<rect x="242" y="110" width="7" height="92" rx="1.5" fill="#555558"/>
+<rect x="252" y="159" width="7" height="43" rx="1.5" fill="#707073"/>
+<rect x="262" y="145" width="7" height="57" rx="1.5" fill="#555558"/>
+<rect x="272" y="196" width="7" height="6" rx="1.5" fill="#555558"/>
+<rect x="282" y="166" width="7" height="36" rx="1.5" fill="#707073"/>
+<rect x="292" y="172" width="7" height="30" rx="1.5" fill="#555558"/>
+<rect x="302" y="201" width="7" height="1" rx="1.5" fill="#0a84ff"/>
+<text x="12" y="220" class="date">18 Aug</text>
+<text x="160" y="220" class="date" text-anchor="middle">1 Sep</text>
+<text x="308" y="220" class="date" text-anchor="end">16 Sep</text>
+<text x="12" y="246" class="metric-label" text-anchor="start">Input tokens</text>
+<text x="12" y="268" class="metric-value" text-anchor="start">1.4M</text>
+<text x="160" y="246" class="metric-label" text-anchor="middle">Cached tokens</text>
+<text x="160" y="268" class="metric-value" text-anchor="middle">3.4M</text>
+<text x="308" y="246" class="metric-label" text-anchor="end">Output tokens</text>
+<text x="308" y="268" class="metric-value" text-anchor="end">300K</text>
+<text x="12" y="292" class="metric-label" text-anchor="start">Requests</text>
+<text x="12" y="314" class="metric-value" text-anchor="start">718</text>
+<text x="160" y="292" class="metric-label" text-anchor="middle">Errors</text>
+<text x="160" y="314" class="metric-value" text-anchor="middle">—</text>
+<text x="308" y="292" class="metric-label" text-anchor="end">Web searches</text>
+<text x="308" y="314" class="metric-value" text-anchor="end">—</text>
+<path d="M12 333H308" fill="none" stroke="#303033" stroke-width="1"/>
+<text x="12" y="353" class="section-label">Settings</text>
+<text x="12" y="389" class="mapping-label">Default model</text>
+<use href="#arrow" x="116" y="378" width="14" height="14" color="#9d9da2"/>
+<rect x="140" y="370" width="168" height="28" rx="6" fill="#1a1a1c"/>
+<g transform="translate(155 376) scale(-1 1)"><use href="#chevron" x="0" y="0" width="10" height="16" color="#a3a3a8"/></g>
+<use href="#chevron" x="291" y="376" width="10" height="16" color="#a3a3a8"/>
+<text x="224" y="388.5" class="model" text-anchor="middle">z.ai/glm-5.3</text>
+<text x="12" y="433" class="mapping-label">Custom review</text>
+<use href="#arrow" x="116" y="422" width="14" height="14" color="#9d9da2"/>
+<rect x="140" y="414" width="168" height="28" rx="6" fill="#1a1a1c"/>
+<g transform="translate(155 420) scale(-1 1)"><use href="#chevron" x="0" y="0" width="10" height="16" color="#a3a3a8"/></g>
+<use href="#chevron" x="291" y="420" width="10" height="16" color="#a3a3a8"/>
+<text x="224" y="432.5" class="model" text-anchor="middle">z.ai/glm-4.7</text>
+<rect x="276" y="456" width="32" height="26" rx="6" fill="#242426" stroke="#353538"/><use href="#return" x="282" y="459" width="20" height="20" color="#76767b"/>
+<path d="M16 501H304" fill="none" stroke="#303033" stroke-width="1"/>
+<use href="#info" x="16" y="513" width="15" height="15"/>
+<text x="38" y="525" class="command">About LittleSwitch</text>
+
+<use href="#refresh" x="16" y="537" width="15" height="15"/>
+<text x="38" y="549" class="command">Check for Updates…</text>
+
+<use href="#quit" x="16" y="561" width="15" height="15"/>
+<text x="38" y="573" class="command">Quit LittleSwitch</text>
+<text x="304" y="573" class="muted command" text-anchor="end">⌘ Q</text>
+      </g>
+    </g>
+  </defs>
+  <rect x="0" y="0" width="384" height="2164" rx="18" fill="#1c1d21"/>
+  <use href="#panel-overview" transform="translate(32 24)"/>
+  <use href="#panel-claude" transform="translate(32 764)"/>
+  <use href="#panel-codex" transform="translate(32 1512)"/>
+</svg>
