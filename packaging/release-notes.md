@@ -1,9 +1,5 @@
-## Improvements
-
-- Menu switches use more compact proportions.
-- The setup guide includes a video walkthrough.
-
 ## Fixes
 
-- Fable 5.1 appears in the Claude model catalog without losing existing mappings or the selected default. Sessions using the previous Fable choice continue to work.
-- **Claude Code shows 1M context choices for every eligible route, including Sonnet.** Choices follow the mapped model's capacity, and Claude Desktop keeps its existing context selection without duplicate entries.
+- **Claude Code and Claude Desktop now show one coherent LittleSwitch choice for each Claude model family.** Context variants follow the mapped provider model's capacity instead of adding duplicate gateway entries, and the selected default remains controlled by LittleSwitch.
+- Claude Code no longer shows Anthropic pricing on its default-model entry when LittleSwitch owns the default.
+- Changing the model indicator updates Claude Code model labels immediately without changing the selected model or routing.
