@@ -34,19 +34,13 @@ Each Claude route (Fable 5, Opus 5, Sonnet 5, Haiku 4.5, Sonnet 4.6) maps indepe
 
 ## Quick start
 
-Download the latest DMG from [Releases](https://github.com/alfred-labs/little-switch/releases) or build from source (see [DEVELOPER.md](DEVELOPER.md)).
+[![Watch the LittleSwitch setup video: open Settings, add Ollama, choose a model, and follow gateway activity.](assets/readme/quick-start/poster.png)](assets/readme/quick-start/video.mp4)
 
-The repository tooling ships as a [standalone Swift package](tools/README.md).
-Verification, release, and diagnostic workflows run through mise, with no
-dependency on Node/npm or Python. `mise.lock` pins SwiftLint and Periphery
-for macOS ARM64. Swift comes from Xcode.
-The [architecture map](docs/architecture.md) describes the Core, UI, Search,
-and Transport domains.
+**[▶ Watch the setup · 48 seconds](assets/readme/quick-start/video.mp4)** — Illustrated walkthrough with sample activity.
 
-1. Open **Settings → Providers** and add Ollama, vLLM, z.ai, or a compatible provider. `Test & Save` must succeed on `/v1/models`. Reopen the provider to verify the detected context window, or enter an override (e.g. `400k`, `1m`) when it isn't published.
-2. In **Claude**, choose a `provider/model` for each route you want.
-3. Save the mappings, then activate Claude from the menu bar. LittleSwitch applies the Claude profile that points to its gateway.
-4. Quitting or disabling LittleSwitch restores the first-party profile.
+[Download for macOS](https://github.com/alfred-labs/little-switch/releases/latest), add a provider in **Settings**, choose your models, then turn on your apps from the menu bar.
+
+Disabling or quitting LittleSwitch restores your previous profiles.
 
 ### Codex
 
@@ -85,6 +79,9 @@ Monitoring events contain only allowed metadata. They exclude prompts, response 
 
 ## Documentation
 
+- [Build from source](DEVELOPER.md)
+- [Repository tooling](tools/README.md)
+- [Architecture](docs/architecture.md)
 - [Known limitations](docs/known-limitations.md)
 - [Provider request queue](docs/provider-request-queue.md)
 
