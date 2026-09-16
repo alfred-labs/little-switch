@@ -34,9 +34,9 @@ Each Claude route (Fable 5, Opus 5, Sonnet 5, Haiku 4.5, Sonnet 4.6) maps indepe
 
 ## Quick start
 
-[![Watch the LittleSwitch setup video: open Settings, add Ollama, choose a model, and follow gateway activity.](assets/readme/quick-start/poster.png)](assets/readme/quick-start/video.mp4)
+https://github.com/user-attachments/assets/5c3f4dc5-cc52-4f8c-ae80-3eedc3affd0b
 
-**[▶ Watch the setup · 48 seconds](assets/readme/quick-start/video.mp4)** — Illustrated walkthrough with sample activity.
+48-second illustrated walkthrough with sample activity.
 
 [Download for macOS](https://github.com/alfred-labs/little-switch/releases/latest), add a provider in **Settings**, choose your models, then turn on your apps from the menu bar.
 

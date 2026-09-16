@@ -26,8 +26,13 @@ walkthrough: the website's control deck, menu bar, Settings, an Ollama provider,
 Claude model routing, and gateway activity. The video is silent H.264 at
 1920 × 1200, 24 fps. Usage and request activity are illustrative.
 
-The main README links the poster and its caption to the MP4. The poster is an
-unmodified frame at 1.5 seconds.
+The main README embeds the video using a GitHub-hosted attachment URL on its
+own line, which renders GitHub's native video player. Keep the MP4 here as the
+source of that upload. When replacing the video, upload the new MP4 to the same
+repository's attachments and update the URL in the main README.
+
+`quick-start/poster.png` is an unmodified frame at 1.5 seconds, retained for uses
+outside GitHub.
 
 Open [`quick-start/index.html`](quick-start/index.html) in a browser to edit or
 preview the animation. It runs locally without a build step or remote assets.
