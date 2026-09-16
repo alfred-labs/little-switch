@@ -62,8 +62,11 @@ Mise caches its pinned tools. SwiftPM's shared caches at `.build/cache` and
 `.build/tooling-cache` retain downloaded repositories, binary artifacts, prebuilts,
 and manifests across the separate test and analysis builds. Their cache key
 includes the runner OS, architecture, exact Xcode build, and all three tracked
-`Package.resolved` files. A changed lockfile can reuse a cache from the same
-toolchain; SwiftPM still resolves the requested versions.
+`Package.resolved` files, with a new snapshot for each run and attempt. GitHub's
+caches are immutable, so this lets a later run complete a cache saved after an
+early failure. Restoration prefers the latest snapshot for the same lockfiles.
+A changed lockfile can reuse a cache from the same toolchain; SwiftPM still
+resolves the requested versions.
 
 The schema tools cache npm's downloaded packages under
 `.cache/sdk-contracts-npm/_cacache`, keyed by `tools/sdk-contracts/package-lock.json`.
@@ -73,6 +76,19 @@ Dependency caches are saved even when checks fail. Application and test build
 products, coverage profiles, credentials, and `node_modules` are not cached, and
 every quality check still runs on a cache hit. See the [GitHub caching strategies](https://github.com/actions/cache/blob/main/caching-strategies.md)
 and [SwiftPM cache locations](https://github.com/swiftlang/swift-package-manager/blob/main/Sources/Workspace/Workspace%2BConfiguration.swift).
+
+### Concurrency test fixtures
+
+Fixtures that deliberately block synchronous credential or configuration APIs
+use dedicated task executors rather than occupy Swift's cooperative worker pool.
+These four tests require macOS 15's task-executor API; the required Xcode 27 host
+and CI image satisfy that requirement. Their semaphore waits are bounded so a
+broken fixture fails instead of hanging the entire gate. To exercise their three
+suites (11 tests) with just one cooperative worker:
+
+```sh
+LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 mise run swift:test -- --filter 'CoordinatorProviderEdgeCoverageTests|ProviderRoutingSecurityTests|CoordinatorSupersededDeleteTests'
+```
 
 ## Architecture
 

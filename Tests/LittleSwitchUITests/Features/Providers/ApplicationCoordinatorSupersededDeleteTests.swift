@@ -11,10 +11,11 @@ import Testing
 @Suite("Application coordinator superseded deletes")
 struct CoordinatorSupersededDeleteTests {
     @Test("A superseded delete releases the routing token before mutation")
+    @available(macOS 15.0, *)
     func deleteSupersededWhileWaitingForRoutingGuard() async throws {
         let fixture = try await ProviderEdgeCoverageFixture.make()
         let blockingStore = BlockingSecretReadStore()
-        let guardBlocker = Task {
+        let guardBlocker = Task(executorPreference: BlockingTestExecutor()) {
             try await fixture.state.routingMutationGuard.readCredential(
                 providerID: UUID(),
                 secretStore: blockingStore
@@ -41,8 +42,8 @@ struct CoordinatorSupersededDeleteTests {
             providerID: fixture.providerID
         )
         let actorGate = BlockingCoordinatorActorGate()
-        let actorBlocker = Task(priority: .low) {
-            await fixture.coordinator.blockActorForEdgeCoverage(actorGate)
+        let actorBlocker = Task(executorPreference: BlockingTestExecutor(), priority: .low) {
+            try await fixture.coordinator.blockActorForEdgeCoverage(actorGate)
         }
         defer {
             actorGate.release()
@@ -50,14 +51,14 @@ struct CoordinatorSupersededDeleteTests {
         }
         #expect(await actorGate.waitUntilBlocked())
         blockingStore.releaseRead()
-        _ = try? await guardBlocker.value
+        _ = try await guardBlocker.value
         try await waitUntilRoutingMutationIsActiveForEdgeCoverage(
             routingMutationGuard: fixture.state.routingMutationGuard,
             providerID: fixture.providerID,
             secretStore: fixture.secrets
         )
         actorGate.release()
-        _ = await actorBlocker.value
+        _ = try await actorBlocker.value
 
         await #expect(throws: ApplicationCoordinator.Error.providerMutationSuperseded) {
             _ = try await deletion.value
@@ -70,10 +71,11 @@ struct CoordinatorSupersededDeleteTests {
     }
 
     @Test("A superseded delete of a vanished provider schedules no refresh loop")
+    @available(macOS 15.0, *)
     func deleteSupersededAfterProviderVanishes() async throws {
         let fixture = try await ProviderEdgeCoverageFixture.make()
         let blockingStore = BlockingSecretReadStore()
-        let guardBlocker = Task {
+        let guardBlocker = Task(executorPreference: BlockingTestExecutor()) {
             try await fixture.state.routingMutationGuard.readCredential(
                 providerID: UUID(),
                 secretStore: blockingStore
@@ -106,7 +108,7 @@ struct CoordinatorSupersededDeleteTests {
             providerID: fixture.providerID
         )
         blockingStore.releaseRead()
-        _ = try? await guardBlocker.value
+        _ = try await guardBlocker.value
 
         await #expect(throws: ApplicationCoordinator.Error.providerMutationSuperseded) {
             _ = try await deletion.value

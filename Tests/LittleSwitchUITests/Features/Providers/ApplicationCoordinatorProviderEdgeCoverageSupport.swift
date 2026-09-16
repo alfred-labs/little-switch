@@ -198,7 +198,9 @@ final class BlockingSecretReadStore: SecretStore, @unchecked Sendable {
     func read(account: SecretAccount) throws -> String? {
         _ = account
         readEntered.signal()
-        readReleased.wait()
+        guard readReleased.wait(timeout: .now() + 30) == .success else {
+            throw AsyncTestTimeout(operation: "release of the blocked credential read")
+        }
         return nil
     }
 
@@ -230,9 +232,11 @@ final class BlockingCoordinatorActorGate: @unchecked Sendable {
     private let entered = DispatchSemaphore(value: 0)
     private let released = DispatchSemaphore(value: 0)
 
-    func block() {
+    func block() throws {
         entered.signal()
-        released.wait()
+        guard released.wait(timeout: .now() + 30) == .success else {
+            throw AsyncTestTimeout(operation: "release of the blocked coordinator")
+        }
     }
 
     func waitUntilBlocked() async -> Bool {
@@ -251,8 +255,8 @@ final class BlockingCoordinatorActorGate: @unchecked Sendable {
 }
 
 extension ApplicationCoordinator {
-    func blockActorForEdgeCoverage(_ gate: BlockingCoordinatorActorGate) {
-        gate.block()
+    func blockActorForEdgeCoverage(_ gate: BlockingCoordinatorActorGate) throws {
+        try gate.block()
     }
 }
 

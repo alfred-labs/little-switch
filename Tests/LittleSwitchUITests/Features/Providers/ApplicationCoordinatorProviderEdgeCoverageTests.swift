@@ -9,13 +9,14 @@ import Testing
 @Suite("Application coordinator provider edge coverage")
 struct CoordinatorProviderEdgeCoverageTests {
     @Test("A superseded save releases the routing token acquired after discovery")
+    @available(macOS 15.0, *)
     func saveSupersededWhileWaitingForRoutingGuard() async throws {
         let transport = GatedProviderCatalogTransport()
         let fixture = try await ProviderEdgeCoverageFixture.make(
             discoveryTransport: transport
         )
         let blockingStore = BlockingSecretReadStore()
-        let guardBlocker = Task {
+        let guardBlocker = Task(executorPreference: BlockingTestExecutor()) {
             try await fixture.state.routingMutationGuard.readCredential(
                 providerID: UUID(),
                 secretStore: blockingStore
@@ -56,8 +57,8 @@ struct CoordinatorProviderEdgeCoverageTests {
             providerID: fixture.providerID
         )
         let actorGate = BlockingCoordinatorActorGate()
-        let actorBlocker = Task(priority: .low) {
-            await fixture.coordinator.blockActorForEdgeCoverage(actorGate)
+        let actorBlocker = Task(executorPreference: BlockingTestExecutor(), priority: .low) {
+            try await fixture.coordinator.blockActorForEdgeCoverage(actorGate)
         }
         defer {
             actorGate.release()
@@ -65,14 +66,14 @@ struct CoordinatorProviderEdgeCoverageTests {
         }
         #expect(await actorGate.waitUntilBlocked())
         blockingStore.releaseRead()
-        _ = try? await guardBlocker.value
+        _ = try await guardBlocker.value
         try await waitUntilRoutingMutationIsActiveForEdgeCoverage(
             routingMutationGuard: fixture.state.routingMutationGuard,
             providerID: fixture.providerID,
             secretStore: fixture.secrets
         )
         actorGate.release()
-        _ = await actorBlocker.value
+        _ = try await actorBlocker.value
 
         await #expect(throws: ApplicationCoordinator.Error.providerMutationSuperseded) {
             _ = try await save.value

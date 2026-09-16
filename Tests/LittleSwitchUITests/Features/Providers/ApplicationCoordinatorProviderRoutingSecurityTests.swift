@@ -12,6 +12,7 @@ import Testing
 @Suite("Application coordinator provider routing security")
 struct ProviderRoutingSecurityTests {
     @Test("Credential replacement is atomic with gateway routing replacement")
+    @available(macOS 15.0, *)
     func credentialReplacementIsAtomicWithRouting() async throws {
         let providerID = UUID()
         let provider = Provider(
@@ -54,7 +55,7 @@ struct ProviderRoutingSecurityTests {
         let oldCapture = await state.routingCapture()
         store.blockNextSave()
 
-        let save = Task {
+        let save = Task(executorPreference: BlockingTestExecutor()) {
             try await coordinator.saveProvider(
                 ProviderInput(
                     id: providerID,
@@ -287,7 +288,10 @@ private actor GatedCatalogTransport: UpstreamTransport {
     func execute(
         _ request: AsyncHTTPClient.HTTPClientRequest
     ) async throws -> AsyncHTTPClient.HTTPClientResponse {
-        _ = request
+        // Image and wire probes must not consume the catalog-refresh gate.
+        guard request.method == .GET else {
+            return AsyncHTTPClient.HTTPClientResponse(status: .forbidden)
+        }
         if shouldBlockNextRequest {
             shouldBlockNextRequest = false
             requestIsBlocked = true
@@ -336,7 +340,9 @@ private final class BlockingConfigurationStore: ConfigurationStoring, @unchecked
             return
         }
         saveEntered.signal()
-        saveReleased.wait()
+        guard saveReleased.wait(timeout: .now() + 30) == .success else {
+            throw AsyncTestTimeout(operation: "release of the blocked configuration save")
+        }
     }
 
     func blockNextSave() {

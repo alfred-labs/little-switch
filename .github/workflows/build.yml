@@ -50,8 +50,10 @@ jobs:
           path: |
             .build/cache
             .build/tooling-cache
-          key: swiftpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.toolchain.outputs.xcode-build }}-${{ hashFiles('Package.resolved', 'tools/Package.resolved', 'Vendor/OrderedJSON/Package.resolved') }}
+          # Caches are immutable: a new snapshot can complete an earlier failed run's downloads.
+          key: swiftpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.toolchain.outputs.xcode-build }}-${{ hashFiles('Package.resolved', 'tools/Package.resolved', 'Vendor/OrderedJSON/Package.resolved') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
+            swiftpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.toolchain.outputs.xcode-build }}-${{ hashFiles('Package.resolved', 'tools/Package.resolved', 'Vendor/OrderedJSON/Package.resolved') }}
             swiftpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.toolchain.outputs.xcode-build }}-
 
       - name: Restore npm downloads
