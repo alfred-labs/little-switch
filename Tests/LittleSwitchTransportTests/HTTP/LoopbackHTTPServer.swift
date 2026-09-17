@@ -35,7 +35,14 @@ final class LoopbackHTTPServer: @unchecked Sendable {
             }
             listener.newConnectionHandler = { [self] connection in
                 connection.stateUpdateHandler = { state in
-                    if case .ready = state { self.respond(connection) }
+                    switch state {
+                    case .ready: self.awaitRequest(connection)
+                    // Under heavy instrumentation load NW may park a fresh
+                    // connection in a waiting state; restart it instead of
+                    // letting it fail as a reset.
+                    case .waiting: connection.restart()
+                    default: break
+                    }
                 }
                 connection.start(queue: .global())
             }
@@ -45,6 +52,38 @@ final class LoopbackHTTPServer: @unchecked Sendable {
 
     func stop() async {
         listener.cancel()
+    }
+
+    /// Read the request head before answering: responding and closing an
+    /// unread connection can reset a client whose request is still in
+    /// flight, which surfaced as ECONNRESET under Thread Sanitizer timing.
+    private func awaitRequest(_ connection: NWConnection) {
+        receiveHead(connection, accumulated: [])
+    }
+
+    private func receiveHead(_ connection: NWConnection, accumulated: [UInt8]) {
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 16_384) { [self] data, _, isComplete, error in
+            var received = accumulated
+            if let data { received.append(contentsOf: data) }
+            if Self.hasRequestTerminator(received) {
+                respond(connection)
+            } else if error == nil, !isComplete {
+                receiveHead(connection, accumulated: received)
+            } else {
+                connection.cancel()
+            }
+        }
+    }
+
+    private static let requestTerminator = [0x0D, 0x0A, 0x0D, 0x0A]
+
+    private static func hasRequestTerminator(_ bytes: [UInt8]) -> Bool {
+        guard bytes.count >= requestTerminator.count else { return false }
+        for start in 0...(bytes.count - requestTerminator.count)
+        where (0..<requestTerminator.count).allSatisfy({ bytes[start + $0] == requestTerminator[$0] }) {
+            return true
+        }
+        return false
     }
 
     private func respond(_ connection: NWConnection) {
