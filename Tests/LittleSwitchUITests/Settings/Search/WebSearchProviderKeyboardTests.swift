@@ -10,7 +10,12 @@ import Testing
 @MainActor
 @Suite("Search provider keyboard navigation", .appKitIsolation)
 struct WebSearchProviderKeyboardTests {
-    @Test("Native arrow commands respect direction, bounds and disabled state", arguments: [false, true])
+    @Test(
+        "Native arrow commands respect direction, bounds and disabled state",
+        arguments: [false, true],
+        .disabled(
+            if: ConditionallyUnavailable.onRunner,
+            "SwiftUICore cannot acquire AX focus on GitHub's macOS 27 preview runner."))
     func arrowNavigation(rightToLeft: Bool) async throws {
         let forward: UInt16 = rightToLeft ? 123 : 124
         let backward: UInt16 = rightToLeft ? 124 : 123
