@@ -29,6 +29,8 @@ run = "swiftlint lint --strict --no-cache"
 description = "Run Swift Testing suites with strict compiler warnings"
 run = """
 xcrun swift test --disable-sandbox \
+  --disable-xctest \
+  --toolset tools/ci/appkit-test-runner.json \
   --cache-path .build/cache --config-path .build/config --security-path .build/security \
   -Xswiftc -warnings-as-errors
 """
@@ -63,6 +65,8 @@ run = """
 # Parallel suite scheduling interleaves NIO continuation setup and resume in a
 # way TSAN reports before test teardown; coverage already uses serial mode.
 xcrun swift test --disable-sandbox --sanitize=thread --no-parallel \
+  --disable-xctest \
+  --toolset tools/ci/appkit-test-runner.json \
   --cache-path .build/cache --config-path .build/config --security-path .build/security \
   -Xswiftc -warnings-as-errors
 """

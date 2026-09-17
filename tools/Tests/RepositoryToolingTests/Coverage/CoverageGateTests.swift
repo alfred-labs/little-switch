@@ -27,7 +27,12 @@ struct CoverageGateTests {
         let (result, log) = try CoverageGateFixture().run(package: package)
         #expect(result.status == 0, "\(result.stdout)\n\(result.stderr)")
         #expect(log.contains("swift\tswift\tbuild\t--show-bin-path"))
-        #expect(log.contains("--enable-code-coverage\t--no-parallel"))
+        #expect(
+            package == .app
+                ? log.contains(
+                    "--enable-code-coverage\t--disable-xctest\t--toolset\ttools/ci/appkit-coverage-test-runner.json\t--no-parallel"
+                )
+                : log.contains("--enable-code-coverage\t--no-parallel"))
         #expect(log.contains("-warnings-as-errors"))
         #expect(log.contains("-instrprof-atomic-counter-update-all"))
         #expect(log.contains(package == .app ? ".build/coverage" : ".build/tooling-coverage"))

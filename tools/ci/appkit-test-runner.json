@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "1.0",
+  "testRunner": {
+    "path": "../../.build/out/Products/Debug/LittleSwitchUITestHost"
+  }
+}

@@ -12,6 +12,7 @@ let package = Package(
         .library(name: "LittleSwitchCore", targets: ["LittleSwitchCore"]),
         .library(name: "LittleSwitchUI", targets: ["LittleSwitchUI"]),
         .executable(name: "LittleSwitch", targets: ["LittleSwitch"]),
+        .executable(name: "LittleSwitchUITestHost", targets: ["LittleSwitchUITestHost"]),
     ],
     dependencies: [
         .package(path: "Vendor/OrderedJSON"),
@@ -132,6 +133,10 @@ let package = Package(
         .executableTarget(
             name: "LittleSwitch",
             dependencies: ["LittleSwitchCore", "LittleSwitchUI"]
+        ),
+        .executableTarget(
+            name: "LittleSwitchUITestHost",
+            path: "Tools/LittleSwitchUITestHost"
         ),
         .testTarget(
             name: "LittleSwitchCommonTests",

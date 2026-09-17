@@ -7,7 +7,8 @@ coverage_scratch_path=.build/coverage
 
 # Async tests exercise shared functions concurrently even in a serial test run.
 # Atomic profile increments prevent lost hits and inconsistent derived counts.
-xcrun swift test --disable-sandbox --enable-code-coverage \
+xcrun swift test --disable-sandbox --enable-code-coverage --disable-xctest \
+    --toolset tools/ci/appkit-coverage-test-runner.json \
     --no-parallel \
     --scratch-path "$coverage_scratch_path" \
     --cache-path .build/cache --config-path .build/config --security-path .build/security \

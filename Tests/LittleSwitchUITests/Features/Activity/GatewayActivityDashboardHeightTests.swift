@@ -10,7 +10,7 @@ import Testing
 /// height has to equal what SwiftUI actually lays out. Anything less clips the
 /// bottom of the menu block silently.
 @MainActor
-@Suite("Gateway dashboard height")
+@Suite("Gateway dashboard height", .appKitIsolation)
 struct GatewayActivityDashboardHeightTests {
     @Test("The declared height matches the laid-out height in every composition")
     func declaredHeightMatchesLayout() {
