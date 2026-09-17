@@ -104,6 +104,7 @@ struct CoverageRepositoryScopeTests {
         "Sources/LittleSwitchUI/Settings/Providers/ProviderModelContextTable.swift",
         "Sources/LittleSwitchUI/Settings/Providers/ProviderSettingsRow.swift",
         "Sources/LittleSwitchUI/Settings/Providers/ProvidersSettingsView.swift",
+        "Sources/LittleSwitchUI/Settings/Search/WebSearchProviderPicker.swift",
         "Sources/LittleSwitchUI/Settings/Search/WebSearchSettingsView.swift",
         "Sources/LittleSwitchUI/MenuBar/MenuClaudeTabView.swift",
         "Sources/LittleSwitchUI/MenuBar/MenuCodexReviewModelRow.swift",
