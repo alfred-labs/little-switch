@@ -10,6 +10,46 @@ import Testing
 @MainActor
 @Suite("Search provider keyboard navigation", .appKitIsolation)
 struct WebSearchProviderKeyboardTests {
+    @Test("Arrow projection respects the disabled state, unsupported keys, focus and bounds")
+    func arrowProjection() {
+        #expect(
+            WebSearchProviderNavigation.selection(
+                after: .right, isEnabled: false, focusedProvider: .firecrawl, layoutDirection: .leftToRight
+            ) == nil)
+        #expect(
+            WebSearchProviderNavigation.selection(
+                after: .up, isEnabled: true, focusedProvider: .firecrawl, layoutDirection: .leftToRight
+            ) == nil)
+        #expect(
+            WebSearchProviderNavigation.selection(
+                after: .right, isEnabled: true, focusedProvider: nil, layoutDirection: .leftToRight
+            ) == nil)
+        #expect(
+            WebSearchProviderNavigation.selection(
+                after: .right, isEnabled: true, focusedProvider: .exa, layoutDirection: .leftToRight
+            ) == nil)
+        #expect(
+            WebSearchProviderNavigation.selection(
+                after: .left, isEnabled: true, focusedProvider: .disabled, layoutDirection: .leftToRight
+            ) == nil)
+        #expect(
+            WebSearchProviderNavigation.selection(
+                after: .right, isEnabled: true, focusedProvider: .firecrawl, layoutDirection: .leftToRight
+            ) == .tavily)
+        #expect(
+            WebSearchProviderNavigation.selection(
+                after: .left, isEnabled: true, focusedProvider: .tavily, layoutDirection: .leftToRight
+            ) == .firecrawl)
+        #expect(
+            WebSearchProviderNavigation.selection(
+                after: .left, isEnabled: true, focusedProvider: .firecrawl, layoutDirection: .rightToLeft
+            ) == .tavily)
+        #expect(
+            WebSearchProviderNavigation.selection(
+                after: .right, isEnabled: true, focusedProvider: .tavily, layoutDirection: .rightToLeft
+            ) == .firecrawl)
+    }
+
     @Test("Native arrow commands respect direction, bounds and disabled state", arguments: [false, true])
     func arrowNavigation(rightToLeft: Bool) async throws {
         let skipReason = "SwiftUICore cannot acquire AX focus on GitHub's macOS 27 preview runner."

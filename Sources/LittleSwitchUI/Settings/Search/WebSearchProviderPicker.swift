@@ -59,20 +59,16 @@ struct WebSearchProviderPicker: View {
     }
 
     private func moveSelection(_ direction: MoveCommandDirection) {
-        guard isEnabled else { return }
-        let offset: Int
-        switch direction {
-        case .left: offset = layoutDirection == .leftToRight ? -1 : 1
-        case .right: offset = layoutDirection == .leftToRight ? 1 : -1
-        default: return
-        }
-        let providers = WebSearchProvider.allCases
-        guard let focused = focusedProvider,
-            let current = providers.firstIndex(of: focused),
-            providers.indices.contains(current + offset)
+        guard
+            let next = WebSearchProviderNavigation.selection(
+                after: direction,
+                isEnabled: isEnabled,
+                focusedProvider: focusedProvider,
+                layoutDirection: layoutDirection
+            )
         else { return }
-        selection = providers[current + offset]
-        focusedProvider = selection
+        selection = next
+        focusedProvider = next
     }
 }
 

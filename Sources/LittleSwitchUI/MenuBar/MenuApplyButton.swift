@@ -50,9 +50,15 @@ private struct MenuApplyKeycapStyle: ButtonStyle {
                 shape.strokeBorder(.primary.opacity(contrast == .increased ? 0.6 : 0.2))
             }
             .overlay {
-                if isFocused {
-                    shape.inset(by: -3).strokeBorder(Color.accentColor, lineWidth: 2)
-                }
+                // Unconditional ring parameters: keyboard focus draws the
+                // accent stroke inset by three points, every other state
+                // draws nothing, so rendering never depends on AX focus.
+                shape
+                    .inset(by: isFocused ? -3 : 0)
+                    .strokeBorder(
+                        isFocused ? Color.accentColor : .clear,
+                        lineWidth: isFocused ? 2 : 0
+                    )
             }
             .contentShape(shape)
             .offset(y: configuration.isPressed ? 1 : 0)

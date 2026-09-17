@@ -105,3 +105,4 @@ Sources/LittleSwitchUI/Platform/ProcessHandoff/ApplicationHandoffSystem.swift	NS
 Sources/LittleSwitchUI/Platform/Updates/DeveloperIDSignatureProbe.swift	Security.framework code-signing probe boundary.
 Sources/LittleSwitchUI/Platform/Updates/SoftwareUpdateProviding.swift	Compile-time protocol declaration emits no executable coverage regions.
 Sources/LittleSwitchUI/Platform/Updates/SparkleSoftwareUpdateController.swift	Sparkle framework adapter boundary.
+Sources/LittleSwitchUI/Settings/Search/WebSearchProviderPicker.swift	SwiftUI provider picker presentation boundary; arrow-key navigation projection is measured in WebSearchProviderNavigation and click selection in WebSearchSettingsControlsTests, with native keyboard interaction validated through Computer Use.
