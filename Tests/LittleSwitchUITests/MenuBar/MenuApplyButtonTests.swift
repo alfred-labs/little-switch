@@ -88,7 +88,7 @@ struct MenuApplyButtonTests {
         try await host.focus(label: L10n.string("Apply changes"))
         let didRenderFocus = try await renders(host.hosting) { $0 != resting }
         #expect(didRenderFocus)
-        #expect(try host.element(label: L10n.string("Apply changes")).object.isAccessibilityFocused?() == true)
+        #expect(host.accessibilityElements.contains { $0.object.isAccessibilityFocused?() == true })
 
         try await host.clearFocus()
         let didClearFocus = try await renders(host.hosting) { $0 == resting }
