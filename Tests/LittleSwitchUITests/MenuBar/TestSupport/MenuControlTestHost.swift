@@ -70,6 +70,7 @@ final class MenuControlTestHost<Content: View> {
         let target = try element(label: label)
         try #require(target.isAccessibilityEnabled(), "Cannot focus the disabled control \(label).")
         target.object.setAccessibilityFocused?(true)
+        try await Task.sleep(for: .milliseconds(16))
         // macOS 27 can report SwiftUI semantic focus on the hosting container
         // instead of the leaf node. Keyboard behavior and drawn focus below
         // remain the assertions; this only accepts either public AX spelling.
