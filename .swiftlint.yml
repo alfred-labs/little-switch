@@ -4,6 +4,7 @@ included:
   - Sources
   - Tests
   - Package.swift
+  - tools/LittleSwitchUITestHost
   - tools/Sources
   - tools/Tests
   - tools/Package.swift

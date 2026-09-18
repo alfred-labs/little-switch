@@ -19,7 +19,7 @@ run = "./tools/ci/check-toolchains.sh"
 
 [tasks."swift:format"]
 description = "Require official swift-format output"
-run = "swift format lint --strict --recursive Sources Tests Package.swift tools/Sources tools/Tests tools/Package.swift"
+run = "swift format lint --strict --recursive Sources Tests Package.swift tools/LittleSwitchUITestHost tools/Sources tools/Tests tools/Package.swift"
 
 [tasks."swift:lint"]
 description = "Run pinned SwiftLint semantic rules"

@@ -32,4 +32,52 @@ struct AppKitSwiftTestRunnerTests {
                 "path": "../../.build/coverage/out/Products/Debug/LittleSwitchUITestHost"
             ])
     }
+
+    @Test("The AppKit test host stays inside the format and lint gates")
+    func appKitTestHostStaysInsideStyleGates() throws {
+        let mise = try RepositoryFixture.text(".mise.toml")
+        let swiftLint = try RepositoryFixture.text(".swiftlint.yml")
+
+        #expect(
+            mise.contains(
+                "swift format lint --strict --recursive Sources Tests Package.swift "
+                    + "tools/LittleSwitchUITestHost tools/Sources tools/Tests tools/Package.swift"))
+        #expect(includedSwiftLintPaths(swiftLint).contains("tools/LittleSwitchUITestHost"))
+    }
+
+    @Test("The AX focus limitation is pinned to the affected GitHub runner")
+    func axFocusLimitationIsPinnedToAffectedRunner() throws {
+        let workflow = try RepositoryFixture.text(".github/workflows/build.yml")
+        let unavailable = try RepositoryFixture.text(
+            "Tests/LittleSwitchUITests/TestSupport/ConditionallyUnavailable.swift")
+        let applyButton = try RepositoryFixture.text(
+            "Tests/LittleSwitchUITests/MenuBar/MenuApplyButtonTests.swift")
+        let providerKeyboard = try RepositoryFixture.text(
+            "Tests/LittleSwitchUITests/Settings/Search/WebSearchProviderKeyboardTests.swift")
+        let expectedPredicate =
+            "ProcessInfo.processInfo.environment[\"LITTLESWITCH_AX_FOCUS_RUNNER_LIMITATION\"] "
+            + "== \"github-macos-27\""
+
+        #expect(
+            workflow.contains(
+                "runs-on: xcode-27\n    env:\n      LITTLESWITCH_AX_FOCUS_RUNNER_LIMITATION: github-macos-27"))
+        #expect(
+            unavailable.contains(expectedPredicate))
+        #expect(!unavailable.contains("environment[\"CI\"]"))
+        #expect(applyButton.contains("ConditionallyUnavailable.skipWhenAxFocusUnavailable(skipReason)"))
+        #expect(providerKeyboard.contains("ConditionallyUnavailable.skipWhenAxFocusUnavailable(skipReason)"))
+    }
+
+    private func includedSwiftLintPaths(_ configuration: String) -> Set<String> {
+        var section: String?
+        var paths = Set<String>()
+        for line in configuration.split(separator: "\n") {
+            if !line.hasPrefix(" ") {
+                section = line.hasSuffix(":") ? String(line.dropLast()) : nil
+            } else if section == "included", line.hasPrefix("  - ") {
+                paths.insert(String(line.dropFirst(4)))
+            }
+        }
+        return paths
+    }
 }

@@ -7,14 +7,14 @@ import Testing
 /// Keep every assertion locally, and skip only where the bug cannot be
 /// reproduced. Remove when the runner image or framework behaves like macOS 26.
 enum ConditionallyUnavailable {
-    static var onRunner: Bool {
-        ProcessInfo.processInfo.environment["CI"] == "true"
+    static var hasAxFocusRunnerLimitation: Bool {
+        ProcessInfo.processInfo.environment["LITTLESWITCH_AX_FOCUS_RUNNER_LIMITATION"] == "github-macos-27"
     }
 
     /// `Trait.disabled(if:)` does not exist in the runner's Swift Testing
     /// build (2078), so the skip has to happen inside the test body.
-    static func skipOnRunner(_ reason: String) -> Bool {
-        guard onRunner else { return false }
+    static func skipWhenAxFocusUnavailable(_ reason: String) -> Bool {
+        guard hasAxFocusRunnerLimitation else { return false }
         withKnownIssue {
             Issue.record(UnavailableOnRunner(reason: reason))
         }

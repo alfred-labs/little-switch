@@ -2,8 +2,10 @@ import Foundation
 import Network
 
 /// A minimal TCP server that responds to the first HTTP request with a
-/// preconfigured status, content type and body, then closes. Enough to
-/// exercise a real loopback HTTP round-trip without importing Hummingbird.
+/// preconfigured status, content type and body, then closes. Requests are
+/// expected to be bodyless (the current client sends a GET); the server answers
+/// once the request-head terminator arrives. Enough to exercise a real loopback
+/// HTTP round-trip without importing Hummingbird.
 final class LoopbackHTTPServer: @unchecked Sendable {
     private let listener: NWListener
     private let statusCode: Int

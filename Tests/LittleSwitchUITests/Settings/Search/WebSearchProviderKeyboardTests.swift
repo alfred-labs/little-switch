@@ -53,7 +53,7 @@ struct WebSearchProviderKeyboardTests {
     @Test("Native arrow commands respect direction, bounds and disabled state", arguments: [false, true])
     func arrowNavigation(rightToLeft: Bool) async throws {
         let skipReason = "SwiftUICore cannot acquire AX focus on GitHub's macOS 27 preview runner."
-        if ConditionallyUnavailable.skipOnRunner(skipReason) {
+        if ConditionallyUnavailable.skipWhenAxFocusUnavailable(skipReason) {
             return
         }
         let forward: UInt16 = rightToLeft ? 123 : 124

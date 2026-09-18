@@ -73,7 +73,7 @@ struct MenuApplyButtonTests {
     @Test("Accessibility focus draws and clears the keyboard focus ring without activation")
     func focusFeedback() async throws {
         let skipReason = "SwiftUICore cannot acquire AX focus on GitHub's macOS 27 preview runner."
-        if ConditionallyUnavailable.skipOnRunner(skipReason) {
+        if ConditionallyUnavailable.skipWhenAxFocusUnavailable(skipReason) {
             return
         }
         let action = MenuApplyAction(isEnabled: true) {}
