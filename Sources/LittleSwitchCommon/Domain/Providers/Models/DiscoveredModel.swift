@@ -20,21 +20,16 @@ public struct DiscoveredModel: Codable, Equatable, Hashable, Sendable {
     }
 
     public var effectiveContextWindow: Int? {
-        contextWindowOverride ?? detectedContextWindow
+        detectedContextWindow ?? contextWindowOverride
     }
 
-    /// Whether a 1M context declaration is admissible: a detected window
-    /// below 1M contradicts it, while an undetected one leaves the option
-    /// open.
+    /// A manual declaration is only needed when the provider reports no capacity.
     public var allows1MContextOverride: Bool {
-        detectedContextWindow.map { $0 >= 1_000_000 } ?? true
+        detectedContextWindow == nil
     }
 
     public var supports1MContext: Bool {
-        guard allows1MContextOverride else {
-            return false
-        }
-        return effectiveContextWindow.map { $0 >= 1_000_000 } ?? false
+        effectiveContextWindow.map { $0 >= 1_000_000 } ?? false
     }
 
     private enum CodingKeys: String, CodingKey {

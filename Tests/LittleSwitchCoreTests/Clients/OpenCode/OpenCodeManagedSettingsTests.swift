@@ -63,7 +63,7 @@ struct OpenCodeManagedSettingsTests {
                         models: [
                             alphaSlug: OpenCodeManagedModel(
                                 name: "Alpha/a",
-                                limit: OpenCodeManagedModelLimit(context: 200_000, output: 8_192),
+                                limit: OpenCodeManagedModelLimit(context: 128_000, output: 8_192),
                                 modalities: OpenCodeManagedModelModalities(input: ["text", "image"], output: ["text"])
                             ),
                             betaSlug: OpenCodeManagedModel(

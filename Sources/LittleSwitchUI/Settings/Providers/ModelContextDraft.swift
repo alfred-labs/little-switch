@@ -3,30 +3,39 @@ import LittleSwitchCommon
 import LittleSwitchCore
 
 public struct ModelContextDraft: Equatable, Identifiable, Sendable {
+    enum Claude1MState: Equatable, Sendable {
+        case automatic
+        case unavailable
+        case manual
+    }
+
     public let id: String
     public let detectedContextWindow: Int?
-    public let allows1MOverride: Bool
+    let claude1MState: Claude1MState
     public var overrideText: String
+
+    public var allows1MOverride: Bool { claude1MState == .manual }
 
     public init(model: DiscoveredModel) {
         id = model.id
         detectedContextWindow = model.detectedContextWindow
-        allows1MOverride = model.allows1MContextOverride
-        overrideText = model.contextWindowOverride.map(Self.format) ?? ""
-        // A probe reporting less than 1M deactivates a saved 1M override:
-        // the row starts Auto and the grayed switch cannot re-arm it.
-        if !allows1MOverride, (try? parsedOverride()).map({ $0 >= 1_000_000 }) == true {
+        if model.allows1MContextOverride {
+            claude1MState = .manual
+            overrideText = model.contextWindowOverride.map(Self.format) ?? ""
+        } else {
+            claude1MState = model.supports1MContext ? .automatic : .unavailable
             overrideText = ""
         }
     }
 
     public func parsedOverride() throws -> Int? {
-        try ContextWindowInput.parse(overrideText)
+        guard allows1MOverride else { return nil }
+        return try ContextWindowInput.parse(overrideText)
     }
 
     public var declares1MManually: Bool {
-        get { (try? parsedOverride()) == 1_000_000 }
-        set { overrideText = newValue ? "1M" : "" }
+        get { (try? parsedOverride()).map { $0 >= 1_000_000 } ?? false }
+        set { overrideText = allows1MOverride && newValue ? "1M" : "" }
     }
 
     public var isValid: Bool {
@@ -43,7 +52,7 @@ public struct ModelContextDraft: Equatable, Identifiable, Sendable {
             return L10n.string("Invalid context override")
         }
         let detected = detectedContextWindow.map(Self.format) ?? L10n.string("Unknown")
-        let effectiveContext = (try? parsedOverride()) ?? detectedContextWindow
+        let effectiveContext = detectedContextWindow ?? (try? parsedOverride())
         let effective = effectiveContext.map(Self.format) ?? L10n.string("Unknown")
         let claude =
             effectiveContext.map { $0 >= 1_000_000 } == true
@@ -54,16 +63,8 @@ public struct ModelContextDraft: Equatable, Identifiable, Sendable {
 
     var capacityText: String {
         guard isValid else { return L10n.string("Invalid override") }
-        return ((try? parsedOverride()) ?? detectedContextWindow).map(Self.format)
-            ?? L10n.string("Unknown")
-    }
-
-    /// Only a differing manual value needs a second line in the compact table.
-    var capacityNote: String? {
-        guard isValid, let override = try? parsedOverride(), override != detectedContextWindow else { return nil }
-        return detectedContextWindow.map {
-            L10n.string("Detected \(Self.format($0))")
-        } ?? L10n.string("Manual override")
+        return detectedContextWindow.map { $0.formatted(.number) }
+            ?? L10n.string("Not reported")
     }
 
     public static func contextOverrides(from drafts: [ModelContextDraft]) throws -> [String: Int] {

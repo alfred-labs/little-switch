@@ -10,11 +10,11 @@ struct ProviderModelContextTable: View {
                 GridRow {
                     Text(L10n.resource("Model"))
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(L10n.resource("Capacity"))
+                    Text(L10n.resource("Detected capacity"))
                         .frame(minWidth: SettingsLayout.ProviderEditor.contextCapacityWidth, alignment: .trailing)
                         .gridColumnAlignment(.trailing)
                     Text(L10n.resource("1M in Claude"))
-                        .frame(width: SettingsLayout.ProviderEditor.contextToggleWidth, alignment: .trailing)
+                        .frame(width: SettingsLayout.ProviderEditor.contextClaudeWidth, alignment: .trailing)
                         .gridColumnAlignment(.trailing)
                 }
                 .font(SettingsLayout.Typography.supporting)
@@ -40,9 +40,18 @@ struct ProviderModelContextTable: View {
                 .foregroundStyle(.secondary)
             }
         } footer: {
-            Text(
-                L10n.resource(
-                    "1M adds an optional model variant in Claude. Unavailable when detected capacity is below 1M."))
+            VStack(alignment: .leading, spacing: 4) {
+                if contexts.contains(where: { !$0.allows1MOverride }) {
+                    Text(
+                        L10n.resource(
+                            "Claude offers 1M automatically when detected capacity reaches 1,000,000 tokens."))
+                }
+                if contexts.contains(where: \.allows1MOverride) {
+                    Text(
+                        L10n.resource("Only force 1M if the model supports it. Its actual capacity remains unverified.")
+                    )
+                }
+            }
         }
     }
 }
@@ -68,39 +77,49 @@ private struct ProviderModelContextRow: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(context.capacityText)
-                    .monospacedDigit()
-                if let note = context.capacityNote {
-                    Text(note)
-                        .font(SettingsLayout.Typography.supporting)
-                }
-            }
-            .font(SettingsLayout.Typography.rowLabel)
-            .foregroundStyle(context.isValid ? Color.secondary : Color.red)
-            .fixedSize(horizontal: true, vertical: false)
-            .frame(minWidth: SettingsLayout.ProviderEditor.contextCapacityWidth, alignment: .trailing)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(L10n.resource("Capacity for \(context.id)"))
-            .accessibilityValue(context.detail)
-            .help(context.detail)
+            Text(context.capacityText)
+                .monospacedDigit()
+                .font(SettingsLayout.Typography.rowLabel)
+                .foregroundStyle(context.isValid ? Color.secondary : Color.red)
+                .fixedSize(horizontal: true, vertical: false)
+                .frame(minWidth: SettingsLayout.ProviderEditor.contextCapacityWidth, alignment: .trailing)
+                .accessibilityLabel(L10n.resource("Capacity for \(context.id)"))
+                .accessibilityValue(context.capacityText)
+                .help(context.detail)
 
-            Toggle(isOn: $context.declares1MManually) { EmptyView() }
+            claudeContext
+                .font(SettingsLayout.Typography.rowLabel)
+                .frame(width: SettingsLayout.ProviderEditor.contextClaudeWidth, alignment: .trailing)
+        }
+        .frame(minHeight: SettingsLayout.catalogModelRowMinimumHeight)
+    }
+
+    @ViewBuilder
+    private var claudeContext: some View {
+        switch context.claude1MState {
+        case .automatic:
+            Label(L10n.resource("Automatic"), systemImage: "checkmark")
+                .fixedSize()
+                .accessibilityLabel(L10n.resource("1M context for \(context.id)"))
+                .accessibilityValue(L10n.resource("Automatic"))
+        case .unavailable:
+            Text(L10n.resource("Unavailable"))
+                .foregroundStyle(.secondary)
+                .fixedSize()
+                .accessibilityLabel(L10n.resource("1M context for \(context.id)"))
+                .accessibilityValue(L10n.resource("Unavailable"))
+                .accessibilityHint(L10n.resource("Detected capacity is below 1M"))
+                .help(L10n.resource("Detected capacity is below 1M"))
+        case .manual:
+            Toggle(L10n.resource("Force"), isOn: $context.declares1MManually)
                 .toggleStyle(.switch)
                 .controlSize(.small)
                 .fixedSize()
-                .frame(width: SettingsLayout.ProviderEditor.contextToggleWidth, alignment: .trailing)
-                .disabled(!context.allows1MOverride)
-                .accessibilityLabel(L10n.resource("Expose 1M context for \(context.id)"))
-                .help(
-
-                    context.allows1MOverride
-                        ? L10n.resource(
-                            "Expose both the standard and [1m] Claude references"
-                        )
-                        : L10n.resource("Detected capacity is below 1M")
+                .accessibilityLabel(L10n.resource("Force 1M context in Claude for \(context.id)"))
+                .accessibilityHint(
+                    L10n.resource("Only force 1M if the model supports it. Its actual capacity remains unverified.")
                 )
+                .help(L10n.resource("Only force 1M if the model supports it. Its actual capacity remains unverified."))
         }
-        .frame(minHeight: SettingsLayout.catalogModelRowMinimumHeight)
     }
 }

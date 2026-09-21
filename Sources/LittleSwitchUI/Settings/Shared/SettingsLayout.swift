@@ -37,8 +37,8 @@ enum SettingsLayout {
         static let idealWidth: CGFloat = 800
         static let idealHeight: CGFloat = 760
         static let controlWidth: CGFloat = 216
-        static let contextCapacityWidth: CGFloat = 104
-        static let contextToggleWidth: CGFloat = 88
+        static let contextCapacityWidth: CGFloat = 126
+        static let contextClaudeWidth: CGFloat = 126
     }
 
     enum Palette {

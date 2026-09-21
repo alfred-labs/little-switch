@@ -68,7 +68,7 @@ struct CodexCatalogTests {
 
         #expect(catalog.models.map(\.displayName) == ["Local/zeta", "Remote/alpha", "little-switch-auto-review"])
         #expect(catalog.models.map(\.priority) == [0, 1, 2])
-        #expect(catalog.models.map(\.contextWindow) == [128_000, 400_000, 128_000])
+        #expect(catalog.models.map(\.contextWindow) == [128_000, 262_144, 128_000])
         let first = try #require(catalog.models.first)
         #expect(first.description == "LittleSwitch")
         #expect(first.defaultReasoningLevel == "medium")

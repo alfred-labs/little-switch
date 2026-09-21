@@ -25,7 +25,8 @@ struct ConnectedCoordinatorFixture {
         tlsProvisioner: (any GatewayTLSProvisioning)? = nil,
         injectFailingStore: Bool = false,
         claudeCodeConnected: Bool = false,
-        mapsSecondRoute: Bool = false
+        mapsSecondRoute: Bool = false,
+        models: [DiscoveredModel] = [DiscoveredModel(id: "applied"), DiscoveredModel(id: "replacement")]
     ) async throws -> Self {
         let root = FileManager.default.temporaryDirectory.appending(
             path: "little-switch-connected-\(UUID().uuidString)",
@@ -37,10 +38,7 @@ struct ConnectedCoordinatorFixture {
             name: "Local",
             baseURL: "http://127.0.0.1:11434",
             authMode: .none,
-            models: [
-                DiscoveredModel(id: "applied"),
-                DiscoveredModel(id: "replacement"),
-            ],
+            models: models,
             status: .ready
         )
         var initial = AppConfiguration(

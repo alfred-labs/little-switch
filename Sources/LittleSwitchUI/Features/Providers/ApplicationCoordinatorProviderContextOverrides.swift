@@ -19,7 +19,7 @@ extension ApplicationCoordinator {
             return [:]
         }
         return provider.models.reduce(into: [:]) { overrides, model in
-            if let value = model.contextWindowOverride {
+            if model.allows1MContextOverride, let value = model.contextWindowOverride {
                 overrides[model.id] = value
             }
         }
@@ -35,13 +35,9 @@ extension ApplicationCoordinator {
         }
         return models.map { model in
             var updated = model
-            updated.contextWindowOverride = overrides[model.id]
-            // A detected window below 1M deactivates a 1M override rather
-            // than re-exposing a variant the provider cannot serve.
-            let overrideClaims1M = updated.contextWindowOverride.map { $0 >= 1_000_000 } == true
-            if !updated.allows1MContextOverride, overrideClaims1M {
-                updated.contextWindowOverride = nil
-            }
+            // Discovery replaces manual declarations, including redundant 1M
+            // values. Later missing metadata must not resurrect an old override.
+            updated.contextWindowOverride = model.allows1MContextOverride ? overrides[model.id] : nil
             return updated
         }
     }

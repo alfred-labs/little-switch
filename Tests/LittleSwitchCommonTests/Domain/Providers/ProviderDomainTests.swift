@@ -99,7 +99,7 @@ struct ProviderDomainTests {
         )
     }
 
-    @Test("A user context override takes precedence unless detection contradicts 1M")
+    @Test("A context override is only effective when detection is missing")
     func contextOverride() {
         let detected = DiscoveredModel(id: "large", detectedContextWindow: 400_000)
         let overridden = DiscoveredModel(
@@ -116,7 +116,7 @@ struct ProviderDomainTests {
 
         #expect(detected.effectiveContextWindow == 400_000)
         #expect(!detected.supports1MContext)
-        #expect(overridden.effectiveContextWindow == 1_000_000)
+        #expect(overridden.effectiveContextWindow == 400_000)
         #expect(!overridden.allows1MContextOverride)
         #expect(!overridden.supports1MContext)
         #expect(!unknown.supports1MContext)

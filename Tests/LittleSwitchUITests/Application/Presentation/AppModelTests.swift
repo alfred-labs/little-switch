@@ -369,11 +369,12 @@ struct AppModelSelectionTests {
         #expect(
             draft.detail
                 == L10n.string(
-                    "Detected \(ModelContextDraft.format(400_000)) · Effective \(ModelContextDraft.format(1_000_000)) · Claude \(L10n.string("200K or 1M"))"
+                    "Detected \(ModelContextDraft.format(400_000)) · Effective \(ModelContextDraft.format(400_000)) · Claude \(L10n.string("200K"))"
                 )
         )
-        #expect(try draft.parsedOverride() == 1_000_000)
+        #expect(try draft.parsedOverride() == nil)
 
+        draft = ModelContextDraft(model: DiscoveredModel(id: "unknown"))
         draft.overrideText = "invalid"
         #expect(!draft.isValid)
         #expect(draft.detail == L10n.string("Invalid context override"))
@@ -410,7 +411,7 @@ struct AppModelSelectionTests {
         #expect(try draft.parsedOverride() == nil)
     }
 
-    @Test("The 1M switch grays out and deactivates when the probe detected less than 1M")
+    @Test("The 1M switch is only available when detection is missing")
     func manual1MSwitchAvailability() {
         let detected400K = ModelContextDraft(
             model: DiscoveredModel(id: "large", detectedContextWindow: 400_000)
@@ -423,7 +424,7 @@ struct AppModelSelectionTests {
         let detected1M = ModelContextDraft(
             model: DiscoveredModel(id: "big", detectedContextWindow: 1_000_000)
         )
-        #expect(detected1M.allows1MOverride)
+        #expect(!detected1M.allows1MOverride)
 
         // A 1M override saved while capacity was unknown returns to Auto
         // once a probe reports 400K.

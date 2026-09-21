@@ -195,8 +195,8 @@ struct ApplicationCoordinatorTests {
         )
     }
 
-    @Test("A probe detecting less than 1M deactivates a saved 1M override")
-    func contradicting1MOverrideDeactivates() async throws {
+    @Test("A detected capacity replaces a saved 1M override", arguments: [400_000, 1_000_000, 1_048_576])
+    func detectedContextReplacesOverride(tokens: Int) async throws {
         let transport = StaticCatalogTransport()
         let fixture = try await ConnectedCoordinatorFixture.make(
             connected: false,
@@ -218,16 +218,48 @@ struct ApplicationCoordinatorTests {
                 .first { $0.id == "applied" }?.contextWindowOverride == 1_000_000
         )
 
-        // Re-detection reports 400K: the override is dropped.
+        // Any detected capacity replaces the manual declaration.
         await transport.serveCatalog(
-            #"{"data":[{"id":"applied","context_window":400000},{"id":"replacement"}]}"#
+            #"{"data":[{"id":"applied","context_window":\#(tokens)},{"id":"replacement"}]}"#
         )
         let refreshed = try await fixture.coordinator.refreshProvider(id: fixture.providerID)
         let model = refreshed.configuration.providers.first?.models
             .first { $0.id == "applied" }
-        #expect(model?.detectedContextWindow == 400_000)
+        #expect(model?.detectedContextWindow == tokens)
         #expect(model?.contextWindowOverride == nil)
-        #expect(model?.supports1MContext == false)
+        #expect(model?.effectiveContextWindow == tokens)
+        #expect(model?.supports1MContext == (tokens >= 1_000_000))
+        #expect(try fixture.store.load().providers.first?.models == refreshed.configuration.providers.first?.models)
+
+        // Losing metadata later must not resurrect the previous declaration.
+        await transport.serveCatalog(#"{"data":[{"id":"applied"},{"id":"replacement"}]}"#)
+        let unknown = try await fixture.coordinator.refreshProvider(id: fixture.providerID)
+        let unknownModel = unknown.configuration.providers.first?.models.first { $0.id == "applied" }
+        #expect(unknownModel?.contextWindowOverride == nil)
+        #expect(unknownModel?.supports1MContext == false)
+    }
+
+    @Test(
+        "Startup and refresh cannot revive a legacy override when capacity disappears",
+        arguments: [400_000, 1_048_576], [200_000, 1_000_000]
+    )
+    func legacyContextDoesNotRevive(tokens: Int, override: Int) async throws {
+        let fixture = try await ConnectedCoordinatorFixture.make(
+            connected: false,
+            models: [
+                DiscoveredModel(id: "applied", detectedContextWindow: tokens, contextWindowOverride: override),
+                DiscoveredModel(id: "replacement"),
+            ]
+        )
+        defer { fixture.removeFiles() }
+        let expected = [DiscoveredModel(id: "applied"), DiscoveredModel(id: "replacement")]
+        // Startup already discovers the catalogue. It must normalize the legacy
+        // record before the subsequent explicit refresh, too.
+        #expect(fixture.appliedConfiguration.providers.first?.models == expected)
+
+        let refreshed = try await fixture.coordinator.refreshProvider(id: fixture.providerID)
+        #expect(refreshed.configuration.providers.first?.models == expected)
+        #expect(try fixture.store.load().providers.first?.models == expected)
     }
 
     @Test("Provider context overrides reject unknown models")

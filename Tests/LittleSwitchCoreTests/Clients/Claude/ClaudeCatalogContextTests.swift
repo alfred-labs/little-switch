@@ -51,6 +51,7 @@ struct ClaudeCatalogContextTests {
         "Sonnet context choices follow the mapped capacity, including a manual declaration",
         arguments: [
             (DiscoveredModel(id: "flash", detectedContextWindow: 1_048_576), true),
+            (DiscoveredModel(id: "flash", detectedContextWindow: 1_048_576, contextWindowOverride: 200_000), true),
             (DiscoveredModel(id: "flash", contextWindowOverride: 1_000_000), true),
             (DiscoveredModel(id: "flash", detectedContextWindow: 262_144, contextWindowOverride: 1_000_000), false),
             (DiscoveredModel(id: "flash"), false),

@@ -31,16 +31,21 @@ struct ProviderEditorAdvancedControlsTests {
         defer { host.close() }
         try await host.activateAccessibility()
 
-        let unavailable = try host.element(label: contextLabel("large"))
-        #expect(!unavailable.isAccessibilityEnabled())
+        let unavailable = try host.element(label: L10n.string("1M context for \("large")"))
+        #expect(unavailable.accessibilityValue() as? String == L10n.string("Unavailable"))
+        let automatic = try host.element(label: L10n.string("1M context for \("xlarge")"))
+        #expect(automatic.accessibilityValue() as? String == L10n.string("Automatic"))
         let manual = try host.element(label: contextLabel("unknown"))
         #expect(manual.isAccessibilityEnabled())
+        #expect(host.textContent.contains(L10n.string("Not reported")))
         // The Grid publishes an AX proxy; dispatch through its native switch.
-        let enabledSwitch = nativeSwitches(in: host.hosting).first(where: \.isEnabled)
-        let native = try #require(enabledSwitch)
+        let switches = nativeSwitches(in: host.hosting)
+        #expect(switches.count == 1)
+        let native = try #require(switches.first)
         _ = native.accessibilityPerformPress()
         host.render()
         #expect(state.draft.contextOverrides == ["unknown": 1_000_000])
+        #expect(host.textContent.contains(L10n.string("Not reported")))
 
         state.expanded = false
         host.render()
@@ -53,7 +58,7 @@ struct ProviderEditorAdvancedControlsTests {
     }
 
     private func contextLabel(_ modelID: String) -> String {
-        L10n.string("Expose 1M context for \(modelID)")
+        L10n.string("Force 1M context in Claude for \(modelID)")
     }
 
     private func nativeSwitches(in view: NSView) -> [NSSwitch] {
@@ -69,6 +74,8 @@ private final class ProviderAdvancedTestState {
         var draft = ProviderDraft()
         draft.modelContexts = [
             ModelContextDraft(model: DiscoveredModel(id: "large", detectedContextWindow: 400_000)),
+            ModelContextDraft(
+                model: DiscoveredModel(id: "xlarge", detectedContextWindow: 1_048_576, contextWindowOverride: 200_000)),
             ModelContextDraft(model: DiscoveredModel(id: "unknown")),
         ]
         return draft
