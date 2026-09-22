@@ -10,6 +10,9 @@ enum StatusMenuLayout {
         applicationRowHeight * 4 + applicationRowSpacing * 3 + applicationBlockVerticalPadding * 2
     static let iconSize: CGFloat = 20
     static let launchTargetSize: CGFloat = 28
+    static let iconHoverCornerRadius: CGFloat = 6
+    static let iconHoverOpacity: Double = 0.08
+    static let iconHoverHighContrastOpacity: Double = 0.16
     static let titleFontSize: CGFloat = 12
     static let counterFontSize: CGFloat = 11
     static let horizontalPadding: CGFloat = 12

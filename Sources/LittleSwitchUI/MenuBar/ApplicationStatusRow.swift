@@ -75,6 +75,7 @@ struct ApplicationStatusRow: View {
                 mark
             }
             .buttonStyle(.borderless)
+            .modifier(ApplicationIconHover())
             .disabled(!available || launchDisabled || launching)
             .accessibilityLabel(L10n.resource("Open \(name)"))
             .accessibilityHint(unavailableReason ?? L10n.string("Opens the app without changing its connection"))
