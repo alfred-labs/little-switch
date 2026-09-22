@@ -386,6 +386,7 @@ extension ApplicationCoordinator {
     /// Claude Desktop profile, so applying it live means rewriting the
     /// profile and relaunching Desktop to pick the new value up.
     public func setAutoMode(_ enabled: Bool) async throws -> CoordinatorSnapshot {
+        try await requireUnmanagedClaudeDesktop()
         let previous = try await persistingConfigurationChange {
             $0.autoMode = enabled
         }

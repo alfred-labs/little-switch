@@ -94,6 +94,7 @@ struct MenuStatusSwitchTests {
         return AppModel(
             snapshot: CoordinatorSnapshot(
                 configuration: configuration,
+                desktopApplications: .init(claude: .available, codex: .available, openCode: .available),
                 claudeCodeStatus: .connected,
                 openCodeStatus: .connected
             )

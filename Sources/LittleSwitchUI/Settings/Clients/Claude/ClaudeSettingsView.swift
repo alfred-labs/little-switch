@@ -20,6 +20,13 @@ struct ClaudeSettingsView: View {
                 SettingsCard {
                     autoModeRow
                         .padding(.vertical, 6)
+                    if model.desktopApplications.claude == .organizationManaged {
+                        Text(
+                            L10n.resource(
+                                "Your organization manages Claude Desktop. LittleSwitch cannot open or connect it.")
+                        )
+                        .settingsSupportingText()
+                    }
                 }
             }
             ClaudeCodeSettingsView(model: model, onDefault: onClaudeCodeDefault)
@@ -111,7 +118,7 @@ struct ClaudeSettingsView: View {
                 .labelsHidden()
                 .toggleStyle(.switch)
                 .controlSize(.small)
-                .disabled(model.isBusy)
+                .disabled(model.isBusy || model.desktopApplications.claude == .organizationManaged)
             }
             Text(L10n.resource("Let Claude decide when to ask before making changes."))
                 .settingsSupportingText()

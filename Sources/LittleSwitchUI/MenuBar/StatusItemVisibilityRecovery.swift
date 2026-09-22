@@ -15,6 +15,7 @@ final class StatusItemController: NSObject {
     private let onToggleClaudeCode: @MainActor () -> Void
     private let onToggleCodex: @MainActor () -> Void
     private let onToggleOpenCode: @MainActor () -> Void
+    private let onOpenApplication: @MainActor (DesktopApplication) -> Void
     private let onMapping: @MainActor (String, ModelMapping?) async -> Void
     private let onCodexDefault: @MainActor (ModelMapping?) async -> Void
     private let onCodexAutoReview: @MainActor (ModelMapping?) async -> Void
@@ -45,6 +46,7 @@ final class StatusItemController: NSObject {
         onToggleClaudeCode: @escaping @MainActor () -> Void,
         onToggleCodex: @escaping @MainActor () -> Void,
         onToggleOpenCode: @escaping @MainActor () -> Void,
+        onOpenApplication: @escaping @MainActor (DesktopApplication) -> Void = { _ in },
         onMapping: @escaping @MainActor (String, ModelMapping?) async -> Void,
         onCodexDefault: @escaping @MainActor (ModelMapping?) async -> Void,
         onCodexAutoReview: @escaping @MainActor (ModelMapping?) async -> Void,
@@ -67,6 +69,7 @@ final class StatusItemController: NSObject {
         self.onToggleClaudeCode = onToggleClaudeCode
         self.onToggleCodex = onToggleCodex
         self.onToggleOpenCode = onToggleOpenCode
+        self.onOpenApplication = onOpenApplication
         self.onMapping = onMapping
         self.onCodexDefault = onCodexDefault
         self.onCodexAutoReview = onCodexAutoReview
@@ -211,7 +214,7 @@ final class StatusItemController: NSObject {
                 onToggleClaudeCode: onToggleClaudeCode,
                 onToggleCodex: onToggleCodex,
                 onToggleOpenCode: onToggleOpenCode
-            ),
+            ) { [weak self] in self?.openApplication($0) },
             height: StatusMenuLayout.applicationBlockHeight
         )
         menu.addItem(status)
@@ -321,6 +324,16 @@ final class StatusItemController: NSObject {
 }
 
 extension StatusItemController {
+    func openApplication(_ application: DesktopApplication) {
+        statusItem?.menu?.cancelTrackingWithoutAnimation()
+        let onOpenApplication = onOpenApplication
+        // Wait until menu tracking has restored the former app's focus before
+        // asking Launch Services to activate the requested application.
+        RunLoop.main.perform(inModes: [.default]) {
+            MainActor.assumeIsolated { onOpenApplication(application) }
+        }
+    }
+
     func showSettings(activateApplication: @MainActor () -> Void = { NSApp.activate() }) {
         // Keep the activation request inside the gear's user event. Deferring
         // it with window presentation can lose macOS's activation context.

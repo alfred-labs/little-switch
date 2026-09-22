@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchCommon
 import Testing
 
 @testable import LittleSwitchUI
@@ -10,7 +11,7 @@ struct CodexApplicationControllerTests {
         let home = URL(filePath: "/Users/test")
 
         #expect(
-            NSWorkspaceCodexController.applicationCandidates(homeDirectory: home).map(\.path) == [
+            DesktopApplication.codex.applicationCandidates(homeDirectory: home).map(\.path) == [
                 "/Applications/Codex.app",
                 "/Applications/ChatGPT.app",
                 "/Users/test/Applications/Codex.app",

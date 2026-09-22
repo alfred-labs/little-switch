@@ -94,6 +94,9 @@ Sources/LittleSwitchUI/MenuBar/MenuCodexTabView.swift	SwiftUI menu Codex tab pre
 Sources/LittleSwitchUI/MenuBar/MenuSettingsSectionHeader.swift	SwiftUI native divider and client settings heading presentation boundary.
 Sources/LittleSwitchUI/MenuBar/MenuStatsBlockLayout.swift	Compile-time shared menu geometry constants emit no executable coverage regions; native fitting-size tests verify the resulting layout.
 Sources/LittleSwitchUI/MenuBar/MenuStatusView.swift	SwiftUI menu-bar status presentation boundary.
+Sources/LittleSwitchUI/MenuBar/ApplicationStatusRow.swift	SwiftUI menu application icon, availability and switch presentation boundary; native controls are exercised by hosted UI tests.
+Sources/LittleSwitchUI/Platform/Applications/DesktopApplicationSystem.swift	NSWorkspace and managed CFPreferences system boundary; availability, identity validation and launch policy are measured independently.
+Sources/LittleSwitchUI/Features/Clients/LittleSwitchApplicationDelegateDesktopApplications.swift	AppKit menu launch intent and error-presentation boundary.
 Sources/LittleSwitchUI/MenuBar/MenuTabSwitcherView.swift	SwiftUI menu tab switcher presentation boundary.
 Sources/LittleSwitchUI/MenuBar/MenuTokenHistoryChart.swift	Shared SwiftUI token-history presentation and native accessibility boundary; period projection and bar geometry remain measured separately.
 Sources/LittleSwitchUI/MenuBar/MenuUsageStatsBlock.swift	SwiftUI menu usage stats presentation boundary.

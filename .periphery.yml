@@ -25,6 +25,8 @@
 # Common extraction remaps existing USRs by the exact demangled declaration,
 # changing only moved type module names. The exception count does not grow;
 # catalogue Codable fields and retained traffic records keep their prior status.
+# Desktop app discovery updates the already-retained coordinator test initializer's
+# USR for its new injected service; no unused-code allowance is added.
 # Run through `mise run swift:deadcode` to inherit the pinned DEVELOPER_DIR.
 index_exclude:
   - Tests/**

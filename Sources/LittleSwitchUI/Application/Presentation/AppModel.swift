@@ -56,6 +56,8 @@ final class AppModel {
     }
 
     var configuration: AppConfiguration
+    var desktopApplications: DesktopApplicationAvailability
+    var launchingApplications: Set<DesktopApplication> = []
     var requestCount: Int
     var claudeRequestCount: Int
     var codexRequestCount: Int
@@ -98,6 +100,7 @@ final class AppModel {
 
     init(snapshot: CoordinatorSnapshot = CoordinatorSnapshot(configuration: .init())) {
         configuration = snapshot.configuration
+        desktopApplications = snapshot.desktopApplications
         requestCount = snapshot.requestCount
         claudeRequestCount = snapshot.claudeRequestCount
         codexRequestCount = snapshot.codexRequestCount
@@ -190,30 +193,6 @@ final class AppModel {
         L10n.string("Apply")
     }
 
-    var canPerformClaudePrimaryAction: Bool {
-        guard hasValidRouting, !isBusy else {
-            return false
-        }
-        return claudePrimaryAction != nil
-    }
-
-    var claudePrimaryActionAccessibilityHint: String {
-        if !hasValidRouting {
-            return connected
-                ? L10n.string("Choose at least one available model to restore live routing")
-                : L10n.string("Assign at least one available model before applying settings")
-        }
-        if isBusy {
-            return L10n.string("An operation is in progress")
-        }
-        switch claudePrimaryAction {
-        case .connect:
-            return L10n.string("Applies LittleSwitch settings to Claude Desktop")
-        case nil:
-            return L10n.string("Model routing edits wait for Apply")
-        }
-    }
-
     var claudePrimaryActionAccessibilityValue: String {
         guard connected else {
             return L10n.string("Claude disconnected")
@@ -293,6 +272,7 @@ final class AppModel {
 
     func apply(_ snapshot: CoordinatorSnapshot) {
         configuration = snapshot.configuration
+        desktopApplications = snapshot.desktopApplications
         requestCount = snapshot.requestCount
         claudeRequestCount = snapshot.claudeRequestCount
         codexRequestCount = snapshot.codexRequestCount
@@ -341,13 +321,6 @@ final class AppModel {
         return modelOptions.first { $0.id == optionID }?.mapping
     }
 
-    private var hasValidRouting: Bool {
-        RoutingSnapshot(
-            generation: 0,
-            providers: configuration.providers,
-            mappings: configuration.mappings
-        ).hasValidMapping
-    }
 }
 
 extension AppModel {

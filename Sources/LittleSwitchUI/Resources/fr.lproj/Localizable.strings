@@ -522,3 +522,12 @@
 "The check exceeded its size limit" = "La vérification a dépassé sa limite de taille";
 "The check returned HTTP %lld" = "La vérification a renvoyé HTTP %lld";
 "Image checks could not be saved. Refresh models to try again." = "Les vérifications d’images n’ont pas pu être enregistrées. Actualisez les modèles pour réessayer.";
+
+/* Desktop application availability */
+"Application not installed" = "Application non installée";
+"Organization managed" = "Organisation imposée";
+"Open %@" = "Ouvrir %@";
+"Opens the app without changing its connection" = "Ouvre l’application sans modifier sa connexion";
+"%@ is not installed." = "%@ n’est pas installé.";
+"Could not open %@. Try opening it from Finder." = "Impossible d’ouvrir %@. Essayez depuis le Finder.";
+"Your organization manages Claude Desktop. LittleSwitch cannot open or connect it." = "Votre organisation impose la configuration de Claude Desktop. LittleSwitch ne peut ni l’ouvrir ni le connecter.";

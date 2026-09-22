@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import LittleSwitchCommon
 
 public protocol ClaudeApplicationControlling: ApplicationRelaunching {}
 
@@ -10,7 +11,7 @@ public final class NSWorkspaceClaudeController: ClaudeApplicationControlling {
         case quitTimedOut
     }
 
-    private static let bundleIdentifier = "com.anthropic.claudefordesktop"
+    private static let bundleIdentifier = DesktopApplication.claude.bundleIdentifier
     private let workspace: NSWorkspace
     private let fileManager: FileManager
 
@@ -44,20 +45,7 @@ public final class NSWorkspaceClaudeController: ClaudeApplicationControlling {
         guard let applicationURL else {
             throw Error.applicationNotFound
         }
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.activates = true
-        let _: Void = try await withCheckedThrowingContinuation { continuation in
-            workspace.openApplication(
-                at: applicationURL,
-                configuration: configuration
-            ) { _, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: ())
-                }
-            }
-        }
+        try await DesktopApplicationSystem.open(applicationURL, workspace: workspace)
     }
 
     private var runningApplications: [NSRunningApplication] {
@@ -67,11 +55,7 @@ public final class NSWorkspaceClaudeController: ClaudeApplicationControlling {
     }
 
     private var applicationURL: URL? {
-        [
-            URL(filePath: "/Applications/Claude.app"),
-            fileManager.homeDirectoryForCurrentUser
-                .appending(path: "Applications", directoryHint: .isDirectory)
-                .appending(path: "Claude.app", directoryHint: .isDirectory),
-        ].first { fileManager.fileExists(atPath: $0.path) }
+        DesktopApplicationSystem.locator(workspace: workspace, fileManager: fileManager)
+            .applicationURL(for: .claude)
     }
 }

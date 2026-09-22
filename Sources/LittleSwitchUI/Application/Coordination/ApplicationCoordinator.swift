@@ -24,6 +24,7 @@ public actor ApplicationCoordinator {
     package let tlsProvisioner: (any GatewayTLSProvisioning)?
     package let profileManager: any ClaudeProfileManaging
     package let claudeController: any ClaudeApplicationControlling
+    package let desktopApplications: (any DesktopApplicationManaging)?
     package let codexProfileManager: (any CodexProfileManaging)?
     package let codexController: (any CodexApplicationControlling)?
     package let claudeCodeProfileManager: (any ClaudeCodeProfileManaging)?
@@ -93,6 +94,7 @@ public actor ApplicationCoordinator {
         secretStore: any SecretStore,
         profileManager: any ClaudeProfileManaging,
         claudeController: any ClaudeApplicationControlling,
+        desktopApplications: (any DesktopApplicationManaging)? = nil,
         codexProfileManager: (any CodexProfileManaging)? = nil,
         codexController: (any CodexApplicationControlling)? = nil,
         claudeCodeProfileManager: (any ClaudeCodeProfileManaging)? = nil,
@@ -117,6 +119,7 @@ public actor ApplicationCoordinator {
         self.monitoringExporter = monitoringExporter ?? MonitoringExportService(store: MonitoringStore())
         self.profileManager = profileManager
         self.claudeController = claudeController
+        self.desktopApplications = desktopApplications
         self.codexProfileManager = codexProfileManager
         self.codexController = codexController
         self.claudeCodeProfileManager = claudeCodeProfileManager
@@ -155,6 +158,7 @@ public actor ApplicationCoordinator {
         secretStore: any SecretStore,
         profileManager: any ClaudeProfileManaging,
         claudeController: any ClaudeApplicationControlling,
+        desktopApplications: (any DesktopApplicationManaging)? = nil,
         codexProfileManager: (any CodexProfileManaging)? = nil,
         codexController: (any CodexApplicationControlling)? = nil,
         claudeCodeProfileManager: (any ClaudeCodeProfileManaging)? = nil,
@@ -183,6 +187,7 @@ public actor ApplicationCoordinator {
         self.monitoringExporter = monitoringExporter ?? MonitoringExportService(store: MonitoringStore())
         self.profileManager = profileManager
         self.claudeController = claudeController
+        self.desktopApplications = desktopApplications
         self.codexProfileManager = codexProfileManager
         self.codexController = codexController
         self.claudeCodeProfileManager = claudeCodeProfileManager
@@ -217,6 +222,7 @@ public actor ApplicationCoordinator {
     }
 
     public func snapshot() async -> CoordinatorSnapshot {
+        let desktopAvailability = await desktopApplications?.availability() ?? .init()
         _ = await responsesWireVerdicts()
         reconcileCodexDraft()
         reconcileOpenCodeDraft()
@@ -253,6 +259,7 @@ public actor ApplicationCoordinator {
             ?? effectiveConfiguration
         var result = CoordinatorSnapshot(
             configuration: effectiveConfiguration,
+            desktopApplications: desktopAvailability,
             requestCount: count,
             claudeRequestCount: claudeCount,
             codexRequestCount: codexCount,

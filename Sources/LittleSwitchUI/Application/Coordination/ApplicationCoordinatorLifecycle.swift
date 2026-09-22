@@ -9,12 +9,15 @@ public enum ApplicationShutdownMode: Sendable, Equatable {
 
 extension ApplicationCoordinator {
     public func connect() async throws -> CoordinatorSnapshot {
+        try await requireUnmanagedClaudeDesktop()
         let routing = routingSnapshot()
         guard routing.hasValidMapping else {
             throw Error.noMappedModel
         }
 
         try await startGateway(snapshot: routing)
+        // Gateway startup may suspend while a new management policy arrives.
+        try await requireUnmanagedClaudeDesktop()
         do {
             // Trust settles before the profile is written: the Desktop
             // reads the origin we advertise literally, so https only goes

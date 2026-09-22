@@ -522,3 +522,12 @@
 "The check exceeded its size limit" = "The check exceeded its size limit";
 "The check returned HTTP %lld" = "The check returned HTTP %lld";
 "Image checks could not be saved. Refresh models to try again." = "Image checks could not be saved. Refresh models to try again.";
+
+/* Desktop application availability */
+"Application not installed" = "Application not installed";
+"Organization managed" = "Organization managed";
+"Open %@" = "Open %@";
+"Opens the app without changing its connection" = "Opens the app without changing its connection";
+"%@ is not installed." = "%@ is not installed.";
+"Could not open %@. Try opening it from Finder." = "Could not open %@. Try opening it from Finder.";
+"Your organization manages Claude Desktop. LittleSwitch cannot open or connect it." = "Your organization manages Claude Desktop. LittleSwitch cannot open or connect it.";

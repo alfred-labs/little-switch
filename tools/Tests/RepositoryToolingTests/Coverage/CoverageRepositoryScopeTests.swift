@@ -15,6 +15,16 @@ struct CoverageRepositoryScopeTests {
         #expect(scope.measured.count + scope.excluded.count == scope.all.count)
         #expect((scope.measured + excluded).sorted() == scope.all)
         #expect(scope.measured.contains("Sources/LittleSwitchUI/MenuBar/StatusMenuSwitchTrack.swift"))
+        for path in [
+            "Sources/LittleSwitchCommon/Domain/Clients/DesktopApplication.swift",
+            "Sources/LittleSwitchUI/Features/Clients/DesktopApplicationManager.swift",
+            "Sources/LittleSwitchUI/Features/Clients/DesktopApplicationLocator.swift",
+            "Sources/LittleSwitchUI/Features/Clients/ApplicationCoordinatorDesktopApplications.swift",
+            "Sources/LittleSwitchUI/Features/Clients/Claude/ClaudeManagedPreferences.swift",
+            "Sources/LittleSwitchUI/Features/Clients/Claude/AppModelClaudeDesktop.swift",
+        ] {
+            #expect(scope.measured.contains(path))
+        }
         #expect(scope.measured.allSatisfy { $0.hasPrefix("Sources/") })
         #expect(scope.excluded.allSatisfy { !$0.rationale.isEmpty })
         let transport = try #require(scope.excluded.first { $0.path.hasSuffix("/AsyncHTTPTransport.swift") })
@@ -82,6 +92,7 @@ struct CoverageRepositoryScopeTests {
         "Sources/LittleSwitchUI/Features/Clients/Codex/CodexApplicationController.swift",
         "Sources/LittleSwitchUI/Settings/Clients/Codex/CodexSettingsView.swift",
         "Sources/LittleSwitchUI/Features/Clients/Codex/LittleSwitchApplicationDelegateCodexProducts.swift",
+        "Sources/LittleSwitchUI/Features/Clients/LittleSwitchApplicationDelegateDesktopApplications.swift",
         "Sources/LittleSwitchUI/Settings/Clients/Codex/ModelCatalogHeader.swift",
         "Sources/LittleSwitchUI/Settings/Clients/Codex/ModelCatalogView.swift",
         "Sources/LittleSwitchUI/Features/Clients/OpenCode/LittleSwitchApplicationDelegateOpenCode.swift",
@@ -106,6 +117,7 @@ struct CoverageRepositoryScopeTests {
         "Sources/LittleSwitchUI/Settings/Providers/ProvidersSettingsView.swift",
         "Sources/LittleSwitchUI/Settings/Search/WebSearchProviderPicker.swift",
         "Sources/LittleSwitchUI/Settings/Search/WebSearchSettingsView.swift",
+        "Sources/LittleSwitchUI/MenuBar/ApplicationStatusRow.swift",
         "Sources/LittleSwitchUI/MenuBar/MenuClaudeTabView.swift",
         "Sources/LittleSwitchUI/MenuBar/MenuCodexReviewModelRow.swift",
         "Sources/LittleSwitchUI/MenuBar/MenuCodexTabView.swift",
@@ -118,6 +130,7 @@ struct CoverageRepositoryScopeTests {
         "Sources/LittleSwitchUI/MenuBar/StatusItemVisibilityRecovery.swift",
         "Sources/LittleSwitchUI/MenuBar/StatusMenuLayout.swift",
         "Sources/LittleSwitchUI/MenuBar/StatusMenuSwitchStyle.swift",
+        "Sources/LittleSwitchUI/Platform/Applications/DesktopApplicationSystem.swift",
         "Sources/LittleSwitchUI/Platform/LoginItems/ServiceManagementLaunchAtLoginService.swift",
         "Sources/LittleSwitchUI/Platform/ProcessHandoff/ApplicationHandoffSystem.swift",
         "Sources/LittleSwitchUI/Platform/Updates/DeveloperIDSignatureProbe.swift",

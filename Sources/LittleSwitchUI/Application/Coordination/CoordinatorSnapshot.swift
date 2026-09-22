@@ -4,6 +4,7 @@ import LittleSwitchCore
 
 public struct CoordinatorSnapshot: Equatable, Sendable {
     public var configuration: AppConfiguration
+    public var desktopApplications: DesktopApplicationAvailability
     public var requestCount: Int
     public var claudeRequestCount: Int
     public var codexRequestCount: Int
@@ -37,6 +38,7 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
 
     public init(
         configuration: AppConfiguration,
+        desktopApplications: DesktopApplicationAvailability = .init(),
         requestCount: Int = 0,
         claudeRequestCount: Int = 0,
         codexRequestCount: Int = 0,
@@ -61,6 +63,7 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
         imageProbeProgress: [UUID: ProviderImageProbeProgress] = [:]
     ) {
         self.configuration = configuration
+        self.desktopApplications = desktopApplications
         self.requestCount = requestCount
         self.claudeRequestCount = claudeRequestCount
         self.codexRequestCount = codexRequestCount

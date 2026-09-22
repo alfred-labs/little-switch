@@ -30,6 +30,7 @@ extension ApplicationCoordinator {
     public static func live(
         claudeController: any ClaudeApplicationControlling,
         codexController: any CodexApplicationControlling,
+        desktopApplications: (any DesktopApplicationManaging)? = nil,
         trafficRecorder: any TrafficRecording = NoopTrafficRecorder()
     ) throws -> ApplicationCoordinator {
         let paths = ApplicationCoordinatorLiveEnvironment.paths
@@ -38,6 +39,7 @@ extension ApplicationCoordinator {
             homeDirectory: paths.homeDirectory,
             claudeController: claudeController,
             codexController: codexController,
+            desktopApplications: desktopApplications,
             trafficRecorder: trafficRecorder
         )
     }
@@ -47,6 +49,7 @@ extension ApplicationCoordinator {
         homeDirectory: URL,
         claudeController: any ClaudeApplicationControlling,
         codexController: any CodexApplicationControlling,
+        desktopApplications: (any DesktopApplicationManaging)? = nil,
         trafficRecorder: any TrafficRecording = NoopTrafficRecorder()
     ) throws -> ApplicationCoordinator {
         // Tests exercise this composition root only with injected temporary paths and shutdown.
@@ -87,6 +90,7 @@ extension ApplicationCoordinator {
             ),
             profileManager: ClaudeProfileManager(paths: profilePaths),
             claudeController: claudeController,
+            desktopApplications: desktopApplications,
             codexProfileManager: CodexProfileManager(paths: codexPaths),
             codexController: codexController,
             claudeCodeProfileManager: ClaudeCodeProfileManager(paths: claudeCodePaths),

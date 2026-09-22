@@ -1,3 +1,4 @@
+import LittleSwitchCommon
 import SwiftUI
 
 public struct MenuStatusView: View {
@@ -6,19 +7,22 @@ public struct MenuStatusView: View {
     private let onToggleClaudeCode: @MainActor () -> Void
     private let onToggleCodex: @MainActor () -> Void
     private let onToggleOpenCode: @MainActor () -> Void
+    private let onOpenApplication: @MainActor (DesktopApplication) -> Void
 
     init(
         model: AppModel,
         onToggleClaude: @escaping @MainActor () -> Void,
         onToggleClaudeCode: @escaping @MainActor () -> Void,
         onToggleCodex: @escaping @MainActor () -> Void,
-        onToggleOpenCode: @escaping @MainActor () -> Void
+        onToggleOpenCode: @escaping @MainActor () -> Void,
+        onOpenApplication: @escaping @MainActor (DesktopApplication) -> Void = { _ in }
     ) {
         self.model = model
         self.onToggleClaude = onToggleClaude
         self.onToggleClaudeCode = onToggleClaudeCode
         self.onToggleCodex = onToggleCodex
         self.onToggleOpenCode = onToggleOpenCode
+        self.onOpenApplication = onOpenApplication
     }
 
     public var body: some View {
@@ -32,8 +36,11 @@ public struct MenuStatusView: View {
                 ),
                 connected: model.connected,
                 disabled: model.isBusy,
+                access: model.desktopApplications.claude,
+                launching: model.launchingApplications.contains(.claude),
+                launchDisabled: model.isBusy,
                 onToggle: onToggleClaude
-            )
+            ) { onOpenApplication(.claude) }
             ApplicationStatusRow(
                 name: L10n.string("Claude Code"),
                 icon: .claudeCode,
@@ -54,8 +61,11 @@ public struct MenuStatusView: View {
                 ),
                 connected: model.codexConnected,
                 disabled: model.isBusy,
+                access: model.desktopApplications.codex,
+                launching: model.launchingApplications.contains(.codex),
+                launchDisabled: model.isBusy,
                 onToggle: onToggleCodex
-            )
+            ) { onOpenApplication(.codex) }
             ApplicationStatusRow(
                 name: L10n.string("OpenCode"),
                 icon: .openCode,
@@ -68,8 +78,11 @@ public struct MenuStatusView: View {
                     || model.openCodeStatus == .recoveryUnavailable
                     || (!model.openCodeSwitchOn
                         && !model.canPerformOpenCodePrimaryAction),
+                access: model.desktopApplications.openCode,
+                launching: model.launchingApplications.contains(.openCode),
+                launchDisabled: model.isBusy,
                 onToggle: onToggleOpenCode
-            )
+            ) { onOpenApplication(.openCode) }
         }
         .padding(.vertical, StatusMenuLayout.applicationBlockVerticalPadding)
         .frame(
@@ -83,7 +96,7 @@ public struct MenuStatusView: View {
 /// Every row shows its bundled brand mark — the app never borrows icons
 /// from the applications it switches, so the marks are present whether or
 /// not the counterpart app is installed.
-private enum ApplicationStatusIcon {
+enum ApplicationStatusIcon {
     case claudeDesktop
     case claudeCode
     case codex
@@ -101,48 +114,5 @@ private enum ApplicationStatusIcon {
         case .openCode:
             OpenCodeIcon()
         }
-    }
-}
-
-private struct ApplicationStatusRow: View {
-    let name: String
-    let icon: ApplicationStatusIcon
-    let detail: String
-    let connected: Bool
-    let disabled: Bool
-    let onToggle: @MainActor () -> Void
-
-    var body: some View {
-        HStack(spacing: StatusMenuLayout.contentSpacing) {
-            icon.mark
-                .frame(width: StatusMenuLayout.iconSize, height: StatusMenuLayout.iconSize)
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 1) {
-                Text(name)
-                    .font(.system(size: StatusMenuLayout.titleFontSize, weight: .medium))
-                Text(detail)
-                    .font(.system(size: StatusMenuLayout.counterFontSize))
-                    .foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 8)
-            Toggle(
-                L10n.resource("\(name) connection"),
-                isOn: Binding(
-                    get: { connected },
-                    set: { _ in onToggle() }
-                )
-            )
-            .labelsHidden()
-            .toggleStyle(StatusMenuSwitchStyle())
-            .controlSize(.mini)
-            .disabled(disabled)
-        }
-        .padding(.horizontal, StatusMenuLayout.horizontalPadding)
-        .frame(
-            width: StatusMenuLayout.width,
-            height: StatusMenuLayout.applicationRowHeight
-        )
-        .accessibilityElement(children: .contain)
     }
 }

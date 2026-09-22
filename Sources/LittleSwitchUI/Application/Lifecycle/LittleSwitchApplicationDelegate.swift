@@ -10,6 +10,7 @@ public final class LittleSwitchApplicationDelegate: NSObject, NSApplicationDeleg
     let usageHistoryStore = GatewayUsageHistoryStore()
     private let claudeController = NSWorkspaceClaudeController()
     private let codexController = NSWorkspaceCodexController()
+    private let desktopApplications = DesktopApplicationSystem.manager()
     private let handoffCoordinator: ApplicationHandoffCoordinator
     let launchAtLoginController: LaunchAtLoginController
     private let signalMonitor = ApplicationHandoffSignalMonitor()
@@ -85,6 +86,7 @@ public final class LittleSwitchApplicationDelegate: NSObject, NSApplicationDeleg
             coordinator = try ApplicationCoordinator.live(
                 claudeController: claudeController,
                 codexController: codexController,
+                desktopApplications: desktopApplications,
                 trafficRecorder: trafficStore
             )
         } catch {
@@ -130,6 +132,9 @@ public final class LittleSwitchApplicationDelegate: NSObject, NSApplicationDeleg
             },
             onToggleOpenCode: { [weak self] in
                 self?.toggleOpenCodeConnection(restoring: self?.model.openCodeSwitchOn == true)
+            },
+            onOpenApplication: { [weak self] application in
+                self?.openDesktopApplication(application)
             },
             onMapping: { [weak self] routeID, mapping in
                 await self?.setMapping(routeID: routeID, mapping: mapping)

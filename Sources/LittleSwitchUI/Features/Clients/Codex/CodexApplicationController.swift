@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import LittleSwitchCommon
 
 public protocol CodexApplicationControlling: ApplicationRelaunching {}
 
@@ -10,7 +11,7 @@ public final class NSWorkspaceCodexController: CodexApplicationControlling {
         case quitTimedOut
     }
 
-    nonisolated package static let bundleIdentifier = "com.openai.codex"
+    nonisolated package static let bundleIdentifier = DesktopApplication.codex.bundleIdentifier
 
     private let workspace: NSWorkspace
     private let fileManager: FileManager
@@ -46,33 +47,7 @@ public final class NSWorkspaceCodexController: CodexApplicationControlling {
         guard let applicationURL else {
             throw Error.applicationNotFound
         }
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.activates = true
-        let _: Void = try await withCheckedThrowingContinuation { continuation in
-            workspace.openApplication(
-                at: applicationURL,
-                configuration: configuration
-            ) { _, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: ())
-                }
-            }
-        }
-    }
-
-    nonisolated package static func applicationCandidates(homeDirectory: URL) -> [URL] {
-        [
-            URL(filePath: "/Applications/Codex.app"),
-            URL(filePath: "/Applications/ChatGPT.app"),
-            homeDirectory
-                .appending(path: "Applications", directoryHint: .isDirectory)
-                .appending(path: "Codex.app", directoryHint: .isDirectory),
-            homeDirectory
-                .appending(path: "Applications", directoryHint: .isDirectory)
-                .appending(path: "ChatGPT.app", directoryHint: .isDirectory),
-        ]
+        try await DesktopApplicationSystem.open(applicationURL, workspace: workspace)
     }
 
     private var runningApplications: [NSRunningApplication] {
@@ -82,7 +57,7 @@ public final class NSWorkspaceCodexController: CodexApplicationControlling {
     }
 
     private var applicationURL: URL? {
-        Self.applicationCandidates(homeDirectory: fileManager.homeDirectoryForCurrentUser)
-            .first { fileManager.fileExists(atPath: $0.path) }
+        DesktopApplicationSystem.locator(workspace: workspace, fileManager: fileManager)
+            .applicationURL(for: .codex)
     }
 }
