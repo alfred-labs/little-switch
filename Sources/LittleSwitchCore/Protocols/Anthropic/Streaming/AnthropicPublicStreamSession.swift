@@ -371,7 +371,7 @@ extension AnthropicPublicStreamSession {
     }
 
     private mutating func emitContentStart(
-        _ publicBlock: [String: JSONValue]
+        _ publicBlock: JSONObject
     ) throws -> (frames: [Data], publicIndex: Int) {
         let index = allocatePublicIndex()
         let block = try anthropicDecode(AnthropicContentBlock.self, from: anthropicJSON(publicBlock))

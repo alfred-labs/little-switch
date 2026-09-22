@@ -29,7 +29,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "40d424095bb852845c0cb05f9243a0e0494a445397f8844afc85af7bf6565186",
+      "sha256": "d8e258747d90dc38578f27725884e8904ffb4b0336b1bb8b5961b411789fb030",
       "origin": "local"
     },
     {
@@ -55,21 +55,21 @@
     },
     {
       "path": "Sources/OrderedJSON/JSONValue+Codable.swift",
-      "sha256": "0f4bf90be69d57019a6303e17787aaa05908d41947dc58fcd4a2924b64221a84",
+      "sha256": "266f38d7dbeb682c25e5b2f78060a3e196e8760a94f8e6f2461b74e235187a21",
       "origin": "orderedjson",
       "upstreamPath": "Sources/OrderedJSON/JSONValue+Codable.swift",
       "upstreamSha256": "0f4bf90be69d57019a6303e17787aaa05908d41947dc58fcd4a2924b64221a84"
     },
     {
       "path": "Sources/OrderedJSON/JSONValue+ExpressibleByLiteral.swift",
-      "sha256": "ee1adaa5caacbcfda865a81c4e31c3596898dabd4bb3727f9889d75f0dba7940",
+      "sha256": "468dcf03ae4d7d92b18f617660c7b8e49900314fa7b50dea1d6496ab437b2f07",
       "origin": "orderedjson",
       "upstreamPath": "Sources/OrderedJSON/JSONValue+ExpressibleByLiteral.swift",
       "upstreamSha256": "ee1adaa5caacbcfda865a81c4e31c3596898dabd4bb3727f9889d75f0dba7940"
     },
     {
       "path": "Sources/OrderedJSON/JSONValue+Parse.swift",
-      "sha256": "5edae3e2ca0e3ae9002620ac284c572fa80daab0364fee087474b4ebbdacbf74",
+      "sha256": "e34209e9b83a83a97adc9cfa11e97c2b204ddaee2ae6d032c6093cd77cdf3b41",
       "origin": "orderedjson",
       "upstreamPath": "Sources/OrderedJSON/JSONValue+Parse.swift",
       "upstreamSha256": "32a1b3bb2931edc0198b0fc4f646ce692bad26d3f5c32e86b2b1d97fe7c25a52"
@@ -90,7 +90,7 @@
     },
     {
       "path": "Sources/OrderedJSON/JSONValue.swift",
-      "sha256": "6c97caa12f5798a71565842000b4071526a45d5bd552324e959a946e52694b76",
+      "sha256": "afd55f18cfb32990b54745d1130de52d108d4e0fd66dcf549f630445b58c51f5",
       "origin": "orderedjson",
       "upstreamPath": "Sources/OrderedJSON/JSONValue.swift",
       "upstreamSha256": "6c97caa12f5798a71565842000b4071526a45d5bd552324e959a946e52694b76"
@@ -2355,6 +2355,25 @@
       "origin": "local"
     },
     {
+      "path": "Tests/OrderedJSONTests/LocalUnicodeKeyTests.swift",
+      "origin": "local",
+      "sha256": "b7708c49e3dacfcda7c79d9dd84e52bf3379435c5c2a1086420cc65c2c7f4222"
+    },
+    {
+      "path": "Upstream/JSONValue+Codable.swift",
+      "origin": "orderedjson",
+      "sha256": "0f4bf90be69d57019a6303e17787aaa05908d41947dc58fcd4a2924b64221a84",
+      "upstreamPath": "Sources/OrderedJSON/JSONValue+Codable.swift",
+      "upstreamSha256": "0f4bf90be69d57019a6303e17787aaa05908d41947dc58fcd4a2924b64221a84"
+    },
+    {
+      "path": "Upstream/JSONValue+ExpressibleByLiteral.swift",
+      "origin": "orderedjson",
+      "sha256": "ee1adaa5caacbcfda865a81c4e31c3596898dabd4bb3727f9889d75f0dba7940",
+      "upstreamPath": "Sources/OrderedJSON/JSONValue+ExpressibleByLiteral.swift",
+      "upstreamSha256": "ee1adaa5caacbcfda865a81c4e31c3596898dabd4bb3727f9889d75f0dba7940"
+    },
+    {
       "path": "Upstream/JSONValue+Parse.swift",
       "sha256": "32a1b3bb2931edc0198b0fc4f646ce692bad26d3f5c32e86b2b1d97fe7c25a52",
       "origin": "orderedjson",
@@ -2367,6 +2386,13 @@
       "sha256": "f33199c5cf064d4452db516dfaded4bffbac06e590828280b5f77f6a7ea74488",
       "upstreamPath": "Sources/OrderedJSON/JSONValue+Serialize.swift",
       "upstreamSha256": "f33199c5cf064d4452db516dfaded4bffbac06e590828280b5f77f6a7ea74488"
+    },
+    {
+      "path": "Upstream/JSONValue.swift",
+      "origin": "orderedjson",
+      "sha256": "6c97caa12f5798a71565842000b4071526a45d5bd552324e959a946e52694b76",
+      "upstreamPath": "Sources/OrderedJSON/JSONValue.swift",
+      "upstreamSha256": "6c97caa12f5798a71565842000b4071526a45d5bd552324e959a946e52694b76"
     },
     {
       "path": "patches/0001-parser-string-buffer.patch",
@@ -2382,6 +2408,26 @@
       "path": "patches/0003-quoted-segments.patch",
       "origin": "local",
       "sha256": "3b8caf93f9c45524bf46528b123243a0ed5f83515c1186f9a6fcb4ca0865d208"
+    },
+    {
+      "path": "patches/0004-exact-unicode-keys.patch",
+      "origin": "local",
+      "sha256": "5dcfbaa1ea85e4d59da20c67e88aa61b57e23f469856519f334da2b8eb06dabe"
+    },
+    {
+      "path": "patches/0005-exact-object-parser.patch",
+      "origin": "local",
+      "sha256": "dca08b0d43e5242e08c7dfa7499818976d0c39cef6cf37a6a5878eeb3f8f9811"
+    },
+    {
+      "path": "patches/0006-exact-object-codable.patch",
+      "origin": "local",
+      "sha256": "790f2073a5902903226d79eeedecaf43c2b57c7a6efea4c3d89af6ffa70cf6c0"
+    },
+    {
+      "path": "patches/0007-exact-object-literals.patch",
+      "origin": "local",
+      "sha256": "db9148e6cc97a993319b95a00d3d132acc4a6013f0e6d61c28d78f2461be2fbf"
     }
   ],
   "patchedFiles": [
@@ -2390,7 +2436,8 @@
       "original": "Upstream/JSONValue+Parse.swift",
       "patches": [
         "patches/0001-parser-string-buffer.patch",
-        "patches/0002-strict-utf8.patch"
+        "patches/0002-strict-utf8.patch",
+        "patches/0005-exact-object-parser.patch"
       ]
     },
     {
@@ -2398,6 +2445,27 @@
       "original": "Upstream/JSONValue+Serialize.swift",
       "patches": [
         "patches/0003-quoted-segments.patch"
+      ]
+    },
+    {
+      "path": "Sources/OrderedJSON/JSONValue.swift",
+      "original": "Upstream/JSONValue.swift",
+      "patches": [
+        "patches/0004-exact-unicode-keys.patch"
+      ]
+    },
+    {
+      "path": "Sources/OrderedJSON/JSONValue+Codable.swift",
+      "original": "Upstream/JSONValue+Codable.swift",
+      "patches": [
+        "patches/0006-exact-object-codable.patch"
+      ]
+    },
+    {
+      "path": "Sources/OrderedJSON/JSONValue+ExpressibleByLiteral.swift",
+      "original": "Upstream/JSONValue+ExpressibleByLiteral.swift",
+      "patches": [
+        "patches/0007-exact-object-literals.patch"
       ]
     }
   ]

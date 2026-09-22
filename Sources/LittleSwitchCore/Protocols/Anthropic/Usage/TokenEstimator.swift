@@ -15,7 +15,7 @@ public enum TokenEstimator {
 
     /// Estimates from an already-parsed request root, so callers that parsed
     /// the body for routing do not re-serialize through JSON.
-    static func estimate(root: [String: JSONValue]) throws -> Int {
+    static func estimate(root: JSONObject) throws -> Int {
         var byteCount = semanticBytes(root[AnthropicCountTokensProjection.Key.system.rawValue])
         if let messages = root[AnthropicCountTokensProjection.Key.messages.rawValue]?.anthropicObjects {
             for message in messages {

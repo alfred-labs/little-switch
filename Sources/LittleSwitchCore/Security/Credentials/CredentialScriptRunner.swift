@@ -6,6 +6,7 @@ package enum CredentialScriptFailureReason: Equatable, Sendable {
     case missingScriptPath
     case missingScriptFile
     case emptyOutput
+    case outputTooLarge
     case timedOut
     case exit(status: Int32)
     case interrupted
@@ -33,6 +34,8 @@ package struct CredentialScriptError: Error, Equatable, Sendable, LocalizedError
             )
         case .emptyOutput:
             return CoreL10n.string("The credential script printed no token.")
+        case .outputTooLarge:
+            return CoreL10n.string("The credential script output exceeded the 64 KiB limit.")
         case .timedOut:
             return CoreL10n.string("The credential script did not finish in time.")
         case .exit(let status):
@@ -114,6 +117,7 @@ public struct ProcessCredentialScriptRunner: CredentialScriptRunning {
         guard fileExists(trimmedPath) else {
             throw CredentialScriptError(reason: .missingScriptFile, standardError: "")
         }
+        try Task.checkCancellation()
 
         let standardOutput = Pipe()
         let standardError = Pipe()
@@ -151,11 +155,23 @@ public struct ProcessCredentialScriptRunner: CredentialScriptRunning {
         // outright, and a finished run waits at most `drainGrace` for them —
         // a backgrounded child can hold the pipes open forever after the
         // script itself has exited.
-        let outputTask = Task<Data?, Never> {
-            await Self.readAll(from: standardOutput.fileHandleForReading)
+        let outputReader = CredentialScriptPipeReader(handle: standardOutput.fileHandleForReading) {
+            interrupt.interrupt()
+            interrupt.armEscalation(afterGrace: killGrace)
         }
-        let errorTask = Task<Data?, Never> {
-            await Self.readAll(from: standardError.fileHandleForReading)
+        let errorReader = CredentialScriptPipeReader(
+            handle: standardError.fileHandleForReading,
+            retention: .suffix(4_096)
+        )
+        let outputTask = Task {
+            await outputReader.read()
+        }
+        let errorTask = Task {
+            await errorReader.read()
+        }
+        defer {
+            outputTask.cancel()
+            errorTask.cancel()
         }
 
         let termination = await withTimeoutOrCancellation(
@@ -169,20 +185,17 @@ public struct ProcessCredentialScriptRunner: CredentialScriptRunning {
         case .finished:
             break
         case .timedOut:
-            outputTask.cancel()
-            errorTask.cancel()
-            throw CredentialScriptError(reason: .timedOut, standardError: "")
+            throw CredentialScriptError(
+                reason: outputReader.exceededLimit ? .outputTooLarge : .timedOut,
+                standardError: ""
+            )
         case .failed(let error):
             // The launch failed, so no child ever existed to close the pipe
             // write ends: close them here or the reads above block forever.
             try? standardOutput.fileHandleForWriting.close()
             try? standardError.fileHandleForWriting.close()
-            outputTask.cancel()
-            errorTask.cancel()
             throw error
         case .cancelled:
-            outputTask.cancel()
-            errorTask.cancel()
             throw CancellationError()
         }
         try Task.checkCancellation()
@@ -195,16 +208,29 @@ public struct ProcessCredentialScriptRunner: CredentialScriptRunning {
             outputTask.cancel()
             errorTask.cancel()
         }
-        let outputData = await outputTask.value
-        let errorData = await errorTask.value
+        let (outputData, errorData) = await withTaskCancellationHandler {
+            await (outputTask.value, errorTask.value)
+        } onCancel: {
+            outputTask.cancel()
+            errorTask.cancel()
+        }
         watchdog.cancel()
+        try Task.checkCancellation()
 
-        let outputText = outputData.flatMap { String(data: $0, encoding: .utf8) }
+        let outputText = String(data: outputData, encoding: .utf8)
         let output = outputText?.trimmingCharacters(in: .whitespacesAndNewlines)
 
+        // A retained suffix can begin inside a UTF-8 scalar. Repair that boundary
+        // instead of discarding the rest of the bounded diagnostic.
+        // swiftlint:disable:next optional_data_string_conversion
+        let errorString = String(decoding: errorData, as: UTF8.self)
         let errorText = Self.boundedTail(
-            errorData.flatMap { String(data: $0, encoding: .utf8) }
+            errorString,
+            truncated: errorReader.exceededLimit
         )
+        guard !outputReader.exceededLimit else {
+            throw CredentialScriptError(reason: .outputTooLarge, standardError: errorText)
+        }
 
         let terminationStatus = process.terminationStatus
         guard terminationStatus == 0 else {
@@ -279,14 +305,6 @@ public struct ProcessCredentialScriptRunner: CredentialScriptRunning {
         }
     }
 
-    /// Reads the handle to EOF in a cancellation-aware way: task
-    /// cancellation ends the read with whatever arrived by then, so a
-    /// backgrounded child holding the pipe cannot wedge the reader forever.
-    private static func readAll(from handle: FileHandle) async -> Data? {
-        let data = await CredentialScriptPipeReader(handle: handle).read()
-        return data.isEmpty ? nil : data
-    }
-
     /// Installs the termination handler before `run()` so a script that exits
     /// immediately can never slip past the observer, and returns once the
     /// process terminates.
@@ -294,6 +312,7 @@ public struct ProcessCredentialScriptRunner: CredentialScriptRunning {
         _ process: Process,
         interrupt: InterruptBox
     ) async throws {
+        try Task.checkCancellation()
         try await withCheckedThrowingContinuation { continuation in
             process.terminationHandler = { _ in
                 interrupt.reachedTermination()
@@ -315,6 +334,7 @@ public struct ProcessCredentialScriptRunner: CredentialScriptRunning {
         private struct State {
             var processIdentifier: Int32 = 0
             var terminated = false
+            var pendingSignal: Int32?
             var escalation: Task<Void, Never>?
         }
 
@@ -325,6 +345,9 @@ public struct ProcessCredentialScriptRunner: CredentialScriptRunning {
         func adopt(_ processIdentifier: Int32) {
             state.withLock { state in
                 state.processIdentifier = processIdentifier
+                if processIdentifier > 0, !state.terminated, let signal = state.pendingSignal {
+                    kill(processIdentifier, signal)
+                }
             }
         }
 
@@ -368,16 +391,19 @@ public struct ProcessCredentialScriptRunner: CredentialScriptRunning {
         }
 
         private func signalChild(_ signal: Int32) {
-            let processIdentifier = state.withLock { state -> Int32? in
-                state.terminated ? nil : state.processIdentifier
-            }
-            if let processIdentifier, processIdentifier > 0 {
-                kill(processIdentifier, signal)
+            state.withLock { state in
+                guard !state.terminated else { return }
+                if state.pendingSignal != SIGKILL {
+                    state.pendingSignal = signal
+                }
+                if state.processIdentifier > 0 {
+                    kill(state.processIdentifier, signal)
+                }
             }
         }
     }
 
-    static func boundedTail(_ text: String?) -> String {
+    static func boundedTail(_ text: String?, truncated: Bool = false) -> String {
         guard let text, !text.isEmpty else {
             return ""
         }
@@ -387,7 +413,7 @@ public struct ProcessCredentialScriptRunner: CredentialScriptRunning {
             .joined(separator: " ")
             .trimmingCharacters(in: .whitespaces)
         guard collapsed.count > 480 else {
-            return collapsed
+            return truncated ? "…" + collapsed : collapsed
         }
         return "…" + String(collapsed.suffix(480))
     }

@@ -24,13 +24,13 @@ public struct AnthropicBase64ImageSource: Sendable, WireCodable {
     public var data: String
     public var mediaType: AnthropicImageMediaType
     public var type: AnthropicBase64ImageSourceType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         data: String,
         mediaType: AnthropicImageMediaType,
         type: AnthropicBase64ImageSourceType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.data = data
         self.mediaType = mediaType

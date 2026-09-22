@@ -69,13 +69,13 @@ public struct OpenAITextAnnotationFilePath: Sendable, WireCodable {
     public var fileId: String?
     public var index: JSONNumber?
     public var type: OpenAITextAnnotationFilePathType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         fileId: String? = nil,
         index: JSONNumber? = nil,
         type: OpenAITextAnnotationFilePathType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.fileId = fileId
         self.index = index

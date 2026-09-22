@@ -23,12 +23,12 @@
 public struct AnthropicMessageParam: Sendable, WireCodable {
     public var content: AnthropicMessageContent
     public var role: AnthropicMessageRole
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         content: AnthropicMessageContent,
         role: AnthropicMessageRole,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.content = content
         self.role = role

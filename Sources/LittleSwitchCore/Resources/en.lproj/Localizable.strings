@@ -8,6 +8,7 @@
 "The credential script exited with status %d." = "The credential script exited with status %d.";
 "The credential script file could not be found. Re-choose it in the provider editor." = "The credential script file could not be found. Re-choose it in the provider editor.";
 "The credential script printed no token." = "The credential script printed no token.";
+"The credential script output exceeded the 64 KiB limit." = "The credential script output exceeded the 64 KiB limit.";
 "The credential script was interrupted." = "The credential script was interrupted.";
 "The endpoint answered with HTTP %lld instead of a model catalog. Check the Base URL and the credential." = "The endpoint answered with HTTP %lld instead of a model catalog. Check the Base URL and the credential.";
 "The endpoint answered, but not with a model catalog. Check the Base URL points at an OpenAI-compatible API root." = "The endpoint answered, but not with a model catalog. Check the Base URL points at an OpenAI-compatible API root.";

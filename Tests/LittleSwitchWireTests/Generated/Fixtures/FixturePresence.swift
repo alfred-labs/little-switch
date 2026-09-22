@@ -14,7 +14,7 @@ public struct FixturePresence: Sendable, WireCodable {
     public var optional: String?
     public var presence: JSONPresence<String>
     public var required: String
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         amount: JSONNumber,
@@ -23,7 +23,7 @@ public struct FixturePresence: Sendable, WireCodable {
         optional: String? = nil,
         presence: JSONPresence<String> = .absent,
         required: String,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.amount = amount
         self.`class` = `class`

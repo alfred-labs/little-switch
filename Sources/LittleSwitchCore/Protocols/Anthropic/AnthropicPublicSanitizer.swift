@@ -1,7 +1,7 @@
 import LittleSwitchWire
 
 enum AnthropicPublicSanitizer {
-    static func block(_ source: [String: JSONValue]) throws -> [String: JSONValue]? {
+    static func block(_ source: JSONObject) throws -> JSONObject? {
         let block = try anthropicDecode(AnthropicContentBlock.self, from: anthropicJSON(source))
         let value: JSONValue
         switch block {
@@ -40,7 +40,7 @@ enum AnthropicPublicSanitizer {
         return value.anthropicObject
     }
 
-    static func delta(_ source: [String: JSONValue]) throws -> [String: JSONValue]? {
+    static func delta(_ source: JSONObject) throws -> JSONObject? {
         let delta = try anthropicDecode(AnthropicContentDelta.self, from: anthropicJSON(source))
         let value: JSONValue
         switch delta {

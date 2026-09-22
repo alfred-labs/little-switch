@@ -31,7 +31,7 @@ public struct AnthropicSearchCitation: Sendable, WireCodable {
     public var startBlockIndex: JSONNumber
     public var title: JSONPresence<String>
     public var type: AnthropicSearchCitationType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         citedText: String,
@@ -41,7 +41,7 @@ public struct AnthropicSearchCitation: Sendable, WireCodable {
         startBlockIndex: JSONNumber,
         title: JSONPresence<String> = .absent,
         type: AnthropicSearchCitationType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.citedText = citedText
         self.endBlockIndex = endBlockIndex

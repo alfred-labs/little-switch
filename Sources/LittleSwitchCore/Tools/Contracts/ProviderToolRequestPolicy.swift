@@ -8,13 +8,13 @@ package enum ProviderToolRequestPolicy {
         case mcpServers = "mcp_servers"
     }
 
-    package static func anthropic(_ root: [String: JSONValue]) throws {
+    package static func anthropic(_ root: JSONObject) throws {
         if let servers = root[UnsupportedAnthropicExtensionKey.mcpServers.rawValue] {
             guard let servers = servers.anthropicObjects, servers.isEmpty else {
                 throw ProviderToolContract.Error.invalidRequest
             }
         }
-        let tools: [[String: JSONValue]]
+        let tools: [JSONObject]
         if let value = root[AnthropicCountTokensProjection.Key.tools.rawValue] {
             guard let objects = value.anthropicObjects else { throw ProviderToolContract.Error.invalidRequest }
             tools = objects

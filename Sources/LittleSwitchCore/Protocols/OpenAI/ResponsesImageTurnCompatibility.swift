@@ -19,9 +19,9 @@ package enum ResponsesImageTurnCompatibility {
     /// providers advertise (262k–400k tokens).
     package static let maximumOutputTokens = 32_768
 
-    static func rewritten(wire object: [String: JSONValue]) throws -> [String: JSONValue]? {
-        guard let rewritten = rewritten(object.mapValues(WireJSONCompatibility.view)) else { return nil }
-        return try rewritten.mapValues(WireJSONCompatibility.value)
+    static func rewritten(wire object: JSONObject) throws -> JSONObject? {
+        guard let rewritten = try rewritten(WireJSONCompatibility.fields(.object(object))) else { return nil }
+        return try WireJSONCompatibility.value(rewritten).object
     }
 
     /// The request reshaped for an image turn, or nil when nothing applies.
@@ -56,14 +56,9 @@ package enum ResponsesImageTurnCompatibility {
     }
 
     private static func containsImage(_ input: Any?) -> Bool {
-        guard let items = input as? [[String: Any]] else {
+        guard let input, let items = (try? WireJSONCompatibility.value(input))?.array else {
             return false
         }
-        return items.contains { item in
-            guard let parts = item["content"] as? [[String: Any]] else {
-                return false
-            }
-            return parts.contains { $0["type"] as? String == "input_image" }
-        }
+        return items.contains { ResponsesImageInputProjection.imageCount(in: $0) > 0 }
     }
 }

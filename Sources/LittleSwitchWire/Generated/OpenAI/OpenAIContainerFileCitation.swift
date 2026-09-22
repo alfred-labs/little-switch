@@ -72,7 +72,7 @@ public struct OpenAIContainerFileCitation: Sendable, WireCodable {
     public var filename: String?
     public var startIndex: JSONNumber?
     public var type: OpenAIContainerFileCitationType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         containerId: String? = nil,
@@ -81,7 +81,7 @@ public struct OpenAIContainerFileCitation: Sendable, WireCodable {
         filename: String? = nil,
         startIndex: JSONNumber? = nil,
         type: OpenAIContainerFileCitationType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.containerId = containerId
         self.endIndex = endIndex

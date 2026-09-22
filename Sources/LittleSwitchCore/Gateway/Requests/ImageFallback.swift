@@ -42,40 +42,61 @@ public enum ImageFallback {
         case .object, .array: break
         default: throw WireCodingError(.typeMismatch)
         }
-        let replacement = try rewrite(object)
-        guard replacement.didReplace else {
+        guard var root = object.object, var messages = root[AnthropicCountTokensProjection.Key.messages.rawValue]?.array
+        else {
             return nil
         }
-        let data = try WireCodec.encode(replacement.value)
+        var didReplace = false
+        for index in messages.indices {
+            guard var message = messages[index].object else { continue }
+            let key = AnthropicMessageParam.Key.content.rawValue
+            message[key] = try rewriteContent(message[key], scope: .message, didReplace: &didReplace)
+            messages[index] = .object(message)
+        }
+        guard didReplace else { return nil }
+        root[AnthropicCountTokensProjection.Key.messages.rawValue] = .array(messages)
+        let data = try WireCodec.encode(JSONValue.object(root))
         return Replacement(body: data, didReplace: true)
     }
 
-    private static func rewrite(_ value: JSONValue) throws -> (value: JSONValue, didReplace: Bool) {
-        switch value {
-        case .object(let dictionary):
-            if dictionary[AnthropicImageParam.Key.type.rawValue] == .string(AnthropicImageParamType.image.rawValue) {
-                return (try AnthropicTextParam(text: notice, type: .text).wireJSON(), true)
-            }
-            var result = dictionary
-            var replaced = false
-            for (key, child) in dictionary {
-                let rewritten = try rewrite(child)
-                result[key] = rewritten.value
-                replaced = replaced || rewritten.didReplace
-            }
-            return (.object(result), replaced)
-        case .array(let array):
-            var result: [JSONValue] = []
-            var replaced = false
-            result.reserveCapacity(array.count)
-            for child in array {
-                let rewritten = try rewrite(child)
-                result.append(rewritten.value)
-                replaced = replaced || rewritten.didReplace
-            }
-            return (.array(result), replaced)
-        default:
-            return (value, false)
+    private enum ContentScope { case message, toolResult, document }
+
+    private static func rewriteContent(
+        _ value: JSONValue?, scope: ContentScope, didReplace: inout Bool
+    ) throws -> JSONValue? {
+        guard let blocks = value?.array else { return value }
+        return .array(try blocks.map { try rewriteBlock($0, scope: scope, didReplace: &didReplace) })
+    }
+
+    /// Only the Anthropic content graph is traversed. Tool input, schemas,
+    /// text extensions and unknown blocks remain opaque even if they look like images.
+    private static func rewriteBlock(
+        _ value: JSONValue, scope: ContentScope, didReplace: inout Bool
+    ) throws -> JSONValue {
+        guard var block = value.object else { return value }
+        let typeKey = AnthropicImageParam.Key.type.rawValue
+        let contentKey = AnthropicToolResultParam.Key.content.rawValue
+        switch block[typeKey]?.string {
+        case AnthropicImageParamType.image.rawValue:
+            didReplace = true
+            return try AnthropicTextParam(text: notice, type: .text).wireJSON()
+        case AnthropicToolResultParamType.toolResult.rawValue where scope == .message:
+            block[contentKey] = try rewriteContent(block[contentKey], scope: .toolResult, didReplace: &didReplace)
+        case AnthropicDocumentParamType.document.rawValue where scope != .document:
+            let key = AnthropicDocumentParam.Key.source.rawValue
+            guard var source = block[key]?.object, source[typeKey] == .string("content") else { return value }
+            source[contentKey] = try rewriteContent(source[contentKey], scope: .document, didReplace: &didReplace)
+            block[key] = .object(source)
+        case "web_fetch_tool_result" where scope == .message:
+            guard var result = block[contentKey]?.object, result[typeKey] == .string("web_fetch_result"),
+                let document = result[contentKey],
+                document.object?[typeKey]
+                    == .string(AnthropicDocumentParamType.document.rawValue)
+            else { return value }
+            result[contentKey] = try rewriteBlock(document, scope: .toolResult, didReplace: &didReplace)
+            block[contentKey] = .object(result)
+        default: return value
         }
+        return .object(block)
     }
 }

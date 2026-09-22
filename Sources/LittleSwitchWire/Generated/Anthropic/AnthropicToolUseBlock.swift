@@ -29,7 +29,7 @@ public struct AnthropicToolUseBlock: Sendable, WireCodable {
     public var input: JSONValue?
     public var name: String
     public var type: AnthropicToolUseBlockType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         caller: JSONPresence<JSONValue> = .absent,
@@ -37,7 +37,7 @@ public struct AnthropicToolUseBlock: Sendable, WireCodable {
         input: JSONValue?,
         name: String,
         type: AnthropicToolUseBlockType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.caller = caller
         self.id = id

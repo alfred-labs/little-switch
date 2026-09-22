@@ -171,7 +171,7 @@ struct CodexNativeCatalogTests {
             #"""
             {"models":[
               {"slug":"gpt-5.6-sol","display_name":"GPT-5.6 Sol","priority":10,"upgrade":"nux","unknown_future":{"x":1}},
-              {"slug":"local/qwen","display_name":"collision"},
+              {"slug":"local:qwen","display_name":"collision"},
               {"slug":"codex-auto-review","display_name":"native review"},
               {"slug":"little-switch-auto-review","display_name":"managed reviewer collision"}
             ]}
@@ -190,7 +190,7 @@ struct CodexNativeCatalogTests {
         let slugs = try models.map { entry in
             try #require(entry["slug"] as? String)
         }
-        #expect(slugs == ["local/qwen", "gpt-5.6-sol", "codex-auto-review", "little-switch-auto-review"])
+        #expect(slugs == ["local:qwen", "gpt-5.6-sol", "codex-auto-review", "little-switch-auto-review"])
         // Codex sorts the picker by priority with a stable sort, so the
         // merged file must already be in display order: priorities match
         // positions and native entries never interleave with managed ones.
@@ -202,7 +202,7 @@ struct CodexNativeCatalogTests {
         #expect(nativeEntry["supported_in_api"] as? Bool == false)
         #expect(nativeEntry["display_name"] as? String == "GPT-5.6 Sol")
         #expect((nativeEntry["unknown_future"] as? [String: Any])?["x"] as? Int == 1)
-        let managedEntry = try #require(models.first { ($0["slug"] as? String) == "local/qwen" })
+        let managedEntry = try #require(models.first { ($0["slug"] as? String) == "local:qwen" })
         #expect(managedEntry["supported_in_api"] as? Bool == true)
     }
 
@@ -224,7 +224,7 @@ struct CodexNativeCatalogTests {
             try #require($0["slug"] as? String)
         }
 
-        #expect(slugs == ["local/qwen", "native/gpt", "little-switch-auto-review"])
+        #expect(slugs == ["local:qwen", "native/gpt", "little-switch-auto-review"])
     }
 }
 

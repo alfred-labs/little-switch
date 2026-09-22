@@ -10,12 +10,12 @@ import LittleSwitchWire
 public struct FixtureLocalNames: Sendable, WireCodable {
     public var object: String
     public var value: String
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         object: String,
         value: String,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.object = object
         self.value = value

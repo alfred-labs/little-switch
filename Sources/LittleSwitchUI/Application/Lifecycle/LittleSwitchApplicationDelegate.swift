@@ -22,6 +22,7 @@ public final class LittleSwitchApplicationDelegate: NSObject, NSApplicationDeleg
     private var settingsWindow: NSWindow?
     private var startupTask: Task<Void, Never>?
     private var pollingTask: Task<Void, Never>?
+    var webSearchDraftTask: Task<Void, Never>?
     var terminationState = ApplicationTerminationState()
     private var terminationStarted = false
 
@@ -272,27 +273,6 @@ extension LittleSwitchApplicationDelegate {
         }
     }
 
-    private func setWebSearchDraft(_ input: WebSearchInput?) async {
-        guard let coordinator else {
-            return
-        }
-        model.apply(await coordinator.setWebSearchDraft(input))
-    }
-
-    private func saveWebSearch(_ input: WebSearchInput) async -> Bool {
-        guard let coordinator else {
-            return false
-        }
-        model.isBusy = true
-        do {
-            model.apply(try await coordinator.saveWebSearch(input))
-            return true
-        } catch {
-            present(error)
-            return false
-        }
-    }
-
     private func refreshProvider(_ id: UUID) async {
         await perform { try await $0.refreshProvider(id: id) }
     }
@@ -363,6 +343,8 @@ extension LittleSwitchApplicationDelegate {
             model.apply(try await operation(coordinator))
             return true
         } catch {
+            // External steps can fail after configuration or a profile was committed.
+            model.apply(await coordinator.snapshot())
             present(error)
             return false
         }
@@ -401,7 +383,7 @@ extension LittleSwitchApplicationDelegate {
                 await self?.saveWebSearch(input) ?? false
             },
             onWebSearchDraft: { [weak self] input in
-                await self?.setWebSearchDraft(input)
+                self?.setWebSearchDraft(input)
             },
             onRefreshProvider: { [weak self] id in
                 await self?.refreshProvider(id)

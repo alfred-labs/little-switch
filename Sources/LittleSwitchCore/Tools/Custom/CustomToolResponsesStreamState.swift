@@ -20,6 +20,7 @@ struct CustomToolResponsesStreamState {
     }
     var calls: [Data: Call] = [:]
     private var retainedBytes = 0
+    private var completedOutput = ResponsesCompletedTurnOutput()
 
     mutating func consume(
         _ value: JSONValue, type: String, projection: CustomToolProjection, maximumBytes: Int
@@ -57,6 +58,8 @@ struct CustomToolResponsesStreamState {
                     root[ItemEventKey.outputIndex.rawValue]?.integer == call.outputIndex
                 else { throw CustomToolProjection.Error.invalidResponse }
                 try complete(item: item, id: id, maximumBytes: maximumBytes)
+                try charge(try item.serializedData().count, maximumBytes: maximumBytes)
+                completedOutput.record(item, at: call.outputIndex)
                 calls[id]?.itemDone = true
                 root[ItemEventKey.item.rawValue] = try projection.restoreResponseItem(item)
             }
@@ -93,19 +96,21 @@ struct CustomToolResponsesStreamState {
         let snapshot = root[ResponseEventKey.response.rawValue]
         if var response = snapshot?.object, let output = response[ResponseKey.output.rawValue]?.array {
             var finalIDs: Set<Data> = []
-            response[ResponseKey.output.rawValue] = .array(
-                try output.enumerated().map { index, item in
-                    guard
-                        item.object?[FunctionKey.type.rawValue]
-                            == .string(OpenAIResponsesFunctionCallType.functionCall.rawValue), projection.adapts(item)
-                    else { return item }
-                    guard let id = item.object?[FunctionKey.id.rawValue]?.string.map({ Data($0.utf8) }),
-                        let call = calls[id],
-                        call.outputIndex == index, call.itemDone, finalIDs.insert(id).inserted
-                    else { throw CustomToolProjection.Error.invalidResponse }
-                    try complete(item: item, id: id, maximumBytes: maximumBytes)
-                    return try projection.restoreResponseItem(item)
-                })
+            let restoredItems = try completedOutput.resolvedItems(for: output).map { index, item in
+                guard
+                    item.object?[FunctionKey.type.rawValue]
+                        == .string(OpenAIResponsesFunctionCallType.functionCall.rawValue), projection.adapts(item)
+                else { return item }
+                guard let id = item.object?[FunctionKey.id.rawValue]?.string.map({ Data($0.utf8) }),
+                    let call = calls[id],
+                    call.outputIndex == index, call.itemDone, finalIDs.insert(id).inserted
+                else { throw CustomToolProjection.Error.invalidResponse }
+                try complete(item: item, id: id, maximumBytes: maximumBytes)
+                return try projection.restoreResponseItem(item)
+            }
+            // Lite output stays empty on the wire. The completed items above
+            // participate only in the same identity and closure validation.
+            if !output.isEmpty { response[ResponseKey.output.rawValue] = .array(restoredItems) }
             if type == OpenAIResponsesCompletedEventType.responseCompleted.rawValue, finalIDs != Set(calls.keys) {
                 throw CustomToolProjection.Error.invalidResponse
             }

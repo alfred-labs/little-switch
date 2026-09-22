@@ -50,12 +50,12 @@
 public struct OpenAIResponsesCompletedEvent: Sendable, WireCodable {
     public var response: JSONValue?
     public var type: OpenAIResponsesCompletedEventType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         response: JSONValue?,
         type: OpenAIResponsesCompletedEventType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.response = response
         self.type = type

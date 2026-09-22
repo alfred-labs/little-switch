@@ -71,9 +71,9 @@ struct CodexAutoReviewTests {
         #expect(snapshot.resolveCodex(model: "little-switch-auto-review") == target)
         #expect(
             snapshot.validCodexTargets == [
-                "example/small": CodexModelTarget(
+                "example:small": CodexModelTarget(
                     provider: target.provider, model: DiscoveredModel(id: "small")),
-                "example/xlarge": target,
+                "example:xlarge": target,
                 "little-switch-auto-review": target,
             ])
         #expect(snapshot.resolveCodex(model: "Little-switch-auto-review") == nil)
@@ -122,6 +122,10 @@ struct CodexAutoReviewTests {
                             diagnosticModelIDs: ["small", "xlarge"])
                     ],
                     routes: [
+                        ProviderRequestRouteKey(client: .codex, modelIdentifier: "example:small"):
+                            ProviderRequestRouteTarget(providerID: provider.id, modelID: "small"),
+                        ProviderRequestRouteKey(client: .codex, modelIdentifier: "example:xlarge"):
+                            ProviderRequestRouteTarget(providerID: provider.id, modelID: "xlarge"),
                         ProviderRequestRouteKey(client: .codex, modelIdentifier: "example/small"):
                             ProviderRequestRouteTarget(providerID: provider.id, modelID: "small"),
                         ProviderRequestRouteKey(client: .codex, modelIdentifier: "example/xlarge"):
@@ -144,7 +148,7 @@ struct CodexAutoReviewTests {
         expected.priority = 2
 
         #expect(catalog.models.last == expected)
-        #expect(catalog.models.map(\.slug) == ["example/xlarge", "example/small", "little-switch-auto-review"])
+        #expect(catalog.models.map(\.slug) == ["example:xlarge", "example:small", "little-switch-auto-review"])
         #expect(catalog.models.filter { $0.visibility == "list" }.count == 2)
         for model in catalog.models {
             #expect(snapshot.resolveCodex(model: model.slug) != nil)

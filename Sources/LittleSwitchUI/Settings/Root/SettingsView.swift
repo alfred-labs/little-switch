@@ -12,7 +12,7 @@ public struct SettingsView: View {
     private let onSaveProvider: @MainActor (ProviderInput) async -> ProviderSaveOutcome
     private let onTestProvider: @MainActor (ProviderInput) async -> ProviderTestOutcome
     private let onSaveWebSearch: @MainActor (WebSearchInput) async -> Bool
-    private let onWebSearchDraft: @MainActor (WebSearchInput?) async -> Void
+    private let onWebSearchDraft: @MainActor (WebSearchPendingSettings?) -> Void
     private let onMonitoringDraft: @MainActor (MonitoringPendingSettings?) async -> Void
     private let onApplyMonitoring: @MainActor (MonitoringApplyInput) async -> Bool
     private let onTestMonitoring: @MainActor () async -> Void
@@ -50,7 +50,7 @@ public struct SettingsView: View {
         onSaveProvider: @escaping @MainActor (ProviderInput) async -> ProviderSaveOutcome,
         onTestProvider: @escaping @MainActor (ProviderInput) async -> ProviderTestOutcome,
         onSaveWebSearch: @escaping @MainActor (WebSearchInput) async -> Bool,
-        onWebSearchDraft: @escaping @MainActor (WebSearchInput?) async -> Void,
+        onWebSearchDraft: @escaping @MainActor (WebSearchPendingSettings?) -> Void,
         onRefreshProvider: @escaping @MainActor (UUID) async -> Void,
         onDeleteProvider: @escaping @MainActor (UUID) async -> Void,
         onMapping: @escaping @MainActor (String, ModelMapping?) async -> Void,

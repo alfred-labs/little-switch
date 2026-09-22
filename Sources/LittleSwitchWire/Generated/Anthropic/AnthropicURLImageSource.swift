@@ -23,12 +23,12 @@
 public struct AnthropicURLImageSource: Sendable, WireCodable {
     public var type: AnthropicURLImageSourceType
     public var url: String
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         type: AnthropicURLImageSourceType,
         url: String,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.type = type
         self.url = url

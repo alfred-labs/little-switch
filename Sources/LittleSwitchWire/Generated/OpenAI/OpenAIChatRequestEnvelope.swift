@@ -10,12 +10,12 @@
 public struct OpenAIChatRequestEnvelope: Sendable, WireCodable {
     public var messages: [JSONValue]
     public var model: String
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         messages: [JSONValue],
         model: String,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.messages = messages
         self.model = model

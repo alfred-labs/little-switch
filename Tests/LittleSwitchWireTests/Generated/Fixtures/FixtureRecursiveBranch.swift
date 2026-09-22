@@ -10,12 +10,12 @@ import LittleSwitchWire
 public struct FixtureRecursiveBranch: Sendable, WireCodable {
     public var child: FixtureRecursive
     public var type: FixtureRecursiveBranchType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         child: FixtureRecursive,
         type: FixtureRecursiveBranchType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.child = child
         self.type = type

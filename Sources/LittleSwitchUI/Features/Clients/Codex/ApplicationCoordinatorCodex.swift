@@ -46,7 +46,7 @@ extension ApplicationCoordinator {
         // Quit before writing: a live Codex Desktop rewrites config.toml
         // from memory on model switches and at quit, which races the
         // activation and stomps the managed profile.
-        let shouldRelaunchCodex = await quitCodexForProfileChange()
+        let shouldRelaunchCodex = try await quitCodexForProfileChange()
         do {
             try profileManager.activate(
                 providers: candidate.providers,
@@ -109,7 +109,7 @@ extension ApplicationCoordinator {
         let previous = configuration
         let previousAppliedState = appliedCodexState
         // Same race as connectCodex: quit before the activation write.
-        let shouldRelaunchCodex = await quitCodexForProfileChange()
+        let shouldRelaunchCodex = try await quitCodexForProfileChange()
 
         do {
             try profileManager.activate(
@@ -159,7 +159,7 @@ extension ApplicationCoordinator {
         let previousAppliedState = appliedCodexState
         // Quit before restoring: the app's quit-time config flush would
         // otherwise rewrite the managed profile over the restored one.
-        let shouldRelaunchCodex = await quitCodexForProfileChange()
+        let shouldRelaunchCodex = try await quitCodexForProfileChange()
         do {
             try profileManager.restore()
             configuration.codex.connected = false
@@ -201,15 +201,11 @@ extension ApplicationCoordinator {
     /// writing while it runs lets it stomp the managed or restored profile.
     /// Returns whether the app should be reopened afterwards — true only
     /// when it was running and quit cleanly.
-    private func quitCodexForProfileChange() async -> Bool {
+    private func quitCodexForProfileChange() async throws -> Bool {
         guard let controller = codexController else { return false }
         guard await controller.isRunning() else { return false }
-        do {
-            try await controller.quitAndWait()
-            return true
-        } catch {
-            return false
-        }
+        try await controller.quitAndWait()
+        return true
     }
 
     private func openCodexApplyingDesktopState() async {

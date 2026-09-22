@@ -11,12 +11,12 @@
 public struct OpenAIResponsesReasoningOptions: Sendable, WireCodable {
     public var effort: JSONPresence<JSONValue>
     public var summary: JSONPresence<JSONValue>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         effort: JSONPresence<JSONValue> = .absent,
         summary: JSONPresence<JSONValue> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.effort = effort
         self.summary = summary

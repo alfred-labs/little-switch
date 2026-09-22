@@ -123,6 +123,7 @@ final class FaultingOpenCodeProfileFileStore: OpenCodeProfileFileStore, @uncheck
 
     private let lock = NSLock()
     private var storage: [URL: Entry]
+    private var snapshots: [[URL: Entry]] = []
     private var mutation = 0
     private var failingMutations: Set<Int> = []
 
@@ -132,6 +133,10 @@ final class FaultingOpenCodeProfileFileStore: OpenCodeProfileFileStore, @uncheck
 
     var files: [URL: Entry] {
         lock.withLock { storage }
+    }
+
+    var durableSnapshots: [[URL: Entry]] {
+        lock.withLock { snapshots }
     }
 
     func fail(onMutations mutations: Set<Int>) {
@@ -177,6 +182,7 @@ final class FaultingOpenCodeProfileFileStore: OpenCodeProfileFileStore, @uncheck
                 throw Error.injected
             }
             body()
+            snapshots.append(storage)
         }
     }
 }

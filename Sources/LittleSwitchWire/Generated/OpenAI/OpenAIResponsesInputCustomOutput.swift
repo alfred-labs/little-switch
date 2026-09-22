@@ -12,14 +12,14 @@ public struct OpenAIResponsesInputCustomOutput: Sendable, WireCodable {
     public var id: String?
     public var output: JSONValue?
     public var type: OpenAIResponsesInputCustomOutputType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         callId: String,
         id: String? = nil,
         output: JSONValue?,
         type: OpenAIResponsesInputCustomOutputType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.callId = callId
         self.id = id

@@ -53,7 +53,7 @@ public struct OpenAIReasoningTextDelta: Sendable, WireCodable {
     public var itemId: String
     public var outputIndex: JSONNumber
     public var type: OpenAIReasoningTextDeltaType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         contentIndex: JSONNumber,
@@ -61,7 +61,7 @@ public struct OpenAIReasoningTextDelta: Sendable, WireCodable {
         itemId: String,
         outputIndex: JSONNumber,
         type: OpenAIReasoningTextDeltaType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.contentIndex = contentIndex
         self.delta = delta

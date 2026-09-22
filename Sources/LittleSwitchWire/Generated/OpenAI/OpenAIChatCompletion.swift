@@ -32,14 +32,14 @@ public struct OpenAIChatCompletion: Sendable, WireCodable {
     public var created: JSONPresence<JSONNumber>
     public var id: JSONPresence<String>
     public var usage: JSONPresence<OpenAIChatBufferedUsage>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         choices: [OpenAIChatCompletionChoice],
         created: JSONPresence<JSONNumber> = .absent,
         id: JSONPresence<String> = .absent,
         usage: JSONPresence<OpenAIChatBufferedUsage> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.choices = choices
         self.created = created

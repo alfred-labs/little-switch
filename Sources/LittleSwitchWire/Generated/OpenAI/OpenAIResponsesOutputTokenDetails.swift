@@ -27,11 +27,11 @@
 
 public struct OpenAIResponsesOutputTokenDetails: Sendable, WireCodable {
     public var reasoningTokens: JSONNumber
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         reasoningTokens: JSONNumber,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.reasoningTokens = reasoningTokens
         self.additionalFields = additionalFields

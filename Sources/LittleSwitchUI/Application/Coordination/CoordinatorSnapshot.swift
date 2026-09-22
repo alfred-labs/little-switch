@@ -17,7 +17,8 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
     public var claudeCodeMappedRouteIDs: [String]
     public var openCodeStatus: OpenCodeConnectionStatus
     public var hasPendingOpenCodeChanges: Bool
-    public var webSearchDraft: WebSearchInput?
+    public var webSearchDraft: WebSearchPendingSettings?
+    public var webSearchDraftRevision: UInt64
     public var monitoringDraft: MonitoringPendingSettings?
     public var monitoringStatus: MonitoringExportStatus
     public var monitoringApplying: Bool
@@ -50,7 +51,8 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
         claudeCodeMappedRouteIDs: [String] = [],
         openCodeStatus: OpenCodeConnectionStatus = .disconnected,
         hasPendingOpenCodeChanges: Bool = false,
-        webSearchDraft: WebSearchInput? = nil,
+        webSearchDraft: WebSearchPendingSettings? = nil,
+        webSearchDraftRevision: UInt64 = 0,
         monitoringDraft: MonitoringPendingSettings? = nil,
         monitoringStatus: MonitoringExportStatus = .init(),
         monitoringApplying: Bool = false,
@@ -76,6 +78,7 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
         self.openCodeStatus = openCodeStatus
         self.hasPendingOpenCodeChanges = hasPendingOpenCodeChanges
         self.webSearchDraft = webSearchDraft
+        self.webSearchDraftRevision = webSearchDraftRevision
         self.monitoringDraft = monitoringDraft
         self.monitoringStatus = monitoringStatus
         self.monitoringApplying = monitoringApplying

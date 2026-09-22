@@ -13,13 +13,13 @@ public struct AnthropicThinkingRequest: Sendable, WireCodable {
     public var outputConfig: AnthropicOutputConfiguration?
     public var reasoningEffort: JSONPresence<JSONValue>
     public var thinking: AnthropicThinkingConfiguration?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         outputConfig: AnthropicOutputConfiguration? = nil,
         reasoningEffort: JSONPresence<JSONValue> = .absent,
         thinking: AnthropicThinkingConfiguration? = nil,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.outputConfig = outputConfig
         self.reasoningEffort = reasoningEffort

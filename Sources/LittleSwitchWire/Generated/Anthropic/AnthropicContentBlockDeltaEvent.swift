@@ -17,13 +17,13 @@ public struct AnthropicContentBlockDeltaEvent: Sendable, WireCodable {
     public var delta: JSONValue?
     public var index: JSONNumber
     public var type: AnthropicContentBlockDeltaEventType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         delta: JSONValue?,
         index: JSONNumber,
         type: AnthropicContentBlockDeltaEventType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.delta = delta
         self.index = index

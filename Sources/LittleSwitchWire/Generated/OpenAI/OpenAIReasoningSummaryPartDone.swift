@@ -54,7 +54,7 @@ public struct OpenAIReasoningSummaryPartDone: Sendable, WireCodable {
     public var status: OpenAIReasoningSummaryPartDoneStatus?
     public var summaryIndex: JSONNumber
     public var type: OpenAIReasoningSummaryPartDoneType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         itemId: String,
@@ -63,7 +63,7 @@ public struct OpenAIReasoningSummaryPartDone: Sendable, WireCodable {
         status: OpenAIReasoningSummaryPartDoneStatus? = nil,
         summaryIndex: JSONNumber,
         type: OpenAIReasoningSummaryPartDoneType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.itemId = itemId
         self.outputIndex = outputIndex

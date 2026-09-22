@@ -8,11 +8,11 @@
 
 public struct AnthropicAutomaticToolChoice: Sendable, WireCodable {
     public var type: AnthropicAutomaticToolChoiceType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         type: AnthropicAutomaticToolChoiceType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.type = type
         self.additionalFields = additionalFields

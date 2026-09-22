@@ -70,14 +70,14 @@ public struct OpenAIResponsesOutputText: Sendable, WireCodable {
     public var logprobs: JSONPresence<[OpenAIResponsesLogprob]>
     public var text: String
     public var type: OpenAIResponsesOutputTextType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         annotations: JSONPresence<[OpenAITextAnnotation]> = .absent,
         logprobs: JSONPresence<[OpenAIResponsesLogprob]> = .absent,
         text: String,
         type: OpenAIResponsesOutputTextType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.annotations = annotations
         self.logprobs = logprobs

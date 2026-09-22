@@ -29,7 +29,7 @@ public struct AnthropicWebSearchResult: Sendable, WireCodable {
     public var title: String
     public var type: AnthropicWebSearchResultType
     public var url: String
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         encryptedContent: String,
@@ -37,7 +37,7 @@ public struct AnthropicWebSearchResult: Sendable, WireCodable {
         title: String,
         type: AnthropicWebSearchResultType,
         url: String,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.encryptedContent = encryptedContent
         self.pageAge = pageAge

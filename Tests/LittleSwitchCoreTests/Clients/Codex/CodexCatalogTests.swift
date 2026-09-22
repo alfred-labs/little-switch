@@ -6,7 +6,7 @@ import Testing
 
 @Suite("Codex model catalog")
 struct CodexCatalogTests {
-    @Test("Slugs are the readable provider and model pair")
+    @Test("Slugs encode separators while display names retain the provider and model pair")
     func stableSlugs() throws {
         let providerID = try #require(UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"))
         let mapping = ModelMapping(providerID: providerID, modelID: "qwen/coder:latest")
@@ -18,7 +18,7 @@ struct CodexCatalogTests {
             models: [DiscoveredModel(id: mapping.modelID)]
         )
 
-        #expect(CodexCatalog.slug(for: mapping, in: [provider]) == "renamed/qwen/coder:latest")
+        #expect(CodexCatalog.slug(for: mapping, in: [provider]) == "renamed:qwen%2fcoder%3alatest")
 
         let catalog = try CodexCatalog.make(
             providers: [provider],
@@ -28,6 +28,7 @@ struct CodexCatalogTests {
             catalog.models.first?.slug
                 == CodexCatalog.slug(for: mapping, in: [provider])
         )
+        #expect(catalog.models.first?.displayName == "Renamed/qwen/coder:latest")
     }
 
     @Test("Catalog puts the default first and encodes complete Codex metadata")
@@ -133,7 +134,7 @@ struct CodexCatalogTests {
         )
 
         let exposed = catalog.models.filter { $0.slug != CodexCatalog.managedAutoReviewModel }
-        #expect(exposed.map(\.slug) == ["openai/gpt-5.5", "z.ai/glm-5.3"])
+        #expect(exposed.map(\.slug) == ["openai:gpt-5.5", "z.ai:glm-5.3"])
         #expect(exposed.map(\.displayName) == ["OpenAI/gpt-5.5", "z.ai/glm-5.3"])
         #expect(
             Set(exposed.map { $0.slug.lowercased() }).count == exposed.count,

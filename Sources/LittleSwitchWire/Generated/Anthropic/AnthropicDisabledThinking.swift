@@ -11,11 +11,11 @@
 
 public struct AnthropicDisabledThinking: Sendable, WireCodable {
     public var type: AnthropicDisabledThinkingType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         type: AnthropicDisabledThinkingType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.type = type
         self.additionalFields = additionalFields

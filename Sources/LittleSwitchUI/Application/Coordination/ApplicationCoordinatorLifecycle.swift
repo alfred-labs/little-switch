@@ -62,6 +62,7 @@ extension ApplicationCoordinator {
         pendingClaudeCodeSettings = nil
         pendingOpenCodeSettings = nil
         pendingWebSearchSettings = nil
+        webSearchDraftRevision &+= 1
         pendingMonitoringSettings = nil
         pendingClaudeMappings = nil
         for operation in providerRefreshOperations.values {

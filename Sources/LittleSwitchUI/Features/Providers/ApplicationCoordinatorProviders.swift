@@ -134,8 +134,8 @@ extension ApplicationCoordinator {
     }
 
     /// Swaps the provider into the configuration and persists it; any
-    /// failure rolls configuration and credential back together so a failed
-    /// save leaves no half-applied state behind.
+    /// failure rolls configuration, client drafts and credential back together
+    /// so a failed save leaves no half-applied state behind.
     private func commitProvider(
         _ provider: Provider,
         credential: ResolvedCredential,
@@ -144,6 +144,8 @@ extension ApplicationCoordinator {
         routingMutationToken: UUID
     ) async throws {
         let oldConfiguration = configuration
+        let oldClaudeCodeDraft = pendingClaudeCodeSettings
+        let oldOpenCodeDraft = pendingOpenCodeSettings
         var provider = provider
         do {
             // Re-read after the routing guard's await, so a concurrent diagnostic
@@ -162,6 +164,8 @@ extension ApplicationCoordinator {
             try configurationStore.save(configuration)
         } catch {
             configuration = oldConfiguration
+            pendingClaudeCodeSettings = oldClaudeCodeDraft
+            pendingOpenCodeSettings = oldOpenCodeDraft
             try restoreAfterFailedProviderSave(
                 providerID: provider.id,
                 previousSecret: previousSecret
@@ -276,7 +280,6 @@ extension ApplicationCoordinator {
         let intent = beginProviderIntent(providerID: id)
         defer { finishProviderIntent(intent, providerID: id) }
         cancelProviderRefreshOperation(providerID: id)
-        let oldConfiguration = configuration
         let oldSecret = try secretStore.read(providerID: id)
         await credentialRefresher.cancel(providerID: id)
         let routingMutationToken = await gatewayRoutingMutationGuard.begin(providerID: id)
@@ -292,6 +295,9 @@ extension ApplicationCoordinator {
             )
             throw error
         }
+        let oldConfiguration = configuration
+        let oldClaudeCodeDraft = pendingClaudeCodeSettings
+        let oldOpenCodeDraft = pendingOpenCodeSettings
         configuration.providers.removeAll { $0.id == id }
         configuration.mappings = configuration.mappings.filter { $0.value.providerID != id }
         configuration.codex = configuration.codex.normalized(for: configuration.providers)
@@ -304,6 +310,8 @@ extension ApplicationCoordinator {
         } catch {
             let persistenceError = error
             configuration = oldConfiguration
+            pendingClaudeCodeSettings = oldClaudeCodeDraft
+            pendingOpenCodeSettings = oldOpenCodeDraft
             try restoreAfterFailedProviderSave(
                 providerID: id,
                 previousSecret: oldSecret

@@ -34,7 +34,7 @@ package enum PortableWebSearchHistory {
     private static let maximumPayloadBytes = 2 * 1_024 * 1_024
     private static let maximumTokenBytes = tokenPrefix.utf8.count + ((maximumPayloadBytes + 2) / 3) * 4
 
-    package static func anthropicResultText(_ block: [String: JSONValue]) throws -> String {
+    package static func anthropicResultText(_ block: JSONObject) throws -> String {
         guard
             block[AnthropicWebSearchToolResultBlock.Key.type.rawValue]?.string
                 == AnthropicWebSearchToolResultBlockType.webSearchToolResult.rawValue,
@@ -127,7 +127,7 @@ package enum PortableWebSearchHistory {
     }
 
     private static func readableResult(
-        _ object: [String: JSONValue],
+        _ object: JSONObject,
         toolUseID: String,
         resultIndex: Int
     ) throws -> WebSearchResult {

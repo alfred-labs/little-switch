@@ -70,14 +70,14 @@ public struct OpenAITextAnnotationFileCitation: Sendable, WireCodable {
     public var filename: String?
     public var index: JSONNumber?
     public var type: OpenAITextAnnotationFileCitationType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         fileId: String? = nil,
         filename: String? = nil,
         index: JSONNumber? = nil,
         type: OpenAITextAnnotationFileCitationType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.fileId = fileId
         self.filename = filename

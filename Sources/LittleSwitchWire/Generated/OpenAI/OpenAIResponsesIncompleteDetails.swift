@@ -7,11 +7,11 @@
 
 public struct OpenAIResponsesIncompleteDetails: Sendable, WireCodable {
     public var reason: OpenAIResponsesIncompleteDetailsReason?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         reason: OpenAIResponsesIncompleteDetailsReason? = nil,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.reason = reason
         self.additionalFields = additionalFields

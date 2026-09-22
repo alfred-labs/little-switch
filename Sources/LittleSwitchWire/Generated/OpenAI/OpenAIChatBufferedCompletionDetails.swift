@@ -29,11 +29,11 @@
 
 public struct OpenAIChatBufferedCompletionDetails: Sendable, WireCodable {
     public var reasoningTokens: JSONNumber?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         reasoningTokens: JSONNumber? = nil,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.reasoningTokens = reasoningTokens
         self.additionalFields = additionalFields

@@ -21,7 +21,7 @@ public struct AnthropicUsageFields: Sendable, WireCodable {
     public var inputTokens: JSONPresence<JSONNumber>
     public var outputTokens: JSONPresence<JSONNumber>
     public var serviceTier: JSONPresence<AnthropicServiceTier>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         cacheCreation: JSONPresence<AnthropicCacheCreation> = .absent,
@@ -30,7 +30,7 @@ public struct AnthropicUsageFields: Sendable, WireCodable {
         inputTokens: JSONPresence<JSONNumber> = .absent,
         outputTokens: JSONPresence<JSONNumber> = .absent,
         serviceTier: JSONPresence<AnthropicServiceTier> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.cacheCreation = cacheCreation
         self.cacheCreationInputTokens = cacheCreationInputTokens

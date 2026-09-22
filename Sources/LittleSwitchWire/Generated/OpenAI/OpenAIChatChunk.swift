@@ -31,7 +31,7 @@ public struct OpenAIChatChunk: Sendable, WireCodable {
     public var model: String
     public var object: OpenAIChatChunkObject
     public var usage: JSONPresence<OpenAIChatStreamUsage>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         choices: [OpenAIChatChoice],
@@ -40,7 +40,7 @@ public struct OpenAIChatChunk: Sendable, WireCodable {
         model: String,
         object: OpenAIChatChunkObject,
         usage: JSONPresence<OpenAIChatStreamUsage> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.choices = choices
         self.created = created

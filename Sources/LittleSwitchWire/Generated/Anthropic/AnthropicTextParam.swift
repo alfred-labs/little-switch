@@ -23,12 +23,12 @@
 public struct AnthropicTextParam: Sendable, WireCodable {
     public var text: String
     public var type: AnthropicTextParamType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         text: String,
         type: AnthropicTextParamType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.text = text
         self.type = type

@@ -17,12 +17,12 @@
 public struct AnthropicCacheCreation: Sendable, WireCodable {
     public var ephemeral1hInputTokens: JSONNumber
     public var ephemeral5mInputTokens: JSONNumber
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         ephemeral1hInputTokens: JSONNumber,
         ephemeral5mInputTokens: JSONNumber,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.ephemeral1hInputTokens = ephemeral1hInputTokens
         self.ephemeral5mInputTokens = ephemeral5mInputTokens

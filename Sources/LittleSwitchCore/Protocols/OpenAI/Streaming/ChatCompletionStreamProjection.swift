@@ -45,7 +45,7 @@ enum ChatCompletionStreamProjection {
             content: choice.messageText.map(JSONPresence.value) ?? .null,
             refusal: choice.refusal.map(JSONPresence.value) ?? .absent,
             toolCalls: choice.toolCalls.isEmpty ? .absent : .value(choice.toolCalls.map(toolCall)),
-            additionalFields: choice.reasoning.mapValues(JSONValue.string))
+            additionalFields: JSONObject(uniqueKeysWithValues: choice.reasoning.map { ($0.key, .string($0.value)) }))
     }
 
     private static func toolCall(_ call: ChatCompletionToolCallState) -> OpenAIChatMessageToolCall {

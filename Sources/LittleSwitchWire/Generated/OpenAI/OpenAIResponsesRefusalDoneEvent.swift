@@ -53,7 +53,7 @@ public struct OpenAIResponsesRefusalDoneEvent: Sendable, WireCodable {
     public var outputIndex: JSONNumber
     public var refusal: String
     public var type: OpenAIResponsesRefusalDoneEventType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         contentIndex: JSONNumber,
@@ -61,7 +61,7 @@ public struct OpenAIResponsesRefusalDoneEvent: Sendable, WireCodable {
         outputIndex: JSONNumber,
         refusal: String,
         type: OpenAIResponsesRefusalDoneEventType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.contentIndex = contentIndex
         self.itemId = itemId

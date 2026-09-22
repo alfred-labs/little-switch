@@ -338,7 +338,7 @@ extension AnthropicWebSearchTests {
 
     @Test("Exact JSON encoding handles objects and fragments")
     func serializationForwarding() throws {
-        let object: [String: JSONValue] = ["model": "claude", "stream": false]
+        let object: JSONObject = ["model": "claude", "stream": false]
         #expect(try AnthropicWebSearch.data(from: object) == Data(#"{"model":"claude","stream":false}"#.utf8))
         let fragment = try publicStreamFragment(Data(#""fragment""#.utf8))
         #expect(try publicStreamData(fragment) == Data(#""fragment""#.utf8))

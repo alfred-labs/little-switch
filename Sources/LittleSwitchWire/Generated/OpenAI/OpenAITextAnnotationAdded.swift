@@ -54,7 +54,7 @@ public struct OpenAITextAnnotationAdded: Sendable, WireCodable {
     public var itemId: String
     public var outputIndex: JSONNumber
     public var type: OpenAITextAnnotationAddedType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         annotation: JSONValue?,
@@ -63,7 +63,7 @@ public struct OpenAITextAnnotationAdded: Sendable, WireCodable {
         itemId: String,
         outputIndex: JSONNumber,
         type: OpenAITextAnnotationAddedType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.annotation = annotation
         self.annotationIndex = annotationIndex

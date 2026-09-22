@@ -35,7 +35,7 @@ public struct OpenAIResponsesResponse: Sendable, WireCodable {
     public var output: [JSONValue]?
     public var status: OpenAIResponsesStatus?
     public var usage: JSONPresence<OpenAIResponsesWireUsage>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         completedAt: JSONPresence<JSONNumber> = .absent,
@@ -47,7 +47,7 @@ public struct OpenAIResponsesResponse: Sendable, WireCodable {
         output: [JSONValue]? = nil,
         status: OpenAIResponsesStatus? = nil,
         usage: JSONPresence<OpenAIResponsesWireUsage> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.completedAt = completedAt
         self.createdAt = createdAt

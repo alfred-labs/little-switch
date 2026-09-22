@@ -17,11 +17,16 @@ struct CustomToolStreamLifecycleTests {
         }
     }
 
-    @Test("The final snapshot cannot omit or duplicate the streamed custom call", arguments: ["[]", "duplicate"])
+    @Test(
+        "A nonempty final snapshot cannot omit or duplicate the streamed custom call",
+        arguments: ["omitted", "duplicate"])
     func finalSetMismatch(output: String) throws {
         var state = try makeState()
         try call(into: &state)
-        let array = output == "duplicate" ? "[\(Self.item),\(Self.item)]" : output
+        let array =
+            output == "duplicate"
+            ? "[\(Self.item),\(Self.item)]"
+            : #"[{"type":"message","id":"message","role":"assistant","content":[]}]"#
         #expect(throws: (any Swift.Error).self) {
             try send("{\"type\":\"response.completed\",\"response\":{\"output\":\(array)}}", into: &state)
         }

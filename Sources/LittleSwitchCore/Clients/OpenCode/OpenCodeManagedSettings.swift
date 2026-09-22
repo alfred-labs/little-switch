@@ -12,6 +12,9 @@ extension OpenCodeManagedSettings {
         guard !targets.isEmpty else {
             throw Error.noExposedModel
         }
+        guard Set(targets.map { CodexCatalog.slug(for: $0) }).count == targets.count else {
+            throw Error.ambiguousModelIdentifiers
+        }
         let defaultTarget =
             targets.first { $0.mapping == configuration.defaultModel }
             ?? targets.first { $0.mapping == codex.defaultModel }

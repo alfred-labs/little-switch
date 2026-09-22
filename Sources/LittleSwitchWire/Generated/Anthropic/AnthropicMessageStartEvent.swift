@@ -16,12 +16,12 @@
 public struct AnthropicMessageStartEvent: Sendable, WireCodable {
     public var message: JSONValue?
     public var type: AnthropicMessageStartEventType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         message: JSONValue?,
         type: AnthropicMessageStartEventType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.message = message
         self.type = type

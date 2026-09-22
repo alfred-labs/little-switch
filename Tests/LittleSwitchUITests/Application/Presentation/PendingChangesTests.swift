@@ -23,7 +23,7 @@ struct PendingChangesTests {
 
         model.hasPendingClaudeCodeChanges = true
         model.hasPendingOpenCodeChanges = true
-        model.webSearchDraft = WebSearchInput(configuration: WebSearchConfiguration())
+        model.webSearchDraft = WebSearchPendingSettings(configuration: WebSearchConfiguration())
         #expect(
             model.pendingChangeNames == [
                 L10n.string("Claude"), L10n.string("Claude Code"), L10n.string("Codex"), L10n.string("OpenCode"),
@@ -40,10 +40,7 @@ struct PendingChangesTests {
 
     @Test("A snapshot carries the web search draft into the model")
     func snapshotCarriesDraft() {
-        let draft = WebSearchInput(
-            configuration: WebSearchConfiguration(provider: .firecrawl),
-            credential: nil
-        )
+        let draft = WebSearchPendingSettings(configuration: WebSearchConfiguration(provider: .firecrawl))
         let model = AppModel(
             snapshot: CoordinatorSnapshot(
                 configuration: AppConfiguration(),
@@ -75,9 +72,9 @@ struct PendingChangesTests {
     @Test("A stored draft survives the pane and drops the typed credential")
     func draftRestoration() {
         let saved = WebSearchConfiguration(provider: .disabled)
-        let pending = WebSearchInput(
+        let pending = WebSearchPendingSettings(
             configuration: WebSearchConfiguration(provider: .firecrawl, resultsLimit: 7),
-            credential: "fc-typed"
+            hasTypedCredential: true
         )
 
         let restored = WebSearchDraft(configuration: saved, pending: pending)

@@ -10,12 +10,12 @@
 public struct AnthropicThinkingDelta: Sendable, WireCodable {
     public var thinking: String
     public var type: AnthropicThinkingDeltaType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         thinking: String,
         type: AnthropicThinkingDeltaType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.thinking = thinking
         self.type = type

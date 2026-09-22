@@ -28,13 +28,13 @@ public struct OpenAIChatCustomDelta: Sendable, WireCodable {
     public var input: String?
     public var name: JSONPresence<String>
     public var namespace: JSONPresence<String>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         input: String? = nil,
         name: JSONPresence<String> = .absent,
         namespace: JSONPresence<String> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.input = input
         self.name = name

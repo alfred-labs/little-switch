@@ -246,7 +246,7 @@ final class ResolverRecordingEstimator: GatewayTokenEstimating, @unchecked Senda
         return result
     }
 
-    func estimate(root: [String: JSONValue]) throws -> Int {
+    func estimate(root: JSONObject) throws -> Int {
         _ = root
         lock.lock()
         calls += 1

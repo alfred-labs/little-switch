@@ -1,6 +1,7 @@
 public struct OpenCodeManagedSettings: Codable, Equatable, Sendable {
     public enum Error: Swift.Error, Equatable {
         case noExposedModel
+        case ambiguousModelIdentifiers
     }
 
     public static let providerID = "little-switch"

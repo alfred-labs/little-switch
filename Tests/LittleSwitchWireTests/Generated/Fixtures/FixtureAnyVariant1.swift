@@ -9,11 +9,11 @@ import LittleSwitchWire
 
 public struct FixtureAnyVariant1: Sendable, WireCodable {
     public var left: String
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         left: String,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.left = left
         self.additionalFields = additionalFields

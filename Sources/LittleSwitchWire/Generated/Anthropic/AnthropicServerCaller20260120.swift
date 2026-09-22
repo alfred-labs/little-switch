@@ -8,12 +8,12 @@
 public struct AnthropicServerCaller20260120: Sendable, WireCodable {
     public var toolId: String
     public var type: AnthropicServerCaller20260120Type
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         toolId: String,
         type: AnthropicServerCaller20260120Type,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.toolId = toolId
         self.type = type

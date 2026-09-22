@@ -13,13 +13,13 @@ public struct OpenAIResponsesRequestEnvelope: Sendable, WireCodable {
     public var input: JSONPresence<JSONValue>
     public var toolChoice: JSONPresence<JSONValue>
     public var tools: JSONPresence<JSONValue>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         input: JSONPresence<JSONValue> = .absent,
         toolChoice: JSONPresence<JSONValue> = .absent,
         tools: JSONPresence<JSONValue> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.input = input
         self.toolChoice = toolChoice

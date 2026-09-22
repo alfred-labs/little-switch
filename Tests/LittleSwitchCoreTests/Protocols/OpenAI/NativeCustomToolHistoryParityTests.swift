@@ -5,13 +5,23 @@ import Testing
 
 @Suite("Native custom tool history parity")
 struct NativeCustomToolHistoryParityTests {
-    @Test("Native custom exchanges retain their structured call and result without rewriting unrelated bytes")
-    func plainCustomHistory() throws {
-        let body = try chatJSONData([
+    @Test(
+        "Native custom image exchanges preserve their history and receive an explicit budget", arguments: [false, true])
+    func plainCustomHistory(declaredBudget: Bool) throws {
+        var request: [String: Any] = [
             "model": "client", "input": history,
             "tools": [["type": "custom", "name": "patch"]],
-        ])
-        #expect(try OpenAIResponsesNativeNamespacing.normalize(body).body == body)
+        ]
+        if declaredBudget { request["max_output_tokens"] = 512 }
+        let body = try chatJSONData(request)
+        let normalized = try OpenAIResponsesNativeNamespacing.normalize(body)
+        let expected: [String: Any] = [
+            "model": "client", "input": history,
+            "tools": [["type": "custom", "name": "patch"]],
+            "max_output_tokens": declaredBudget ? 512 : 32_768,
+        ]
+        #expect(try chatJSONObject(normalized.body) as NSDictionary == expected as NSDictionary)
+        if declaredBudget { #expect(normalized.body == body) }
     }
 
     @Test("Namespaced custom history uses a collision-safe current binding while preserving the result payload")

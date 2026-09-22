@@ -16,12 +16,17 @@ public struct WebSearchInput: Equatable, Sendable {
 }
 
 extension WebSearchInput {
+    var pendingSettings: WebSearchPendingSettings {
+        WebSearchPendingSettings(
+            configuration: configuration,
+            hasTypedCredential: !(credential?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "").isEmpty
+        )
+    }
+
     /// True when the draft would write nothing: the same configuration and no
     /// new credential typed. Apply stays disabled in that case, the way the
     /// application panes already behave.
     public func matches(_ saved: WebSearchConfiguration) -> Bool {
-        let trimmed = credential?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let hasNewCredential = !(trimmed ?? "").isEmpty
-        return !hasNewCredential && configuration == saved
+        pendingSettings.matches(saved)
     }
 }

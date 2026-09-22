@@ -66,7 +66,7 @@ struct FailingGatewayTokenEstimator: GatewayTokenEstimating {
         throw GatewayTestError.failure
     }
 
-    func estimate(root: [String: JSONValue]) throws -> Int {
+    func estimate(root: JSONObject) throws -> Int {
         _ = root
         throw GatewayTestError.failure
     }

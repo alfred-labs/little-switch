@@ -91,17 +91,12 @@ struct MenuClaudeTabView: View {
                 MenuModelStepper(
                     name: route.displayName,
                     options: routeOptions,
-                    selection: Binding<MenuModelOption?>(
-                        get: {
-                            routeOptions.first { $0.id == model.optionID(for: route.id) }
-                                ?? routeOptions.first { $0.mapping == nil }
-                        },
-                        set: { option in
-                            Task { await onMapping(route.id, option?.mapping) }
-                        }
-                    ),
+                    selection: routeOptions.first { $0.id == model.optionID(for: route.id) }
+                        ?? routeOptions.first { $0.mapping == nil },
                     width: MenuTabContentLayout.mappingPickerWidth
-                )
+                ) { option in
+                    await onMapping(route.id, option.mapping)
+                }
             }
         }
     }

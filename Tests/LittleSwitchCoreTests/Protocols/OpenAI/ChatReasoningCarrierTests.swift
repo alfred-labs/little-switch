@@ -8,7 +8,7 @@ import Testing
 struct ChatReasoningCarrierTests {
     @Test("Absent and null fields do not invent a reasoning item")
     func absentFields() throws {
-        let message: [String: JSONValue] = [
+        let message: JSONObject = [
             "content": .string("Visible"), "reasoning": .null, "reasoning_content": .null,
         ]
         let fields = try ResponsesChatCompletionsReasoning.wireFields(in: message)

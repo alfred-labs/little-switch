@@ -8,11 +8,11 @@
 
 public struct AnthropicRoutingRequest: Sendable, WireCodable {
     public var model: String
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         model: String,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.model = model
         self.additionalFields = additionalFields

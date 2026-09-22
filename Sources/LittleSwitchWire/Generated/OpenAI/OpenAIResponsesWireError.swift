@@ -28,12 +28,12 @@
 public struct OpenAIResponsesWireError: Sendable, WireCodable {
     public var code: OpenWireValue<OpenAIResponsesWireErrorCode>
     public var message: String
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         code: OpenWireValue<OpenAIResponsesWireErrorCode>,
         message: String,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.code = code
         self.message = message

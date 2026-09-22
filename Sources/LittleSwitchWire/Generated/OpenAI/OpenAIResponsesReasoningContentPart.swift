@@ -8,12 +8,12 @@
 public struct OpenAIResponsesReasoningContentPart: Sendable, WireCodable {
     public var text: String
     public var type: OpenAIResponsesReasoningContentPartType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         text: String,
         type: OpenAIResponsesReasoningContentPartType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.text = text
         self.type = type

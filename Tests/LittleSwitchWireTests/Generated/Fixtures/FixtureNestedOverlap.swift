@@ -9,11 +9,11 @@ import LittleSwitchWire
 
 public struct FixtureNestedOverlap: Sendable, WireCodable {
     public var choice: FixtureNestedOverlapChoice
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         choice: FixtureNestedOverlapChoice,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.choice = choice
         self.additionalFields = additionalFields

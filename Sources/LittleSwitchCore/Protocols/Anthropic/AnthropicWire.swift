@@ -3,17 +3,16 @@ import LittleSwitchWire
 
 /// Exact JSON values used for explicit, unconsumed Anthropic subtrees.
 /// Known message, block, delta and usage shapes use their generated codecs.
-func anthropicJSON(_ object: [String: JSONValue]) -> JSONValue {
-    .object(.init(uniqueKeysWithValues: object.sorted { $0.key < $1.key }))
+func anthropicJSON(_ object: JSONObject) -> JSONValue {
+    .object(.init(uniqueKeysWithValues: object.sorted { $0.key.utf8.lexicographicallyPrecedes($1.key.utf8) }))
 }
 
 extension JSONValue {
-    var anthropicObject: [String: JSONValue]? {
-        guard let object else { return nil }
-        return Dictionary(uniqueKeysWithValues: object.map { ($0.key, $0.value) })
+    var anthropicObject: JSONObject? {
+        object
     }
 
-    var anthropicObjects: [[String: JSONValue]]? {
+    var anthropicObjects: [JSONObject]? {
         guard let array else { return nil }
         let objects = array.compactMap(\.anthropicObject)
         return objects.count == array.count ? objects : nil

@@ -10,12 +10,12 @@
 public struct AnthropicCitationsDelta: Sendable, WireCodable {
     public var citation: JSONPresence<JSONValue>
     public var type: AnthropicCitationsDeltaType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         citation: JSONPresence<JSONValue> = .absent,
         type: AnthropicCitationsDeltaType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.citation = citation
         self.type = type

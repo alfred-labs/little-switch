@@ -90,7 +90,7 @@ extension JSONValue: Codable {
 
   public init(from decoder: Decoder) throws {
     if let keyed = try? decoder.container(keyedBy: AnyKey.self) {
-      var dictionary = OrderedDictionary<String, Self>()
+      var dictionary = JSONObject()
       dictionary.reserveCapacity(keyed.allKeys.count)
       for key in keyed.allKeys {
         dictionary[key.stringValue] = try keyed.decode(Self.self, forKey: key)

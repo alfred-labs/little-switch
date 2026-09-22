@@ -10,12 +10,12 @@
 public struct AnthropicInputJSONDelta: Sendable, WireCodable {
     public var partialJson: String
     public var type: AnthropicInputJSONDeltaType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         partialJson: String,
         type: AnthropicInputJSONDeltaType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.partialJson = partialJson
         self.type = type

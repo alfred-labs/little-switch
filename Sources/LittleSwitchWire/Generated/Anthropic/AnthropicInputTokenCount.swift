@@ -8,11 +8,11 @@
 
 public struct AnthropicInputTokenCount: Sendable, WireCodable {
     public var inputTokens: JSONNumber
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         inputTokens: JSONNumber,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.inputTokens = inputTokens
         self.additionalFields = additionalFields

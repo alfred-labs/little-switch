@@ -6,7 +6,7 @@ extension OpenAIResponsesChatCompletions {
     /// absent versus null while Core supplies the adapter's existing defaults.
     static func responseEcho(
         _ prepared: PreparedResponsesChatCompletionsRequest
-    ) throws -> [String: JSONValue] {
+    ) throws -> JSONObject {
         let source: OpenAIResponsesRequestEcho
         do {
             source = try WireCodec.decode(OpenAIResponsesRequestEcho.self, from: prepared.originalBody).value

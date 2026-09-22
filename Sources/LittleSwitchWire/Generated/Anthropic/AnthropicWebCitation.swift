@@ -29,7 +29,7 @@ public struct AnthropicWebCitation: Sendable, WireCodable {
     public var title: String?
     public var type: AnthropicWebCitationType
     public var url: String
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         citedText: String,
@@ -37,7 +37,7 @@ public struct AnthropicWebCitation: Sendable, WireCodable {
         title: String?,
         type: AnthropicWebCitationType,
         url: String,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.citedText = citedText
         self.encryptedIndex = encryptedIndex

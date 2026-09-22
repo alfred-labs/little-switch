@@ -49,7 +49,7 @@ struct OpenCodeModelCapabilitiesTests {
         let providers = try #require(root["provider"] as? [String: Any])
         let entry = try #require(providers["little-switch"] as? [String: Any])
         let models = try #require(entry["models"] as? [String: Any])
-        let model = try #require(models["local/model"] as? NSDictionary)
+        let model = try #require(models["local:model"] as? NSDictionary)
         let expected: NSDictionary = [
             "name": "Local/model",
             "modalities": ["input": input, "output": ["text"]],

@@ -19,14 +19,14 @@ public struct AnthropicIncomingServerToolUseBlock: Sendable, WireCodable {
     public var input: JSONValue?
     public var name: OpenWireValue<AnthropicIncomingServerToolName>
     public var type: AnthropicIncomingServerToolUseBlockType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         id: String,
         input: JSONValue?,
         name: OpenWireValue<AnthropicIncomingServerToolName>,
         type: AnthropicIncomingServerToolUseBlockType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.id = id
         self.input = input

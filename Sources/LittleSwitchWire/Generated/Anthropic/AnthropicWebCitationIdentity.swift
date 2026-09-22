@@ -12,11 +12,11 @@
 
 public struct AnthropicWebCitationIdentity: Sendable, WireCodable {
     public var type: AnthropicWebCitationIdentityType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         type: AnthropicWebCitationIdentityType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.type = type
         self.additionalFields = additionalFields

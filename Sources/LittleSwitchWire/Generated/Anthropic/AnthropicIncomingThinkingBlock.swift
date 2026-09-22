@@ -18,13 +18,13 @@ public struct AnthropicIncomingThinkingBlock: Sendable, WireCodable {
     public var signature: String?
     public var thinking: String
     public var type: AnthropicIncomingThinkingBlockType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         signature: String? = nil,
         thinking: String,
         type: AnthropicIncomingThinkingBlockType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.signature = signature
         self.thinking = thinking

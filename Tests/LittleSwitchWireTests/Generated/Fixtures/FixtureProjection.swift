@@ -11,12 +11,12 @@ import LittleSwitchWire
 public struct FixtureProjection: Sendable, WireCodable {
     public var kept: String
     public var type: FixtureProjectionType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         kept: String,
         type: FixtureProjectionType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.kept = kept
         self.type = type

@@ -85,7 +85,8 @@ public actor ApplicationCoordinator {
     package var pendingOpenCodeSettings: OpenCodeSettingsDraft?
     /// Web search edits waiting for Apply. The other panes keep their drafts
     /// here too, so leaving a section no longer decides whether work survives.
-    package var pendingWebSearchSettings: WebSearchInput?
+    package var pendingWebSearchSettings: WebSearchPendingSettings?
+    package var webSearchDraftRevision: UInt64 = 0
     package var appliedOpenCodeSettings: OpenCodeManagedSettings?
     package var openCodeStatus: OpenCodeConnectionStatus = .disconnected
 
@@ -278,6 +279,7 @@ public actor ApplicationCoordinator {
             openCodeStatus: openCodeStatus,
             hasPendingOpenCodeChanges: hasPendingOpenCodeChanges,
             webSearchDraft: pendingWebSearchSettings,
+            webSearchDraftRevision: webSearchDraftRevision,
             monitoringDraft: pendingMonitoringSettings,
             monitoringStatus: monitoringStatus,
             monitoringApplying: monitoringApplyInProgress,

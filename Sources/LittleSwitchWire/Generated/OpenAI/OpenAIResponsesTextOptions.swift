@@ -9,11 +9,11 @@
 
 public struct OpenAIResponsesTextOptions: Sendable, WireCodable {
     public var format: JSONPresence<JSONValue>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         format: JSONPresence<JSONValue> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.format = format
         self.additionalFields = additionalFields

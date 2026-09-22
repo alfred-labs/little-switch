@@ -9,11 +9,11 @@ import LittleSwitchWire
 
 public struct FixtureBooleanArray: Sendable, WireCodable {
     public var flags: [FixtureBooleanArrayFlagsItem]
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         flags: [FixtureBooleanArrayFlagsItem],
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.flags = flags
         self.additionalFields = additionalFields

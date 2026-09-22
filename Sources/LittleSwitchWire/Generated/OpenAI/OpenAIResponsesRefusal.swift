@@ -68,12 +68,12 @@
 public struct OpenAIResponsesRefusal: Sendable, WireCodable {
     public var refusal: String
     public var type: OpenAIResponsesRefusalType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         refusal: String,
         type: OpenAIResponsesRefusalType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.refusal = refusal
         self.type = type

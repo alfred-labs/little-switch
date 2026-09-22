@@ -37,7 +37,7 @@ public struct OpenAIResponsesRequestEcho: Sendable, WireCodable {
     public var topP: JSONPresence<JSONValue>
     public var truncation: JSONPresence<JSONValue>
     public var user: JSONPresence<JSONValue>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         instructions: JSONPresence<JSONValue> = .absent,
@@ -55,7 +55,7 @@ public struct OpenAIResponsesRequestEcho: Sendable, WireCodable {
         topP: JSONPresence<JSONValue> = .absent,
         truncation: JSONPresence<JSONValue> = .absent,
         user: JSONPresence<JSONValue> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.instructions = instructions
         self.maxOutputTokens = maxOutputTokens

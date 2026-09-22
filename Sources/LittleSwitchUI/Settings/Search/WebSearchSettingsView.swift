@@ -4,13 +4,13 @@ import SwiftUI
 struct WebSearchSettingsView: View {
     @Bindable var model: AppModel
     let onSave: @MainActor (WebSearchInput) async -> Bool
-    let onDraft: @MainActor (WebSearchInput?) async -> Void
+    let onDraft: @MainActor (WebSearchPendingSettings?) -> Void
     @State private var draft: WebSearchDraft
 
     init(
         model: AppModel,
         onSave: @escaping @MainActor (WebSearchInput) async -> Bool,
-        onDraft: @escaping @MainActor (WebSearchInput?) async -> Void
+        onDraft: @escaping @MainActor (WebSearchPendingSettings?) -> Void
     ) {
         self.model = model
         self.onSave = onSave
@@ -30,7 +30,11 @@ struct WebSearchSettingsView: View {
                     WebSearchProviderPicker(
                         selection: Binding(
                             get: { draft.provider },
-                            set: { draft.select(provider: $0) }
+                            set: { provider in
+                                var updated = draft
+                                updated.select(provider: provider)
+                                updateDraft(updated)
+                            }
                         )
                     )
                     .disabled(model.isBusy)
@@ -42,7 +46,7 @@ struct WebSearchSettingsView: View {
                         LabeledContent(L10n.string("API key")) {
                             SecureField(
                                 L10n.resource("API key"),
-                                text: $draft.credential,
+                                text: draftBinding.credential,
                                 prompt: Text(draft.credentialPresentation.placeholder)
                             )
                             .labelsHidden()
@@ -58,7 +62,7 @@ struct WebSearchSettingsView: View {
                 }
                 SettingsSection(L10n.resource("Usage limits")) {
                     SettingsCard {
-                        Stepper(value: $draft.resultsLimit, in: draft.resultsRange) {
+                        Stepper(value: draftBinding.resultsLimit, in: draft.resultsRange) {
                             usageLabel(
                                 L10n.resource("Results per search"),
                                 detail: L10n.resource(
@@ -67,7 +71,7 @@ struct WebSearchSettingsView: View {
                                 value: draft.resultsLimit)
                         }
                         .padding(.vertical, 6)
-                        Stepper(value: $draft.maximumUses, in: WebSearchDraft.maximumUsesRange) {
+                        Stepper(value: draftBinding.maximumUses, in: WebSearchDraft.maximumUsesRange) {
                             usageLabel(
                                 L10n.resource("Maximum searches"),
                                 detail: maximumSearchesDetail,
@@ -102,13 +106,26 @@ struct WebSearchSettingsView: View {
                 .accessibilityHint(L10n.string("Apply web search settings"))
             }
         }
-        .onChange(of: model.configuration.webSearch) { _, configuration in
-            draft = WebSearchDraft(configuration: configuration, pending: model.webSearchDraft)
+        .onChange(of: model.configuration.webSearch) { previous, applied in
+            var updated = draft
+            updated.rebase(on: applied, replacing: previous)
+            updateDraft(updated)
         }
         .onDisappear {
-            let input = draft.input
-            Task { await onDraft(input) }
+            var cleared = draft
+            cleared.credential = ""
+            updateDraft(cleared)
         }
+    }
+
+    private var draftBinding: Binding<WebSearchDraft> {
+        Binding(get: { draft }, set: updateDraft)
+    }
+
+    private func updateDraft(_ value: WebSearchDraft) {
+        draft = value
+        let pending = value.pending.matches(model.configuration.webSearch) ? nil : value.pending
+        onDraft(pending)
     }
 
     private var hasPendingChanges: Bool {
@@ -123,7 +140,7 @@ struct WebSearchSettingsView: View {
         let input = draft.input
         Task {
             if await onSave(input) {
-                draft = WebSearchDraft(configuration: model.configuration.webSearch)
+                updateDraft(WebSearchDraft(configuration: model.configuration.webSearch))
             }
         }
     }

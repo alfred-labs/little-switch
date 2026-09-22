@@ -31,7 +31,7 @@ public struct OpenAIResponsesWireUsage: Sendable, WireCodable {
     public var outputTokens: JSONNumber?
     public var outputTokensDetails: JSONPresence<OpenAIResponsesOutputTokenDetails>
     public var totalTokens: JSONNumber?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         inputTokens: JSONNumber? = nil,
@@ -39,7 +39,7 @@ public struct OpenAIResponsesWireUsage: Sendable, WireCodable {
         outputTokens: JSONNumber? = nil,
         outputTokensDetails: JSONPresence<OpenAIResponsesOutputTokenDetails> = .absent,
         totalTokens: JSONNumber? = nil,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.inputTokens = inputTokens
         self.inputTokensDetails = inputTokensDetails

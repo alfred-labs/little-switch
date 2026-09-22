@@ -32,7 +32,7 @@ struct OpenCodeImageObservationPublicationTests {
         #expect(fixture.store.configuration.providers[0].imageInputObservations == [observation])
         let applied = try await fixture.coordinator.applyOpenCode()
         #expect(!applied.hasPendingOpenCodeChanges)
-        #expect(fixture.profile.activations.last?.provider.models["alpha/applied"]?.modalities?.input == ["text"])
+        #expect(fixture.profile.activations.last?.provider.models["alpha:applied"]?.modalities?.input == ["text"])
         #expect(fixture.codexController.quitCount == 0)
         #expect(fixture.claudeController.quitCount == 0)
         await fixture.coordinator.shutdown(mode: .handoff)

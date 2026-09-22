@@ -99,11 +99,8 @@ public struct DiskOpenCodeProfileFileStore: OpenCodeProfileFileStore {
             data,
             to: url,
             backupDirectory: backupDirectory,
-            backupLimit: 0
-        )
-        try FileManager.default.setAttributes(
-            [.posixPermissions: permissions],
-            ofItemAtPath: url.path
+            backupLimit: 0,
+            permissions: permissions
         )
     }
 
@@ -141,6 +138,9 @@ public struct OpenCodeProfileManager: Sendable {
         var backupFilename: String?
         var originalPermissions: Int?
         var managed: OpenCodeManagedSettings
+        // An interrupted replacement may leave either signature in settings.
+        // Retain both until the settings and final journal are published.
+        var previousManaged: [OpenCodeManagedSettings]?
     }
 
     private struct Snapshot {
@@ -230,10 +230,10 @@ public struct OpenCodeProfileManager: Sendable {
         if current == (try OpenCodeSettingsDocument.activating(original, managed: journal.managed)) {
             restored = original
         } else {
-            restored = try OpenCodeSettingsDocument.restoring(
+            restored = try restoringManagedValues(
                 current: current,
                 original: original,
-                managed: journal.managed
+                signatures: managedSignatures(for: journal)
             )
         }
         let restoredPermissions =
@@ -260,6 +260,9 @@ public struct OpenCodeProfileManager: Sendable {
             return .inactive
         }
         _ = try originalData(for: journal)
+        if journal.previousManaged?.isEmpty == false {
+            return .drifted
+        }
         if let expected, expected.mcp != journal.managed.mcp {
             return .drifted
         }
@@ -310,6 +313,24 @@ public struct OpenCodeProfileManager: Sendable {
         return data
     }
 
+    private func managedSignatures(for journal: Journal) -> [OpenCodeManagedSettings] {
+        ((journal.previousManaged ?? []) + [journal.managed]).reduce(into: []) { signatures, managed in
+            if !signatures.contains(managed) {
+                signatures.append(managed)
+            }
+        }
+    }
+
+    private func restoringManagedValues(
+        current: Data?,
+        original: Data?,
+        signatures: [OpenCodeManagedSettings]
+    ) throws -> Data? {
+        try signatures.reduce(current) { restored, managed in
+            try OpenCodeSettingsDocument.restoring(current: restored, original: original, managed: managed)
+        }
+    }
+
     private func backupURL(for journal: Journal) throws -> URL {
         guard let filename = journal.backupFilename,
             !filename.isEmpty,
@@ -346,7 +367,11 @@ public struct OpenCodeProfileManager: Sendable {
         }
     }
 
-    private func transaction(urls: [URL], operation: () throws -> Void) throws {
+    private func transaction(
+        urls: [URL],
+        preparingRollback: () throws -> Void = {},
+        operation: () throws -> Void
+    ) throws {
         let snapshots = try urls.map { url in
             Snapshot(
                 url: url,
@@ -358,6 +383,7 @@ public struct OpenCodeProfileManager: Sendable {
             try operation()
         } catch {
             do {
+                try preparingRollback()
                 for snapshot in snapshots.reversed() {
                     if let data = snapshot.data {
                         try fileStore.write(
@@ -396,10 +422,11 @@ extension OpenCodeProfileManager {
     ) throws {
         var journal = existing
         let original = try originalData(for: journal)
-        let restored = try OpenCodeSettingsDocument.restoring(
+        let ownedManaged = managedSignatures(for: journal)
+        let restored = try restoringManagedValues(
             current: current,
             original: original,
-            managed: journal.managed
+            signatures: ownedManaged
         )
         let activated = try OpenCodeSettingsDocument.activating(restored, managed: managed)
         var recoveryBackup: (url: URL, data: Data)?
@@ -415,21 +442,38 @@ extension OpenCodeProfileManager {
             }
             journal.originalPermissions = journal.originalPermissions ?? currentPermissions
         }
+        journal.previousManaged = ownedManaged.filter { $0 != managed }
         journal.managed = managed
-        let journalData = try encode(journal)
+        let transitionJournalData = try encode(journal)
+        journal.previousManaged = nil
+        let finalJournalData = try encode(journal)
         var transactionURLs = [paths.restoreState, paths.settings]
         if let recoveryBackup {
             transactionURLs.insert(recoveryBackup.url, at: 0)
         }
 
-        try transaction(urls: transactionURLs) {
-            if let recoveryBackup {
-                try fileStore.write(recoveryBackup.data, to: recoveryBackup.url, permissions: Self.privatePermissions)
+        var mayHavePublishedFinalJournal = false
+        try transaction(
+            urls: transactionURLs,
+            preparingRollback: {
+                guard mayHavePublishedFinalJournal else { return }
+                // Restoring settings can revive an older signature. Publish ownership
+                // of both versions before that write, and stop if this preparation fails.
+                // The recovery backup stays in place until the old journal is restored.
+                try fileStore.write(transitionJournalData, to: paths.restoreState, permissions: Self.privatePermissions)
+            },
+            operation: {
+                if let recoveryBackup {
+                    try fileStore.write(
+                        recoveryBackup.data, to: recoveryBackup.url, permissions: Self.privatePermissions)
+                }
+                try fileStore.write(transitionJournalData, to: paths.restoreState, permissions: Self.privatePermissions)
+                try fileStore.write(activated, to: paths.settings, permissions: Self.privatePermissions)
+                mayHavePublishedFinalJournal = true
+                try fileStore.write(finalJournalData, to: paths.restoreState, permissions: Self.privatePermissions)
+                try committing()
             }
-            try fileStore.write(journalData, to: paths.restoreState, permissions: Self.privatePermissions)
-            try fileStore.write(activated, to: paths.settings, permissions: Self.privatePermissions)
-            try committing()
-        }
+        )
         if let recoveryBackup {
             try? pruneBackups(protected: recoveryBackup.url)
         }

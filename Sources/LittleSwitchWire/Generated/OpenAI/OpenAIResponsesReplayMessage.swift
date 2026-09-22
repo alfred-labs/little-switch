@@ -11,13 +11,13 @@ public struct OpenAIResponsesReplayMessage: Sendable, WireCodable {
     public var content: [JSONValue]
     public var role: OpenAIResponsesReplayMessageRole
     public var type: OpenAIResponsesReplayMessageType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         content: [JSONValue],
         role: OpenAIResponsesReplayMessageRole,
         type: OpenAIResponsesReplayMessageType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.content = content
         self.role = role

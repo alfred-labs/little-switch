@@ -52,8 +52,8 @@ func responsesWireTerminal(_ status: OpenAIResponsesStatus?) throws -> Responses
     }
 }
 
-func responsesWireJSON(_ fields: [String: JSONValue]) -> JSONValue {
-    .object(.init(uniqueKeysWithValues: fields.sorted { $0.key < $1.key }))
+func responsesWireJSON(_ fields: JSONObject) -> JSONValue {
+    .object(.init(uniqueKeysWithValues: fields.sorted { $0.key.utf8.lexicographicallyPrecedes($1.key.utf8) }))
 }
 
 func nonemptyResponsesString(_ value: JSONValue?) -> String? {

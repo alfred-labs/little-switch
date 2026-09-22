@@ -21,11 +21,11 @@ package enum PortableToolHistory {
         "tool_search_tool_result",
     ]
 
-    package static func anthropic(_ root: [String: JSONValue]) throws -> [String: JSONValue] {
+    package static func anthropic(_ root: JSONObject) throws -> JSONObject {
         guard let messages = root[AnthropicCountTokensProjection.Key.messages.rawValue]?.anthropicObjects else {
             return root
         }
-        let blocks = messages.flatMap { message -> [[String: JSONValue]] in
+        let blocks = messages.flatMap { message -> [JSONObject] in
             (message[AnthropicMessageParam.Key.content.rawValue]?.array ?? []).compactMap(\.anthropicObject)
         }
         let calls = try serverCalls(in: blocks)
@@ -53,7 +53,7 @@ package enum PortableToolHistory {
     }
 
     private static func serverCalls(
-        in blocks: [[String: JSONValue]]
+        in blocks: [JSONObject]
     ) throws -> [String: HistoricalServerToolCall] {
         var calls: [String: HistoricalServerToolCall] = [:]
         let clientBlocks = blocks.filter {
@@ -78,7 +78,7 @@ package enum PortableToolHistory {
     }
 
     private static func validateResults(
-        in blocks: [[String: JSONValue]],
+        in blocks: [JSONObject],
         calls: [String: HistoricalServerToolCall]
     ) throws {
         var completed: Set<String> = []
@@ -103,9 +103,9 @@ package enum PortableToolHistory {
     }
 
     private static func projectedBlock(
-        _ block: [String: JSONValue],
+        _ block: JSONObject,
         calls: [String: HistoricalServerToolCall]
-    ) throws -> [String: JSONValue] {
+    ) throws -> JSONObject {
         let type = block[AnthropicToolUseParam.Key.type.rawValue]?.string
         if type == AnthropicServerToolUseParamType.serverToolUse.rawValue {
             if let id = block[AnthropicServerToolUseParam.Key.id.rawValue]?.string, let call = calls[id] {
@@ -147,7 +147,7 @@ package enum PortableToolHistory {
         return content.joined(separator: "\n")
     }
 
-    private static func isServerResult(_ block: [String: JSONValue]) -> Bool {
+    private static func isServerResult(_ block: JSONObject) -> Bool {
         guard let type = block[AnthropicToolUseParam.Key.type.rawValue]?.string else {
             return false
         }
@@ -161,11 +161,11 @@ package enum PortableToolHistory {
         return string
     }
 
-    private static func text(_ value: String) throws -> [String: JSONValue] {
+    private static func text(_ value: String) throws -> JSONObject {
         try WireObject(AnthropicTextParam(text: value, type: .text).wireJSON()).additionalFields(excluding: [])
     }
 
-    private static func jsonText(_ value: [String: JSONValue]) throws -> String {
+    private static func jsonText(_ value: JSONObject) throws -> String {
         let data = try anthropicJSON(value).serializedData()
         // The exact JSON codec emits UTF-8.
         // swiftlint:disable:next optional_data_string_conversion

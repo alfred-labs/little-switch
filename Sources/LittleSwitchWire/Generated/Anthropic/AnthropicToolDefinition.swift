@@ -11,14 +11,14 @@ public struct AnthropicToolDefinition: Sendable, WireCodable {
     public var inputSchema: AnthropicToolInputSchema
     public var name: String
     public var type: JSONPresence<AnthropicToolDefinitionType>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         description: String? = nil,
         inputSchema: AnthropicToolInputSchema,
         name: String,
         type: JSONPresence<AnthropicToolDefinitionType> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.description = description
         self.inputSchema = inputSchema

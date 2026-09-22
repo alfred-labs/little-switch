@@ -10,13 +10,13 @@ public struct AnthropicMessageMetadata: Sendable, WireCodable {
     public var model: String
     public var role: AnthropicMessageMetadataRole
     public var type: AnthropicMessageMetadataType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         model: String,
         role: AnthropicMessageMetadataRole,
         type: AnthropicMessageMetadataType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.model = model
         self.role = role

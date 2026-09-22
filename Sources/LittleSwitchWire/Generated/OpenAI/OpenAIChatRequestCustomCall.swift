@@ -18,13 +18,13 @@ public struct OpenAIChatRequestCustomCall: Sendable, WireCodable {
     public var custom: OpenAIChatRequestCustom
     public var id: String
     public var type: OpenAIChatRequestCustomCallType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         custom: OpenAIChatRequestCustom,
         id: String,
         type: OpenAIChatRequestCustomCallType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.custom = custom
         self.id = id

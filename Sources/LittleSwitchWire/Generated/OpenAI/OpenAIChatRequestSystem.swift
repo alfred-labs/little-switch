@@ -17,12 +17,12 @@
 public struct OpenAIChatRequestSystem: Sendable, WireCodable {
     public var content: JSONValue?
     public var role: OpenAIChatRequestSystemRole
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         content: JSONValue?,
         role: OpenAIChatRequestSystemRole,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.content = content
         self.role = role

@@ -14,7 +14,7 @@ public struct AnthropicSearchToolConfiguration: Sendable, WireCodable {
     public var name: AnthropicSearchToolConfigurationName
     public var type: AnthropicSearchToolConfigurationType
     public var userLocation: JSONPresence<AnthropicSearchUserLocation>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         allowedCallers: [AnthropicSearchAllowedCaller]? = nil,
@@ -24,7 +24,7 @@ public struct AnthropicSearchToolConfiguration: Sendable, WireCodable {
         name: AnthropicSearchToolConfigurationName,
         type: AnthropicSearchToolConfigurationType,
         userLocation: JSONPresence<AnthropicSearchUserLocation> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.allowedCallers = allowedCallers
         self.allowedDomains = allowedDomains

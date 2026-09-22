@@ -1,15 +1,16 @@
 /// Field operations used by generated codecs. Presence is defined by each schema field.
 public struct WireObject: Sendable {
-    private var fields: [String: JSONValue]
+    public static let emptyFields: JSONObject = [:]
+    private var fields: JSONObject
 
     public init(_ json: JSONValue) throws {
         guard case .object(let object) = json else {
             throw WireCodingError(.typeMismatch)
         }
-        fields = Dictionary(uniqueKeysWithValues: object.map { ($0.key, $0.value) })
+        fields = object
     }
 
-    public init(additionalFields: [String: JSONValue], knownKeys: [String]) throws {
+    public init(additionalFields: JSONObject, knownKeys: [String]) throws {
         if let collision = knownKeys.first(where: { additionalFields[$0] != nil }) {
             throw WireCodingError(.additionalFieldCollision, path: [collision])
         }
@@ -17,7 +18,7 @@ public struct WireObject: Sendable {
     }
 
     public var wireJSON: JSONValue {
-        .object(.init(uniqueKeysWithValues: fields.sorted { $0.key < $1.key }))
+        .object(.init(uniqueKeysWithValues: fields.sorted { $0.key.utf8.lexicographicallyPrecedes($1.key.utf8) }))
     }
 
     public func required<Value: WireCodable>(_ key: String) throws -> Value {
@@ -47,9 +48,8 @@ public struct WireObject: Sendable {
         return value.isNull ? .null : .value(try decode(value, key: key))
     }
 
-    public func additionalFields(excluding knownKeys: [String]) -> [String: JSONValue] {
-        let known = Set(knownKeys)
-        return fields.filter { !known.contains($0.key) }
+    public func additionalFields(excluding knownKeys: [String]) -> JSONObject {
+        fields.filter { field in !knownKeys.contains { $0.utf8.elementsEqual(field.key.utf8) } }
     }
 
     public mutating func set<Value: WireCodable>(_ value: Value, for key: String) throws {

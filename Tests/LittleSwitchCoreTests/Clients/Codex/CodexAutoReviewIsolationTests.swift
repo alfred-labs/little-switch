@@ -28,7 +28,7 @@ extension CodexAutoReviewTests {
         let models = try #require(root["models"] as? [[String: Any]])
         #expect(
             models.compactMap { $0["slug"] as? String } == [
-                "example/xlarge", "example/small", "gpt-native", "gpt-special", "codex-auto-review",
+                "example:xlarge", "example:small", "gpt-native", "gpt-special", "codex-auto-review",
                 "little-switch-auto-review",
             ])
         for (index, native) in nativeModels.enumerated() {

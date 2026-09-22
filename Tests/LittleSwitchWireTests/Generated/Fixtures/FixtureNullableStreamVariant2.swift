@@ -10,12 +10,12 @@ import LittleSwitchWire
 public struct FixtureNullableStreamVariant2: Sendable, WireCodable {
     public var model: String
     public var stream: FixtureNullableStreamVariant2Stream
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         model: String,
         stream: FixtureNullableStreamVariant2Stream,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.model = model
         self.stream = stream

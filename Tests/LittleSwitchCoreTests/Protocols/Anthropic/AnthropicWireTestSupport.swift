@@ -17,14 +17,14 @@ func anthropicTestJSON(_ value: Any) throws -> JSONValue {
     }
 }
 
-func anthropicTestObject(_ value: Any) throws -> [String: JSONValue] {
+func anthropicTestObject(_ value: Any) throws -> JSONObject {
     guard let object = try anthropicTestJSON(value).anthropicObject else {
         throw AnthropicWebSearch.Error.invalidMessage
     }
     return object
 }
 
-func anthropicFoundationObject(_ value: [String: JSONValue]) throws -> [String: Any] {
+func anthropicFoundationObject(_ value: JSONObject) throws -> [String: Any] {
     let data = try anthropicJSON(value).serializedData()
     guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
         throw AnthropicWebSearch.Error.invalidMessage

@@ -61,11 +61,11 @@ extension ContractEmitter {
         return """
             public struct \(name): Sendable, WireCodable {
             \(properties.joined(separator: "\n"))
-                public var additionalFields: [String: JSONValue]
+                public var additionalFields: JSONObject
 
                 public init(
             \(parameters.joined(separator: "\n"))
-                    additionalFields: [String: JSONValue] = [:]
+                    additionalFields: JSONObject = WireObject.emptyFields
                 ) {
             \(assignments.joined(separator: "\n"))
                     self.additionalFields = additionalFields

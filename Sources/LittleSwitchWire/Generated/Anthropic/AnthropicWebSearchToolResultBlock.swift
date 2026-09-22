@@ -28,14 +28,14 @@ public struct AnthropicWebSearchToolResultBlock: Sendable, WireCodable {
     public var content: AnthropicWebSearchContent
     public var toolUseId: String
     public var type: AnthropicWebSearchToolResultBlockType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         caller: JSONPresence<JSONValue> = .absent,
         content: AnthropicWebSearchContent,
         toolUseId: String,
         type: AnthropicWebSearchToolResultBlockType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.caller = caller
         self.content = content

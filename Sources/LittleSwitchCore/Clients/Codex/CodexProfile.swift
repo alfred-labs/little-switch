@@ -370,13 +370,20 @@ public struct CodexProfileManager: Sendable {
         configuration: CodexConfiguration,
         expected: CodexManagedProfileSignature
     ) throws -> CodexProfileStatus {
-        _ = providers
-        _ = configuration
-        return try status(expected: expected)
+        try status(
+            expected: expected,
+            legacyIdentifiers: expected.withLegacyModelIdentifiers(providers: providers, configuration: configuration))
     }
 
     public func status(
         expected: CodexManagedProfileSignature
+    ) throws -> CodexProfileStatus {
+        try status(expected: expected, legacyIdentifiers: nil)
+    }
+
+    private func status(
+        expected: CodexManagedProfileSignature,
+        legacyIdentifiers: CodexManagedProfileSignature?
     ) throws -> CodexProfileStatus {
         guard let configData = try fileStore.snapshot(paths.config),
             let catalogData = try fileStore.snapshot(paths.catalog),
@@ -391,29 +398,22 @@ public struct CodexProfileManager: Sendable {
         let provider = try CodexTOMLEditor.rootString("model_provider", in: configText)
         let openAIBaseURL = try CodexTOMLEditor.rootString("openai_base_url", in: configText)
         let catalog = try CodexTOMLEditor.rootString("model_catalog_json", in: configText)
-        let expectedCatalog = try CodexCatalog.mergedData(
-            managedData: expected.catalogData,
-            nativeCatalogData: state.nativeCatalogData
-        )
         guard profile == nil,
-            model == expected.modelSlug,
             provider == nil,
             openAIBaseURL == CodexTOMLEditor.baseURL,
             catalog == paths.catalog.path
         else {
             return .inactive
         }
-        let catalogSignature: CodexManagedProfileSignature
-        if catalogData == expectedCatalog {
-            catalogSignature = expected
-        } else {
-            let legacy = try expected.withLegacyAutoReview()
-            let legacyCatalog = try CodexCatalog.mergedData(
-                managedData: legacy.catalogData, nativeCatalogData: state.nativeCatalogData)
-            guard catalogData == legacyCatalog else {
-                return .inactive
-            }
-            catalogSignature = legacy
+        guard
+            let catalogSignature = try CodexProfileSignatureMatcher.matching(
+                modelSlug: model,
+                catalogData: catalogData,
+                nativeCatalogData: state.nativeCatalogData,
+                expected: expected,
+                legacyIdentifiers: legacyIdentifiers)
+        else {
+            return .inactive
         }
         return state.status(in: configText, expected: expected, catalogSignature: catalogSignature)
     }

@@ -22,7 +22,7 @@ public struct AnthropicCountTokensProjection: Sendable, WireCodable {
     public var thinking: JSONPresence<JSONValue>
     public var toolChoice: JSONPresence<JSONValue>
     public var tools: JSONPresence<JSONValue>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         cacheControl: JSONPresence<JSONValue> = .absent,
@@ -33,7 +33,7 @@ public struct AnthropicCountTokensProjection: Sendable, WireCodable {
         thinking: JSONPresence<JSONValue> = .absent,
         toolChoice: JSONPresence<JSONValue> = .absent,
         tools: JSONPresence<JSONValue> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.cacheControl = cacheControl
         self.messages = messages

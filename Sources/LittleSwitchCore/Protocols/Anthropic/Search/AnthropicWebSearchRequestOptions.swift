@@ -18,7 +18,7 @@ extension AnthropicWebSearch {
     /// Refusing the tool version cost it the whole conversation: a client
     /// that upgraded answered HTTP 400 on every turn that declared the newer
     /// tool, search or no search. Only a malformed list is still rejected.
-    static func requireBridgeableCallers(for tool: [String: JSONValue]) throws {
+    static func requireBridgeableCallers(for tool: JSONObject) throws {
         guard let rawCallers = tool[AnthropicSearchToolConfiguration.Key.allowedCallers.rawValue] else {
             return
         }
@@ -28,7 +28,7 @@ extension AnthropicWebSearch {
     }
 
     static func searchOptions(
-        from tool: [String: JSONValue]
+        from tool: JSONObject
     ) throws -> WebSearchFilterOptions {
         let hasAllowedDomains = tool[AnthropicSearchToolConfiguration.Key.allowedDomains.rawValue] != nil
         let hasBlockedDomains = tool[AnthropicSearchToolConfiguration.Key.blockedDomains.rawValue] != nil

@@ -31,13 +31,13 @@ public struct OpenAIChatCustomCall: Sendable, WireCodable {
     public var custom: OpenAIChatCustomInput
     public var id: String
     public var type: OpenAIChatCustomCallType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         custom: OpenAIChatCustomInput,
         id: String,
         type: OpenAIChatCustomCallType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.custom = custom
         self.id = id

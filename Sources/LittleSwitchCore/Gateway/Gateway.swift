@@ -14,7 +14,7 @@ package protocol GatewayAdmitting: Sendable {
 
 package protocol GatewayTokenEstimating: Sendable {
     func estimate(_ request: Data) throws -> Int
-    func estimate(root: [String: JSONValue]) throws -> Int
+    func estimate(root: JSONObject) throws -> Int
 }
 
 package protocol GatewayRoutingSnapshotCapturing: Sendable {
@@ -36,7 +36,7 @@ package struct LiveGatewayTokenEstimator: GatewayTokenEstimating {
         try TokenEstimator.estimate(request)
     }
 
-    package func estimate(root: [String: JSONValue]) throws -> Int {
+    package func estimate(root: JSONObject) throws -> Int {
         try TokenEstimator.estimate(root: root)
     }
 }
@@ -291,7 +291,7 @@ public struct GatewayResponder: HTTPResponder {
             return response
         }
         trafficRecorder.record(eventID: eventID, action: .claudeRequestBody(body))
-        let root: [String: JSONValue]
+        let root: JSONObject
         do {
             root = try WireObject(WireCodec.decode(JSONValue.self, from: body).value)
                 .additionalFields(excluding: [])

@@ -33,7 +33,7 @@ public struct OpenAIChatBufferedUsage: Sendable, WireCodable {
     public var promptTokens: JSONNumber?
     public var promptTokensDetails: JSONPresence<OpenAIChatBufferedPromptDetails>
     public var totalTokens: JSONPresence<JSONNumber>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         completionTokens: JSONNumber? = nil,
@@ -41,7 +41,7 @@ public struct OpenAIChatBufferedUsage: Sendable, WireCodable {
         promptTokens: JSONNumber? = nil,
         promptTokensDetails: JSONPresence<OpenAIChatBufferedPromptDetails> = .absent,
         totalTokens: JSONPresence<JSONNumber> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.completionTokens = completionTokens
         self.completionTokensDetails = completionTokensDetails

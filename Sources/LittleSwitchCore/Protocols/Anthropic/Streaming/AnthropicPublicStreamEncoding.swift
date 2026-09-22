@@ -48,7 +48,7 @@ func publicStreamFragment(_ data: Data?) throws -> JSONValue {
     try AnthropicWebSearch.fragmentObject(from: data)
 }
 
-func publicStreamObject(_ data: Data) throws -> [String: JSONValue] {
+func publicStreamObject(_ data: Data) throws -> JSONObject {
     try AnthropicWebSearch.object(from: data)
 }
 
@@ -56,7 +56,7 @@ func publicStreamData(_ value: JSONValue) throws -> Data {
     try value.serializedData()
 }
 
-func publicStreamData(_ value: [String: JSONValue]) throws -> Data {
+func publicStreamData(_ value: JSONObject) throws -> Data {
     try anthropicJSON(value).serializedData()
 }
 

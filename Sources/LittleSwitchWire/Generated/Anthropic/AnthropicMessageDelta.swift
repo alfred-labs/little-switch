@@ -16,12 +16,12 @@
 public struct AnthropicMessageDelta: Sendable, WireCodable {
     public var stopReason: JSONPresence<OpenWireValue<AnthropicDeltaStopReason>>
     public var stopSequence: JSONPresence<String>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         stopReason: JSONPresence<OpenWireValue<AnthropicDeltaStopReason>> = .absent,
         stopSequence: JSONPresence<String> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.stopReason = stopReason
         self.stopSequence = stopSequence

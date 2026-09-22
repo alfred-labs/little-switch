@@ -55,6 +55,23 @@ public struct CodexManagedProfileSignature: Equatable, Sendable {
         )
     }
 
+    package func withLegacyModelIdentifiers(
+        providers: [Provider], configuration: CodexConfiguration
+    ) throws -> CodexManagedProfileSignature? {
+        guard
+            let legacy = try CodexProfileLegacyIdentifiers.resolve(
+                modelSlug: modelSlug, catalogData: catalogData, providers: providers, configuration: configuration)
+        else {
+            return nil
+        }
+        return CodexManagedProfileSignature(
+            modelSlug: legacy.modelSlug,
+            catalogData: legacy.catalogData,
+            maximumConcurrentThreadsPerSession: maximumConcurrentThreadsPerSession,
+            webSearchMode: webSearchMode
+        )
+    }
+
     public func withoutManagedWebSearch() -> CodexManagedProfileSignature {
         CodexManagedProfileSignature(
             modelSlug: modelSlug,

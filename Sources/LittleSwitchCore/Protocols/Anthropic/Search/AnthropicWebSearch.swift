@@ -109,7 +109,7 @@ package enum AnthropicWebSearch {
         )
     }
 
-    private static func privateSearchTool(name: String) throws -> [String: JSONValue] {
+    private static func privateSearchTool(name: String) throws -> JSONObject {
         let tool = AnthropicToolDefinition(
             description:
                 "Search the web for current information. Use this to find up-to-date information about any topic.",
@@ -119,7 +119,7 @@ package enum AnthropicWebSearch {
         return try WireObject(tool.wireJSON()).additionalFields(excluding: [])
     }
 
-    static func object(from data: Data) throws -> [String: JSONValue] {
+    static func object(from data: Data) throws -> JSONObject {
         do {
             let document = try WireCodec.decode(JSONValue.self, from: data)
             guard let object = document.value.anthropicObject else { throw Error.invalidMessage }
@@ -127,7 +127,7 @@ package enum AnthropicWebSearch {
         } catch { throw Error.invalidMessage }
     }
 
-    static func data(from object: [String: JSONValue]) throws -> Data {
+    static func data(from object: JSONObject) throws -> Data {
         try anthropicJSON(object).serializedData()
     }
 
@@ -140,8 +140,8 @@ package enum AnthropicWebSearch {
         traces: [WebSearchTrace],
         finalTurn: AnthropicModelTurn,
         privateToolName: String? = toolName
-    ) throws -> [[String: JSONValue]] {
-        var content: [[String: JSONValue]] = []
+    ) throws -> [JSONObject] {
+        var content: [JSONObject] = []
         for trace in traces {
             let traceContent = try publicTraceContent(trace.publicContentJSON, privateToolName: privateToolName)
             content += traceContent.beforeSearch
@@ -175,11 +175,11 @@ package enum AnthropicWebSearch {
 
     private static func publicTraceContent(
         _ data: Data?, privateToolName: String?
-    ) throws -> (beforeSearch: [[String: JSONValue]], afterSearch: [[String: JSONValue]]) {
+    ) throws -> (beforeSearch: [JSONObject], afterSearch: [JSONObject]) {
         guard let data else { return ([], []) }
         guard let blocks = try fragmentObject(from: data).anthropicObjects else { throw Error.invalidMessage }
-        var beforeSearch: [[String: JSONValue]] = []
-        var afterSearch: [[String: JSONValue]] = []
+        var beforeSearch: [JSONObject] = []
+        var afterSearch: [JSONObject] = []
         var foundPrivateSearch = false
         for block in blocks {
             guard block[AnthropicToolUseBlock.Key.type.rawValue]?.string != nil else { throw Error.invalidMessage }

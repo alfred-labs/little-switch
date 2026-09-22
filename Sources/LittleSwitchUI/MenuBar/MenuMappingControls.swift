@@ -26,9 +26,12 @@ struct MenuMappingArrow: View {
 struct MenuModelStepper: View {
     let name: String
     let options: [MenuModelOption]
-    @Binding var selection: MenuModelOption?
+    let selection: MenuModelOption?
     let width: CGFloat
+    let onSelect: @MainActor (MenuModelOption) async -> Void
     @State private var steppedSelection: MenuModelOption?
+    @State private var selectionTask: Task<Void, Never>?
+    @State private var selectionID: UUID?
 
     private var current: MenuModelOption? { steppedSelection ?? selection }
 
@@ -55,7 +58,6 @@ struct MenuModelStepper: View {
         .help(current?.label ?? L10n.string("No model selected"))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(L10n.resource("Model for \(name)"))
-        .onChange(of: selection) { _, _ in steppedSelection = nil }
     }
 
     private func chevron(
@@ -75,7 +77,19 @@ struct MenuModelStepper: View {
     private func step(_ delta: Int) {
         if let option = MenuModelSelection.step(options: options, from: current, by: delta) {
             steppedSelection = option
-            selection = option
+            let id = UUID()
+            selectionID = id
+            let previousTask = selectionTask
+            selectionTask = Task {
+                // Preserve click order even when committing a selection suspends.
+                await previousTask?.value
+                await onSelect(option)
+                guard selectionID == id else { return }
+                // Success and rejection both settle on the authoritative value.
+                steppedSelection = nil
+                selectionTask = nil
+                selectionID = nil
+            }
         }
     }
 }

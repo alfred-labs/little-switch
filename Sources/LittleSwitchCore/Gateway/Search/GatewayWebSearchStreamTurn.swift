@@ -331,6 +331,6 @@ private func anthropicLiveBlockEvents(
     return events
 }
 
-private func anthropicLiveData(_ value: [String: JSONValue]) throws -> Data {
+private func anthropicLiveData(_ value: JSONObject) throws -> Data {
     try anthropicJSON(value).serializedData()
 }

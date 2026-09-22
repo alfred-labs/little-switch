@@ -100,6 +100,79 @@ struct CredentialScriptRunnerTests {
         }
     }
 
+    @Test("Oversized stdout fails instead of becoming a credential")
+    func oversizedStandardOutput() async throws {
+        let runner = ProcessCredentialScriptRunner(timeout: 5, killGrace: 0.1)
+        let script = try makeScriptFile("head -c 4194304 /dev/zero | tr '\\000' x")
+        defer { try? FileManager.default.removeItem(at: script) }
+
+        await #expect(throws: CredentialScriptError(reason: .outputTooLarge, standardError: "")) {
+            _ = try await runner.run(scriptPath: script.path)
+        }
+    }
+
+    @Test("Oversized output terminates even a script that ignores SIGTERM")
+    func oversizedOutputEscalates() async throws {
+        let runner = ProcessCredentialScriptRunner(timeout: 5, killGrace: 0.05)
+        let script = try makeScriptFile("trap '' TERM; head -c 65537 /dev/zero; while :; do :; done")
+        defer { try? FileManager.default.removeItem(at: script) }
+        let started = ContinuousClock.now
+
+        await #expect(throws: CredentialScriptError(reason: .outputTooLarge, standardError: "")) {
+            _ = try await runner.run(scriptPath: script.path)
+        }
+
+        #expect(ContinuousClock.now - started < .seconds(3))
+    }
+
+    @Test("A token at the stdout limit remains valid")
+    func maximumTokenSize() async throws {
+        let runner = ProcessCredentialScriptRunner()
+        let script = try makeScriptFile("head -c 65536 /dev/zero | tr '\\000' x")
+        defer { try? FileManager.default.removeItem(at: script) }
+
+        let run = try await runner.run(scriptPath: script.path)
+
+        #expect(run == CredentialScriptRun(token: String(repeating: "x", count: 65_536), standardError: ""))
+    }
+
+    @Test("Large stderr drains and preserves the diagnostic tail")
+    func oversizedStandardError() async throws {
+        let runner = ProcessCredentialScriptRunner()
+        let script = try makeScriptFile("head -c 4194304 /dev/zero | tr '\\000' x >&2; printf ' END' >&2; printf token")
+        defer { try? FileManager.default.removeItem(at: script) }
+
+        let run = try await runner.run(scriptPath: script.path)
+
+        #expect(
+            run == CredentialScriptRun(token: "token", standardError: "…" + String(repeating: "x", count: 476) + " END")
+        )
+        #expect(ProcessCredentialScriptRunner.boundedTail("tail", truncated: true) == "…tail")
+    }
+
+    @Test("Truncating stderr inside a UTF-8 scalar preserves the remaining diagnostic")
+    func partialUTF8Diagnostic() async throws {
+        let runner = ProcessCredentialScriptRunner()
+        let script = try makeScriptFile("printf '€%.0s' {1..1366} >&2; printf token")
+        defer { try? FileManager.default.removeItem(at: script) }
+
+        let run = try await runner.run(scriptPath: script.path)
+
+        #expect(run == CredentialScriptRun(token: "token", standardError: "…" + String(repeating: "€", count: 480)))
+    }
+
+    @Test("An already cancelled run never launches its script")
+    func preCancelledRun() async throws {
+        let script = try makeScriptFile("printf token")
+        defer { try? FileManager.default.removeItem(at: script) }
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await ProcessCredentialScriptRunner().run(scriptPath: script.path)
+        }
+
+        await #expect(throws: CancellationError.self) { _ = try await task.value }
+    }
+
     @Test("Empty or undecodable output produces no token")
     func emptyOutput() async throws {
         let runner = ProcessCredentialScriptRunner()
@@ -258,6 +331,11 @@ struct CredentialScriptRunnerTests {
             CredentialScriptError(reason: .emptyOutput, standardError: "")
                 .errorDescription
                 == CoreL10n.string("The credential script printed no token.")
+        )
+        #expect(
+            CredentialScriptError(reason: .outputTooLarge, standardError: "")
+                .errorDescription
+                == CoreL10n.string("The credential script output exceeded the 64 KiB limit.")
         )
         #expect(
             CredentialScriptError(reason: .timedOut, standardError: "")

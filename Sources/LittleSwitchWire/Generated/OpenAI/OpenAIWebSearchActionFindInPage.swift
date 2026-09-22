@@ -69,13 +69,13 @@ public struct OpenAIWebSearchActionFindInPage: Sendable, WireCodable {
     public var pattern: String?
     public var type: OpenAIWebSearchActionFindInPageType
     public var url: String?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         pattern: String? = nil,
         type: OpenAIWebSearchActionFindInPageType,
         url: String? = nil,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.pattern = pattern
         self.type = type

@@ -2,7 +2,7 @@
   "files" : [
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicAutomaticToolChoice.swift",
-      "sha256" : "b28d431a436307b6facefd2286463ba34321d221bc9b216ef206c2aef8745581"
+      "sha256" : "3c3304c6c3d03a7bc4befc9a4c9d40a654124683067db474a18b867a51ef64b0"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicAutomaticToolChoiceType.swift",
@@ -10,7 +10,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicBase64ImageSource.swift",
-      "sha256" : "42c00b0749b4c08ac3b99b66ef21687ab897364b386391d4b6b60070edfc6426"
+      "sha256" : "7bc2adb9982f14dbfd2c69741bafdacd93c95f0b33e2314bcf52194424feecbd"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicBase64ImageSourceType.swift",
@@ -18,7 +18,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicCacheCreation.swift",
-      "sha256" : "360abadd35e883d1e4126413203fe8cd5ea6262fa81ea1696e5cd916645c33a3"
+      "sha256" : "23c38490ffea031b9e405cd875cfdb0af818dc71f6c68df01a64b9d08ca0d3de"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicCaller.swift",
@@ -26,11 +26,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicCharCitation.swift",
-      "sha256" : "cdd57f2c6766356836999d7711bdeee7fe79feb72ee816f8a63c3e0eb3ed3b8c"
+      "sha256" : "d7428ad770bac487198d6dd898e386fa2bcf27556e111193fb9bde60e8891080"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicCharCitationIdentity.swift",
-      "sha256" : "6584abb567d2fe5b0ad34c2e4798a03b2895725f2716a56305c9d611d84028a8"
+      "sha256" : "036123ed79fefd1893725a902bf0544f348c2b9d218721714401436fb4eab293"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicCharCitationIdentityType.swift",
@@ -50,7 +50,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicCitationsDelta.swift",
-      "sha256" : "faadbeef40066c72505756a5a104eb1886125735260742d9fa5e9daeb960dcc9"
+      "sha256" : "c5a779e6a527a88dece24eed30b128c11a8ac2e736b5e06ea7105f1deda31b13"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicCitationsDeltaType.swift",
@@ -62,7 +62,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicContentBlockDeltaEvent.swift",
-      "sha256" : "4ceb8143b63f1755dd8551d30f7c40b89acb58848a7e593a17a016090ffc20b3"
+      "sha256" : "5ae5fc31370c542845fe6da6c79a91d637eb7ac14468c58008246f772a3e6dbb"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicContentBlockDeltaEventType.swift",
@@ -74,7 +74,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicContentBlockStartEvent.swift",
-      "sha256" : "822bfd8b2061f1516306f0e13cc94b4c894c3e09e7c30c46b8c86b75ec8032d8"
+      "sha256" : "c8664e7791cd490c4dae93fb45f1d98acb5936649aedb52a70cbd5ced15feb8d"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicContentBlockStartEventType.swift",
@@ -82,7 +82,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicContentBlockStopEvent.swift",
-      "sha256" : "619c256cf7c5b7bb69aba1c87ae83e5ec065ac84ae83d760eaddd99be139ef21"
+      "sha256" : "ce912dd512b8ecf2023610249efdffed0a6a75d967fb3074fc6ee57e1e281417"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicContentBlockStopEventType.swift",
@@ -90,11 +90,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicContentCitation.swift",
-      "sha256" : "e1d97504072eb495141cd73bf4f0b691be6290abc5e074bdb16ff6b86baa1587"
+      "sha256" : "1c95d95720e86bd4760b85e08c30aef7682f8be13c540fedd8eaef26c82a826c"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicContentCitationIdentity.swift",
-      "sha256" : "ea0764858fa6ba65a64a972a82a4f2ae068db7dfe2e94c0679ecfc6f57d6550a"
+      "sha256" : "fcd22741c3d5f1f1f1e2f68d8be7cf310c0c2900c413f7526726eaee87edda45"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicContentCitationIdentityType.swift",
@@ -110,7 +110,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicCountTokensProjection.swift",
-      "sha256" : "454b99381a746aeb3c04bcff50431a20851a47ba4e0e1472314bd826ac3901d0"
+      "sha256" : "39f17b47d18ba44d5d3454592df0122cda02a44839ce0aea8a2c2b60b2bd0e0b"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicDeltaStopReason.swift",
@@ -118,7 +118,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicDirectCaller.swift",
-      "sha256" : "1f3b0747822477ee14d71f45c65501c67f45d8822ce87b5c5362dafd09c1c4e6"
+      "sha256" : "a4783769cfcc847c2b52c9a94ce103fee4ab36642481acc147cc6fcb470da5bc"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicDirectCallerType.swift",
@@ -126,7 +126,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicDisabledThinking.swift",
-      "sha256" : "87c012a1a39684d5ec714151d302eb0de2bc2d70ca00f1037d81ac302d9bc14d"
+      "sha256" : "7a7d3588b349c160dcd37e0e0241e11c3cfb87971f8138fe0808f3bb3016d6a8"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicDisabledThinkingType.swift",
@@ -134,7 +134,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicDocumentParam.swift",
-      "sha256" : "1e59066d1595e6a5a3195451a33d2ed468a0801035d5164f17861eebe928f831"
+      "sha256" : "2d4906ead743a52989bd94ca54f62fddfa5b90754cdf3ef3b7dd90740b24a918"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicDocumentParamType.swift",
@@ -146,7 +146,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicFileImageSource.swift",
-      "sha256" : "f2402a8eb956f27a2be2e8f2784edbc1afb549602b0429e177ce3d668d8986f2"
+      "sha256" : "8fd101f307be0147f0cb61c7c810c6a693df5ccb6d38aaa3c215a43628fb0863"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicFileImageSourceType.swift",
@@ -158,7 +158,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicImageParam.swift",
-      "sha256" : "b7b870dc148b39cec2b6fe0bdc875d4b6650777148e3db60fa59951bd7064da2"
+      "sha256" : "c83b472c80008b5b1a301b7f0a6b680647be03a2c3311158e960c28b60c635ec"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicImageParamType.swift",
@@ -178,7 +178,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicIncomingServerToolUseBlock.swift",
-      "sha256" : "a0a57b72e1baead17357b89e8a770fea7b028c4ed50f51ba7aa6e37dd86a1ff4"
+      "sha256" : "e6d5829fa3bc3fe10397011c7f9d6d0b43172bbc431229100f3debfd76d54b69"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicIncomingServerToolUseBlockType.swift",
@@ -186,7 +186,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicIncomingTextBlock.swift",
-      "sha256" : "345c0425f03e6fe601241662494e5941d199e48849bef472e8bc8cbb09867844"
+      "sha256" : "65a5fb9f519efb99454cbebc42abb9c369aee042d3535b17384447f1a00e258c"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicIncomingTextBlockType.swift",
@@ -194,7 +194,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicIncomingThinkingBlock.swift",
-      "sha256" : "05f71487613994edcdf77d83e86c87d694b12d75cfed6c8774465b0fbe8a4cc6"
+      "sha256" : "99768974905b7d74fa303fbf92b4ac5e2211ef5620a0062577c95f93c77681e3"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicIncomingThinkingBlockType.swift",
@@ -202,7 +202,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicIncomingToolUseBlock.swift",
-      "sha256" : "fb8c09cf288fb60920ce20510389aa416577a040bc4ab576c9d3a0dcb867544b"
+      "sha256" : "3a9bdf719c53efab5688ae8549f4dd07e09ff1188dd02a61189ced2df484720d"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicIncomingToolUseBlockType.swift",
@@ -210,7 +210,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicInputJSONDelta.swift",
-      "sha256" : "a9ea04ed2b8a9079f72b0d098f1872817c3bed77d46a950baaa006f4fba58c6c"
+      "sha256" : "5ddcf6cacc145bce533233ad4d4e3d8ef3ad7091def35e8fdda4c535d79905d4"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicInputJSONDeltaType.swift",
@@ -222,11 +222,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicInputTokenCount.swift",
-      "sha256" : "9efd461da8bc9afadf17498cf6cf798821d8be9bdc3488a2c97f9a739ab351b3"
+      "sha256" : "a97201f3b04c74aa0fac68b1a2a8d276e1e567d830d1b51e65672be415b64a63"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessage.swift",
-      "sha256" : "1576982b8cff0a8b6aab2b2dd5114dad15eeaabed6089c797ba246dc88c4bbcc"
+      "sha256" : "43328d5aecaa68133f74e379e5fa68bb33995dbd9ddc50e5300b616c16007314"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessageContent.swift",
@@ -234,11 +234,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessageDelta.swift",
-      "sha256" : "551eff94fdb4c158ab6f01b8d10752a3b2340ceca4732d0b3a4762043e46fd51"
+      "sha256" : "7381f00facdb6aab904edb0c1761a6d9968ce2ffcf9266940728d44b1da07008"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessageDeltaEvent.swift",
-      "sha256" : "d8f02d3ebe4024caad17464dfd6b5e26146bf9611dbfdc3a5db7ed3ccfea740b"
+      "sha256" : "08391782cc05923e169811eb3648cfc250de314e1b8879b50e644a7faddb719a"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessageDeltaEventType.swift",
@@ -246,7 +246,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessageMetadata.swift",
-      "sha256" : "36d92c3357fddd242b7157b78ad99d7793a62b212caff90156a156cc8d73cda0"
+      "sha256" : "f2109de3b461c356a85c0eca7ccf017c8f374098e887cfa55a4fbdfae9ce816d"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessageMetadataRole.swift",
@@ -258,7 +258,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessageParam.swift",
-      "sha256" : "efd7c7d2f02443e2267f711287d93649561a91460551b27867154dba3ac95a29"
+      "sha256" : "83c98b1cca1744d0a73e82986cbfe8d533a10256c630de5b31a355133c2be9bf"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessageRole.swift",
@@ -266,7 +266,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessageStartEvent.swift",
-      "sha256" : "7106c3d9a1020adfdc01caeccd8de6d7e68d9ac18432a62fa88825b2ac0137ed"
+      "sha256" : "afcabc9e2121432562c147db8be24dc9122be602749401dd91d822a94de71a11"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessageStartEventType.swift",
@@ -274,7 +274,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessageStopEvent.swift",
-      "sha256" : "10821f94211a805bb335b76e7589aa509420113659d59cf1d26d15f97b50fda7"
+      "sha256" : "bacbf0f16c3730611e1b7c9f730c8c2d3b747d766287c171e1054f297004d8c1"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicMessageStopEventType.swift",
@@ -286,7 +286,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicNamedToolChoice.swift",
-      "sha256" : "5e2ca00041a1d607c1dc0357b15bc1b292e1867991ec93625e7f2a243f414bcc"
+      "sha256" : "9ed7e49606fb0bec06478d3b0a65e1b060910edf8e732626c529b035ed2034dc"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicNamedToolChoiceType.swift",
@@ -294,15 +294,15 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicOutputConfiguration.swift",
-      "sha256" : "748756401f2244c44dedc6d02a834b35a411e43c983a724ec310785374f25059"
+      "sha256" : "ba77c03793da9fdb338c8b1d93ca3539d04cb8e76dd0c4ea24bb23be2641759f"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicPageCitation.swift",
-      "sha256" : "0d94283cdf63546f1a51f98f48986138989c2a9bdb38e5850b5468baf3a901d1"
+      "sha256" : "928075f917f497c795f8176627d5f2f397c77f0e9973fd2bc9142c6281a5cd07"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicPageCitationIdentity.swift",
-      "sha256" : "f3f3e0f4bad917fa2a956d7f89a33349c30e4298b558db9d13ac17aed406ad3a"
+      "sha256" : "af7c96070d6298407e4e1179e04462ab2d61f4f13b0d7e0c0fa1f2df5daa29b3"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicPageCitationIdentityType.swift",
@@ -314,7 +314,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicPublicMessageDeltaEvent.swift",
-      "sha256" : "ce78b39a93f4ea1fc667790fde8d65d6e4c9e4f5a991107bd0aa676a1d685f72"
+      "sha256" : "e12451ed75a723450404243a68755d63b47c718e10a1ad2df6304fa26373dd15"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicPublicMessageDeltaEventType.swift",
@@ -322,11 +322,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicPublicUsage.swift",
-      "sha256" : "0b162ef250ebf3501719d436ba4856fcc7893facc653c2637659b3cabc744b06"
+      "sha256" : "26f0bc8a833f930cb5daaef0357e7e97cee930058744addfb3a6a8b418cf5513"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicRedactedThinkingBlock.swift",
-      "sha256" : "ee8e44d9258f85981f2dbef7cd40cb65a44387f2891ce4861131e382b9a55367"
+      "sha256" : "e1cb408807f983b8a15b50d8a42d668491a9f84e3fea65ed74b89bf31722d747"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicRedactedThinkingBlockType.swift",
@@ -334,7 +334,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicRedactedThinkingParam.swift",
-      "sha256" : "d284d808974090351a71fb8e97fa4ed1e27e3733af225b1be6f2c21fba004b57"
+      "sha256" : "652b21e194f6d15cae3904dadd58029e6263b92fdb0c2a89aa2086ebeb049c26"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicRedactedThinkingParamType.swift",
@@ -342,7 +342,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicRoutingRequest.swift",
-      "sha256" : "53fdfcb1dd3b78bf0233db9da074e8d22eb2c0bae13cd2d87212da7984e56ac8"
+      "sha256" : "cb889f8331e770afc244f3fc7e2c8e7192153a83886e69e7d4bbe9053ca9a87c"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicSearchAllowedCaller.swift",
@@ -350,11 +350,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicSearchCitation.swift",
-      "sha256" : "bf0a1602d34daac0051e0ce61ea404216b734834747112893704e18c35bbba26"
+      "sha256" : "08a3a4410bb15a832d9e4c55139a5fa90d40ac6541de2266ba15ca96301df028"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicSearchCitationIdentity.swift",
-      "sha256" : "5bc9590e85b1ac9ecd22c30a10edfaf0654cecba2a460728f9f558d87cfe3ad3"
+      "sha256" : "a89f17ff2ea85ca7b77edf9901aa34c37741f7dd55710210cffa257337b4bb86"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicSearchCitationIdentityType.swift",
@@ -370,7 +370,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicSearchToolConfiguration.swift",
-      "sha256" : "46518460bb3f95da0d98d5f261ec607eef5dc3a8ce3e868d145e032380daf924"
+      "sha256" : "be8d54c57fa9c07e132b9b655f7a9dcdff6864eeab3ea9aff017d80480d38b8f"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicSearchToolConfigurationName.swift",
@@ -382,11 +382,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicSearchUserLocation.swift",
-      "sha256" : "77e44bda17a26e37d1d3a8c07a1fd4ba8c0d34a9c702b0f5f30a57c428fd5fa5"
+      "sha256" : "fce8d3b1f1851ae24cca1b732744a84275996141f8a5b25b348b0da7812e5c41"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicServerCaller20250825.swift",
-      "sha256" : "1efdd6369168eb07a083cba1814e9b237e2b44a3dc06d7ac16a60a2491476d1e"
+      "sha256" : "518ee119ae80870957d682162433566a8f0c6fefe1ebf420311b218ee9465564"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicServerCaller20250825Type.swift",
@@ -394,7 +394,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicServerCaller20260120.swift",
-      "sha256" : "68e4d926770769a5f14ed15cad7345cd92a9d43fc907bf014b9d623c51172b83"
+      "sha256" : "c26f6b79cf6c8ddb383beaa507393e35a8b350c5fb85cb955b9d961764f19857"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicServerCaller20260120Type.swift",
@@ -406,11 +406,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicServerToolUsage.swift",
-      "sha256" : "572e3b6b1887364db586698436f0f2dd9b58c80498451e59730754a1c2678401"
+      "sha256" : "e1bfadd97fbbd8f857bd14861365dc332203373c14a176d36f3fb0c408919cc9"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicServerToolUseBlock.swift",
-      "sha256" : "8943ba90aaddd71cadabac9ed154c222e063cc0ffe4f8668b678c52895db0378"
+      "sha256" : "c5599f793142bc48be56912d37667d5aa79a60755c89e5f5f599b104c91d8ac5"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicServerToolUseBlockType.swift",
@@ -418,7 +418,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicServerToolUseParam.swift",
-      "sha256" : "8e14e75ddaaa3b99aef63d635cb4419499d30a27b2079a9af92f59af872d9e8a"
+      "sha256" : "9a1bfab37dd969e9aa1ab4947a636be9b875ee6efbad625faeb1d15072396b93"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicServerToolUseParamType.swift",
@@ -430,7 +430,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicSignatureDelta.swift",
-      "sha256" : "1fc5c1e382ade462eb81367d6414f9d94ac7ac92e0ea654120513ce7cc1d48f5"
+      "sha256" : "b05e46ced1ce504e99f69404f75026252c1bd92bb0336c1f8e231eaa096a1616"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicSignatureDeltaType.swift",
@@ -446,7 +446,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicTextBlock.swift",
-      "sha256" : "8307f5605c3d30d43853f4cb0b515c57602f1dc6b4fdb3da137c47a2581b9619"
+      "sha256" : "4a51d00efe56060c3a2014f45d405885ac5e6c8db00afea6a41f43e32a3ba580"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicTextBlockType.swift",
@@ -454,7 +454,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicTextDelta.swift",
-      "sha256" : "babe8f40480ac369bbbacf43d69e80cb2c42840a6450ec8bc980313fd527f7a1"
+      "sha256" : "d4937d71f898c74f4ae2e8ccb0df7a4d503829a97207966b288ef8361019050e"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicTextDeltaType.swift",
@@ -462,7 +462,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicTextParam.swift",
-      "sha256" : "a34115bd88258929fb9994f67186736618fbf17ea028120d36eb3011dc2db731"
+      "sha256" : "fa5d620b06fe4b2907257a3649c44ab76c2edc30729eda6a59dbce54e863f7c5"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicTextParamType.swift",
@@ -470,7 +470,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicThinkingBlock.swift",
-      "sha256" : "842e7fb796e039d5b7453b50875c1c93d535b9c162dafd7e66f9bf50c77dc564"
+      "sha256" : "868a1099f609b1e25925bb3d70d852e17e0ed7f805ceb082a7f2954419739dbd"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicThinkingBlockType.swift",
@@ -482,7 +482,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicThinkingDelta.swift",
-      "sha256" : "f53ce5c4bdbef6ca603df30ed57182b0b374d456023daa25c4761eab1a6582b8"
+      "sha256" : "b82f763d39a5233ea286f7365034787684d7047d1a72eebc8466289b255cc1cf"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicThinkingDeltaType.swift",
@@ -490,7 +490,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicThinkingParam.swift",
-      "sha256" : "55a52c80d29f2cf7d3d65edeac01555ce0a2e095de1b7415a3611fddd522f6e1"
+      "sha256" : "98c1ff04f497ab00fa70ae31a182401028c16f8d0c090b679d5037c4ba8ccec8"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicThinkingParamType.swift",
@@ -498,11 +498,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicThinkingRequest.swift",
-      "sha256" : "0279fab17f3585e2254dcbe8c7929a11b866fc0f6661df2fcd659fa15ec2235d"
+      "sha256" : "4a80f40aaec38b4783285bd466a017ccc493f078dca98285ffb1a3f46c2bc7ac"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicToolDefinition.swift",
-      "sha256" : "6f7015bd5b60f0fae7a78de6e0f11883f9be2fad716dbdf33959899fe38632c1"
+      "sha256" : "7947579a2d346f91b98283e15dc521c61f62b50c230a9e537058b213a0c74f8e"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicToolDefinitionType.swift",
@@ -510,11 +510,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicToolInputSchema.swift",
-      "sha256" : "d5b7756773e3500ff160169280dca8fb2a2a44ed3ff79e40291bc901c1f19562"
+      "sha256" : "566e0ed6a3a81dfa23518dffcdb6ba762a526e74d57bc8d399660ef8ab16cbaa"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicToolReferenceIdentity.swift",
-      "sha256" : "984a985aa631d3e116c30d6651fc5eefa4844630ba37d960a495b833c31cdaae"
+      "sha256" : "1d697757f40dec32b0bcf1c7c11b2df8c34749ec875a844937975228d35cee5c"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicToolReferenceIdentityType.swift",
@@ -522,7 +522,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicToolResultParam.swift",
-      "sha256" : "40ab0a3ef08be866a100b9e532e47bdcbd05ff879c90bc6abb327794fc594f57"
+      "sha256" : "4af0d80b4654e584505f25588dcd82b8138cefa6305380aecd971ae04e4cda03"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicToolResultParamType.swift",
@@ -534,7 +534,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicToolUseBlock.swift",
-      "sha256" : "ccdf2bb5c1d740c47ef73be4124cd3f4e611c6fdbd491e731952b57dcde7f975"
+      "sha256" : "5dfd6077ef9c55b578cc51a6f02e7d89c9d4d457db916f5b88425b07eb59f9cc"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicToolUseBlockType.swift",
@@ -542,7 +542,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicToolUseParam.swift",
-      "sha256" : "03036ca44f30dc41329bf224dc9991c1ceb1381c0da7afda146deb421d6692d9"
+      "sha256" : "c6858b5bd97c3c8bfea68095505a5890bcc1ceedc11d971ab8834dc371b63eae"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicToolUseParamType.swift",
@@ -550,7 +550,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicURLImageSource.swift",
-      "sha256" : "2b429766d3220751f95e525e3af2b530465be95e966dbd4229b0d99fa605bbe1"
+      "sha256" : "0092c28fc07d7ce458bada611e38dd178a0cefbbaf591e9d5cea2508dee48e6f"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicURLImageSourceType.swift",
@@ -558,15 +558,15 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicUsageFields.swift",
-      "sha256" : "dd4965a2a2be873d8ccd60dfaf2f69d766b02c592df00d7c1cc0e47e405a0be3"
+      "sha256" : "68872bfe6ac56b44a13042c447d7715ca43dfcf6ab03bfa18abf941ac4c04e99"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicWebCitation.swift",
-      "sha256" : "20abb5851a87d031dbce4983f5168d10d442651f74250abaa1277a3da4f3965f"
+      "sha256" : "8f3e76f79a9ba60d535a20cdfe4bcf13f7844728985f3a5e5393426f7dd9f99e"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicWebCitationIdentity.swift",
-      "sha256" : "b4bb15ca11f886ddba1034d2901b758e23cf9eb0a27c1e589b2f4ae317482a83"
+      "sha256" : "295cf421d90268a4c35369f4ed4c72efd2a86dcb7cf54c78f064766064f85439"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicWebCitationIdentityType.swift",
@@ -582,7 +582,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicWebSearchError.swift",
-      "sha256" : "d8b28c889ef489fc014c8cd85956ab7e2d5380dd91eb3f5ab62155a18ebf1099"
+      "sha256" : "830de03937d2631d4d48611d44b85d6c8e193e7f96c1e423ee7108e38ac4653f"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicWebSearchErrorCode.swift",
@@ -594,11 +594,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicWebSearchResult.swift",
-      "sha256" : "6e2d62cf00a4c854f26b91915e420ed4467d563171b9a18f61c0e586b16f69d4"
+      "sha256" : "df302c31f781e415c272c8a0c95275c67690e4b987ab6d72ac52975f5c1ac8a1"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicWebSearchResultParam.swift",
-      "sha256" : "afd0a7f333453f8f21665a3a1e2a47f6867547134cced7b40322a44ccf12e19f"
+      "sha256" : "986836349b294227d62c40558c3245994588ac92c0979783cb9e1e12f49876ef"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicWebSearchResultParamType.swift",
@@ -610,7 +610,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicWebSearchToolResultBlock.swift",
-      "sha256" : "1dd55576aeca8057dd687375067904cf7c59cad8389c338caf05f3398c4ff531"
+      "sha256" : "ddde15c76adaf5f5d99d58b6c4fe0c5d430e29b4bc7b2e2f62f6a3cc66b3f5e5"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/Anthropic/AnthropicWebSearchToolResultBlockType.swift",
@@ -618,23 +618,23 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatBufferedCompletionDetails.swift",
-      "sha256" : "4430fdc37468feddeccaa781dbbba8402d818e7771e0dcb4a0fd21dc1a11d4b4"
+      "sha256" : "5496c7f2c4877dc9370ac157f1ddebb4e15447bdf62147096f277a202388bb9f"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatBufferedPromptDetails.swift",
-      "sha256" : "03cca096125d7714e9e3a5063bbfdeb08e9dfadfa5f941be87fa93e641b4979d"
+      "sha256" : "497df68f1aefd9c658e3d8c125f4e3ebfb82702fb57af58f9823990db20201eb"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatBufferedUsage.swift",
-      "sha256" : "5b9365a406fe6b0bcc72b0389660ae28c4366bd9431772ccb84d42c33eeeec20"
+      "sha256" : "62e29e94a3fee8a4bfe3c486ca583e38538c8950a5820f17082592289a991b32"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatChoice.swift",
-      "sha256" : "419c63599b4688f30069cc5de79fbae8a345de87c455b30e41cbb3a906d4d2da"
+      "sha256" : "a0a625b669345d69e3688abec21874e7f8a84689d025e15e3fadcd138d856c89"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatChunk.swift",
-      "sha256" : "ba74f63d6e70d74b79c15eb0a7631155ab8b0221f8b7d60b6e88147e79ceea99"
+      "sha256" : "e442b3246074c0e21c49078268bb48a2b7c897e33ec393ae0eb03e484b5c6bed"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatChunkObject.swift",
@@ -642,11 +642,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatCompletion.swift",
-      "sha256" : "fba714c7098fb6aa6494dc1666fd8ec8e236ab45d76fad74479b2374c323b301"
+      "sha256" : "4b2e811146ce243d7687f1850dab08b49ba6c9ce3bd4ef99df6a3d67f6bc8f75"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatCompletionChoice.swift",
-      "sha256" : "e0d86b556e7e9b344851a8be0fba345a41fe6c1f0cd0e448179cba38d89cd691"
+      "sha256" : "715d8bacce5ff3e6999db7d1805374ad23b9e04f67955c06d265e7aed9a2876b"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatCompletionFinishReason.swift",
@@ -654,11 +654,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatCompletionTokenDetails.swift",
-      "sha256" : "d22dfb241a425572d2469287aa2617a3d42b9e3a6bae108dde6c3f38dacb6631"
+      "sha256" : "a53a1b1ba5c1af73ec024c01f6cd00be6863a5ef14e65f100755204c24154982"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatCustomCall.swift",
-      "sha256" : "237a082679d4bf9a39c428bae5b17ead5a5ce064f7a01ce1c20f487f024c99d8"
+      "sha256" : "71703a5451a21293caa004c164ce4df7bbc82734aaa8975ee8377126dd0b60af"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatCustomCallType.swift",
@@ -666,15 +666,15 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatCustomDelta.swift",
-      "sha256" : "8a3e301187e424bd85436c335fc43eaa8d361a13fc74f9a11e4b94e1a5bd7e38"
+      "sha256" : "86cc40f18874b9b93930afc893d681c8b927ad829bd673038324594dd96e2b40"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatCustomInput.swift",
-      "sha256" : "883477f1f99887b6091181646f4f3cbb9bd83f79424caf4688d2382aed2de082"
+      "sha256" : "88e6a19216261937d81746bfdd1b387afddbda7784fdc193b961a3e562c05bee"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatDelta.swift",
-      "sha256" : "5250cb045db4661748a6324afa126db4fec347a7ae8693fdb01a816dfce761ec"
+      "sha256" : "5cc707e626865d7b067d479b246200e941f48929f3c7624b0473d527afbec017"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatFinishReason.swift",
@@ -682,7 +682,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatFunctionCall.swift",
-      "sha256" : "dce730abe65ba0de5197f32d02a12c459c335045b6c147d26c3e57c0ed401525"
+      "sha256" : "4299c144ac834ca4319ad43e962a2cc59007ac86236ea3af08bc11a74655255f"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatFunctionCallType.swift",
@@ -690,15 +690,15 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatFunctionDelta.swift",
-      "sha256" : "fd85cb3ddd55f1cd9b72329cb39ad71136c9e0437d79ce92e8f7677a95449e64"
+      "sha256" : "cd1564ff81b987d35024c244070c1efcf02cd540e105a39bcdb32e5773aa5634"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatFunctionInput.swift",
-      "sha256" : "c326d323387a007835c2e8d5d0db9abd107ad2e14532cb2580f5fcf3e0935b25"
+      "sha256" : "30f8469c167919996bdd4ebda2e82baeb8345061d25b2ea0e910dac25664749b"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatMessage.swift",
-      "sha256" : "ca5b93cd659e794b083cb602f0e62ed7ac0018b0896ce67b7a4ed53942e2518f"
+      "sha256" : "b326a984df442d7fca25327246c2c31fcc3300233394bbc22f3be3192fe79374"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatMessageToolCall.swift",
@@ -706,11 +706,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatPromptTokenDetails.swift",
-      "sha256" : "7ed129dd55ec6c8907c69ffffe81373ff2b84e8c27b0491421f060a7fcdee668"
+      "sha256" : "030aec6534dcb8ade4e177a14d578048290ebafcd89be13d6a54268f9d5e91a3"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestAssistant.swift",
-      "sha256" : "9200e194453b499b0064accb038b01fe6a2009e17d253c4f790b934bd14dabd6"
+      "sha256" : "96147eab622e57c8e745f0d17c7ec6b0b2b38ae11317b218457f25cae6eee747"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestAssistantRole.swift",
@@ -718,11 +718,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestCustom.swift",
-      "sha256" : "536108f3d7a73bcc34b5376d6552c63ab5b1632145ca255831de96207a72d807"
+      "sha256" : "b973cb3aa71582ddcc4750d6f7a636797f5c9a5f2a1624a949e9e9713d4214fb"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestCustomCall.swift",
-      "sha256" : "e121e218ae0c307f881c9edb061d13c028ec01e4e374caca1e62bf2a6e255f49"
+      "sha256" : "17599deb440650edd1ffc33883cea249b061053007b9bc5a355d05c5c7ce7d9b"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestCustomCallType.swift",
@@ -730,15 +730,15 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestEnvelope.swift",
-      "sha256" : "6d92a4f03b2b29b6aeabf79bd0be94fba9bea957af1c6ab55eac7b86776a4583"
+      "sha256" : "59064d29520f7bf28ec8e1095a7bd362166b48429cec151f2f9e1c5dd6aa3f8a"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestFunction.swift",
-      "sha256" : "af3f6b27055fcdd928bb068b6c7999aff847b682ac863bacbdc68c6c11824a4a"
+      "sha256" : "a3e2084198ed6b159c5057b61794659ce9b11b5d7153f6da5f3fdbf185d5e653"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestFunctionCall.swift",
-      "sha256" : "5de0995dc7d10cc16bdcec63d42d42b92f34551056fdb501d0dafa43f672648c"
+      "sha256" : "45babe1317de114badfd23f1e912e349a9305e56828a440f04437080e75c609c"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestFunctionCallType.swift",
@@ -750,7 +750,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestSystem.swift",
-      "sha256" : "7f444938663bde9179f560f2c9b0cb90448197ec2056fa3b988984757a1191ad"
+      "sha256" : "6dd861a556f8a7747ff3dc11cd2d8965d860e76a6c8447a942536914e387c72c"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestSystemRole.swift",
@@ -758,7 +758,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestTool.swift",
-      "sha256" : "25883e61fd31bd11229d3bd26495eb3ff3628e2db66182792bb215fabde44269"
+      "sha256" : "7b6a77d3f5da36b0e5a14251989924d9859e62f412ebd1445e278c1f134b5305"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestToolCall.swift",
@@ -770,7 +770,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestUser.swift",
-      "sha256" : "7ba9c9c5c5a660a236f55f887b5bc78112d13f44fd996c4ac344b9d11d8014ef"
+      "sha256" : "39837ed4e2c03979f958aed4cf10cfeeaaadc1eea5dd42014f10e2823052a7e4"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestUserRole.swift",
@@ -782,11 +782,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatStreamUsage.swift",
-      "sha256" : "7101cd0c77bd0c0adb349d2cd9f03d4c00a24696286f423e16b8fd32b1b3b193"
+      "sha256" : "be2d7253cffeb250d03ec9cf7ff132b7c275d368c03bb9d9da4e9704b4b9e59c"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatToolDelta.swift",
-      "sha256" : "22d1a1d25fd1276a3831a1b4322c36891b20747db5ba3610183a7a9e75917451"
+      "sha256" : "5c1095e3e19b8a93cdff6ce1d1f2538408e3e5a1ae71f0b446d88be8e378893a"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatToolKind.swift",
@@ -794,7 +794,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAICodexAgentMessage.swift",
-      "sha256" : "443e3b7908dee9ebfd57ffe8d4e589b923201b63d27ddb629d43c0929c164bdb"
+      "sha256" : "5d858d2f45315eaa8ab5aa8aa948a27a633721f41874d3e3be4dd278c84514d8"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAICodexAgentMessageType.swift",
@@ -802,7 +802,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIContainerFileCitation.swift",
-      "sha256" : "ecd3ba2334be890fca7f623254932fe024f2559cf7522715124a6ea3736c817f"
+      "sha256" : "de0cde3fc8a9f68a114816e137e0db418a6a04f51691edfffd3d5bf9c964a28e"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIContainerFileCitationType.swift",
@@ -810,7 +810,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIContentPartAdded.swift",
-      "sha256" : "29ccf3d8e17d5f1199b8b2d8f612809c386935411a5929a0fbee9758603118d5"
+      "sha256" : "8a9d99312b8e147f8e1dc1fa99a0572967e61a3d5614bd3f0f1c5f36918cdd97"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIContentPartAddedType.swift",
@@ -818,7 +818,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIContentPartDone.swift",
-      "sha256" : "b29638a3f64e151c1fd7f2fa95c72a899c55b8ea844690255988d2dbe136fe56"
+      "sha256" : "33c6deec234f6738081aec818b001299c4622f90cfc6ce83b6f4498b2befea1c"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIContentPartDoneType.swift",
@@ -826,11 +826,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAICustomCallMetadata.swift",
-      "sha256" : "42ff261b9e53e631b3dbdbb4c902297645588459a21ad0f3bdd769064256ba8e"
+      "sha256" : "2639e03ca8949a697d8aad2ab8169bc86c05a78945909e829429a320ea4e6366"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAICustomInputDelta.swift",
-      "sha256" : "939f9eb4e1e1f179c4b87e8ffe875afc176125a52f2f42e2fe18867b6a9c2c08"
+      "sha256" : "db9ba5d0e11532bb3bbe93278a1ac1ce6bad3152aef32f64a87e26a41a9b07e8"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAICustomInputDeltaType.swift",
@@ -838,7 +838,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAICustomInputDone.swift",
-      "sha256" : "0d34feb40614e37b457dd213a36df15c01fd693c803b340898c98c7043205739"
+      "sha256" : "d02475bb3fef090d681a56b09bceef6e8f9d44a61f172fd2329f61078f94f840"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAICustomInputDoneType.swift",
@@ -846,7 +846,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIFunctionArgumentsDelta.swift",
-      "sha256" : "59f178f49fee35e61a470bbd5f3d4a3372107b57650394d05863b52578a21056"
+      "sha256" : "97267c372d0b08ab1f1ae7295a009796a3c2f51e5426c7a36b585e85b63ae78f"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIFunctionArgumentsDeltaType.swift",
@@ -854,7 +854,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIFunctionArgumentsDone.swift",
-      "sha256" : "503d890f11fb8d89665f234a0f7579bac9540cd5655bed6f1281dca05218926e"
+      "sha256" : "e9b4b781df48802bd44217e1e2dc444ec5f556b1ee6f5326ca4437389227465e"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIFunctionArgumentsDoneType.swift",
@@ -862,19 +862,19 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIFunctionCallMetadata.swift",
-      "sha256" : "78dea3f0a8badd87dc8c641d6d84081c90c23e7968fa433d4a2e94448eda06c3"
+      "sha256" : "8d8a32d5e2bed2120f90b50ceba5401c1768fa599b860c32a404171982c92240"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIMessageMetadata.swift",
-      "sha256" : "2ad20a68672bd9f216d0b00c844b156aeddcf558d0b3056426cfa292aac12c83"
+      "sha256" : "97f151e303ac9a4a1d31c3b52e5f2269e502aed8e23b9cebcc8d7ee05aa3f190"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningMetadata.swift",
-      "sha256" : "2073c8502337e7f3fd3ad4c4d7285db2e86fc7dc710cf2dae47c245156caea4c"
+      "sha256" : "435be46f2503ea8da5730e04c68ca4f9e0767ceb96fe7aeb5d1b88aa19cd8866"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningSummaryPartAdded.swift",
-      "sha256" : "1c2e45b3ac38a9f893fb90725b43df8280b96d5a4486780c8247af79814e10f3"
+      "sha256" : "f1f95b44b4fcbf689150fca7206d028acf8ecfaa262d120b3ef30c61146b1103"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningSummaryPartAddedType.swift",
@@ -882,7 +882,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningSummaryPartDone.swift",
-      "sha256" : "28cfce58830f3d25491da08e77ad6429211451b294ec076e205da3984642bab7"
+      "sha256" : "745b4f8324cdaabbbfe3767c0310e08fc8b5556be903da74af0d84029d17cb74"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningSummaryPartDoneStatus.swift",
@@ -894,7 +894,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningSummaryTextDelta.swift",
-      "sha256" : "97dea4c757c09e613a4e652d0345e9125664d42d715b0666d92ca63e2b2e56e7"
+      "sha256" : "0686414481ec043edb055f7202c13f44fcd080ef77dae5c0e006065d7b3a4aa1"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningSummaryTextDeltaType.swift",
@@ -902,7 +902,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningSummaryTextDone.swift",
-      "sha256" : "4380d3fe55a85659e9d7148cbbf890f223ba6a239c26dca14963968bebf8ba85"
+      "sha256" : "e81fbd94e0e3f2eed8c8c61737beb4a6153b1f3f26e8221b71351f3bff5984ad"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningSummaryTextDoneType.swift",
@@ -910,7 +910,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningTextDelta.swift",
-      "sha256" : "817100116ab97e44f4873ef0023b192c033236a83b9d5a78a47fcb6db0ee0ce8"
+      "sha256" : "d4a7b6aba94ece843ce0399fc8728f7582106b6a3da42ab35a8226653e4db773"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningTextDeltaType.swift",
@@ -918,7 +918,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningTextDone.swift",
-      "sha256" : "a046016fb387ff2918030a8405bfaad62b79ca39898f695fa9f137890995feeb"
+      "sha256" : "8f1306e93358ed879c9e76081378423e12fc6d83162afc18fef65cb7f31d4996"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIReasoningTextDoneType.swift",
@@ -930,7 +930,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesCompletedEvent.swift",
-      "sha256" : "354f9927184beed6677e5a0a845af11943de66f3ea42f07fbaf8e0a5d718c311"
+      "sha256" : "4ceb0b3b862ad7b93b760486888a936cb0abed341913b4e8c23061b31006320f"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesCompletedEventType.swift",
@@ -942,7 +942,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesCreatedEvent.swift",
-      "sha256" : "87ab3ce86bbf6b67bf3cdf7592f493e16f67c943360f2ad9f8f34448dd9a79f6"
+      "sha256" : "9ad19ba8a55c2b5c40c0a4a914240959d6fe3f78ef50ab99f3198786868c85b3"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesCreatedEventType.swift",
@@ -950,7 +950,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesCustomCall.swift",
-      "sha256" : "ea90dfada82b5960a8718a183480f9169c53fbd6ef8cd83d43874c7be34b74e3"
+      "sha256" : "4522e01bac02304e329d1f2bb0e0e0fd4713c7185aff009c4601d682f9d2b0c7"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesCustomCallStatus.swift",
@@ -962,7 +962,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesErrorEvent.swift",
-      "sha256" : "52f72f1b0a0354bef94e1e62ee781915e5177bdfefe2589a130601eb980f2ea5"
+      "sha256" : "15853399ab193bcb6f23ca790d26af0c1bfda11702f7f7e5a26528f95b401072"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesErrorEventType.swift",
@@ -970,7 +970,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesFailedEvent.swift",
-      "sha256" : "f7a6b5e4c376db405d48126285e7b45730a7158e65504233ca1445c43bfa6d5c"
+      "sha256" : "1bd8e6f0364220d5ce74534f6765e2ad9a2af99b0bfa0b9cd119ffe7096f69df"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesFailedEventType.swift",
@@ -978,7 +978,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesFunctionCall.swift",
-      "sha256" : "af0a23650b72716497091e13fd84c6e7303707dfeffff4279837238fbd92eb04"
+      "sha256" : "e580acb25bd8cbe5341c6b6acbabd43c4c387b48d5a535b6cf3dba10e1b647fa"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesFunctionCallStatus.swift",
@@ -990,7 +990,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInProgressEvent.swift",
-      "sha256" : "f300f37cea04aef209295a4d3313207949144e480899875559f704c0da68e013"
+      "sha256" : "226cc4c89fdd3dace5ea2b4d76d57af0f5362f08675da609a4eecb23b662e208"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInProgressEventType.swift",
@@ -998,7 +998,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesIncompleteDetails.swift",
-      "sha256" : "b5c4d9101b7edf04678cbd20b0055814cd1e8a3c10e86a798f2fef228846f853"
+      "sha256" : "5c8f047032e8af73bfa6c016dd13629a711d83d5d5bf847fd9e6cf72aa1d2da5"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesIncompleteDetailsReason.swift",
@@ -1006,7 +1006,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesIncompleteEvent.swift",
-      "sha256" : "123cce407d91aa8ee8c0a30b9c98f4e62f43fbae6d565a18c7e061f2391b03eb"
+      "sha256" : "af190c7b2628ad4de77868cccf1c1d6224179ddcf567a36917bbc564e30d8435"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesIncompleteEventType.swift",
@@ -1014,7 +1014,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInputCustomCall.swift",
-      "sha256" : "793ba95d9c9ab07b1f4330973b90d8406f09322bd56c95bca7547903b8dfd2f3"
+      "sha256" : "fafb3229e7d15f446c26fbf2d2678e953b372a30541630bbd0c1c5f3e094ac02"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInputCustomCallType.swift",
@@ -1022,7 +1022,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInputCustomOutput.swift",
-      "sha256" : "080ee9d5d6a81275a361f819900b8d6d596015e6b38e8eece6f4c62526202122"
+      "sha256" : "23dcf56b31ae05ce891f918630f0e445de37f6bf58a77c3b5f0e5cff700eb05b"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInputCustomOutputType.swift",
@@ -1030,7 +1030,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInputFunctionCall.swift",
-      "sha256" : "1d21fe2cb14b88ee11d7093362b5dd82e803ccabffceec31f477d289ef9a5bfe"
+      "sha256" : "0f27047d95943797cf0f0ca683a4b1b41393fdea3df74c3d2b6f433ff97382c6"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInputFunctionCallType.swift",
@@ -1038,7 +1038,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInputFunctionOutput.swift",
-      "sha256" : "eeceba9594fb02c1a80d44049cbe88561b48b9a5ed79c56777ba21f2871a4c91"
+      "sha256" : "d2c2e6f23ea45cc813aa3e0c9ccfa3fd3b3492b84df9ec3d73293c6c9bd38bb6"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInputFunctionOutputType.swift",
@@ -1046,7 +1046,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInputTextPart.swift",
-      "sha256" : "d92ed38d392edf303252dc775132f11bf7412d8624e0e58c3694dfbbd9458896"
+      "sha256" : "d3cf139213bbdb5dd5c210d53a667b4aa32ae302130806b48c4f6f7cf1df7807"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInputTextPartType.swift",
@@ -1054,15 +1054,15 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesInputTokenDetails.swift",
-      "sha256" : "a9e94191087b47480cb1049a23fa731ce69a59dcc3eb13789d1115071d934f70"
+      "sha256" : "43ba4eb2122b8e618f734f85049f50f3f7bbd9dc26764c304810a570a4976bf9"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesLogprob.swift",
-      "sha256" : "f496e9f225fd441b4d5c685a6a1fa858be10b7a3deb0f1edb1cc2334c1ac5f07"
+      "sha256" : "6b5c9891a3f379fe7e54431a379f59ea05179c1fe8df388383c2927c60f76dc0"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesMessage.swift",
-      "sha256" : "ab684e1919c60bbad8ef3d6ac471ead60a3034793440d457683ac069afae9168"
+      "sha256" : "e82fa924ff879f1e2bd22dc84ded0cd373fd38ea3ae50f0ccdc4cb104722ea4c"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesMessagePhase.swift",
@@ -1086,7 +1086,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesOutputItemAddedEvent.swift",
-      "sha256" : "56ba493c4ec651ed9e488a7b8d653a5f0d5860de950a1379ff258d04d3292f90"
+      "sha256" : "f142bd0cf0ea651e24ff00679030a5e809862810d10f977b54661dda90044408"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesOutputItemAddedEventType.swift",
@@ -1094,7 +1094,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesOutputItemDoneEvent.swift",
-      "sha256" : "29d1dac79012d38fce6dd178b9a0d1a6f0c0bfc0fc31612b62245c4cf944b7a7"
+      "sha256" : "78735f02e4c261a7461fcfdd9340434d636e3775d61596970f1aba906f377ac9"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesOutputItemDoneEventType.swift",
@@ -1102,7 +1102,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesOutputText.swift",
-      "sha256" : "4f29b2f721cfe3d3668e052588e1a729b731c5cbe5dd150c96bf26344b2811c3"
+      "sha256" : "91eddd3b458bdccb78d54469608a1b386710fef8407a68de34dd59a17134340d"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesOutputTextType.swift",
@@ -1110,11 +1110,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesOutputTokenDetails.swift",
-      "sha256" : "fe6d68083686454d051e12097763383a6fb45398d5893b9adebd58118dbf4a12"
+      "sha256" : "cef5d115d13445bc3398ca9187526751dd0b9bce842258d300cafe38f39bccdf"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesQueuedEvent.swift",
-      "sha256" : "21d3907a700ecd1791c9751a4f7c9ad0e8c93cb7fae7cd34c9222fe3dc78570c"
+      "sha256" : "6b115f5cd2c9adc80b749b715faa59a0dc223d85c5bf4c0f4b2970a2b17235ce"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesQueuedEventType.swift",
@@ -1122,11 +1122,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesReasoning.swift",
-      "sha256" : "3a90854b3a53eb389ee4bda7a020cc99b566c07d2aced7360bd299e4499b21fb"
+      "sha256" : "1c9fe7fad7ce28b8d03c689a3cc6560ed84ab31f5ea9ddcc9da610cdab1d0514"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesReasoningContentPart.swift",
-      "sha256" : "34ea97e8fe2ceab268fd15b87d211d5c1823dfbdcb2e7e67522e461dbe22492f"
+      "sha256" : "1c7853df88ba95eafb401ab28a30d84fea81d719f8f61e8f58bd6731b67c7df9"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesReasoningContentPartType.swift",
@@ -1134,7 +1134,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesReasoningOptions.swift",
-      "sha256" : "43b77bc97bf2fdcd318c780edae76c17612ac058b1002fc8d1222c6ac237f67e"
+      "sha256" : "b28af5f72815e1fec28b59b304f3a4c49119f7d83f7ae76ddf19ada0a4b1c725"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesReasoningStatus.swift",
@@ -1146,11 +1146,11 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesRefusal.swift",
-      "sha256" : "214dc44ebc2fb88c29df8646945c046378401675188c1af2785b707fedef4224"
+      "sha256" : "d3325f16a2dbc6d9f485a8a56da8031442fdb3a4e248add24f3865eb125d015b"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesRefusalDeltaEvent.swift",
-      "sha256" : "77731f3662cb47e94a4d32112c4d944154270a58c2f89e898c385e38d707505f"
+      "sha256" : "e7b88e7503b68715934e55252d3d4d9e6df747fc9e0a00ef838ea3ca7bbb010a"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesRefusalDeltaEventType.swift",
@@ -1158,7 +1158,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesRefusalDoneEvent.swift",
-      "sha256" : "d45dde86e2c5c68e7181eab1fdecb4ab3a63ae75690f4af69767947200542c52"
+      "sha256" : "cc864e1532241d4dbd4a7ce16767378b3aca2cd38733df3f027b9e3ade65e3d7"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesRefusalDoneEventType.swift",
@@ -1170,7 +1170,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesReplayMessage.swift",
-      "sha256" : "ed48c0a68264409a4dde89b82af9600eba083a345b5e001c3055ae29a77f8986"
+      "sha256" : "df21350d4ef11234df4e7cfb0f5313d0ea2e3abe4bf2d3a564ecb2e187a21bfb"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesReplayMessageRole.swift",
@@ -1182,7 +1182,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesReplayTextPart.swift",
-      "sha256" : "433dee24fdbdb32fe388fbb78165fe21ceabf826051634c97d091a1ce4ee8502"
+      "sha256" : "c2f2bc2f4676da058045ccda3b658e4247d53c8c3dbd5d9d691c0912b70ca231"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesReplayTextPartType.swift",
@@ -1190,15 +1190,15 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesRequestEcho.swift",
-      "sha256" : "b1fec039d4fec75c15ecdee63ebcc536c6e11a5055e1123afb31f14498cc8ea9"
+      "sha256" : "4678640cb6de51ca172c00336f20dd0cf6bda63403c18555e024b045d335156d"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesRequestEnvelope.swift",
-      "sha256" : "3d7539e2630fec2a22410d49b90cbaa63fe63ab3843c8a24c3f40986a227d79e"
+      "sha256" : "6c1d554d93bff8b3d7c04ea8e69c95a79f34440fb4435e2df91866674c0fe163"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesResponse.swift",
-      "sha256" : "49ff9dcb59b00ef2594a04d9ba2fe48b6927bfa309d7968694bdc2d067de59cb"
+      "sha256" : "bc75d0235df5e8f770fccf5dd9769e57c8059c88841eb8663fb39e6471cef39d"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesResponseObject.swift",
@@ -1206,7 +1206,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesRoutingRequest.swift",
-      "sha256" : "083ab5fa684982c8dbb28bf0245c971c084257632af9bcb0484a7d7536580f30"
+      "sha256" : "16f408d94728b28cceee4abd059f46f2b25422e84aaf4bd83a4e40dd3ca24db3"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesStatus.swift",
@@ -1214,7 +1214,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesSummaryPart.swift",
-      "sha256" : "5dad87d4191204f0525c9ae77b8c438801b785bbbf2106400de20c417d11f26d"
+      "sha256" : "e5511c9bcfc5d552f51a5b5ee72754930b95cb01c157ddef6f1bf60683be970b"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesSummaryPartType.swift",
@@ -1222,7 +1222,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesTextDeltaEvent.swift",
-      "sha256" : "8cff50a3cfe9b99a8ddeb335e53d80f5cd21449f157c0adddc694114436f2a3a"
+      "sha256" : "7a8bda98a283dbbb37c79ff4b940828ae81cc7d1f66de58cddc0abebd38383c3"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesTextDeltaEventType.swift",
@@ -1230,7 +1230,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesTextDoneEvent.swift",
-      "sha256" : "8d6b9872af1347809d959e3279f5a5b32dbf6b05a9ab5099e994aef10be718a4"
+      "sha256" : "d8c41c69b8a99b3978b04e2ee7a1a46a7790774da64fe05bdd63bdc95038c068"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesTextDoneEventType.swift",
@@ -1238,7 +1238,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesTextFormat.swift",
-      "sha256" : "8f732c0a8b8840576166f57ba684b062ebeaa4957d1b8bf766c34a61dd12e31c"
+      "sha256" : "3672e5128f47197cd502c176dce85d08c7d200268d052bff1eac7fbfcf3610a1"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesTextFormatType.swift",
@@ -1246,7 +1246,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesTextOptions.swift",
-      "sha256" : "ae05364d1aff5d13adc459d4ae0dee47ed81d49a8783df11ad20488ce40f9823"
+      "sha256" : "936ccfcb855ae6e25b82a6c4dcf9289ae86526306c37e03ebe05cebb69ec78d1"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesToolChoiceMode.swift",
@@ -1254,7 +1254,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesToolSearchCall.swift",
-      "sha256" : "c764790838774c9eb86315a6ece51c54634c16529f342f896d37a61d6ac5687d"
+      "sha256" : "13f236fbc94b4d889b057147f3b86ef52f064e1b47caafe2654226117fd1a658"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesToolSearchCallExecution.swift",
@@ -1270,7 +1270,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesTopLogprob.swift",
-      "sha256" : "b6c514805e36675d6ecc5318cef0851db417daa2fd15beac311f5f1e0d9f8262"
+      "sha256" : "c1e1772b5e5d4c7f826017e9753370e8289495018cfeebd7d12fa6889f555a7b"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesTruncation.swift",
@@ -1278,7 +1278,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesUserMessage.swift",
-      "sha256" : "92325fe026708d04efed0024acc491bf867fb6821e9e014ebf8b153a0885b43b"
+      "sha256" : "70d13814b9018dffd592b109ec6447e9f68a9184df7da2f60aba53b124053541"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesUserMessageContent.swift",
@@ -1294,7 +1294,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesWebSearchCall.swift",
-      "sha256" : "1dd947173d527917dd332f6cf527b762e0d018cf124d7cdfd026e092ecaf4d97"
+      "sha256" : "d1e1fb13455cf9500b5d4d3c7a517ade20f19dbaa9a7b43b8d466aa4322ac12f"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesWebSearchCallStatus.swift",
@@ -1306,7 +1306,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesWireError.swift",
-      "sha256" : "ea5a17753c0e3c93e0e4879422fd58d451f646d5fd95d75fd7b3e7f19b83bf65"
+      "sha256" : "6bf13127b5c8670e8bb7e5f14923ce220f6efdfab52c6d26caa3ba74a6c76172"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesWireErrorCode.swift",
@@ -1314,7 +1314,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIResponsesWireUsage.swift",
-      "sha256" : "f83e013936bfc77c6198aa7b54a34d292faf97dad15d1f8521f6f619f4ab2d3b"
+      "sha256" : "ee2dd42c1825eebcc961d86aa58a1df06ac2d1c7b84177738168f8297f2432cb"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAITextAnnotation.swift",
@@ -1322,7 +1322,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAITextAnnotationAdded.swift",
-      "sha256" : "d11d275aea573cd7dfea0ef22001e84660b46478298e68f529c9f330e1069f56"
+      "sha256" : "782e5d4d8f0e59cf602222c98416e5f86e2d6c6983144ddde3c448b0366b7246"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAITextAnnotationAddedType.swift",
@@ -1330,7 +1330,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAITextAnnotationFileCitation.swift",
-      "sha256" : "4613f846c2a60c98f75983cee3941dba605183caf2c05bb265cdbc3c55c12268"
+      "sha256" : "a96143f9dd997038533f16d5abe97805647df3463fffef0ac7428897ced1f994"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAITextAnnotationFileCitationType.swift",
@@ -1338,7 +1338,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAITextAnnotationFilePath.swift",
-      "sha256" : "9ccc282d5ee89051dc5dfc30ae49479e3de76dba0b236ab93b384be30692d156"
+      "sha256" : "98bc0b8a769f4008c5718b165ed3deae67bc69c2d1e30537b0a1f27e028c1f03"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAITextAnnotationFilePathType.swift",
@@ -1346,7 +1346,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAITextAnnotationUrlCitation.swift",
-      "sha256" : "869658a0db8e110cc1c25a03d7671926d72f7699fc2c5de2cc0ae89261dee462"
+      "sha256" : "bd0cee2ea67b36e520a1e1e73d4a84caf35e980c8bcc1643e64757d7da90fa31"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAITextAnnotationUrlCitationType.swift",
@@ -1358,7 +1358,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIWebSearchActionFindInPage.swift",
-      "sha256" : "f0576bc5d27f8ae00e62af6992aadb99ab023a5d0c5a4305cb7ec1f01cd6641a"
+      "sha256" : "c70932d77db60d96cae70369ab9fa3faff344823badbd4774e7561dbfd691695"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIWebSearchActionFindInPageType.swift",
@@ -1366,7 +1366,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIWebSearchActionOpenPage.swift",
-      "sha256" : "8dfe047ca8b61f4d132e0876eecef9b31b673471040840270e9dcc978faf7e67"
+      "sha256" : "b9281c8a8849d6df2f4a329bdc2cff2e0f2389a76747ff8cd630941132223af7"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIWebSearchActionOpenPageType.swift",
@@ -1374,7 +1374,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIWebSearchActionSearch.swift",
-      "sha256" : "818ac2b5252303b35b88cd0cd37de5c2e31ac2acb9019a3e605522c3cc53501e"
+      "sha256" : "632897c7ece25a45f2b6b588885d987c15cf3f315d174012ee668921dadcef3e"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIWebSearchActionSearchType.swift",
@@ -1382,7 +1382,7 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIWebSearchSource.swift",
-      "sha256" : "5368e47e060ecda0927aad26724660c33ed97f51394c63337872e03e9e28ad64"
+      "sha256" : "a99d0e6b816293e591aae4553b52677dcb3fbe8da5c4b5efac33ba78a7cbba98"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIWebSearchSourceType.swift",
@@ -1394,15 +1394,15 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureAnyVariant1.swift",
-      "sha256" : "57e7f3429252b51e1b9efdc105a7ac1be297c14fa5aec8642ac90e8d672b43a8"
+      "sha256" : "acd3eadf66dcd5ca5359ec2dbb296eb7e62b6eb7094a3e5d61bd8598146b4046"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureAnyVariant2.swift",
-      "sha256" : "cf21d5b3d1db0df9948ee0fd2161e944bf61219c984300b8c15a50a1b91d77ee"
+      "sha256" : "f9f12660322f534c2c96de2f36f925f09961905279fbf7676dfed3b9df7c9a4d"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureBooleanArray.swift",
-      "sha256" : "2021003ae4eb64f8d313fb3b7195cd586a0e58b7b47e51869e215a90df0fd5e9"
+      "sha256" : "15a69388ac8e25273902bf3ee5622052ed2651db21270fc8dc6bedfaccbc0090"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureBooleanArrayFlagsItem.swift",
@@ -1410,7 +1410,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureBooleanMap.swift",
-      "sha256" : "7be60dae9d4974d0e15c88e7836f075ecc9f8df4b22ba69fb44ea1eae4167b06"
+      "sha256" : "84b39f3c58d070c7e32c06f1e0035b886f294515f66aef64bc1efa39c07f1658"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureBooleanMapAdditionalValue.swift",
@@ -1430,19 +1430,19 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureLocalNames.swift",
-      "sha256" : "66d8cfbd5b069a247eaeb13c318a780db94c6e88bc2d2610a07710b7ba1a245c"
+      "sha256" : "c3df7ab31cb99b3684509c70142c873fff4230d1165beab8245d418fc71c09be"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureMap.swift",
-      "sha256" : "b9ad53602d32bfb76430a64b71f77adcd0172a22ea52b4ab3ff6f2f56222818c"
+      "sha256" : "be97df53bb2c06fe26de856256fe9ec442523d1e01cc8048c6912dfd482cd097"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureNested.swift",
-      "sha256" : "64f835cb14f1cd73db2bbead1cbec2ab29f30ea69877eebf1ad9e8d04fe7724f"
+      "sha256" : "3f4160b6abac5396e901edd4ccfe845e2913d50b86823f1fb641d1655c6485e7"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureNestedOverlap.swift",
-      "sha256" : "c7a3ce1a2e29ba1ab9f67b557b6066ee3f7fd9ad11cab6e2bbc1641975d8cb8d"
+      "sha256" : "df32d4ba34cf54a7390f312c34de7bcca2f4eccdca60acfa50a2e5fee3698d60"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureNestedOverlapChoice.swift",
@@ -1458,7 +1458,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureNullableOne.swift",
-      "sha256" : "9181f2cbfbaa554412970f7c10842f0e6424e29687b409c39b2d423107b36d56"
+      "sha256" : "c4a53ddb49e014a1fefb832fc8d4b486806fbf5e3ef36445c8f89efedc213cc4"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureNullableOneValue.swift",
@@ -1470,7 +1470,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureNullableStreamVariant1.swift",
-      "sha256" : "a9325b7221575794cd7c84221f3dc1a8a126baa930663e123806c1bf580fe7bd"
+      "sha256" : "1a2e003a03e073bc8e595a9e651a2a53f60fb78102420d9c35f4821f032e99c8"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureNullableStreamVariant1Stream.swift",
@@ -1478,7 +1478,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureNullableStreamVariant2.swift",
-      "sha256" : "4966ce316e7b413bdd87a91886c743957b1cf0d030fabf84f16e223f11530df2"
+      "sha256" : "5778dc83e4217d3e2894f76082dcb5c89fabf55d25e553797aecce93ee40c874"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureNullableStreamVariant2Stream.swift",
@@ -1490,11 +1490,11 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureOneVariant1.swift",
-      "sha256" : "7da566bf0368db51a8f63c35e66dd20a291c53fd3e9f1a485e9274b0a95d4216"
+      "sha256" : "d9a1b2e6c9497607e003eac61ead9b630d8fe8c3d7a73089651f38bcb9513fa7"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureOneVariant2.swift",
-      "sha256" : "ee02c61b56d331acfcf47f1799539766793a38bfaf50c513f93be9ac1de1b639"
+      "sha256" : "3dbc9ce874a119e8261859db65813912adb3036b140eab90d12afdec5329ca31"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureOpaqueAny.swift",
@@ -1518,7 +1518,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixturePayloadTagValueA.swift",
-      "sha256" : "e565944abc5a255342946f77a375dfaaf096137f5bf5020e5112936178fffde9"
+      "sha256" : "3f3b651af5d973e3e517c15fb66868821f283fd7e088951ceb817cfaad02d378"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixturePayloadTagValueAWirePayload.swift",
@@ -1526,7 +1526,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixturePayloadTagValueB.swift",
-      "sha256" : "0ca013bf3dbe1d4f32cd40a77b6cb4e48c23d4b587bfbde2766c81c52f09373e"
+      "sha256" : "41fe1b45eef64c31efb833b3ef0b6e0843d5c1fd06d6f4972f35e3f381331f10"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixturePayloadTagValueBWirePayload.swift",
@@ -1534,7 +1534,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixturePresence.swift",
-      "sha256" : "eba3b5569a331eaae3dc4dc893869188d25ec0e0988cdc7fc53b401536122f63"
+      "sha256" : "b6272faae24468a0a895c1b68b14e809930b6142969fc235b6fec71fb739996a"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixturePresenceClass.swift",
@@ -1542,7 +1542,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureProjection.swift",
-      "sha256" : "2eb4828344bef94c3f5610ce9bbdeef7da5ec8a1178c558ba09d080caf1af2da"
+      "sha256" : "016c57d149d069f337c1d7744a128f55abbcb5d5ec4d3f7bc6897a57700000fe"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureProjectionType.swift",
@@ -1554,7 +1554,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureRecursiveBranch.swift",
-      "sha256" : "e746bb17904545ce6662a9aadba1a7a1e029c1f9a1f85a3ebf03db62e929f510"
+      "sha256" : "b41f5039d2221ffb3564607b5283490b0ee8fca3b9be0b58ae099c6d01e2e6c9"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureRecursiveBranchType.swift",
@@ -1562,7 +1562,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureRecursiveLeaf.swift",
-      "sha256" : "d7ec03efafa90405f0b4e15361598742ee7141664f352ea2439a5acf7b0e2169"
+      "sha256" : "1faff20404c6c55ce16f95b0391c5ccbe2fc39cca2f7eaef938fbb3663be6295"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureRecursiveLeafType.swift",
@@ -1578,7 +1578,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureStreamVariant1.swift",
-      "sha256" : "1ea7b96b4f4d3ae77d6ebac68f326e75e584fc48b1de045087bc7b25200a1922"
+      "sha256" : "5305ca04d42c073d58ea29dc9cb972add9a73222546c8bb07df583e486276a58"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureStreamVariant1Stream.swift",
@@ -1586,7 +1586,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureStreamVariant2.swift",
-      "sha256" : "c4217cea501496a970903bfd72c43ec16a39b79c5ce449936e8b5ae813440123"
+      "sha256" : "cc44135fed1c2f435af84772ac4f1d7045b64f9fae2408fba35cf259cc6c8bc6"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureStreamVariant2Stream.swift",
@@ -1598,7 +1598,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureTaggedText.swift",
-      "sha256" : "6babd3fd14c50b54406399f80a57132ebd9465c6daf4a01b84fc0124b9a65d01"
+      "sha256" : "c3425167db2d7b1b76eee16c5aa0dca828d8a0c0a95864a2426846912f53fa4d"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureTaggedTextType.swift",
@@ -1606,7 +1606,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureTaggedTool.swift",
-      "sha256" : "7b5152dccd7689a5bcd7c7679dac64757238632c15ae85af2d599bcf608b59ff"
+      "sha256" : "673051dbbc63cfe6a5cd694ed5cf3b37578e0b419fa5d9939cfbd01529c17270"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Fixtures/FixtureTaggedToolType.swift",

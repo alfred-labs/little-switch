@@ -30,7 +30,7 @@ public struct OpenAIChatToolDelta: Sendable, WireCodable {
     public var id: JSONPresence<String>
     public var index: JSONNumber
     public var type: JSONPresence<OpenAIChatToolKind>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         custom: OpenAIChatCustomDelta? = nil,
@@ -38,7 +38,7 @@ public struct OpenAIChatToolDelta: Sendable, WireCodable {
         id: JSONPresence<String> = .absent,
         index: JSONNumber,
         type: JSONPresence<OpenAIChatToolKind> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.custom = custom
         self.function = function

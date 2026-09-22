@@ -1,6 +1,7 @@
 import Foundation
 import HTTPTypes
 import Hummingbird
+import LittleSwitchCommon
 import NIOHTTP1
 
 /// Codex's native upstreams for models outside the LittleSwitch catalog.
@@ -33,7 +34,8 @@ package enum CodexNativePassthrough {
             let model = root["model"] as? String,
             !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
             model != CodexCatalog.managedAutoReviewModel,
-            !model.contains("/")
+            !model.contains("/"),
+            !ManagedModelIdentifier.usesCanonicalNamespace(model)
         else {
             return false
         }

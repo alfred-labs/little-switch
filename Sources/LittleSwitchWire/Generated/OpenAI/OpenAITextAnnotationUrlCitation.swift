@@ -71,7 +71,7 @@ public struct OpenAITextAnnotationUrlCitation: Sendable, WireCodable {
     public var title: String?
     public var type: OpenAITextAnnotationUrlCitationType
     public var url: String?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         endIndex: JSONNumber? = nil,
@@ -79,7 +79,7 @@ public struct OpenAITextAnnotationUrlCitation: Sendable, WireCodable {
         title: String? = nil,
         type: OpenAITextAnnotationUrlCitationType,
         url: String? = nil,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.endIndex = endIndex
         self.startIndex = startIndex

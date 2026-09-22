@@ -23,12 +23,12 @@
 public struct AnthropicFileImageSource: Sendable, WireCodable {
     public var fileId: String
     public var type: AnthropicFileImageSourceType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         fileId: String,
         type: AnthropicFileImageSourceType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.fileId = fileId
         self.type = type

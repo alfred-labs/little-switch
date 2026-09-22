@@ -22,7 +22,10 @@ enum ResponsesChatCompletionsHistory {
         var pendingCalls: Set<String> = []
         var pendingImages: [[String: Any]] = []
         for item in items {
-            let kind = item[OpenAIResponsesUserMessage.Key.type.rawValue] as? String
+            let discriminator = item[OpenAIResponsesUserMessage.Key.type.rawValue]
+            // EasyInputMessage omits type, but a supplied null or invalid value
+            // must not acquire the same interpretation as an absent discriminator.
+            let kind = discriminator == nil ? "message" : discriminator as? String
             if !pendingImages.isEmpty, kind != "function_call_output", kind != "custom_tool_call_output" {
                 throw OpenAIResponsesChatCompletions.Error.invalidRequest
             }

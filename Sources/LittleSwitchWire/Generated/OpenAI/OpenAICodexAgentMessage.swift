@@ -12,12 +12,12 @@
 public struct OpenAICodexAgentMessage: Sendable, WireCodable {
     public var content: JSONPresence<JSONValue>
     public var type: OpenAICodexAgentMessageType?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         content: JSONPresence<JSONValue> = .absent,
         type: OpenAICodexAgentMessageType? = nil,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.content = content
         self.type = type

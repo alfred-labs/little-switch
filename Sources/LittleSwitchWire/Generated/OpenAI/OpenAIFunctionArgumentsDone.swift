@@ -54,7 +54,7 @@ public struct OpenAIFunctionArgumentsDone: Sendable, WireCodable {
     public var name: JSONPresence<String>
     public var outputIndex: JSONNumber
     public var type: OpenAIFunctionArgumentsDoneType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         arguments: String,
@@ -63,7 +63,7 @@ public struct OpenAIFunctionArgumentsDone: Sendable, WireCodable {
         name: JSONPresence<String> = .absent,
         outputIndex: JSONNumber,
         type: OpenAIFunctionArgumentsDoneType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.arguments = arguments
         self.callId = callId

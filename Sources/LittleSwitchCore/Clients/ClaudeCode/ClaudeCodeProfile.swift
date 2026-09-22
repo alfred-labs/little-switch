@@ -97,11 +97,8 @@ public struct DiskClaudeCodeProfileFileStore: ClaudeCodeProfileFileStore {
             data,
             to: url,
             backupDirectory: backupDirectory,
-            backupLimit: 0
-        )
-        try FileManager.default.setAttributes(
-            [.posixPermissions: permissions],
-            ofItemAtPath: url.path
+            backupLimit: 0,
+            permissions: permissions
         )
     }
 

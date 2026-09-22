@@ -9,7 +9,7 @@ package enum ResponsesChatCompletionsReasoning {
     private static let carrierType = "little_switch_chat_reasoning"
     private enum CarrierKey: String { case type, version, data }
 
-    static func wireFields(in additionalFields: [String: JSONValue]) throws -> [String: String] {
+    static func wireFields(in additionalFields: JSONObject) throws -> [String: String] {
         var fields: [String: String] = [:]
         for key in keys {
             guard let value = additionalFields[key], !value.isNull else { continue }

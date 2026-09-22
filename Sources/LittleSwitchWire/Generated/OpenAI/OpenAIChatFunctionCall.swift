@@ -31,13 +31,13 @@ public struct OpenAIChatFunctionCall: Sendable, WireCodable {
     public var function: OpenAIChatFunctionInput
     public var id: String
     public var type: OpenAIChatFunctionCallType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         function: OpenAIChatFunctionInput,
         id: String,
         type: OpenAIChatFunctionCallType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.function = function
         self.id = id

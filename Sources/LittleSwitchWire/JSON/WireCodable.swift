@@ -2,6 +2,7 @@ import OrderedJSON
 
 public typealias JSONValue = OrderedJSON.JSONValue
 public typealias JSONNumber = OrderedJSON.JSONNumberLiteral
+public typealias JSONObject = OrderedJSON.JSONObject
 
 public protocol WireCodable: Sendable {
     init(wireJSON: JSONValue) throws

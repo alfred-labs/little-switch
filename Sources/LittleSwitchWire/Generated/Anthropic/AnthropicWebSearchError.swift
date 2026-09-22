@@ -26,12 +26,12 @@
 public struct AnthropicWebSearchError: Sendable, WireCodable {
     public var errorCode: AnthropicWebSearchErrorCode
     public var type: AnthropicWebSearchErrorType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         errorCode: AnthropicWebSearchErrorCode,
         type: AnthropicWebSearchErrorType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.errorCode = errorCode
         self.type = type

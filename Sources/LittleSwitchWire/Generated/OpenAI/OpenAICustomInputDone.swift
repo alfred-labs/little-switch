@@ -54,7 +54,7 @@ public struct OpenAICustomInputDone: Sendable, WireCodable {
     public var name: JSONPresence<String>
     public var outputIndex: JSONNumber
     public var type: OpenAICustomInputDoneType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         callId: JSONPresence<String> = .absent,
@@ -63,7 +63,7 @@ public struct OpenAICustomInputDone: Sendable, WireCodable {
         name: JSONPresence<String> = .absent,
         outputIndex: JSONNumber,
         type: OpenAICustomInputDoneType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.callId = callId
         self.input = input

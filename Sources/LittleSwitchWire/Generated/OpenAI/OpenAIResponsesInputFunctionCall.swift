@@ -14,7 +14,7 @@ public struct OpenAIResponsesInputFunctionCall: Sendable, WireCodable {
     public var name: String
     public var namespace: JSONPresence<String>
     public var type: OpenAIResponsesInputFunctionCallType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         arguments: String,
@@ -23,7 +23,7 @@ public struct OpenAIResponsesInputFunctionCall: Sendable, WireCodable {
         name: String,
         namespace: JSONPresence<String> = .absent,
         type: OpenAIResponsesInputFunctionCallType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.arguments = arguments
         self.callId = callId

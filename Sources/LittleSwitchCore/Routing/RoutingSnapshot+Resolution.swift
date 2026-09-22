@@ -28,11 +28,10 @@ extension RoutingSnapshot {
 
     public var validCodexTargets: [String: CodexModelTarget] {
         let exposed = codex.exposedModels(in: providers)
-        var targets = Dictionary(
-            uniqueKeysWithValues: exposed.map {
-                (CodexCatalog.slug(for: $0), $0)
-            }
-        )
+        // Never trap on a malformed persisted or external catalog. Ambiguous
+        // identities are unavailable, not silently routed to the last model.
+        var targets = Dictionary(grouping: exposed, by: CodexCatalog.slug(for:))
+            .compactMapValues { $0.count == 1 ? $0.first : nil }
         if let target = codex.resolvedAutoReviewTarget(in: providers) {
             targets[CodexCatalog.managedAutoReviewModel] = target
         }
@@ -40,7 +39,18 @@ extension RoutingSnapshot {
     }
 
     public func resolveCodex(model: String) -> CodexModelTarget? {
-        validCodexTargets[model]
+        codexRoutingTargets[model]
+    }
+
+    private var codexRoutingTargets: [String: CodexModelTarget] {
+        var targets = validCodexTargets
+        let legacy = Dictionary(grouping: codex.exposedModels(in: providers)) {
+            $0.provider.reference(to: $0.model.id).lowercased()
+        }
+        for (slug, matches) in legacy where targets[slug] == nil && matches.count == 1 {
+            targets[slug] = matches.first
+        }
+        return targets
     }
 
     public func resolve(model: String) -> RoutedTarget? {
@@ -91,7 +101,7 @@ extension RoutingSnapshot {
                 modelID: target.modelID
             )
         }
-        for (slug, target) in validCodexTargets {
+        for (slug, target) in codexRoutingTargets {
             routes[
                 ProviderRequestRouteKey(client: .codex, modelIdentifier: slug)
             ] = ProviderRequestRouteTarget(

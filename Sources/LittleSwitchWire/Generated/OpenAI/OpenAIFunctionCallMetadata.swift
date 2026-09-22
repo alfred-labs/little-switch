@@ -67,11 +67,11 @@
 
 public struct OpenAIFunctionCallMetadata: Sendable, WireCodable {
     public var turnId: String?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         turnId: String? = nil,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.turnId = turnId
         self.additionalFields = additionalFields

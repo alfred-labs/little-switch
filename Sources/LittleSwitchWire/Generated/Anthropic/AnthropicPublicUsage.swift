@@ -8,11 +8,11 @@
 
 public struct AnthropicPublicUsage: Sendable, WireCodable {
     public var serverToolUse: AnthropicServerToolUsage?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         serverToolUse: AnthropicServerToolUsage?,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.serverToolUse = serverToolUse
         self.additionalFields = additionalFields

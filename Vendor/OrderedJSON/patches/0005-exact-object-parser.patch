@@ -1,0 +1,8 @@
+--- a/Sources/OrderedJSON/JSONValue+Parse.swift
++++ b/Sources/OrderedJSON/JSONValue+Parse.swift
+@@ -94,4 +94,4 @@
+   private enum Container {
+-    case object(OrderedDictionary<String, JSONValue>, key: String)
++    case object(JSONObject, key: String)
+     case array([JSONValue])
+   }

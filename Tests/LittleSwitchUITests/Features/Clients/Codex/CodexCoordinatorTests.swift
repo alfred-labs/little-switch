@@ -66,9 +66,12 @@ struct CodexCoordinatorTests {
         fixture.codexProfile.eventLog = log
         fixture.codexController.failNextQuit()
 
-        _ = try await fixture.coordinator.connectCodex()
+        await #expect(throws: TestCodexController.Error.quitInjected) {
+            _ = try await fixture.coordinator.connectCodex()
+        }
 
         #expect(log.recorded.isEmpty)
+        #expect(fixture.codexProfile.activations.isEmpty)
         #expect(fixture.codexController.openCount == 0)
     }
 
@@ -157,13 +160,13 @@ struct CodexCoordinatorTests {
     func relaunchFailureKeepsConnection() async throws {
         let fixture = try await CodexCoordinatorFixture.make(codexRunning: true)
         defer { fixture.remove() }
-        fixture.codexController.failNextQuit()
+        fixture.codexController.failNextOpen()
 
         let connected = try await fixture.coordinator.connectCodex()
 
         #expect(connected.configuration.codex.connected)
         #expect(fixture.codexProfile.activations.count == 1)
-        #expect(fixture.codexController.openCount == 0)
+        #expect(fixture.codexController.openCount == 1)
     }
 
     @Test("Connected exposure changes apply without controlling Codex")

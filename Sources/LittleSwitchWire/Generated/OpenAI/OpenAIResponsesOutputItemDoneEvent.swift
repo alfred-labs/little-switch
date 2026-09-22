@@ -51,13 +51,13 @@ public struct OpenAIResponsesOutputItemDoneEvent: Sendable, WireCodable {
     public var item: JSONValue?
     public var outputIndex: JSONNumber
     public var type: OpenAIResponsesOutputItemDoneEventType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         item: JSONValue?,
         outputIndex: JSONNumber,
         type: OpenAIResponsesOutputItemDoneEventType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.item = item
         self.outputIndex = outputIndex

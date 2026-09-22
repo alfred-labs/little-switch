@@ -18,7 +18,7 @@ extension JSONValue: ExpressibleByArrayLiteral {
 
 extension JSONValue: ExpressibleByDictionaryLiteral {
   public init(dictionaryLiteral elements: (String, JSONValue)...) {
-    var dictionary = OrderedDictionary<String, JSONValue>()
+    var dictionary = JSONObject()
     dictionary.reserveCapacity(elements.count)
     for (key, value) in elements {
       dictionary[key] = value

@@ -12,7 +12,7 @@ public struct AnthropicSearchUserLocation: Sendable, WireCodable {
     public var region: JSONPresence<String>
     public var timezone: JSONPresence<String>
     public var type: AnthropicSearchLocationType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         city: JSONPresence<String> = .absent,
@@ -20,7 +20,7 @@ public struct AnthropicSearchUserLocation: Sendable, WireCodable {
         region: JSONPresence<String> = .absent,
         timezone: JSONPresence<String> = .absent,
         type: AnthropicSearchLocationType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.city = city
         self.country = country

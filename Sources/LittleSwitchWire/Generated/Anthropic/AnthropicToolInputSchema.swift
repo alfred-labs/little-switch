@@ -10,13 +10,13 @@ public struct AnthropicToolInputSchema: Sendable, WireCodable {
     public var properties: JSONPresence<JSONValue>
     public var required: JSONPresence<[String]>
     public var type: AnthropicToolSchemaType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         properties: JSONPresence<JSONValue> = .absent,
         required: JSONPresence<[String]> = .absent,
         type: AnthropicToolSchemaType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.properties = properties
         self.required = required

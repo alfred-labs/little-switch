@@ -10,12 +10,12 @@ import LittleSwitchWire
 public struct FixtureTaggedTool: Sendable, WireCodable {
     public var input: JSONValue?
     public var type: FixtureTaggedToolType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         input: JSONValue?,
         type: FixtureTaggedToolType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.input = input
         self.type = type

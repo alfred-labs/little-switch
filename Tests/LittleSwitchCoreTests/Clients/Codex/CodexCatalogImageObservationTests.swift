@@ -42,9 +42,9 @@ struct CodexCatalogImageObservationTests {
             codex: .disconnected,
             configuration: .disconnected,
             responsesWireVerdicts: [provider.id: true])
-        #expect(adapted.provider.models["example/text"]?.modalities?.input == ["text"])
-        #expect(native.provider.models["example/text"]?.modalities?.input == ["text", "image"])
-        #expect(adapted.provider.models["example/vision"]?.modalities?.input == ["text", "image"])
+        #expect(adapted.provider.models["example:text"]?.modalities?.input == ["text"])
+        #expect(native.provider.models["example:text"]?.modalities?.input == ["text", "image"])
+        #expect(adapted.provider.models["example:vision"]?.modalities?.input == ["text", "image"])
     }
 
     static func provider() throws -> Provider {

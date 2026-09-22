@@ -92,7 +92,7 @@ struct JSONParser {
   static let maxDepth: Int = 256
 
   private enum Container {
-    case object(OrderedDictionary<String, JSONValue>, key: String)
+    case object(JSONObject, key: String)
     case array([JSONValue])
   }
 

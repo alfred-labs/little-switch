@@ -68,12 +68,12 @@
 public struct OpenAIWebSearchActionOpenPage: Sendable, WireCodable {
     public var type: OpenAIWebSearchActionOpenPageType
     public var url: JSONPresence<String>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         type: OpenAIWebSearchActionOpenPageType,
         url: JSONPresence<String> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.type = type
         self.url = url

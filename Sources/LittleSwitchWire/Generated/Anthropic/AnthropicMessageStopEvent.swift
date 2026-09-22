@@ -15,11 +15,11 @@
 
 public struct AnthropicMessageStopEvent: Sendable, WireCodable {
     public var type: AnthropicMessageStopEventType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         type: AnthropicMessageStopEventType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.type = type
         self.additionalFields = additionalFields

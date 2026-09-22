@@ -9,12 +9,12 @@
 public struct OpenAIResponsesReplayTextPart: Sendable, WireCodable {
     public var text: String
     public var type: OpenAIResponsesReplayTextPartType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         text: String,
         type: OpenAIResponsesReplayTextPartType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.text = text
         self.type = type

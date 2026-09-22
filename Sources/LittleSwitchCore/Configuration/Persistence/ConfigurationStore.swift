@@ -76,12 +76,13 @@ public struct ConfigurationStore: Sendable {
 
 extension ConfigurationStore: ConfigurationStoring {}
 
-public enum AtomicFileWriter {
-    public static func write(
+enum AtomicFileWriter {
+    static func write(
         _ data: Data,
         to destination: URL,
         backupDirectory: URL,
         backupLimit: Int = 5,
+        permissions: Int = 0o600,
         fileManager: FileManager = .default,
         renamer: @escaping @Sendable (URL, URL) -> Int32 = { source, destination in
             guard Darwin.rename(source.path, destination.path) == 0 else {
@@ -102,12 +103,21 @@ public enum AtomicFileWriter {
         }
 
         let temporary = parent.appending(path: ".\(destination.lastPathComponent).\(UUID().uuidString).tmp")
-        fileManager.createFile(atPath: temporary.path, contents: nil)
+        guard fileManager.createFile(atPath: temporary.path, contents: nil, attributes: [.posixPermissions: 0o600])
+        else {
+            throw CocoaError(.fileWriteUnknown, userInfo: [NSFilePathErrorKey: temporary.path])
+        }
         do {
             let handle = try FileHandle(forWritingTo: temporary)
             try handle.write(contentsOf: data)
             try handle.synchronize()
             try handle.close()
+            // Restore deliberate user permissions only after the private file
+            // is complete, before publishing it. Read-only originals remain writable
+            // during preparation, and new data is never written to a public temporary.
+            if permissions != 0o600 {
+                try fileManager.setAttributes([.posixPermissions: permissions], ofItemAtPath: temporary.path)
+            }
             try replaceAtomically(temporary, destination: destination, renamer: renamer)
         } catch {
             try? fileManager.removeItem(at: temporary)

@@ -16,7 +16,7 @@ struct WebSearchCoordinatorTests {
         let saved = await fixture.coordinator.snapshot().configuration.webSearch
 
         let clean = await fixture.coordinator.setWebSearchDraft(
-            WebSearchInput(configuration: saved)
+            WebSearchPendingSettings(configuration: saved)
         )
         #expect(clean.webSearchDraft == nil)
 
@@ -24,14 +24,14 @@ struct WebSearchCoordinatorTests {
             configuration: WebSearchConfiguration(provider: .firecrawl, resultsLimit: 12),
             credential: "firecrawl-key"
         )
-        let pending = await fixture.coordinator.setWebSearchDraft(draft)
-        #expect(pending.webSearchDraft == draft)
+        let pending = await fixture.coordinator.setWebSearchDraft(draft.pendingSettings)
+        #expect(pending.webSearchDraft == draft.pendingSettings)
 
         let applied = try await fixture.coordinator.saveWebSearch(draft)
         #expect(applied.webSearchDraft == nil)
         #expect(applied.configuration.webSearch.resultsLimit == 12)
 
-        _ = await fixture.coordinator.setWebSearchDraft(draft)
+        _ = await fixture.coordinator.setWebSearchDraft(draft.pendingSettings)
         let cleared = await fixture.coordinator.setWebSearchDraft(nil)
         #expect(cleared.webSearchDraft == nil)
     }

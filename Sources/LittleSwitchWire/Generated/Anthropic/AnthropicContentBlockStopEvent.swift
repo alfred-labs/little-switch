@@ -16,12 +16,12 @@
 public struct AnthropicContentBlockStopEvent: Sendable, WireCodable {
     public var index: JSONNumber
     public var type: AnthropicContentBlockStopEventType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         index: JSONNumber,
         type: AnthropicContentBlockStopEventType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.index = index
         self.type = type

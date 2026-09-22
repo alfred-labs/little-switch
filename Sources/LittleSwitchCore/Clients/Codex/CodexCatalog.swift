@@ -12,6 +12,7 @@ public enum CodexCatalog {
     public enum Error: Swift.Error, Equatable {
         case empty
         case unavailableAutoReviewModel
+        case ambiguousModelIdentifiers
     }
 
     /// Separate from Codex's native reviewer so custom routing cannot capture
@@ -57,12 +58,10 @@ public enum CodexCatalog {
         ),
     ]
 
-    /// Codex surfaces the slug itself in its model picker, so it stays the
-    /// readable `provider/model` pair; RoutingSnapshot resolves it back by
-    /// exact string match. Provider names are unique case-insensitively
-    /// (enforced on save), so the lowercased pair is unique too.
+    /// Preserve case-sensitive model identity in a namespace that cannot
+    /// capture an existing provider/model alias. Display names stay readable.
     package static func slug(for target: CodexModelTarget) -> String {
-        target.provider.reference(to: target.model.id).lowercased()
+        ManagedModelIdentifier.make(providerName: target.provider.name, modelID: target.model.id)
     }
 
     package static func make(
@@ -73,6 +72,9 @@ public enum CodexCatalog {
         var targets = configuration.exposedModels(in: providers)
         guard !targets.isEmpty else {
             throw Error.empty
+        }
+        guard Set(targets.map { slug(for: $0) }).count == targets.count else {
+            throw Error.ambiguousModelIdentifiers
         }
         if let defaultModel = configuration.resolvedDefaultModel(in: providers) {
             if let index = targets.firstIndex(where: { $0.mapping == defaultModel }) {

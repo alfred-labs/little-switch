@@ -27,13 +27,13 @@ public struct AnthropicTextBlock: Sendable, WireCodable {
     public var citations: JSONPresence<[AnthropicCitation]>
     public var text: String
     public var type: AnthropicTextBlockType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         citations: JSONPresence<[AnthropicCitation]> = .absent,
         text: String,
         type: AnthropicTextBlockType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.citations = citations
         self.text = text

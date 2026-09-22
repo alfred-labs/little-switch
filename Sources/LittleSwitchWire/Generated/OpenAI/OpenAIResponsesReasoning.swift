@@ -73,7 +73,7 @@ public struct OpenAIResponsesReasoning: Sendable, WireCodable {
     public var status: JSONPresence<OpenAIResponsesReasoningStatus>
     public var summary: [JSONValue]?
     public var type: OpenAIResponsesReasoningType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         content: JSONPresence<JSONValue> = .absent,
@@ -83,7 +83,7 @@ public struct OpenAIResponsesReasoning: Sendable, WireCodable {
         status: JSONPresence<OpenAIResponsesReasoningStatus> = .absent,
         summary: [JSONValue]? = nil,
         type: OpenAIResponsesReasoningType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.content = content
         self.encryptedContent = encryptedContent

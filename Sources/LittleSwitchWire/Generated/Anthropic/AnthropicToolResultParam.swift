@@ -25,14 +25,14 @@ public struct AnthropicToolResultParam: Sendable, WireCodable {
     public var isError: Bool?
     public var toolUseId: String
     public var type: AnthropicToolResultParamType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         content: JSONPresence<JSONValue> = .absent,
         isError: Bool? = nil,
         toolUseId: String,
         type: AnthropicToolResultParamType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.content = content
         self.isError = isError

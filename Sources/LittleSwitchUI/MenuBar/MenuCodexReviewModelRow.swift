@@ -22,12 +22,9 @@ struct MenuCodexReviewModelRow: View {
             MenuModelStepper(
                 name: L10n.string("Custom approval review model"),
                 options: options,
-                selection: Binding(
-                    get: { selection },
-                    set: { option in Task { await onSelect(option?.mapping) } }
-                ),
+                selection: selection,
                 width: MenuTabContentLayout.mappingPickerWidth
-            )
+            ) { option in await onSelect(option.mapping) }
             .disabled(model.isBusy || model.modelOptions.isEmpty)
             .accessibilityHint(
                 L10n.resource(

@@ -31,13 +31,13 @@ public struct OpenAIChatMessage: Sendable, WireCodable {
     public var content: JSONPresence<String>
     public var refusal: JSONPresence<String>
     public var toolCalls: JSONPresence<[OpenAIChatMessageToolCall]>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         content: JSONPresence<String> = .absent,
         refusal: JSONPresence<String> = .absent,
         toolCalls: JSONPresence<[OpenAIChatMessageToolCall]> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.content = content
         self.refusal = refusal

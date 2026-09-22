@@ -10,12 +10,12 @@
 public struct AnthropicSignatureDelta: Sendable, WireCodable {
     public var signature: String
     public var type: AnthropicSignatureDeltaType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         signature: String,
         type: AnthropicSignatureDeltaType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.signature = signature
         self.type = type

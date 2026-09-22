@@ -58,7 +58,7 @@ private func inputDelta(_ value: JSONValue?) throws -> AnthropicContentDelta {
 }
 
 extension AnthropicWebSearch {
-    static func appendStreamingBlock(_ block: [String: JSONValue], index: Int, to stream: inout Data) throws {
+    static func appendStreamingBlock(_ block: JSONObject, index: Int, to stream: inout Data) throws {
         let value = try anthropicDecode(AnthropicContentBlock.self, from: anthropicJSON(block))
         for frame in try publicContentStartFrames(value, index: index, includeToolInput: true) { stream.append(frame) }
         stream.append(try contentStopFrame(index: index))

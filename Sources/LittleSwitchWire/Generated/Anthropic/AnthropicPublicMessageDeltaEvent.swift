@@ -11,13 +11,13 @@ public struct AnthropicPublicMessageDeltaEvent: Sendable, WireCodable {
     public var delta: JSONValue?
     public var type: AnthropicPublicMessageDeltaEventType
     public var usage: JSONValue?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         delta: JSONValue?,
         type: AnthropicPublicMessageDeltaEventType,
         usage: JSONValue?,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.delta = delta
         self.type = type

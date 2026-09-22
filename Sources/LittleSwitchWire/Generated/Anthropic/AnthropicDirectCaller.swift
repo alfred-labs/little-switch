@@ -7,11 +7,11 @@
 
 public struct AnthropicDirectCaller: Sendable, WireCodable {
     public var type: AnthropicDirectCallerType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         type: AnthropicDirectCallerType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.type = type
         self.additionalFields = additionalFields

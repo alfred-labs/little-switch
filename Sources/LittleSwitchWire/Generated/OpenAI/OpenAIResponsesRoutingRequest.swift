@@ -8,11 +8,11 @@
 
 public struct OpenAIResponsesRoutingRequest: Sendable, WireCodable {
     public var model: String?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         model: String? = nil,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.model = model
         self.additionalFields = additionalFields

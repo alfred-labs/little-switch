@@ -68,7 +68,8 @@ struct ContractEmitter {
             if let name = names[node.pointer] { return name }
             let name = ContractSwiftNames.type(graph.typeNames[node.pointer] ?? suggested)
             guard !names.values.contains(name),
-                !["String", "Bool", "JSONNumber", "JSONValue", "JSONPresence", "WireObject", "Key"].contains(name)
+                !["String", "Bool", "JSONNumber", "JSONValue", "JSONObject", "JSONPresence", "WireObject", "Key"]
+                    .contains(name)
             else {
                 throw graph.error(pointer, "Swift type name collision: \(name)")
             }

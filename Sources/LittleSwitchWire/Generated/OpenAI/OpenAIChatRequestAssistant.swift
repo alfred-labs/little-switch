@@ -19,14 +19,14 @@ public struct OpenAIChatRequestAssistant: Sendable, WireCodable {
     public var refusal: JSONPresence<String>
     public var role: OpenAIChatRequestAssistantRole
     public var toolCalls: [OpenAIChatRequestToolCall]?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         content: JSONPresence<JSONValue> = .absent,
         refusal: JSONPresence<String> = .absent,
         role: OpenAIChatRequestAssistantRole,
         toolCalls: [OpenAIChatRequestToolCall]? = nil,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.content = content
         self.refusal = refusal

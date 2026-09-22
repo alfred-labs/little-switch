@@ -11,13 +11,13 @@ public struct OpenAIResponsesUserMessage: Sendable, WireCodable {
     public var content: OpenAIResponsesUserMessageContent
     public var role: OpenAIResponsesUserMessageRole
     public var type: OpenAIResponsesUserMessageType?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         content: OpenAIResponsesUserMessageContent,
         role: OpenAIResponsesUserMessageRole,
         type: OpenAIResponsesUserMessageType? = nil,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.content = content
         self.role = role

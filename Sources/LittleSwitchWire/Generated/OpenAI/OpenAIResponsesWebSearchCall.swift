@@ -70,14 +70,14 @@ public struct OpenAIResponsesWebSearchCall: Sendable, WireCodable {
     public var id: String
     public var status: JSONPresence<OpenAIResponsesWebSearchCallStatus>
     public var type: OpenAIResponsesWebSearchCallType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         action: OpenAIWebSearchAction? = nil,
         id: String,
         status: JSONPresence<OpenAIResponsesWebSearchCallStatus> = .absent,
         type: OpenAIResponsesWebSearchCallType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.action = action
         self.id = id

@@ -18,7 +18,7 @@ public struct AnthropicMessage: Sendable, WireCodable {
     public var stopReason: JSONPresence<OpenWireValue<AnthropicMessageStopReason>>
     public var stopSequence: JSONPresence<JSONValue>
     public var usage: JSONValue?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         content: [JSONValue],
@@ -26,7 +26,7 @@ public struct AnthropicMessage: Sendable, WireCodable {
         stopReason: JSONPresence<OpenWireValue<AnthropicMessageStopReason>> = .absent,
         stopSequence: JSONPresence<JSONValue> = .absent,
         usage: JSONValue?,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.content = content
         self.id = id

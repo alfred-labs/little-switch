@@ -83,16 +83,11 @@ struct MenuCodexTabView: View {
                 MenuModelStepper(
                     name: L10n.string("Default model"),
                     options: codexOptions,
-                    selection: Binding<MenuModelOption?>(
-                        get: {
-                            codexOptions.first { $0.id == model.codexDefaultOptionID }
-                        },
-                        set: { option in
-                            Task { await onDefault(option?.mapping) }
-                        }
-                    ),
+                    selection: codexOptions.first { $0.id == model.codexDefaultOptionID },
                     width: MenuTabContentLayout.mappingPickerWidth
-                )
+                ) { option in
+                    await onDefault(option.mapping)
+                }
             }
         }
     }

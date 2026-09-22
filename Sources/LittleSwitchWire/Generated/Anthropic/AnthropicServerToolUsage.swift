@@ -9,12 +9,12 @@
 public struct AnthropicServerToolUsage: Sendable, WireCodable {
     public var webFetchRequests: JSONNumber
     public var webSearchRequests: JSONNumber
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         webFetchRequests: JSONNumber,
         webSearchRequests: JSONNumber,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.webFetchRequests = webFetchRequests
         self.webSearchRequests = webSearchRequests

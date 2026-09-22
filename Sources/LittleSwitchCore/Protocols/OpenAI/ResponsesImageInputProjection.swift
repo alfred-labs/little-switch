@@ -49,7 +49,9 @@ package enum ResponsesImageInputProjection {
         case OpenAIResponsesInputFunctionOutputType.functionCallOutput.rawValue,
             OpenAIResponsesInputCustomOutputType.customToolCallOutput.rawValue:
             return OpenAIResponsesInputFunctionOutput.Key.output.rawValue
-        case nil where fields[OpenAIResponsesUserMessage.Key.role.rawValue]?.string != nil:
+        case nil
+        where fields[OpenAIResponsesUserMessage.Key.type.rawValue] == nil
+            && fields[OpenAIResponsesUserMessage.Key.role.rawValue]?.string != nil:
             return OpenAIResponsesUserMessage.Key.content.rawValue
         default: return nil
         }

@@ -68,12 +68,12 @@
 public struct OpenAIWebSearchSource: Sendable, WireCodable {
     public var type: OpenAIWebSearchSourceType
     public var url: String
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         type: OpenAIWebSearchSourceType,
         url: String,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.type = type
         self.url = url

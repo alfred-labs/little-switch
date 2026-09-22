@@ -28,13 +28,13 @@ public struct OpenAIChatChoice: Sendable, WireCodable {
     public var delta: OpenAIChatDelta
     public var finishReason: JSONPresence<OpenAIChatFinishReason>
     public var index: JSONNumber
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         delta: OpenAIChatDelta,
         finishReason: JSONPresence<OpenAIChatFinishReason> = .absent,
         index: JSONNumber,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.delta = delta
         self.finishReason = finishReason

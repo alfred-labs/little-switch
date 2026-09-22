@@ -24,13 +24,13 @@ public struct AnthropicWebSearchResultParam: Sendable, WireCodable {
     public var content: JSONValue?
     public var toolUseId: String
     public var type: AnthropicWebSearchResultParamType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         content: JSONValue?,
         toolUseId: String,
         type: AnthropicWebSearchResultParamType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.content = content
         self.toolUseId = toolUseId

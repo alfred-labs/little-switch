@@ -24,9 +24,20 @@ struct WebSearchDraft: Equatable {
     /// Restores edits that were left waiting when the pane was last closed.
     /// A typed credential is deliberately not carried across: the field says
     /// blank keeps the saved key, and a secret should not linger unseen.
-    init(configuration: WebSearchConfiguration, pending: WebSearchInput?) {
+    init(configuration: WebSearchConfiguration, pending: WebSearchPendingSettings?) {
         self.init(configuration: pending?.configuration ?? configuration)
     }
+
+    /// Rebase untouched fields without replacing in-progress edits or the active key.
+    mutating func rebase(on applied: WebSearchConfiguration, replacing previous: WebSearchConfiguration) {
+        let unchangedLimit = resultsLimit == previous.resultsLimit
+        if provider == previous.provider { select(provider: applied.provider) }
+        if unchangedLimit { resultsLimit = applied.resultsLimit }
+        if maximumUses == previous.maximumUses { maximumUses = applied.maximumUses }
+        resultsLimit = min(max(resultsLimit, resultsRange.lowerBound), resultsRange.upperBound)
+    }
+
+    var pending: WebSearchPendingSettings { input.pendingSettings }
 
     var resultsRange: ClosedRange<Int> {
         provider.resultsLimitRange

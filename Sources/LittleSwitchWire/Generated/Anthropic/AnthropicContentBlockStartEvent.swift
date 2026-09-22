@@ -17,13 +17,13 @@ public struct AnthropicContentBlockStartEvent: Sendable, WireCodable {
     public var contentBlock: JSONValue?
     public var index: JSONNumber
     public var type: AnthropicContentBlockStartEventType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         contentBlock: JSONValue?,
         index: JSONNumber,
         type: AnthropicContentBlockStartEventType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.contentBlock = contentBlock
         self.index = index

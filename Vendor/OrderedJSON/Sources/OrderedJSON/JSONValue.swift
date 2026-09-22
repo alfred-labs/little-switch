@@ -17,16 +17,15 @@ import OrderedCollections
 ///     let value: Value = nil
 /// ```
 ///
-/// Object values are stored in an ``OrderedCollections/OrderedDictionary`` so
-/// that the insertion order of keys is preserved by encoding, equality (which
-/// is order-insensitive) is unchanged, and downstream consumers get
-/// reproducible JSON output. See issue #149 for the rationale.
+/// Object values use insertion-ordered ``JSONObject`` storage with exact decoded
+/// UTF-8 key identity. Equality remains order-insensitive; canonically equivalent
+/// spellings are distinct JSON member names.
 ///
 /// - SeeAlso: ``JSONType``
 public enum JSONValue: Hashable, Equatable, Sendable {
   case string(String)
   case numberLiteral(JSONNumberLiteral)
-  case object(OrderedDictionary<String, Self>)
+  case object(JSONObject)
   case array([Self])
   case boolean(Bool)
   case null
@@ -56,16 +55,7 @@ public enum JSONValue: Hashable, Equatable, Sendable {
       hasher.combine(value)
     case .object(let dictionary):
       hasher.combine(2)
-      // JSON objects are unordered for equality, so hash order-insensitively
-      // via XOR of per-pair hashes.
-      var combined: Int = 0
-      for (key, value) in dictionary {
-        var pairHasher = Hasher()
-        pairHasher.combine(key)
-        pairHasher.combine(value)
-        combined ^= pairHasher.finalize()
-      }
-      hasher.combine(combined)
+      hasher.combine(dictionary)
     case .array(let array):
       hasher.combine(3)
       hasher.combine(array)
@@ -87,14 +77,7 @@ public enum JSONValue: Hashable, Equatable, Sendable {
     case (.numberLiteral(let lhsValue), .numberLiteral(let rhsValue)):
       return lhsValue == rhsValue
     case (.object(let lhsValue), .object(let rhsValue)):
-      // JSON objects compare on key membership, not insertion order, even
-      // though we store keys in an OrderedDictionary for deterministic
-      // emission. See issue #149.
-      guard lhsValue.count == rhsValue.count else { return false }
-      for (key, value) in lhsValue {
-        guard rhsValue[key] == value else { return false }
-      }
-      return true
+      return lhsValue == rhsValue
     case (.array(let lhsValue), .array(let rhsValue)):
       return lhsValue == rhsValue
     case (.boolean(let lhsValue), .boolean(let rhsValue)):
@@ -147,7 +130,7 @@ extension JSONValue {
     try? numberLiteral?.integerValue()
   }
 
-  public var object: OrderedDictionary<String, JSONValue>? {
+  public var object: JSONObject? {
     if case .object(let value) = self { return value }
     return nil
   }
@@ -165,6 +148,94 @@ extension JSONValue {
   public var isNull: Bool {
     if case .null = self { return true }
     return false
+  }
+}
+
+/// Insertion-ordered JSON fields with exact decoded UTF-8 key identity.
+/// Swift's String equality normalizes Unicode; JSON member names must not.
+/// String subscripts expose the original spelling without normalizing storage.
+public struct JSONObject: RandomAccessCollection, ExpressibleByDictionaryLiteral, Sendable, Hashable {
+  public typealias Index = Int
+  public typealias Element = (key: String, value: JSONValue)
+  public typealias Key = String
+  public typealias Value = JSONValue
+
+  private struct ExactKey: Hashable, Sendable {
+    let text: String
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+      lhs.text.utf8.elementsEqual(rhs.text.utf8)
+    }
+
+    func hash(into hasher: inout Hasher) {
+      hasher.combine(Array(text.utf8))
+    }
+  }
+
+  private var storage: OrderedDictionary<ExactKey, JSONValue> = [:]
+
+  public init() {}
+
+  public init<S: Sequence>(uniqueKeysWithValues elements: S) where S.Element == (String, JSONValue) {
+    storage = OrderedDictionary(uniqueKeysWithValues: elements.map { (ExactKey(text: $0.0), $0.1) })
+  }
+
+  public init(dictionaryLiteral elements: (String, JSONValue)...) {
+    reserveCapacity(elements.count)
+    for (key, value) in elements { self[key] = value }
+  }
+
+  public var startIndex: Int { 0 }
+  public var endIndex: Int { storage.count }
+  public func index(after index: Int) -> Int { index + 1 }
+  public func index(before index: Int) -> Int { index - 1 }
+
+  public subscript(position: Int) -> Element {
+    let pair = storage.elements[position]
+    return (pair.key.text, pair.value)
+  }
+
+  public subscript(key: String) -> JSONValue? {
+    get { storage[ExactKey(text: key)] }
+    set { storage[ExactKey(text: key)] = newValue }
+  }
+
+  public var keys: [String] { storage.keys.map(\.text) }
+  public var values: [JSONValue] { Array(storage.values) }
+
+  public mutating func reserveCapacity(_ capacity: Int) {
+    storage.reserveCapacity(capacity)
+  }
+
+  @discardableResult
+  public mutating func removeValue(forKey key: String) -> JSONValue? {
+    storage.removeValue(forKey: ExactKey(text: key))
+  }
+
+  public func filter(_ isIncluded: (Element) throws -> Bool) rethrows -> Self {
+    var result = Self()
+    for pair in self where try isIncluded(pair) { result[pair.key] = pair.value }
+    return result
+  }
+
+  public func mapValues(_ transform: (JSONValue) throws -> JSONValue) rethrows -> Self {
+    try Self(uniqueKeysWithValues: map { ($0.key, try transform($0.value)) })
+  }
+
+  public static func == (lhs: Self, rhs: Self) -> Bool {
+    guard lhs.count == rhs.count else { return false }
+    return lhs.allSatisfy { rhs[$0.key] == $0.value }
+  }
+
+  public func hash(into hasher: inout Hasher) {
+    var combined = 0
+    for (key, value) in storage {
+      var pairHasher = Hasher()
+      pairHasher.combine(key)
+      pairHasher.combine(value)
+      combined ^= pairHasher.finalize()
+    }
+    hasher.combine(combined)
   }
 }
 

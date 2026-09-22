@@ -30,12 +30,12 @@
 public struct OpenAIChatCompletionChoice: Sendable, WireCodable {
     public var finishReason: OpenAIChatCompletionFinishReason
     public var message: OpenAIChatMessage
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         finishReason: OpenAIChatCompletionFinishReason,
         message: OpenAIChatMessage,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.finishReason = finishReason
         self.message = message

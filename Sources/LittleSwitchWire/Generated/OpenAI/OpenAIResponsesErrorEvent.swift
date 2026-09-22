@@ -52,14 +52,14 @@ public struct OpenAIResponsesErrorEvent: Sendable, WireCodable {
     public var message: String
     public var param: String?
     public var type: OpenAIResponsesErrorEventType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         code: String?,
         message: String,
         param: String?,
         type: OpenAIResponsesErrorEventType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.code = code
         self.message = message

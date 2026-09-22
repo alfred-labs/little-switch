@@ -54,7 +54,7 @@ public struct OpenAICustomInputDelta: Sendable, WireCodable {
     public var name: JSONPresence<String>
     public var outputIndex: JSONNumber
     public var type: OpenAICustomInputDeltaType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         callId: JSONPresence<String> = .absent,
@@ -63,7 +63,7 @@ public struct OpenAICustomInputDelta: Sendable, WireCodable {
         name: JSONPresence<String> = .absent,
         outputIndex: JSONNumber,
         type: OpenAICustomInputDeltaType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.callId = callId
         self.delta = delta

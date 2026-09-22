@@ -6,14 +6,14 @@ extension AnthropicWebSearch {
         "web_search_20250305", "web_search_20260209", "web_search_20260318",
     ]
 
-    static func isBuiltInSearchTool(_ tool: [String: JSONValue]) -> Bool {
+    static func isBuiltInSearchTool(_ tool: JSONObject) -> Bool {
         guard let type = tool[AnthropicToolDefinition.Key.type.rawValue]?.string else {
             return false
         }
         return supportedSearchTypes.contains(type)
     }
 
-    static func isPrivateSearchBlock(_ block: [String: JSONValue], privateToolName: String?) -> Bool {
+    static func isPrivateSearchBlock(_ block: JSONObject, privateToolName: String?) -> Bool {
         guard let privateToolName else {
             return false
         }
@@ -21,8 +21,8 @@ extension AnthropicWebSearch {
             && block[AnthropicToolUseParam.Key.name.rawValue]?.string == privateToolName
     }
 
-    static func builtInSearchTool(in tools: [[String: JSONValue]]) throws -> [String: JSONValue]? {
-        var selected: [String: JSONValue]?
+    static func builtInSearchTool(in tools: [JSONObject]) throws -> JSONObject? {
+        var selected: JSONObject?
         for tool in tools {
             if let type = tool[AnthropicToolDefinition.Key.type.rawValue]?.string, type.hasPrefix("web_search") {
                 guard supportedSearchTypes.contains(type) else {
@@ -41,8 +41,8 @@ extension AnthropicWebSearch {
     }
 
     static func privateSearchToolName(
-        clientTools: [[String: JSONValue]],
-        messages: [[String: JSONValue]]
+        clientTools: [JSONObject],
+        messages: [JSONObject]
     ) -> String {
         var occupied = Set(clientTools.compactMap { $0[AnthropicToolDefinition.Key.name.rawValue]?.string })
         var blocks = messages.flatMap { $0[AnthropicMessageParam.Key.content.rawValue]?.anthropicObjects ?? [] }

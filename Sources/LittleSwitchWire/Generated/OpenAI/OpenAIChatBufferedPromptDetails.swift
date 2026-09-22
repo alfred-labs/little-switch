@@ -30,12 +30,12 @@
 public struct OpenAIChatBufferedPromptDetails: Sendable, WireCodable {
     public var cacheWriteTokens: JSONNumber?
     public var cachedTokens: JSONNumber?
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         cacheWriteTokens: JSONNumber? = nil,
         cachedTokens: JSONNumber? = nil,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.cacheWriteTokens = cacheWriteTokens
         self.cachedTokens = cachedTokens

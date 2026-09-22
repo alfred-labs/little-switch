@@ -29,14 +29,14 @@ public struct OpenAIChatDelta: Sendable, WireCodable {
     public var refusal: JSONPresence<String>
     public var role: JSONPresence<OpenAIChatRole>
     public var toolCalls: JSONPresence<[OpenAIChatToolDelta]>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         content: JSONPresence<String> = .absent,
         refusal: JSONPresence<String> = .absent,
         role: JSONPresence<OpenAIChatRole> = .absent,
         toolCalls: JSONPresence<[OpenAIChatToolDelta]> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.content = content
         self.refusal = refusal

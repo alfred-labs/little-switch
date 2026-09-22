@@ -70,14 +70,14 @@ public struct OpenAIWebSearchActionSearch: Sendable, WireCodable {
     public var query: String?
     public var sources: [OpenAIWebSearchSource]?
     public var type: OpenAIWebSearchActionSearchType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         queries: [String]? = nil,
         query: String? = nil,
         sources: [OpenAIWebSearchSource]? = nil,
         type: OpenAIWebSearchActionSearchType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.queries = queries
         self.query = query

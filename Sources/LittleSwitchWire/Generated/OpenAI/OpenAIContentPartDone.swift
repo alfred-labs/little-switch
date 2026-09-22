@@ -53,7 +53,7 @@ public struct OpenAIContentPartDone: Sendable, WireCodable {
     public var outputIndex: JSONNumber
     public var part: JSONValue?
     public var type: OpenAIContentPartDoneType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         contentIndex: JSONNumber,
@@ -61,7 +61,7 @@ public struct OpenAIContentPartDone: Sendable, WireCodable {
         outputIndex: JSONNumber,
         part: JSONValue?,
         type: OpenAIContentPartDoneType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.contentIndex = contentIndex
         self.itemId = itemId

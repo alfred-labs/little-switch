@@ -87,11 +87,26 @@ struct OpenCodeProfileCommitTests {
     @Test("Rollback failure after a rejected commit remains explicit")
     func commitRollbackFailure() throws {
         let fixture = try fixture(legacy: true)
-        fixture.store.fail(onMutations: [4])
+        fixture.store.fail(onMutations: [5])
 
         #expect(throws: OpenCodeProfileManager.Error.rollbackFailed) {
             try fixture.manager.activate(managed: managed) { throw CommitError.injected }
         }
+    }
+
+    @Test("Failure to finalize the migration journal rolls back before commit")
+    func finalJournalWriteFailure() throws {
+        let fixture = try fixture(legacy: true)
+        let before = fixture.store.files
+        fixture.store.fail(onMutations: [4])
+        var commits = 0
+
+        #expect(throws: FaultingOpenCodeProfileFileStore.Error.injected) {
+            try fixture.manager.activate(managed: managed) { commits += 1 }
+        }
+
+        #expect(commits == 0)
+        #expect(fixture.store.files == before)
     }
 
     private var managed: OpenCodeManagedSettings {

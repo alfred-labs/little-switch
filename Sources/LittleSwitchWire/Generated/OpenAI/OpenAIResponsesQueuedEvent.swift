@@ -49,11 +49,11 @@
 
 public struct OpenAIResponsesQueuedEvent: Sendable, WireCodable {
     public var type: OpenAIResponsesQueuedEventType
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         type: OpenAIResponsesQueuedEventType,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.type = type
         self.additionalFields = additionalFields

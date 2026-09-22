@@ -33,7 +33,7 @@ struct CodexManagedProfileSignatureTests {
         )
         let models = try #require(root["models"] as? [[String: Any]])
         let slugs = models.compactMap { $0["slug"] as? String }
-        #expect(slugs == ["local/qwen", "gpt-5.6-sol", "little-switch-auto-review"])
+        #expect(slugs == ["local:qwen", "gpt-5.6-sol", "little-switch-auto-review"])
         let nativeEntry = try #require(models.first { ($0["slug"] as? String) == "gpt-5.6-sol" })
         #expect(nativeEntry["supported_in_api"] as? Bool == false)
     }

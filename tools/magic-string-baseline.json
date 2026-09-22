@@ -4652,36 +4652,6 @@
       "rule" : "subscriptKey"
     },
     {
-      "anchor" : "enum ResponsesImageTurnCompatibility/static func containsImage(_:Any?)->Bool",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesImageTurnCompatibility.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "input_image"
-      },
-      "ordinal" : 1,
-      "rule" : "discriminantValue"
-    },
-    {
-      "anchor" : "enum ResponsesImageTurnCompatibility/static func containsImage(_:Any?)->Bool",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesImageTurnCompatibility.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "content"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesImageTurnCompatibility/static func containsImage(_:Any?)->Bool",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesImageTurnCompatibility.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "type"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
       "anchor" : "enum ResponsesImageTurnCompatibility/static func effortless(_:Any?)->[String:Any]?",
       "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesImageTurnCompatibility.swift",
       "literal" : {

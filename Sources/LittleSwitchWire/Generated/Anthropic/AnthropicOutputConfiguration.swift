@@ -11,11 +11,11 @@
 
 public struct AnthropicOutputConfiguration: Sendable, WireCodable {
     public var effort: JSONPresence<AnthropicEffort>
-    public var additionalFields: [String: JSONValue]
+    public var additionalFields: JSONObject
 
     public init(
         effort: JSONPresence<AnthropicEffort> = .absent,
-        additionalFields: [String: JSONValue] = [:]
+        additionalFields: JSONObject = WireObject.emptyFields
     ) {
         self.effort = effort
         self.additionalFields = additionalFields

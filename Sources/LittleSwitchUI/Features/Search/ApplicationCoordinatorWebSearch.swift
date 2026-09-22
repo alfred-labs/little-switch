@@ -7,10 +7,11 @@ extension ApplicationCoordinator {
     /// Records web search edits without writing them. The draft outlives the
     /// pane, so navigating away no longer discards typed settings, and the
     /// Apply button can report whether anything is waiting.
-    public func setWebSearchDraft(_ input: WebSearchInput?) async -> CoordinatorSnapshot {
+    public func setWebSearchDraft(_ input: WebSearchPendingSettings?) async -> CoordinatorSnapshot {
         pendingWebSearchSettings = input.flatMap { draft in
             draft.matches(configuration.webSearch) ? nil : draft
         }
+        webSearchDraftRevision &+= 1
         return await snapshot()
     }
 
@@ -32,7 +33,6 @@ extension ApplicationCoordinator {
             throw missingCredential
         }
 
-        pendingWebSearchSettings = nil
         configuration.webSearch = normalized
         var credentialWasMutated = false
         do {
@@ -59,6 +59,8 @@ extension ApplicationCoordinator {
             }
             throw transactionError
         }
+        pendingWebSearchSettings = nil
+        webSearchDraftRevision &+= 1
         await replaceGatewayRoutingIfNeeded()
         return await snapshot()
     }

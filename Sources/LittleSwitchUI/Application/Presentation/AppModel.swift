@@ -71,7 +71,9 @@ final class AppModel {
     var hasPendingOpenCodeChanges: Bool
     /// Web search edits waiting to be applied. Held here rather than in the
     /// pane so leaving the section no longer throws typed settings away.
-    var webSearchDraft: WebSearchInput?
+    var webSearchDraft: WebSearchPendingSettings?
+    @ObservationIgnored private var webSearchDraftPublication: UUID?
+    @ObservationIgnored private var webSearchDraftRevision: UInt64
     var monitoringDraft: MonitoringPendingSettings?
     var monitoringStatus: MonitoringExportStatus
     var monitoringApplying: Bool
@@ -113,6 +115,7 @@ final class AppModel {
         openCodeStatus = snapshot.openCodeStatus
         hasPendingOpenCodeChanges = snapshot.hasPendingOpenCodeChanges
         webSearchDraft = snapshot.webSearchDraft
+        webSearchDraftRevision = snapshot.webSearchDraftRevision
         monitoringDraft = snapshot.monitoringDraft
         monitoringStatus = snapshot.monitoringStatus
         monitoringApplying = snapshot.monitoringApplying
@@ -284,7 +287,7 @@ final class AppModel {
         claudeCodeMappedRouteIDs = snapshot.claudeCodeMappedRouteIDs
         openCodeStatus = snapshot.openCodeStatus
         hasPendingOpenCodeChanges = snapshot.hasPendingOpenCodeChanges
-        webSearchDraft = snapshot.webSearchDraft
+        applyWebSearchDraft(snapshot)
         monitoringDraft = snapshot.monitoringDraft
         monitoringStatus = snapshot.monitoringStatus
         monitoringApplying = snapshot.monitoringApplying
@@ -298,6 +301,28 @@ final class AppModel {
         responsesWireVerdicts = snapshot.responsesWireVerdicts
         isBusy = false
         errorMessage = nil
+    }
+
+    /// Retain even a local clear until its own actor publication is acknowledged.
+    func beginWebSearchDraftPublication(_ pending: WebSearchPendingSettings?) -> UUID {
+        let publication = UUID()
+        webSearchDraftPublication = publication
+        webSearchDraft = pending
+        return publication
+    }
+
+    func completeWebSearchDraftPublication(_ publication: UUID, snapshot: CoordinatorSnapshot) {
+        guard webSearchDraftPublication == publication else { return }
+        webSearchDraftPublication = nil
+        applyWebSearchDraft(snapshot)
+    }
+
+    private func applyWebSearchDraft(_ snapshot: CoordinatorSnapshot) {
+        guard webSearchDraftPublication == nil,
+            snapshot.webSearchDraftRevision >= webSearchDraftRevision
+        else { return }
+        webSearchDraftRevision = snapshot.webSearchDraftRevision
+        webSearchDraft = snapshot.webSearchDraft
     }
 
     func optionID(for routeID: String) -> String? {
