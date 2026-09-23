@@ -5,6 +5,19 @@
         <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
         <description>LittleSwitch releases</description>
         <item>
+            <title>0.6.4</title>
+            <pubDate>Wed, 23 Sep 2026 07:09:59 +0000</pubDate>
+            <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
+            <sparkle:version>28</sparkle:version>
+            <sparkle:shortVersionString>0.6.4</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Improvements</h2>
+<ul><li><strong>Open Claude Desktop, Codex and OpenCode directly from their icons in the menu.</strong> Available icons highlight on hover. Missing applications have disabled icons and switches, and Claude Desktop is disabled when an organization-managed login prevents profile integration.</li><li><strong>Claude&apos;s 1M context follows the capacity reported by the provider.</strong> Detected capacity is authoritative, and the manual 1M switch appears only when the provider does not report a context length.</li><li><strong>Claude Desktop shows when its model list needs to be applied.</strong> Changes to model names, available families or context capabilities wait for an explicit Apply, which restarts Claude Desktop only if it is running. Refreshing a provider or changing a label does not restart the app automatically.</li></ul>
+<h2>Fixes</h2>
+<ul><li>Existing Claude Desktop profiles remain recognized when their model list is outdated, so updating LittleSwitch or changing model capabilities does not incorrectly disconnect them or prevent restoration.</li><li>Models with similar names no longer collide in Codex and OpenCode. Existing Codex configurations remain recognized and offer Apply when their catalog needs updating.</li><li>Model selections and unsaved web-search settings remain consistent during background refreshes and failed updates. Failed menu selections return to the applied choice.</li><li>The gateway preserves distinct Unicode field names and provider-specific tool content across protocol conversions. Custom-tool streams also handle providers that omit repeated output from their final response.</li><li>Image-compatibility retries leave tool arguments and unrelated data untouched instead of treating every image-shaped object as an attachment.</li><li>OpenCode settings remain recoverable after interrupted or failed updates, while unrelated settings are preserved. Sensitive settings files retain restrictive permissions during replacement.</li><li>Credential scripts stop on cancellation or timeout, and excessive output produces an error instead of leaving the request waiting indefinitely.</li><li>Escape cancels confirmation dialogs in French as well as English. Settings accessibility labels no longer retain an outdated pending status.</li></ul>]]></description>
+            <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.6.4/LittleSwitch-0.6.4-arm64.dmg" length="22704846" type="application/octet-stream" sparkle:edSignature="4ZENOFKTCxX4F0st5K7xUoFv5d2FoLlwQYA//l/zy6mIiHFPIQh8CtOx0WAdVneXf/6Dd0Wl6VhmDQraarDYAA=="/>
+        </item>
+        <item>
             <title>0.6.3</title>
             <pubDate>Wed, 16 Sep 2026 22:29:27 +0000</pubDate>
             <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
