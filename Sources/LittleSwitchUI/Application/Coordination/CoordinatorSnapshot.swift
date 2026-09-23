@@ -12,6 +12,7 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
     public var hasPendingCodexChanges: Bool
     /// Claude route mappings edited while connected, waiting for Apply.
     public var hasPendingClaudeMappings: Bool
+    public var hasPendingClaudeDesktopChanges: Bool
     public var claudeCodeStatus: ClaudeCodeConnectionStatus
     public var hasPendingClaudeCodeChanges: Bool
     public var claudeCodeMappedRouteIDs: [String]
@@ -46,6 +47,7 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
         proxyRunning: Bool = false,
         hasPendingCodexChanges: Bool = false,
         hasPendingClaudeMappings: Bool = false,
+        hasPendingClaudeDesktopChanges: Bool = false,
         claudeCodeStatus: ClaudeCodeConnectionStatus = .disconnected,
         hasPendingClaudeCodeChanges: Bool = false,
         claudeCodeMappedRouteIDs: [String] = [],
@@ -72,6 +74,7 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
         self.proxyRunning = proxyRunning
         self.hasPendingCodexChanges = hasPendingCodexChanges
         self.hasPendingClaudeMappings = hasPendingClaudeMappings
+        self.hasPendingClaudeDesktopChanges = hasPendingClaudeDesktopChanges
         self.claudeCodeStatus = claudeCodeStatus
         self.hasPendingClaudeCodeChanges = hasPendingClaudeCodeChanges
         self.claudeCodeMappedRouteIDs = claudeCodeMappedRouteIDs

@@ -1,17 +1,26 @@
 import SwiftUI
 
-/// Keep the page's state and commit action together.
+/// Keep the page's state and commit action together. A stable native group
+/// label prevents AppKit from caching the initial status as its accessible name.
 struct SettingsToolbarActions<Content: View>: ToolbarContent {
     @ViewBuilder var content: Content
 
     var body: some ToolbarContent {
         if #available(macOS 26.0, *) {
             ToolbarSpacer(.flexible, placement: .primaryAction)
-            ToolbarItem(placement: .primaryAction) { actions }
-                .sharedBackgroundVisibility(.hidden)
+            ToolbarItemGroup(placement: .primaryAction) {
+                actions
+            } label: {
+                Text(L10n.resource("Settings actions"))
+            }
+            .sharedBackgroundVisibility(.hidden)
         } else {
             ToolbarItem(placement: .primaryAction) { Spacer() }
-            ToolbarItem(placement: .primaryAction) { actions }
+            ToolbarItemGroup(placement: .primaryAction) {
+                actions
+            } label: {
+                Text(L10n.resource("Settings actions"))
+            }
         }
     }
 

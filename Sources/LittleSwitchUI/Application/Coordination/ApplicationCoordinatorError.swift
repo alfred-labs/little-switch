@@ -5,6 +5,7 @@ extension ApplicationCoordinator {
         case codexUnavailable
         case claudeCodeUnavailable
         case claudeCodeRecoveryRequired
+        case claudeDesktopProfileChanged
         case openCodeUnavailable
         case openCodeRecoveryRequired
         case noExposedOpenCodeModel
@@ -38,6 +39,9 @@ extension ApplicationCoordinator {
                 L10n.string("Claude Code integration is unavailable.")
             case .claudeCodeRecoveryRequired:
                 L10n.string("Restore the previous Claude Code settings before connecting.")
+            case .claudeDesktopProfileChanged:
+                L10n.string(
+                    "Claude Desktop settings changed outside LittleSwitch. Disconnect and reconnect before applying.")
             case .openCodeUnavailable:
                 L10n.string("OpenCode integration is unavailable.")
             case .openCodeRecoveryRequired:

@@ -14,6 +14,11 @@ struct ApplicationCoordinatorContractsTests {
             (.codexUnavailable, L10n.string("Codex desktop integration is unavailable.")),
             (.claudeCodeUnavailable, L10n.string("Claude Code integration is unavailable.")),
             (
+                .claudeDesktopProfileChanged,
+                L10n.string(
+                    "Claude Desktop settings changed outside LittleSwitch. Disconnect and reconnect before applying.")
+            ),
+            (
                 .claudeCodeRecoveryRequired,
                 L10n.string("Restore the previous Claude Code settings before connecting.")
             ),

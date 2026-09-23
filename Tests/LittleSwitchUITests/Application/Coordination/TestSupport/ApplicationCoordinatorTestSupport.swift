@@ -119,6 +119,14 @@ final class TestClaudeProfileManager: ClaudeProfileManaging, @unchecked Sendable
         _ = autoMode
         return lock.withLock { active }
     }
+
+    func catalogMatches(_ choices: [ClaudeCodeModelChoice]) throws -> Bool {
+        lock.withLock { active }
+    }
+
+    func updateCatalog(_ choices: [ClaudeCodeModelChoice], autoMode: Bool) throws {
+        guard try isActive(autoMode: autoMode) else { throw ClaudeProfileManager.Error.inactiveProfile }
+    }
 }
 
 final class SharedEventLog: @unchecked Sendable {
@@ -146,6 +154,8 @@ final class TestClaudeController: ClaudeApplicationControlling {
     private var running: Bool
     private var shouldFailNextQuit = false
     private var shouldFailNextOpen = false
+    var onQuit: (@MainActor () async throws -> Void)?
+    var onOpen: (@MainActor () async throws -> Void)?
 
     init(running: Bool = false) {
         self.running = running
@@ -160,6 +170,7 @@ final class TestClaudeController: ClaudeApplicationControlling {
         }
         quitCount += 1
         running = false
+        try await onQuit?()
     }
 
     func open() async throws {
@@ -169,6 +180,7 @@ final class TestClaudeController: ClaudeApplicationControlling {
             throw Error.openInjected
         }
         running = true
+        try await onOpen?()
     }
 
     func failNextQuit() {

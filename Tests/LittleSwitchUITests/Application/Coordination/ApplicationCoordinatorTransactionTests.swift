@@ -47,7 +47,7 @@ struct ApplicationCoordinatorTransactionTests {
         #expect(!autoChanged.configuration.autoMode)
         #expect(try fixture.store.load().autoMode == false)
         #expect(fixture.profile.appliedAutoMode == false)
-        // A remap is routing-only; auto mode is the sole relaunch-worthy change.
+        // A same-capability remap is routing-only; auto mode explicitly reloads Desktop.
         #expect(fixture.controller.quitCount == 1)
         #expect(fixture.controller.openCount == 1)
     }
@@ -90,6 +90,7 @@ struct ApplicationCoordinatorTransactionTests {
         #expect(fixture.profile.appliedAutoMode == false)
         #expect(fixture.controller.quitCount == 0)
         #expect(fixture.controller.openCount == 0)
+        #expect((await fixture.coordinator.snapshot()).hasPendingClaudeDesktopChanges)
     }
 
     @Test("Disconnect keeps live-persisted settings and restores the profile")
@@ -160,6 +161,14 @@ private final class ControlledProfileManager: ClaudeProfileManaging, @unchecked 
 
     func isActive(autoMode: Bool) throws -> Bool {
         lock.withLock { self.autoMode == autoMode }
+    }
+
+    func catalogMatches(_ choices: [ClaudeCodeModelChoice]) throws -> Bool {
+        lock.withLock { autoMode != nil }
+    }
+
+    func updateCatalog(_ choices: [ClaudeCodeModelChoice], autoMode: Bool) throws {
+        guard try isActive(autoMode: autoMode) else { throw ClaudeProfileManager.Error.inactiveProfile }
     }
 
     func failNextActivation() {

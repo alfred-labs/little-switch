@@ -136,7 +136,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "LittleSwitchUITestHost",
-            path: "Tools/LittleSwitchUITestHost"
+            path: "tools/LittleSwitchUITestHost"
         ),
         .testTarget(
             name: "LittleSwitchCommonTests",

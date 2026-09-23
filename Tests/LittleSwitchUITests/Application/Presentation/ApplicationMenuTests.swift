@@ -5,14 +5,16 @@ import Testing
 
 @Suite("Application menu")
 struct ApplicationMenuTests {
-    @Test("Claude and Codex actions apply settings without restart guidance")
+    @Test("Client actions apply settings without manual restart guidance")
     func processNeutralClientActions() throws {
-        let delegate = try [
+        let processNeutralDelegate = try [
             "Application/Lifecycle/LittleSwitchApplicationDelegate.swift",
-            "Features/Clients/Claude/LittleSwitchApplicationDelegateClaudeProducts.swift",
             "Features/Clients/Codex/LittleSwitchApplicationDelegateCodexProducts.swift",
             "Features/Clients/OpenCode/LittleSwitchApplicationDelegateOpenCode.swift",
         ].map { try source(named: $0) }.joined()
+        let claudeProducts = try source(
+            named: "Features/Clients/Claude/LittleSwitchApplicationDelegateClaudeProducts.swift")
+        let delegate = processNeutralDelegate + claudeProducts
         let appModel = try source(named: "Application/Presentation/AppModel.swift")
         let settingsViews = try [
             "Settings/Root/SettingsView.swift",
@@ -28,7 +30,10 @@ struct ApplicationMenuTests {
         #expect(!delegate.contains("Connect Claude to LittleSwitch"))
         #expect(!appModel.contains("\"Connect Claude\""))
         #expect(!delegate.contains("ManualClientRestartNotice"))
-        #expect(!delegate.localizedCaseInsensitiveContains("restart"))
+        // Desktop catalog Apply now asks permission to restart a running
+        // Claude. Other clients must still never promise process control.
+        #expect(!processNeutralDelegate.localizedCaseInsensitiveContains("restart"))
+        #expect(!claudeProducts.localizedCaseInsensitiveContains("restart Claude Code"))
         #expect(!appModel.localizedCaseInsensitiveContains("restart"))
         #expect(settingsViews.allSatisfy { !$0.localizedCaseInsensitiveContains("restart") })
     }

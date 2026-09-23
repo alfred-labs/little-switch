@@ -133,11 +133,16 @@ public protocol ClaudeProfileManaging: Sendable {
     func activate(autoMode: Bool, tlsEnabled: Bool) throws
     func restore() throws
     func isActive(autoMode: Bool) throws -> Bool
+    /// Catalog freshness is independent of ownership of the gateway connection.
+    func catalogMatches(_ choices: [ClaudeCodeModelChoice]) throws -> Bool
+    /// Updates only catalog presentation in a profile still owned by LittleSwitch.
+    func updateCatalog(_ choices: [ClaudeCodeModelChoice], autoMode: Bool) throws
 }
 
 public struct ClaudeProfileManager: Sendable {
     public enum Error: Swift.Error, Equatable {
         case applicationSupportUnavailable
+        case inactiveProfile
         case rollbackFailed
     }
 
@@ -192,12 +197,11 @@ public struct ClaudeProfileManager: Sendable {
         var thirdParty = try fileStore.readObject(paths.thirdPartyConfig)
         var normal = try fileStore.readObject(paths.normalConfig)
 
-        let inferenceModels = managedInferenceModels()
         configureProfile(
             &profile,
             autoMode: autoMode,
             tlsEnabled: tlsEnabled,
-            inferenceModels: inferenceModels
+            catalog: ClaudeProfileCatalog(choices: managedModelChoices())
         )
         configureMetadata(&metadata)
         thirdParty["deploymentMode"] = "3p"
@@ -208,7 +212,7 @@ public struct ClaudeProfileManager: Sendable {
             enabled: tlsEnabled && managedWebSearchEnabled()
         )
 
-        try transaction {
+        try transaction(urls: paths.managedFiles) {
             try fileStore.writeObject(profile, to: paths.profile)
             try fileStore.writeObject(metadata, to: paths.metadata)
             try fileStore.writeObject(thirdParty, to: paths.thirdPartyConfig)
@@ -227,7 +231,7 @@ public struct ClaudeProfileManager: Sendable {
         restoreMetadata(&metadata)
         restoreProfile(&profile)
 
-        try transaction {
+        try transaction(urls: paths.managedFiles) {
             try fileStore.writeObject(normal, to: paths.normalConfig)
             try fileStore.writeObject(thirdParty, to: paths.thirdPartyConfig)
             try fileStore.writeObject(metadata, to: paths.metadata)
@@ -236,6 +240,8 @@ public struct ClaudeProfileManager: Sendable {
     }
 
     public func isActive(autoMode: Bool) throws -> Bool {
+        // Catalog presentation can be stale without changing the gateway
+        // connection we must restore when the user disconnects or quits.
         let normal = try fileStore.readObject(paths.normalConfig)
         let thirdParty = try fileStore.readObject(paths.thirdPartyConfig)
         let metadata = try fileStore.readObject(paths.metadata)
@@ -257,10 +263,6 @@ public struct ClaudeProfileManager: Sendable {
                 == ClaudeProfileIdentity.gatewayBaseURL
                 || profile["inferenceGatewayBaseUrl"] as? String
                     == ClaudeProfileIdentity.gatewayHTTPBaseURL,
-            profile["modelDiscoveryEnabled"] as? Bool == true,
-            isManagedInferenceModelsActive(
-                profile["inferenceModels"], expected: managedInferenceModels()
-            ),
             hasSupportedIdentity,
             profile["autoModeEnabled"] as? Bool == autoMode
         else {
@@ -269,8 +271,27 @@ public struct ClaudeProfileManager: Sendable {
         return true
     }
 
-    private func transaction(_ operation: () throws -> Void) throws {
-        let snapshots = try paths.managedFiles.map { url in
+    public func catalogMatches(_ choices: [ClaudeCodeModelChoice]) throws -> Bool {
+        try ClaudeProfileCatalog(choices: choices).matches(fileStore.readObject(paths.profile))
+    }
+
+    public func updateCatalog(_ choices: [ClaudeCodeModelChoice], autoMode: Bool) throws {
+        guard try isActive(autoMode: autoMode) else {
+            throw Error.inactiveProfile
+        }
+        var profile = try fileStore.readObject(paths.profile)
+        let catalog = ClaudeProfileCatalog(choices: choices)
+        guard try !catalog.matches(profile) else {
+            return
+        }
+        catalog.apply(to: &profile)
+        try transaction(urls: [paths.profile]) {
+            try fileStore.writeObject(profile, to: paths.profile)
+        }
+    }
+
+    private func transaction(urls: [URL], _ operation: () throws -> Void) throws {
+        let snapshots = try urls.map { url in
             Snapshot(url: url, data: try fileStore.snapshot(url))
         }
         do {
@@ -291,7 +312,7 @@ public struct ClaudeProfileManager: Sendable {
         _ profile: inout [String: Any],
         autoMode: Bool,
         tlsEnabled: Bool,
-        inferenceModels: [[String: Any]]?
+        catalog: ClaudeProfileCatalog
     ) {
         profile["inferenceProvider"] = "gateway"
         profile["inferenceGatewayBaseUrl"] =
@@ -301,7 +322,7 @@ public struct ClaudeProfileManager: Sendable {
         profile["inferenceGatewayApiKey"] = ClaudeProfileIdentity.gatewayAPIKey
         profile["inferenceGatewayAuthScheme"] = "bearer"
         profile["deploymentDisplayName"] = ClaudeProfileIdentity.name
-        profile["modelDiscoveryEnabled"] = true
+        catalog.apply(to: &profile)
         profile["chatTabEnabled"] = true
         profile["disableDeploymentModeChooser"] = true
         profile["coworkEgressAllowedHosts"] = ["*"]
@@ -309,64 +330,23 @@ public struct ClaudeProfileManager: Sendable {
         profile["disableNonessentialTelemetry"] = true
         profile["autoModeEnabled"] = autoMode
         profile["allowedPluginMarketplaces"] = ClaudeProfileManager.defaultMarketplaces
-        if let inferenceModels, !inferenceModels.isEmpty {
-            profile["inferenceModels"] = inferenceModels
-        } else {
-            profile.removeValue(forKey: "inferenceModels")
-        }
         // Migrate profiles written before the rename: the stale key is what
         // Desktop warned about at every launch.
         profile.removeValue(forKey: "marketplaces")
     }
 
-    private func managedInferenceModels() -> [[String: Any]]? {
+    private func managedModelChoices() -> [ClaudeCodeModelChoice] {
         guard let object = try? fileStore.readObject(paths.littleSwitchConfig),
             let data = try? JSONSerialization.data(withJSONObject: object),
             let configuration = try? JSONDecoder().decode(AppConfiguration.self, from: data)
         else {
-            return nil
+            return []
         }
-        let choices = ClaudeCodeModelChoice.available(
+        return ClaudeCodeModelChoice.available(
             providers: configuration.providers,
             mappings: configuration.mappings,
             indicator: configuration.modelIndicator
         )
-        return choices.map { choice in
-            var model: [String: Any] = [
-                "name": choice.route.id,
-                "labelOverride": choice.baseLabel,
-                "anthropicFamilyTier": choice.route.family,
-                "isFamilyDefault": choice.route.isFamilyDefault,
-            ]
-            if choice.contextMode == .extended1M {
-                model["supports1m"] = true
-            }
-            if choice.route.offersMaxEffort {
-                model["maxEffort"] = "max"
-            }
-            return model
-        }
-    }
-
-    private func isManagedInferenceModelsActive(
-        _ actual: Any?,
-        expected: [[String: Any]]?
-    ) -> Bool {
-        guard let expected else {
-            return true
-        }
-        guard let actual,
-            JSONSerialization.isValidJSONObject(actual),
-            let actualData = try? JSONSerialization.data(
-                withJSONObject: actual, options: [.sortedKeys]
-            ),
-            let expectedData = try? JSONSerialization.data(
-                withJSONObject: expected, options: [.sortedKeys]
-            )
-        else {
-            return false
-        }
-        return actualData == expectedData
     }
 
     private func configureMetadata(_ metadata: inout [String: Any]) {

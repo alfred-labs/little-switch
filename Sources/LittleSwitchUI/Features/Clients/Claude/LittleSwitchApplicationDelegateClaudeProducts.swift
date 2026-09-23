@@ -15,13 +15,12 @@ extension LittleSwitchApplicationDelegate {
                 desktopAction != nil ? "Claude Desktop" : nil,
                 codeAction != nil ? "Claude Code" : nil,
             ].compactMap(\.self)
-            guard
-                confirm(
-                    L10n.string(
-                        "Apply these LittleSwitch settings to \(AppModel.list(targetNames))?"
-                    )
-                )
-            else {
+            var message = L10n.string("Apply these LittleSwitch settings to \(AppModel.list(targetNames))?")
+            if desktopAction == .apply {
+                let restartNotice = L10n.string("Claude Desktop will restart if it is running.")
+                message = L10n.string("\(message) \(restartNotice)")
+            }
+            guard confirm(message) else {
                 return
             }
         }
@@ -42,6 +41,8 @@ extension LittleSwitchApplicationDelegate {
                 switch desktopAction {
                 case .connect:
                     try await coordinator.connect()
+                case .apply:
+                    try await coordinator.applyClaudeDesktop()
                 }
             }
             guard succeeded else {

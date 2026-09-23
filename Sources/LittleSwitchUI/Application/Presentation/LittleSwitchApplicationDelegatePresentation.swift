@@ -38,12 +38,11 @@ extension LittleSwitchApplicationDelegate {
         // not active returns immediately without ever appearing, which reads as
         // the user cancelling something they were never asked about.
         NSApp.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
-        alert.messageText = ProductIdentity.displayName
-        alert.informativeText = message
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: actionTitle)
-        alert.addButton(withTitle: L10n.string("Cancel"))
+        let alert = ApplicationConfirmationAlert.make(
+            message: message,
+            actionTitle: actionTitle,
+            cancelTitle: L10n.string("Cancel")
+        )
         return alert.runModal() == .alertFirstButtonReturn
     }
 

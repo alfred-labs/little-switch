@@ -125,8 +125,8 @@ struct ClaudeProfileTests {
         #expect(!active)
     }
 
-    @Test("Disabling managed model discovery marks the profile drifted")
-    func modelDiscoveryDrift() throws {
+    @Test("Disabling model discovery preserves ownership of the gateway profile")
+    func modelDiscoveryPreservesOwnership() throws {
         let fixture = try ProfileFixture()
         defer { fixture.remove() }
         try fixture.writeInitialFiles()
@@ -136,7 +136,7 @@ struct ClaudeProfileTests {
         profile["modelDiscoveryEnabled"] = false
         try fixture.writeJSON(profile, to: fixture.paths.profile)
 
-        #expect(try !manager.isActive(autoMode: true))
+        #expect(try manager.isActive(autoMode: true))
     }
 
     @Test("Managed model labels override Desktop's native catalog")
@@ -184,7 +184,7 @@ struct ClaudeProfileTests {
         var profile = try fixture.object(at: fixture.paths.profile)
         profile.removeValue(forKey: "inferenceModels")
         try fixture.writeJSON(profile, to: fixture.paths.profile)
-        #expect(try !manager.isActive(autoMode: true))
+        #expect(try manager.isActive(autoMode: true))
     }
 
     @Test("A partial activation rolls every managed file back byte for byte")
@@ -444,7 +444,7 @@ struct ClaudeProfileTests {
     }
 }
 
-private struct ProfileFixture {
+struct ProfileFixture {
     let root: URL
     let paths: ClaudeProfilePaths
 

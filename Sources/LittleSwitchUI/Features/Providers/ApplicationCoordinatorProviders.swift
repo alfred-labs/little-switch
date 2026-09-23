@@ -390,10 +390,10 @@ extension ApplicationCoordinator {
         return await snapshot()
     }
 
-    /// Auto mode is the only mapping-independent setting carried by the
-    /// Claude Desktop profile, so applying it live means rewriting the
-    /// profile and relaunching Desktop to pick the new value up.
+    /// Auto mode changes the Desktop profile and explicitly reloads it.
     public func setAutoMode(_ enabled: Bool) async throws -> CoordinatorSnapshot {
+        claudeDesktopLifecycleGeneration &+= 1
+        let generation = claudeDesktopLifecycleGeneration
         try await requireUnmanagedClaudeDesktop()
         let previous = try await persistingConfigurationChange {
             $0.autoMode = enabled
@@ -411,8 +411,13 @@ extension ApplicationCoordinator {
             }
             throw error
         }
+        let catalog = claudeDesktopCatalog(in: configuration)
+        appliedClaudeDesktopCatalog = nil
         if await claudeController.relaunch() == .failed {
             throw Error.relaunchFailed
+        }
+        if generation == claudeDesktopLifecycleGeneration {
+            appliedClaudeDesktopCatalog = catalog
         }
         return await snapshot()
     }

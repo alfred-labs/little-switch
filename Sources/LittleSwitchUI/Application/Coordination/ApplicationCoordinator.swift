@@ -79,6 +79,12 @@ public actor ApplicationCoordinator {
     /// is a full replacement of the applied mappings: routes absent from it
     /// read as unassigned.
     package var pendingClaudeMappings: [String: ModelMapping]?
+    /// Catalog last loaded by Desktop, separate from live gateway routing.
+    /// Nil means an older profile or an unsuccessful client reload.
+    package var appliedClaudeDesktopCatalog: [ClaudeCodeModelChoice]?
+    package var claudeDesktopLifecycleGeneration: UInt64 = 0
+    package var claudeDesktopApplyInProgress = false
+    package var isShuttingDown = false
     package var pendingClaudeCodeSettings: ClaudeCodeSettingsDraft?
     package var appliedClaudeCodeSettings: ClaudeCodeManagedSettings?
     package var claudeCodeStatus: ClaudeCodeConnectionStatus = .disconnected
@@ -267,6 +273,7 @@ public actor ApplicationCoordinator {
             proxyRunning: proxyRunning,
             hasPendingCodexChanges: hasPendingCodexChanges,
             hasPendingClaudeMappings: hasPendingClaudeMappings,
+            hasPendingClaudeDesktopChanges: hasPendingClaudeDesktopChanges,
             claudeCodeStatus: claudeCodeStatus,
             hasPendingClaudeCodeChanges: hasPendingClaudeCodeChanges,
             // The route list follows the same effective view as the

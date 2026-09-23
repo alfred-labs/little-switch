@@ -4,6 +4,7 @@ import LittleSwitchCore
 
 struct GatewayActivityPollingUpdate: Equatable, Sendable {
     let desktopApplications: DesktopApplicationAvailability
+    let hasPendingClaudeDesktopChanges: Bool
     let requestCount: Int
     let claudeRequestCount: Int
     let codexRequestCount: Int
@@ -30,6 +31,7 @@ struct GatewayActivityPollingUpdate: Equatable, Sendable {
         responsesWireVerdicts: [UUID: Bool] = [:]
     ) {
         desktopApplications = snapshot.desktopApplications
+        hasPendingClaudeDesktopChanges = snapshot.hasPendingClaudeDesktopChanges
         requestCount = snapshot.requestCount
         claudeRequestCount = snapshot.claudeRequestCount
         codexRequestCount = snapshot.codexRequestCount
@@ -69,6 +71,10 @@ struct GatewayActivityPollingUpdate: Equatable, Sendable {
     @MainActor
     func apply(to model: AppModel) {
         model.desktopApplications = desktopApplications
+        model.updateClaudeDesktopPendingChanges(
+            hasPendingClaudeDesktopChanges,
+            snapshotSequence: monitoringSnapshotSequence
+        )
         model.requestCount = requestCount
         model.claudeRequestCount = claudeRequestCount
         model.codexRequestCount = codexRequestCount

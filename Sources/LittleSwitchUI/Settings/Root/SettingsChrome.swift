@@ -98,11 +98,12 @@ struct SettingsSidebarIdentity: View {
     }
 }
 
-/// The one way the window says a section holds changes that are not live yet.
-/// Every pane with a draft shows this, in the same words, in the same place.
+/// Shared toolbar treatment for settings waiting to be applied.
 struct SettingsPendingNotice: View {
+    var title = L10n.resource("Changes are ready to apply.")
+
     var body: some View {
-        Label(L10n.resource("Changes are ready to apply."), systemImage: "checkmark.circle")
+        Label(title, systemImage: "checkmark.circle")
             .labelStyle(.titleAndIcon)
             .font(SettingsLayout.Typography.toolbarLabel)
             .foregroundStyle(.secondary)

@@ -33,7 +33,9 @@ struct ClaudeSettingsView: View {
         }
         .toolbar {
             SettingsToolbarActions {
-                if model.hasPendingClaudeMappings || model.hasPendingClaudeCodeChanges {
+                if model.hasPendingClaudeDesktopChanges {
+                    SettingsPendingNotice(title: L10n.resource("Pending in Claude"))
+                } else if model.hasPendingClaudeMappings || model.hasPendingClaudeCodeChanges {
                     SettingsPendingNotice()
                 } else {
                     SettingsConnectionStatus(
@@ -49,7 +51,7 @@ struct ClaudeSettingsView: View {
                 }
                 .keyboardShortcut("s", modifiers: .command)
                 .disabled(!model.canApplyClaudeProducts)
-                .accessibilityHint(L10n.string("Applies pending settings and connects Claude apps"))
+                .accessibilityHint(model.claudeProductsApplyAccessibilityHint)
             }
         }
     }

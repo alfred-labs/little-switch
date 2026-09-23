@@ -9,6 +9,8 @@ public enum ApplicationShutdownMode: Sendable, Equatable {
 
 extension ApplicationCoordinator {
     public func connect() async throws -> CoordinatorSnapshot {
+        claudeDesktopLifecycleGeneration &+= 1
+        let generation = claudeDesktopLifecycleGeneration
         try await requireUnmanagedClaudeDesktop()
         let routing = routingSnapshot()
         guard routing.hasValidMapping else {
@@ -30,12 +32,17 @@ extension ApplicationCoordinator {
                 autoMode: configuration.autoMode,
                 tlsEnabled: tlsReady
             )
+            let catalog = claudeDesktopCatalog(in: configuration)
             configuration.connected = true
             try configurationStore.save(configuration)
-            await claudeController.relaunch()
+            appliedClaudeDesktopCatalog = nil
+            if await claudeController.relaunch() != .failed, generation == claudeDesktopLifecycleGeneration {
+                appliedClaudeDesktopCatalog = catalog
+            }
         } catch {
             try? profileManager.restore()
             configuration.connected = false
+            appliedClaudeDesktopCatalog = nil
             try? configurationStore.save(configuration)
             throw error
         }
@@ -43,12 +50,14 @@ extension ApplicationCoordinator {
     }
 
     public func disconnect() async throws -> CoordinatorSnapshot {
+        claudeDesktopLifecycleGeneration &+= 1
         try profileManager.restore()
         // The trust anchor deliberately survives the toggle: the authority's
         // signing key is destroyed at issuance, so a lingering anchor cannot
         // vouch for anything that does not already exist — removing it would
         // only force the consent prompt back on every reconnect.
         configuration.connected = false
+        appliedClaudeDesktopCatalog = nil
         // The disconnect confirm names the discarded drafts, so the mapping
         // draft cannot outlive the connection it drafts against.
         pendingClaudeMappings = nil
@@ -58,6 +67,10 @@ extension ApplicationCoordinator {
     }
 
     public func shutdown(mode: ApplicationShutdownMode = .userQuit) async {
+        isShuttingDown = true
+        // Invalidate catalog actions before shutdown's first suspension. Handoff
+        // intentionally keeps ownership, but must never let Apply reopen Claude.
+        claudeDesktopLifecycleGeneration &+= 1
         pendingCodexSettings = nil
         pendingClaudeCodeSettings = nil
         pendingOpenCodeSettings = nil

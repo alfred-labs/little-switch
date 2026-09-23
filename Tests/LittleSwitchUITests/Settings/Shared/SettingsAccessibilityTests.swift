@@ -6,7 +6,7 @@ import Testing
 @testable import LittleSwitchUI
 
 @MainActor
-@Suite("Settings accessibility boundaries", .serialized)
+@Suite("Settings accessibility boundaries", .appKitIsolation)
 struct SettingsAccessibilityTests {
     @Test("Toolbar status and actions retain independent accessibility names", arguments: [false, true])
     func toolbarActionNames(disabled: Bool) async throws {
@@ -32,7 +32,7 @@ struct SettingsAccessibilityTests {
         window.displayIfNeeded()
 
         let toolbar = try #require(window.toolbar)
-        let initialElements = toolbar.items.compactMap(\.view).flatMap { descendants(of: $0) }
+        let initialElements = SettingsToolbarTestSupport.views(in: toolbar.items).flatMap { descendants(of: $0) }
         let status = try #require(
             initialElements.first { $0.accessibilityValue() as? String == L10n.string("Not connected") },
             "\(initialElements)"
@@ -43,7 +43,7 @@ struct SettingsAccessibilityTests {
         controller.view.layoutSubtreeIfNeeded()
         window.displayIfNeeded()
 
-        let elements = toolbar.items.compactMap(\.view).flatMap { descendants(of: $0) }
+        let elements = SettingsToolbarTestSupport.views(in: toolbar.items).flatMap { descendants(of: $0) }
         let testExport = try #require(elements.first { $0.object.accessibilityHelp?() == "Send a synthetic event" })
         let apply = try #require(
             elements.first { $0.object.accessibilityHelp?() == L10n.string("Apply monitoring settings") })

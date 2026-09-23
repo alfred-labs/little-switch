@@ -48,6 +48,7 @@ final class AppModel {
 
     enum ClaudePrimaryAction: Equatable, Sendable {
         case connect
+        case apply
     }
 
     enum CodexPrimaryAction: Equatable, Sendable {
@@ -64,6 +65,8 @@ final class AppModel {
     var proxyRunning: Bool
     var hasPendingCodexChanges: Bool
     var hasPendingClaudeMappings: Bool
+    var hasPendingClaudeDesktopChanges: Bool
+    @ObservationIgnored private var claudeDesktopSnapshotSequence: UInt64
     var claudeCodeStatus: ClaudeCodeConnectionStatus
     var hasPendingClaudeCodeChanges: Bool
     var claudeCodeMappedRouteIDs: [String]
@@ -109,6 +112,8 @@ final class AppModel {
         proxyRunning = snapshot.proxyRunning
         hasPendingCodexChanges = snapshot.hasPendingCodexChanges
         hasPendingClaudeMappings = snapshot.hasPendingClaudeMappings
+        hasPendingClaudeDesktopChanges = snapshot.hasPendingClaudeDesktopChanges
+        claudeDesktopSnapshotSequence = snapshot.monitoringSnapshotSequence
         claudeCodeStatus = snapshot.claudeCodeStatus
         hasPendingClaudeCodeChanges = snapshot.hasPendingClaudeCodeChanges
         claudeCodeMappedRouteIDs = snapshot.claudeCodeMappedRouteIDs
@@ -184,23 +189,6 @@ final class AppModel {
 
     var codexConnected: Bool {
         configuration.codex.connected
-    }
-
-    var claudePrimaryAction: ClaudePrimaryAction? {
-        // Routing remaps reach a connected Desktop live through the gateway,
-        // so the only Desktop action left is connecting.
-        connected ? nil : .connect
-    }
-
-    var claudePrimaryActionTitle: String {
-        L10n.string("Apply")
-    }
-
-    var claudePrimaryActionAccessibilityValue: String {
-        guard connected else {
-            return L10n.string("Claude disconnected")
-        }
-        return hasPendingClaudeMappings ? L10n.string("Changes pending") : L10n.string("No pending changes")
     }
 
     var codexPrimaryAction: CodexPrimaryAction {
@@ -282,6 +270,10 @@ final class AppModel {
         proxyRunning = snapshot.proxyRunning
         hasPendingCodexChanges = snapshot.hasPendingCodexChanges
         hasPendingClaudeMappings = snapshot.hasPendingClaudeMappings
+        updateClaudeDesktopPendingChanges(
+            snapshot.hasPendingClaudeDesktopChanges,
+            snapshotSequence: snapshot.monitoringSnapshotSequence
+        )
         claudeCodeStatus = snapshot.claudeCodeStatus
         hasPendingClaudeCodeChanges = snapshot.hasPendingClaudeCodeChanges
         claudeCodeMappedRouteIDs = snapshot.claudeCodeMappedRouteIDs
@@ -301,6 +293,14 @@ final class AppModel {
         responsesWireVerdicts = snapshot.responsesWireVerdicts
         isBusy = false
         errorMessage = nil
+    }
+
+    /// Desktop catalog state shares the coordinator snapshot clock, but accepts
+    /// polling updates independently of any in-progress monitoring action.
+    func updateClaudeDesktopPendingChanges(_ pending: Bool, snapshotSequence: UInt64) {
+        guard snapshotSequence >= claudeDesktopSnapshotSequence else { return }
+        claudeDesktopSnapshotSequence = snapshotSequence
+        setIfChanged(\.hasPendingClaudeDesktopChanges, to: pending)
     }
 
     /// Retain even a local clear until its own actor publication is acknowledged.

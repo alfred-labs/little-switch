@@ -3,6 +3,34 @@ import Testing
 
 @Suite("AppKit SwiftPM test runner")
 struct AppKitSwiftTestRunnerTests {
+    @Test("The AppKit test host path matches directory entry case")
+    func appKitTestHostPathMatchesDirectoryEntryCase() throws {
+        let root = try RepositoryFixture.root()
+        try withTemporaryDirectory { scratch in
+            let result = try RepositoryProcess.run(
+                URL(fileURLWithPath: "/usr/bin/xcrun"),
+                arguments: [
+                    "swift", "package", "--disable-sandbox", "--scratch-path", scratch.path, "dump-package",
+                ],
+                directory: root)
+            try #require(result.status == 0, "\(result.stderr)")
+            let package = try #require(
+                JSONSerialization.jsonObject(with: Data(result.stdout.utf8)) as? [String: Any])
+            let targets = try #require(package["targets"] as? [[String: Any]])
+            let host = try #require(targets.first { $0["name"] as? String == "LittleSwitchUITestHost" })
+            let path = try #require(host["path"] as? String)
+
+            var directory = root
+            for component in path.split(separator: "/") {
+                let entries = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+                try #require(
+                    entries.contains(String(component)),
+                    "Target path \(path) does not match directory entry case at \(directory.path)")
+                directory.appendPathComponent(String(component))
+            }
+        }
+    }
+
     @Test("Application Swift Testing uses direct AppKit hosts so DYLD environment survives launch")
     func applicationSwiftTestingUsesDirectAppKitHosts() throws {
         let package = try RepositoryFixture.text("Package.swift")

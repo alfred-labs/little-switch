@@ -114,12 +114,19 @@ struct MenuClaudeTabView: View {
             }
     }
 
+    private var hasPendingChanges: Bool {
+        model.hasPendingClaudeDesktopChanges || model.hasPendingClaudeMappings || model.hasPendingClaudeCodeChanges
+    }
+
     private var actionRow: some View {
         HStack {
-            if model.hasPendingClaudeMappings || model.hasPendingClaudeCodeChanges {
-                Text(L10n.resource("Changes pending"))
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
+            if hasPendingChanges {
+                Text(
+                    model.hasPendingClaudeDesktopChanges
+                        ? L10n.resource("Pending in Claude") : L10n.resource("Changes pending")
+                )
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
             }
             Spacer()
             MenuApplyButton(
@@ -129,6 +136,7 @@ struct MenuClaudeTabView: View {
                     onApply: onApplyClaude
                 )
             )
+            .accessibilityHint(model.claudeProductsApplyAccessibilityHint)
         }
         .padding(.horizontal, MenuStatsBlockLayout.horizontalPadding)
         .frame(width: StatusMenuLayout.width, height: MenuTabContentLayout.actionRowHeight)

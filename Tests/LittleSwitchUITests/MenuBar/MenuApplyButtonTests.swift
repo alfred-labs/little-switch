@@ -48,7 +48,6 @@ struct MenuApplyButtonTests {
         let host = MenuControlTestHost(MenuApplyButton(action: action).padding(10), width: 60, height: 50)
         defer { host.close() }
         try await host.activateAccessibility()
-        let wasActive = NSApp.isActive
         let resting = try pixels(of: host.hosting)
 
         host.hosting.updateTrackingAreas()
@@ -67,7 +66,6 @@ struct MenuApplyButtonTests {
         let didClearHover = try await renders(host.hosting) { $0 == resting }
         #expect(didClearHover)
         #expect(calls == 0)
-        #expect(NSApp.isActive == wasActive)
     }
 
     @Test("Accessibility focus draws and clears the keyboard focus ring without activation")
@@ -117,6 +115,7 @@ struct MenuApplyButtonTests {
             )
         )
         #expect(!view.trackingAreas.isEmpty)
+        let wasActive = NSApp.isActive
         for area in view.trackingAreas {
             let owner = area.owner as AnyObject?
             let event = TrackingEvent(baseEvent, area: area)
@@ -126,6 +125,9 @@ struct MenuApplyButtonTests {
                 owner?.mouseExited?(with: event)
             }
         }
+        // Measure the event's own effect before yielding MainActor. A user or
+        // another app may change activation while deferred pixels are awaited.
+        #expect(NSApp.isActive == wasActive)
     }
 
     /// NSEvent's public factory creates a legacy rectangle event without a

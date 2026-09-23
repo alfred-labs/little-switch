@@ -139,6 +139,8 @@
 "Claude Code integration is unavailable." = "Claude Code integration is unavailable.";
 "Claude Desktop" = "Claude Desktop";
 "Claude Desktop kept its previous settings: the app could not be restarted. Relaunch it manually to pick the change up." = "Claude Desktop kept its previous settings: the app could not be restarted. Relaunch it manually to pick the change up.";
+"Claude Desktop settings changed outside LittleSwitch. Disconnect and reconnect before applying." = "Claude Desktop settings changed outside LittleSwitch. Disconnect and reconnect before applying.";
+"Claude Desktop will restart if it is running." = "Claude Desktop will restart if it is running.";
 "Claude disconnected" = "Claude disconnected";
 "Claude offers 1M automatically when detected capacity reaches 1,000,000 tokens." = "Claude offers 1M automatically when detected capacity reaches 1,000,000 tokens.";
 "Clear script" = "Clear script";
@@ -357,6 +359,7 @@
 "Paste" = "Paste";
 "Paste a token" = "Paste a token";
 "Pending" = "Pending";
+"Pending in Claude" = "Pending in Claude";
 "Port 11436 is already in use. Quit the other LittleSwitch instance, then reopen the app." = "Port 11436 is already in use. Quit the other LittleSwitch instance, then reopen the app.";
 "Preset" = "Preset";
 "Preview" = "Preview";
@@ -417,6 +420,7 @@
 "Send a synthetic event using the applied settings. Apply changes before testing." = "Send a synthetic event using the applied settings. Apply changes before testing.";
 "Sending…" = "Sending…";
 "Settings" = "Settings";
+"Settings actions" = "Settings actions";
 "Settings…" = "Settings…";
 "Settings… (⌘,)" = "Settings… (⌘,)";
 "Shared by every model and app using this provider." = "Shared by every model and app using this provider.";
@@ -451,6 +455,7 @@
 "The %@ token contains invalid characters." = "The %@ token contains invalid characters.";
 "The interrupted batch may already have reached the receiver." = "The interrupted batch may already have reached the receiver.";
 "The model catalog is shared with Codex." = "The model catalog is shared with Codex.";
+"The model list still needs to be applied in Claude Desktop." = "The model list still needs to be applied in Claude Desktop.";
 "The new monitoring token could not be saved in Keychain." = "The new monitoring token could not be saved in Keychain.";
 "The original provider has no saved key. Enter an API token for this copy." = "The original provider has no saved key. Enter an API token for this copy.";
 "The original provider is no longer available. Choose another provider to duplicate." = "The original provider is no longer available. Choose another provider to duplicate.";
@@ -476,6 +481,7 @@
 "Undo" = "Undo";
 "Unknown" = "Unknown";
 "Unknown error" = "Unknown error";
+"Updates the model list in Claude Desktop and restarts it if it is running" = "Updates the model list in Claude Desktop and restarts it if it is running";
 "Usage limits" = "Usage limits";
 "Use low effort" = "Use low effort";
 "Use the complete OTLP receiver URL, including its %@ path." = "Use the complete OTLP receiver URL, including its %@ path.";

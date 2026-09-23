@@ -4,6 +4,7 @@ import LittleSwitchCore
 
 extension ApplicationCoordinator {
     public func start() async throws -> CoordinatorSnapshot {
+        isShuttingDown = false
         gatewayActivityStartingCount += 1
         defer { gatewayActivityStartingCount -= 1 }
         configuration = try configurationStore.load()
@@ -22,11 +23,19 @@ extension ApplicationCoordinator {
             throw Error.gatewayUnavailable
         }
         if configuration.connected {
-            let profileIsActive =
-                (try? profileManager.isActive(autoMode: configuration.autoMode)) == true
+            // An unreadable profile is not evidence that ownership was lost.
+            // Keep restoration responsibility until the check succeeds.
+            let profileIsActive = try profileManager.isActive(autoMode: configuration.autoMode)
             if !routing.hasValidMapping || !profileIsActive {
-                configuration.connected = false
-                try configurationStore.save(configuration)
+                if profileIsActive { try profileManager.restore() }
+                var disconnected = configuration
+                disconnected.connected = false
+                try configurationStore.save(disconnected)
+                configuration = disconnected
+                appliedClaudeDesktopCatalog = nil
+            } else {
+                let catalog = claudeDesktopCatalog(in: configuration)
+                appliedClaudeDesktopCatalog = try profileManager.catalogMatches(catalog) ? catalog : nil
             }
         }
         _ = await responsesWireVerdicts()

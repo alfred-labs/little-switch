@@ -139,6 +139,8 @@
 "Claude Code integration is unavailable." = "L’intégration Claude Code est indisponible.";
 "Claude Desktop" = "Claude Desktop";
 "Claude Desktop kept its previous settings: the app could not be restarted. Relaunch it manually to pick the change up." = "Claude Desktop a conservé ses réglages précédents : l’app n’a pas pu être relancée. Relancez-la manuellement pour prendre en compte la modification.";
+"Claude Desktop settings changed outside LittleSwitch. Disconnect and reconnect before applying." = "Les réglages de Claude Desktop ont changé en dehors de LittleSwitch. Déconnectez puis reconnectez Claude avant d’appliquer les modifications.";
+"Claude Desktop will restart if it is running." = "Claude Desktop redémarrera s’il est ouvert.";
 "Claude disconnected" = "Claude déconnecté";
 "Claude offers 1M automatically when detected capacity reaches 1,000,000 tokens." = "Claude propose automatiquement le contexte 1M dès que la capacité détectée atteint 1 000 000 tokens.";
 "Clear script" = "Effacer le script";
@@ -357,6 +359,7 @@
 "Paste" = "Coller";
 "Paste a token" = "Coller un jeton";
 "Pending" = "En attente";
+"Pending in Claude" = "À appliquer dans Claude";
 "Port 11436 is already in use. Quit the other LittleSwitch instance, then reopen the app." = "Le port 11436 est déjà utilisé. Quittez l’autre instance de LittleSwitch, puis rouvrez l’app.";
 "Preset" = "Préréglage";
 "Preview" = "Aperçu";
@@ -417,6 +420,7 @@
 "Send a synthetic event using the applied settings. Apply changes before testing." = "Envoie un événement synthétique avec les réglages appliqués. Appliquez les modifications avant de tester.";
 "Sending…" = "Envoi…";
 "Settings" = "Réglages";
+"Settings actions" = "Actions des réglages";
 "Settings…" = "Réglages…";
 "Settings… (⌘,)" = "Réglages… (⌘,)";
 "Shared by every model and app using this provider." = "Partagé par tous les modèles et apps utilisant ce fournisseur.";
@@ -451,6 +455,7 @@
 "The %@ token contains invalid characters." = "Le jeton %@ contient des caractères invalides.";
 "The interrupted batch may already have reached the receiver." = "Le lot interrompu a peut-être déjà atteint le récepteur.";
 "The model catalog is shared with Codex." = "Le catalogue de modèles est partagé avec Codex.";
+"The model list still needs to be applied in Claude Desktop." = "La liste des modèles reste à appliquer dans Claude Desktop.";
 "The new monitoring token could not be saved in Keychain." = "Le nouveau jeton de supervision n'a pas pu être enregistré dans le trousseau.";
 "The original provider has no saved key. Enter an API token for this copy." = "Le fournisseur d'origine n'a pas de clé enregistrée. Saisissez un jeton API pour cette copie.";
 "The original provider is no longer available. Choose another provider to duplicate." = "Le fournisseur d'origine n'est plus disponible. Choisissez un autre fournisseur à dupliquer.";
@@ -476,6 +481,7 @@
 "Undo" = "Annuler";
 "Unknown" = "Inconnu";
 "Unknown error" = "Erreur inconnue";
+"Updates the model list in Claude Desktop and restarts it if it is running" = "Met à jour la liste des modèles dans Claude Desktop et le redémarre s’il est ouvert";
 "Usage limits" = "Limites d’usage";
 "Use low effort" = "Utiliser l’effort faible";
 "Use the complete OTLP receiver URL, including its %@ path." = "Utilisez l’URL complète du récepteur OTLP, y compris son chemin %@.";

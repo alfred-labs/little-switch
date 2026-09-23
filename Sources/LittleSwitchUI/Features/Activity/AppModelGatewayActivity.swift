@@ -44,16 +44,21 @@ extension AppModel {
     }
 
     public var hasPendingChanges: Bool {
-        !pendingChangeNames.isEmpty
+        hasPendingClaudeDesktopChanges || !pendingChangeNames.isEmpty
     }
 
-    /// Nil when nothing would be lost, so callers can skip the question.
+    /// Saved catalog changes still need an explicit Desktop Apply. Keep that
+    /// notice separate from drafts that disconnecting or quitting discards.
     public var pendingChangesWarning: String? {
         let names = pendingChangeNames
-        guard !names.isEmpty else {
-            return nil
+        var warnings: [String] = []
+        if !names.isEmpty {
+            warnings.append(L10n.string("Unapplied changes for \(AppModel.list(names)) will be discarded."))
         }
-        return L10n.string("Unapplied changes for \(AppModel.list(names)) will be discarded.")
+        if hasPendingClaudeDesktopChanges {
+            warnings.append(L10n.string("The model list still needs to be applied in Claude Desktop."))
+        }
+        return warnings.isEmpty ? nil : warnings.joined(separator: " ")
     }
 
     static func list(_ names: [String]) -> String {

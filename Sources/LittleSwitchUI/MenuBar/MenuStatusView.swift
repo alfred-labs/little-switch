@@ -30,10 +30,12 @@ public struct MenuStatusView: View {
             ApplicationStatusRow(
                 name: L10n.string("Claude Desktop"),
                 icon: .claudeDesktop,
-                detail: StatusMenuCopy.detail(
-                    StatusMenuCopy.customModelCount(model.claudeCustomModelCount),
-                    hasPendingChanges: model.hasPendingClaudeMappings
-                ),
+                detail: model.hasPendingClaudeDesktopChanges
+                    ? L10n.string("Pending in Claude")
+                    : StatusMenuCopy.detail(
+                        StatusMenuCopy.customModelCount(model.claudeCustomModelCount),
+                        hasPendingChanges: model.hasPendingClaudeMappings
+                    ),
                 connected: model.connected,
                 disabled: model.isBusy,
                 access: model.desktopApplications.claude,

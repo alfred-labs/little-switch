@@ -25,6 +25,7 @@ struct ConnectedCoordinatorFixture {
         tlsProvisioner: (any GatewayTLSProvisioning)? = nil,
         injectFailingStore: Bool = false,
         claudeCodeConnected: Bool = false,
+        claudeRunning: Bool = false,
         mapsSecondRoute: Bool = false,
         models: [DiscoveredModel] = [DiscoveredModel(id: "applied"), DiscoveredModel(id: "replacement")]
     ) async throws -> Self {
@@ -62,7 +63,7 @@ struct ConnectedCoordinatorFixture {
             initial.claudeCode.connected = true
         }
         let store = ConfigurationStore(
-            fileURL: root.appending(path: "config.json"),
+            fileURL: ClaudeProfilePaths(applicationSupport: root).littleSwitchConfig,
             backupDirectory: root.appending(path: "configuration-backups")
         )
         try store.save(initial)
@@ -87,7 +88,7 @@ struct ConnectedCoordinatorFixture {
                 modelIndicator: initial.modelIndicator
             )
         )
-        let controller = TestClaudeController()
+        let controller = TestClaudeController(running: claudeRunning)
         let secrets = MemorySecretStore()
         let coordinator = ApplicationCoordinator(
             configurationStore: wrappedStore,

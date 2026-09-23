@@ -5,7 +5,7 @@ import Testing
 @testable import LittleSwitchUI
 
 @MainActor
-@Suite("Settings toolbar placement")
+@Suite("Settings toolbar placement", .appKitIsolation)
 struct SettingsToolbarPlacementTests {
     init() { _ = NSApplication.shared }
 
@@ -39,8 +39,13 @@ struct SettingsToolbarPlacementTests {
         #expect(spacer > items.startIndex)
         #expect(spacer < items.endIndex - 1)
         #expect(window.titleVisibility == .hidden)
-        let actions = try #require(toolbar.items.last?.view)
-        let frame = actions.convert(actions.bounds, to: nil)
+        let actions = try #require(toolbar.items.last)
+        let views = SettingsToolbarTestSupport.views(in: [actions])
+        try #require(!views.isEmpty)
+        try #require(views.allSatisfy { $0.window === window })
+        let frames = views.map { $0.convert($0.bounds, to: nil) }
+        let frame = frames.reduce(NSRect.null) { $0.union($1) }
+        #expect(!frame.isEmpty)
         #expect(frame.minX > width / 2 - 80)
         #expect(frame.maxX <= width)
     }
