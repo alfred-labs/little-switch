@@ -131,7 +131,7 @@ struct ChatGPTHistoryStoreTests {
 
 func historyRequest(
     conversation: String? = nil,
-    parent: String = UUID().uuidString.lowercased(),
+    parent: String? = UUID().uuidString.lowercased(),
     text: String = "hello",
     temporary: Bool = false,
     messageID: String = UUID().uuidString.lowercased()

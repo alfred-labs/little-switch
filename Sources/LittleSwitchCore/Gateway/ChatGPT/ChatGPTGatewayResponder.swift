@@ -81,13 +81,7 @@ package struct ChatGPTGatewayResponder: HTTPResponder {
             }
             let bytes = Data(try await upstream.body.collect(upTo: 8 * 1_024 * 1_024).readableBytesView)
             let merged = try ChatGPTCatalog.merge(nativeData: bytes, models: models)
-            var headers = nativeResponseHeaders(upstream.headers)
-            headers[.eTag] = nil
-            headers[.lastModified] = nil
-            headers[.contentEncoding] = nil
-            headers[.contentType] = "application/json"
-            headers[.cacheControl] = "no-store"
-            return Response(status: .ok, headers: headers, body: ResponseBody(byteBuffer: ByteBuffer(bytes: merged)))
+            return nativeJSONResponse(merged, headers: upstream.headers)
         } catch is CancellationError {
             throw CancellationError()
         } catch {

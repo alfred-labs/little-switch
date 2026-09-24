@@ -28,10 +28,8 @@ extension ApplicationCoordinator {
         chatGPTStatus = managedRunning ? .connected : .ready
     }
 
-    func openManagedChatGPT(
-        using controller: any CodexApplicationControlling,
-        environment: [String: String]
-    ) async throws {
+    func openManagedChatGPT(using controller: any CodexApplicationControlling) async throws {
+        guard let environment = chatGPTLaunchEnvironment else { throw ChatGPTConnectionError.unavailable }
         chatGPTManagedLaunchID = try await controller.openTracked(environment: environment)
         chatGPTDesktopRestoration = .managed
     }

@@ -40,9 +40,21 @@ extension ChatGPTGatewayResponder {
     func nativeResponseHeaders(_ incoming: HTTPHeaders) -> HTTPFields {
         var fields = HTTPFields()
         for header in HTTPForwardingHeaders.endToEnd(incoming) {
-            if let name = HTTPField.Name(header.name) { fields.append(HTTPField(name: name, value: header.value)) }
+            guard let name = HTTPField.Name(header.name) else { continue }
+            let value = name == .setCookie ? ChatGPTNativeCookie.localHeader(header.value) : header.value
+            if let value { fields.append(HTTPField(name: name, value: value)) }
         }
         return fields
+    }
+
+    func nativeJSONResponse(_ data: Data, headers incoming: HTTPHeaders) -> Response {
+        var headers = nativeResponseHeaders(incoming)
+        headers[.eTag] = nil
+        headers[.lastModified] = nil
+        headers[.contentEncoding] = nil
+        headers[.contentType] = "application/json"
+        headers[.cacheControl] = "no-store"
+        return Response(status: .ok, headers: headers, body: ResponseBody(byteBuffer: ByteBuffer(bytes: data)))
     }
 
     func isCatalog(_ request: Request) -> Bool {

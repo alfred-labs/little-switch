@@ -3,7 +3,7 @@ import LittleSwitchCore
 
 extension ApplicationCoordinator {
     func startChatGPTListener(installTrust: Bool) async throws {
-        guard let tlsProvisioner, let builder = chatGPTGatewayBuilder, let gatewayState else {
+        guard let tlsProvisioner, let builder = chatGPTGatewayBuilder, let chatGPTLaunchTrust, let gatewayState else {
             throw ChatGPTConnectionError.unavailable
         }
         // Startup checks trust before identity: recovery cannot provision or
@@ -19,7 +19,19 @@ extension ApplicationCoordinator {
             ? tlsProvisioner.installTrust(secretStore: secretStore).isTrusted
             : tlsProvisioner.isTrusted(secretStore: secretStore)
         guard trusted else { throw ChatGPTConnectionError.trustRequired }
-        if let chatGPTServer, chatGPTGatewayState === gatewayState, await chatGPTServer.isRunning { return }
+        let environment: [String: String]
+        do {
+            environment = try chatGPTLaunchTrust.prepare(
+                inheriting: inheritedEnvironment, authorityPEM: identity.authorityPEM)
+        } catch {
+            throw ChatGPTConnectionError.certificateBundleUnavailable
+        }
+        let matchesListener =
+            chatGPTGatewayState === gatewayState && chatGPTListenerAuthorityPEM == identity.authorityPEM
+        if matchesListener, let chatGPTServer, await chatGPTServer.isRunning {
+            chatGPTLaunchEnvironment = environment
+            return
+        }
         // A listener owns active turns and its history actor. Drain it before
         // constructing another owner, including after a primary state change.
         await stopChatGPTListener()
@@ -33,10 +45,14 @@ extension ApplicationCoordinator {
         )
         chatGPTServer = server
         chatGPTGatewayState = gatewayState
+        chatGPTLaunchEnvironment = environment
+        chatGPTListenerAuthorityPEM = identity.authorityPEM
         do { try await server.start() } catch {
             await server.stop()
             chatGPTServer = nil
             chatGPTGatewayState = nil
+            chatGPTLaunchEnvironment = nil
+            chatGPTListenerAuthorityPEM = nil
             throw error
         }
         try checkChatGPTOperation()
@@ -61,6 +77,8 @@ extension ApplicationCoordinator {
         let server = chatGPTServer
         chatGPTServer = nil
         chatGPTGatewayState = nil
+        chatGPTLaunchEnvironment = nil
+        chatGPTListenerAuthorityPEM = nil
         await server?.stop()
     }
 

@@ -14,7 +14,8 @@ enum ChatGPTHistoryValidation {
     }
 
     static func request(_ request: ChatGPTConversationRequest, owner account: String, now: Double) throws {
-        guard owner(account), now.isFinite, identifier(request.parentMessageID),
+        guard owner(account), now.isFinite,
+            request.parentMessageID.map(identifier) ?? (request.conversationID == nil),
             !request.messages.isEmpty, request.messages.count <= ChatGPTConversationLimits.maximumMessages,
             !request.model.isEmpty, request.model == request.model.trimmingCharacters(in: .whitespacesAndNewlines),
             request.messages.allSatisfy({ identifier($0.id) })

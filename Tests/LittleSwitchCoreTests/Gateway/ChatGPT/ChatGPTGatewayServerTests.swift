@@ -130,9 +130,14 @@ struct ChatGPTGatewayServerTests {
             authorityPEM: issued.authorityPEM,
             keyPEM: issued.keyPEM
         )
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let environment = try ChatGPTLaunchTrust(directory: directory).prepare(
+            inheriting: [:], authorityPEM: issued.authorityPEM)
+        let authorityPath = try #require(environment["CODEX_CA_CERTIFICATE"])
         let (server, port) = try await start(fixture: fixture, identity: identity)
         var configuration = TLSConfiguration.makeClientConfiguration()
-        configuration.trustRoots = .certificates([identity.authority])
+        configuration.trustRoots = .file(authorityPath)
         let client = HTTPClient(
             eventLoopGroupProvider: .singleton,
             configuration: .init(tlsConfiguration: configuration)

@@ -105,6 +105,6 @@ extension ChatGPTGatewayResponder {
             return nativeResponse(upstream)
         }
         let data = Data(try await upstream.body.collect(upTo: 8 * 1_024 * 1_024).readableBytesView)
-        return try jsonResponse(page.merge(nativeData: data, local: local))
+        return try nativeJSONResponse(page.merge(nativeData: data, local: local), headers: upstream.headers)
     }
 }

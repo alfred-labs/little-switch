@@ -106,7 +106,8 @@ extension ApplicationCoordinator {
             chatGPTGatewayBuilder: LiveChatGPTGatewayBuilder(
                 historyFileURL: root.appending(path: "ChatGPT/conversations.json"),
                 trafficRecorder: trafficRecorder
-            )
+            ),
+            chatGPTLaunchTrust: ChatGPTLaunchTrust(directory: root.appending(path: "ChatGPT/Certificates"))
         )
     }
 }

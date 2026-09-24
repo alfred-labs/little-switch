@@ -542,6 +542,7 @@
 "Enable a model in Codex before connecting ChatGPT." = "Enable a model in Codex before connecting ChatGPT.";
 "Apply Codex changes before opening ChatGPT." = "Apply Codex changes before opening ChatGPT.";
 "Approve the local certificate to connect ChatGPT securely." = "Approve the local certificate to connect ChatGPT securely.";
+"ChatGPT certificates could not be prepared. Check your certificate settings and try again." = "ChatGPT certificates could not be prepared. Check your certificate settings and try again.";
 "Wait for the current desktop operation to finish." = "Wait for the current desktop operation to finish.";
 "ChatGPT could not be restored. Keep LittleSwitch open and try Disconnect again." = "ChatGPT could not be restored. Keep LittleSwitch open and try Disconnect again.";
 "Ready to open" = "Ready to open";

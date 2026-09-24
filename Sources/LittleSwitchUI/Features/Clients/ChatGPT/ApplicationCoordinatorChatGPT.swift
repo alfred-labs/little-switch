@@ -62,7 +62,7 @@ extension ApplicationCoordinator {
                 throw ChatGPTConnectionError.noModels
             }
             guard !hasPendingCodexChanges else { throw ChatGPTConnectionError.pendingCodex }
-            let environment = try ChatGPTLaunchEnvironment.connected(inheriting: inheritedEnvironment)
+            _ = try ChatGPTLaunchEnvironment.connected(inheriting: inheritedEnvironment)
             try await startGateway(snapshot: routingSnapshot())
             try checkChatGPTOperation()
             try await startChatGPTListener(installTrust: true)
@@ -72,7 +72,7 @@ extension ApplicationCoordinator {
             quit = true
             chatGPTDesktopRestoration = .relaunchRequired
             try checkChatGPTOperation()
-            try await openManagedChatGPT(using: controller, environment: environment)
+            try await openManagedChatGPT(using: controller)
             try checkChatGPTOperation()
             var candidate = configuration
             candidate.chatgpt.connected = true
@@ -132,14 +132,10 @@ extension ApplicationCoordinator {
                 // while its listener remains available and trusted.
                 let restoreManaged = await canRestoreManagedChatGPT(previous)
                 guard !isShuttingDown else { return true }
-                let environment =
-                    restoreManaged
-                    ? try ChatGPTLaunchEnvironment.connected(inheriting: inheritedEnvironment)
-                    : normalDesktopEnvironment
                 if restoreManaged {
-                    try await openManagedChatGPT(using: controller, environment: environment)
+                    try await openManagedChatGPT(using: controller)
                 } else {
-                    try await controller.open(environment: environment)
+                    try await controller.open(environment: normalDesktopEnvironment)
                     chatGPTManagedLaunchID = nil
                     chatGPTDesktopRestoration = .normal
                 }

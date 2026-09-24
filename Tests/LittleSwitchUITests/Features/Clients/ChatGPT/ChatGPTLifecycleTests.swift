@@ -53,6 +53,8 @@ struct ChatGPTFixture {
     let mainServer: TestGatewayServer
     let events: SharedEventLog
     let builder: ChatGPTTestBuilder
+    let certificates: ChatGPTTestCertificateDirectory
+    let authorityPEM: String
 
     static func make(
         connected: Bool = false,
@@ -86,6 +88,7 @@ struct ChatGPTFixture {
         if failListenerStart { await server.failNextStart() }
         let mainServer = TestGatewayServer()
         let builder = ChatGPTTestBuilder(server: server)
+        let certificates = ChatGPTTestCertificateDirectory()
         let coordinator = ApplicationCoordinator(
             configurationStore: store,
             secretStore: MemorySecretStore(),
@@ -98,6 +101,7 @@ struct ChatGPTFixture {
             gatewayServerOverride: mainServer,
             tlsProvisioner: ChatGPTTestTrust(identity: hasIdentity ? identity : nil, trusted: trusted, events: events),
             chatGPTGatewayBuilder: builder,
+            chatGPTLaunchTrust: ChatGPTLaunchTrust(directory: certificates.url),
             inheritedEnvironment: environment
         )
         _ = try await coordinator.start()
@@ -109,7 +113,9 @@ struct ChatGPTFixture {
             server: server,
             mainServer: mainServer,
             events: events,
-            builder: builder
+            builder: builder,
+            certificates: certificates,
+            authorityPEM: issued.authorityPEM
         )
     }
 }

@@ -39,13 +39,15 @@ package actor ChatGPTHistoryStore {
         request: ChatGPTConversationRequest, owner: String, now: Double, newConversationID: String? = nil
     ) throws -> ChatGPTPendingTurn {
         try ChatGPTHistoryValidation.request(request, owner: owner, now: now)
+        var parent =
+            request.parentMessageID ?? ChatGPTHistoryMessageID.make(excluding: Set(request.messages.map(\.id)))
         var value: ChatGPTStoredConversation
         if let id = request.conversationID {
             guard newConversationID == nil else { throw ChatGPTHistoryError.invalidInput }
             value = try conversation(id: id, owner: owner)
             try requireIdle(id)
             guard value.temporary == request.historyAndTrainingDisabled,
-                value.contains(request.parentMessageID)
+                value.contains(parent)
             else { throw ChatGPTHistoryError.invalidInput }
         } else {
             let id = newConversationID ?? ChatGPTConversationID.make()
@@ -57,18 +59,17 @@ package actor ChatGPTHistoryStore {
             value = ChatGPTStoredConversation(
                 id: id,
                 owner: owner,
-                rootID: request.parentMessageID,
+                rootID: parent,
                 title: title.isEmpty ? "New chat" : String(title.prefix(80)),
                 createdAt: now,
                 updatedAt: now,
-                currentNodeID: request.parentMessageID,
+                currentNodeID: parent,
                 archived: false,
                 starred: false,
                 temporary: request.historyAndTrainingDisabled,
                 nodes: [:])
         }
-        let history = try value.ancestry(of: request.parentMessageID)
-        var parent = request.parentMessageID
+        let history = try value.ancestry(of: parent)
         for message in request.messages {
             guard !value.contains(message.id) else { throw ChatGPTHistoryError.invalidInput }
             value.nodes[message.id] = ChatGPTHistoryNode(
@@ -82,8 +83,7 @@ package actor ChatGPTHistoryStore {
                 status: .finishedSuccessfully)
             parent = message.id
         }
-        var assistant = UUID().uuidString.lowercased()
-        while value.contains(assistant) { assistant = UUID().uuidString.lowercased() }
+        let assistant = ChatGPTHistoryMessageID.make(excluding: Set(value.nodes.keys).union([value.rootID]))
         value.nodes[assistant] = ChatGPTHistoryNode(
             id: assistant,
             parentID: parent,

@@ -24,7 +24,8 @@ package struct ChatGPTConversationTurn: Equatable, Sendable {
 package struct ChatGPTConversationRequest: Equatable, Sendable {
     package let model: String
     package let conversationID: String?
-    package let parentMessageID: String
+    /// A fresh native chat can omit its parent; the history store creates its root.
+    package let parentMessageID: String?
     package let messages: [ChatGPTUserMessage]
     package let historyAndTrainingDisabled: Bool
 
@@ -44,15 +45,20 @@ package struct ChatGPTConversationRequest: Equatable, Sendable {
             throw ChatGPTConversationError.limitExceeded
         }
         try ChatGPTRequestValidation.validateContext(root)
-        let parent = try ChatGPTRequestValidation.identifier(
-            root[ChatGPTNativeContract.ConversationField.parentMessageId.rawValue])
         let conversation: String?
         if let value = root[ChatGPTNativeContract.ConversationField.conversationId.rawValue], !(value is NSNull) {
             conversation = try ChatGPTRequestValidation.identifier(value)
         } else {
             conversation = nil
         }
-        var seen = Set([parent])
+        let parent: String?
+        if let value = root[ChatGPTNativeContract.ConversationField.parentMessageId.rawValue], !(value is NSNull) {
+            parent = try ChatGPTRequestValidation.identifier(value)
+        } else {
+            guard conversation == nil else { throw ChatGPTConversationError.invalidRequest }
+            parent = nil
+        }
+        var seen = Set([parent].compactMap(\.self))
         let parsed = try messages.map { message in
             let parsed = try ChatGPTRequestValidation.message(message)
             guard seen.insert(parsed.id).inserted else { throw ChatGPTConversationError.invalidRequest }

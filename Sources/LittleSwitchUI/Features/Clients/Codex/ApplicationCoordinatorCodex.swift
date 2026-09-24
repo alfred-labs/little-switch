@@ -210,6 +210,11 @@ extension ApplicationCoordinator {
     private func quitCodexForProfileChange() async throws -> Bool {
         guard let controller = codexController else { return false }
         guard await controller.isRunning() else { return false }
+        // The shared host must have a usable ChatGPT launch before quitting;
+        // failed recovery or a changed CA file must leave its current UI open.
+        if configuration.chatgpt.connected {
+            try await startChatGPTListener(installTrust: false)
+        }
         try await controller.quitAndWait()
         if configuration.chatgpt.connected || chatGPTDesktopRestoration.requiresRestoration {
             // Transfer the owed desktop relaunch before shutdown can suppress
@@ -225,12 +230,10 @@ extension ApplicationCoordinator {
         try? codexProfileManager?.enableDesktopMaximumEffort()
         if configuration.chatgpt.connected {
             do {
-                try await startChatGPTListener(installTrust: false)
+                // Profile changes update the existing gateway state. Reuse
+                // the immutable launch prepared before quitting the desktop.
                 try checkChatGPTOperation()
-                try await openManagedChatGPT(
-                    using: controller,
-                    environment: ChatGPTLaunchEnvironment.connected(inheriting: inheritedEnvironment)
-                )
+                try await openManagedChatGPT(using: controller)
                 chatGPTStatus = .connected
             } catch { chatGPTStatus = .needsAttention }
         } else {

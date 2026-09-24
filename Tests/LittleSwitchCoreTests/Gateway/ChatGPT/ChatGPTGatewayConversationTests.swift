@@ -36,7 +36,8 @@ struct ChatGPTGatewayConversationTests {
         #expect(!String(describing: recorder.events).contains("synthetic-cookie"))
     }
 
-    @Test func twoTurnsReopenWithTrustedHistoryAndSeparateCredentials() async throws {
+    @Test(arguments: [false, true])
+    func twoTurnsReopenWithTrustedHistoryAndSeparateCredentials(explicitInitialParent: Bool) async throws {
         let transport = RecordingGatewayTransport(responses: [
             try chatGPTProviderReply("Bonjour"), try chatGPTProviderReply("Deux"),
         ])
@@ -46,7 +47,8 @@ struct ChatGPTGatewayConversationTests {
                 uri: "/backend-api/f/conversation",
                 method: .post,
                 headers: chatGPTOwnerHeaders,
-                body: ByteBuffer(bytes: chatGPTTurnBody(text: "Un"))
+                body: ByteBuffer(
+                    bytes: chatGPTTurnBody(text: "Un", parent: explicitInitialParent ? UUID().uuidString : nil))
             )
             #expect(first.status == .ok)
             let events = try chatGPTNativeEvents(Data(first.body.readableBytesView))
@@ -196,11 +198,11 @@ func managedChatGPTApplication(
 func chatGPTTurnBody(
     text: String,
     conversation: String? = nil,
-    parent: String = UUID().uuidString,
+    parent: String? = UUID().uuidString,
     model: String = "example:chat-model"
 ) throws -> Data {
     var object: [String: Any] = [
-        "action": "next", "model": model, "parent_message_id": parent,
+        "action": "next", "model": model,
         "messages": [
             [
                 "id": UUID().uuidString, "author": ["role": "user"],
@@ -208,6 +210,7 @@ func chatGPTTurnBody(
             ]
         ],
     ]
+    if let parent { object["parent_message_id"] = parent }
     if let conversation { object["conversation_id"] = conversation }
     return try JSONSerialization.data(withJSONObject: object)
 }

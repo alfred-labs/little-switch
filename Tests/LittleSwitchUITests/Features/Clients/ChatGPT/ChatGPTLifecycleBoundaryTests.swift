@@ -116,7 +116,7 @@ struct ChatGPTLifecycleBoundaryTests {
     @Test func connectionErrorsProvideDistinctActionableDescriptions() {
         let errors: [ChatGPTConnectionError] = [
             .unavailable, .noModels, .pendingCodex, .trustRequired, .operationInProgress, .rollbackFailed,
-            .conflictingEnvironment,
+            .conflictingEnvironment, .certificateBundleUnavailable,
         ]
         let descriptions = errors.compactMap(\.errorDescription)
         #expect(descriptions.count == errors.count)

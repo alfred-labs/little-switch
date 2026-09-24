@@ -5,6 +5,7 @@ enum ChatGPTConnectionError: LocalizedError {
     case noModels
     case pendingCodex
     case trustRequired
+    case certificateBundleUnavailable
     case operationInProgress
     case rollbackFailed
     case conflictingEnvironment
@@ -15,6 +16,8 @@ enum ChatGPTConnectionError: LocalizedError {
         case .noModels: L10n.string("Enable a model in Codex before connecting ChatGPT.")
         case .pendingCodex: L10n.string("Apply Codex changes before opening ChatGPT.")
         case .trustRequired: L10n.string("Approve the local certificate to connect ChatGPT securely.")
+        case .certificateBundleUnavailable:
+            L10n.string("ChatGPT certificates could not be prepared. Check your certificate settings and try again.")
         case .operationInProgress: L10n.string("Wait for the current desktop operation to finish.")
         case .rollbackFailed:
             L10n.string("ChatGPT could not be restored. Keep LittleSwitch open and try Disconnect again.")

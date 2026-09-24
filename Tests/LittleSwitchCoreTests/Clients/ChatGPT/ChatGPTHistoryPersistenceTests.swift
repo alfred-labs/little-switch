@@ -62,13 +62,13 @@ struct ChatGPTHistoryPersistenceTests {
         #expect(throws: ChatGPTHistoryError.persistenceFailed) { try ChatGPTHistoryStore(fileURL: file) }
     }
 
-    @Test("Restart restores tree, native timestamps, and cancels unfinished assistants")
-    func restart() async throws {
+    @Test("Restart restores tree, native timestamps, and cancels unfinished assistants", arguments: [false, true])
+    func restart(explicitInitialParent: Bool) async throws {
         let directory = historyDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let file = directory.appending(path: "history.json")
         let store = try ChatGPTHistoryStore(fileURL: file)
-        let request = historyRequest()
+        let request = historyRequest(parent: explicitInitialParent ? UUID().uuidString.lowercased() : nil)
         let turn = try await store.begin(request: request, owner: owner, now: 10)
         let initialBytes = try Data(contentsOf: file)
         try await store.update(
@@ -81,9 +81,12 @@ struct ChatGPTHistoryPersistenceTests {
         #expect(detail["owner"] == nil)
         #expect(detail["current_node"] as? String == turn.assistantID)
         let mapping = try #require(detail["mapping"] as? [String: [String: Any]])
+        let rootID = recovered.rootID
+        #expect(UUID(uuidString: rootID) != nil)
+        if let suppliedParent = request.parentMessageID { #expect(rootID == suppliedParent) }
         #expect(mapping.count == 3)
-        #expect(mapping[request.parentMessageID]?["message"] is NSNull)
-        #expect(mapping[request.parentMessageID]?["children"] as? [String] == [request.messages[0].id])
+        #expect(mapping[rootID]?["message"] is NSNull)
+        #expect(mapping[rootID]?["children"] as? [String] == [request.messages[0].id])
         let summary = try #require(JSONSerialization.jsonObject(with: recovered.summaryData()) as? [String: Any])
         #expect(summary["create_time"] as? String == "1970-01-01T00:00:10Z")
         #expect(try historyPermissions(directory) == 0o700)
