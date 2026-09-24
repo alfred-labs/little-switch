@@ -5,6 +5,19 @@
         <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
         <description>LittleSwitch releases</description>
         <item>
+            <title>0.6.5</title>
+            <pubDate>Thu, 24 Sep 2026 11:08:01 +0000</pubDate>
+            <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
+            <sparkle:version>29</sparkle:version>
+            <sparkle:shortVersionString>0.6.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Improvements</h2>
+<ul><li><strong>Use LittleSwitch models in ChatGPT Chat.</strong> A dedicated ChatGPT connection adds your selected models alongside ChatGPT&apos;s own choices. Start text conversations, receive streaming replies, and return to custom-model conversations from the chat history.</li><li>Update announcements use shorter wording in English and French.</li></ul>
+<h2>Fixes</h2>
+<ul><li><strong>Codex conversations continue across changes to models and available tools.</strong> Earlier calls to tools that are no longer available remain readable context, without encouraging the model to call those retired tools again. This addresses unexpected exec calls from older conversation history.</li><li>Tool names remain distinct across namespaces and protocol conversions, including names with visually identical Unicode characters. A tool call resolves only to an unambiguous tool declared for the current request.</li></ul>]]></description>
+            <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.6.5/LittleSwitch-0.6.5-arm64.dmg" length="22973247" type="application/octet-stream" sparkle:edSignature="5H5f4+2Pv/jgvSmMZWQDd0Z5gD/wY/GVSVTdPSaxkAVWmO7mBYtR3UzXRUx0RetILIj2dV/be3LzEhQvenjyBA=="/>
+        </item>
+        <item>
             <title>0.6.4</title>
             <pubDate>Wed, 23 Sep 2026 07:09:59 +0000</pubDate>
             <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
