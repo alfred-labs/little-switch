@@ -308,7 +308,7 @@ private struct TestGatewayServerRunnerFactory: GatewayServerRunnerFactory {
     }
 }
 
-private struct ReusableGatewayServerRunnerFactory: GatewayServerRunnerFactory {
+struct ReusableGatewayServerRunnerFactory: GatewayServerRunnerFactory {
     let runner: AutomaticallyReadyGatewayServerRunner
 
     func makeRunner(configuration: GatewayServerConfiguration) -> any GatewayServerRunning {
@@ -331,7 +331,7 @@ private actor CompletionCounter {
     }
 }
 
-private actor AutomaticallyReadyGatewayServerRunner: GatewayServerRunning {
+actor AutomaticallyReadyGatewayServerRunner: GatewayServerRunning {
     private var continuations: [Int: CheckedContinuation<Void, any Swift.Error>] = [:]
     private(set) var runCount = 0
 

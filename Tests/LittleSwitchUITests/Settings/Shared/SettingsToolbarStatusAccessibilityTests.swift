@@ -24,6 +24,7 @@ struct SettingsToolbarStatusAccessibilityTests {
     func clearsPendingGroupLabel(initialPending: Bool) async throws {
         let bootstrap = MenuControlTestHost(Text("Accessibility initialization"))
         defer { bootstrap.close() }
+        let previousApplication = NSWorkspace.shared.frontmostApplication
         let previousKeyWindow = NSApp.keyWindow
         let previousFirstResponder = previousKeyWindow?.firstResponder
         let model = AppModel(snapshot: snapshot(pending: initialPending, sequence: 1))
@@ -49,11 +50,20 @@ struct SettingsToolbarStatusAccessibilityTests {
                 previousKeyWindow.makeKey()
                 _ = previousKeyWindow.makeFirstResponder(previousFirstResponder)
             }
+            if NSApp.isActive, let previousApplication {
+                if previousApplication.processIdentifier != ProcessInfo.processInfo.processIdentifier {
+                    NSApp.yieldActivation(to: previousApplication)
+                    _ = previousApplication.activate(options: [])
+                }
+            }
         }
         SettingsWindowChrome.apply(to: window)
         window.setContentSize(NSSize(width: 1_200, height: 840))
         window.center()
         window.makeKeyAndOrderFront(nil)
+        // This visible AX scenario owns activation; the offscreen control host
+        // intentionally does not, and the runner's startup activation can lapse.
+        NSApp.activate()
         try await waitForReadyWindow(window)
         try await bootstrap.activateAccessibility()
         let toolbar = try #require(window.toolbar)
@@ -113,11 +123,11 @@ struct SettingsToolbarStatusAccessibilityTests {
         var snapshot = await Task.detached { ToolbarStatusAXSnapshot.read(windowIdentifier: windowIdentifier) }.value
         // The native representation can materialize after SwiftUI rendering.
         // Retry materialization only, never a stale semantic value.
-        while snapshot.error != nil, ContinuousClock.now < deadline {
+        while !snapshot.isMaterialized, ContinuousClock.now < deadline {
             try await Task.sleep(for: .milliseconds(16))
             snapshot = await Task.detached { ToolbarStatusAXSnapshot.read(windowIdentifier: windowIdentifier) }.value
         }
-        try #require(snapshot.error == nil, "Native AX \(phase): \(snapshot)")
+        try #require(snapshot.isMaterialized, "Native AX \(phase): \(snapshot)")
         return snapshot
     }
 
@@ -241,6 +251,12 @@ private struct ToolbarStatusAXSnapshot: Sendable {
     let nodes: [ToolbarStatusAXNode]
 
     var names: [String] { nodes.flatMap(\.names) }
+
+    var isMaterialized: Bool {
+        // Traversal records the toolbar root first. A named descendant proves
+        // content exists without waiting for a particular status value.
+        error == nil && nodes.dropFirst().contains { $0.names.contains { !$0.isEmpty } }
+    }
 
     static func read(windowIdentifier: String) -> Self {
         let application = AXUIElementCreateApplication(ProcessInfo.processInfo.processIdentifier)

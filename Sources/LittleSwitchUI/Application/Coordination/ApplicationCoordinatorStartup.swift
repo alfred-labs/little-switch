@@ -91,6 +91,7 @@ extension ApplicationCoordinator {
         }
         try initializeClaudeCodeStatus()
         try initializeOpenCodeStatus()
+        await recoverChatGPTAtStartup()
         await reconnectRelaunchTargets()
         return await snapshot()
     }

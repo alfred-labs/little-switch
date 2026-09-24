@@ -66,11 +66,24 @@ extension ApplicationCoordinator {
         return await snapshot()
     }
 
-    public func shutdown(mode: ApplicationShutdownMode = .userQuit) async {
+    @discardableResult
+    public func shutdown(mode: ApplicationShutdownMode = .userQuit) async -> Bool {
         isShuttingDown = true
         // Invalidate catalog actions before shutdown's first suspension. Handoff
         // intentionally keeps ownership, but must never let Apply reopen Claude.
         claudeDesktopLifecycleGeneration &+= 1
+        await waitForCodexDesktopOperation()
+        let targets = RelaunchTargets(
+            claude: configuration.connected,
+            codex: configuration.codex.connected
+                || (configuration.chatgpt.connected && configuration.relaunchTargets.codex),
+            claudeCode: configuration.claudeCode.connected,
+            openCode: configuration.openCode.connected
+        )
+        guard await prepareChatGPTShutdown(mode: mode) else {
+            isShuttingDown = false
+            return false
+        }
         pendingCodexSettings = nil
         pendingClaudeCodeSettings = nil
         pendingOpenCodeSettings = nil
@@ -90,12 +103,6 @@ extension ApplicationCoordinator {
         await monitoringExporter.shutdown()
         switch mode {
         case .userQuit:
-            let targets = RelaunchTargets(
-                claude: configuration.connected,
-                codex: configuration.codex.connected,
-                claudeCode: configuration.claudeCode.connected,
-                openCode: configuration.openCode.connected
-            )
             if configuration.relaunchTargets != targets {
                 configuration.relaunchTargets = targets
                 try? configurationStore.save(configuration)
@@ -129,6 +136,7 @@ extension ApplicationCoordinator {
             break
         }
         try? await discoveryTransport.shutdown()
+        return true
     }
 }
 

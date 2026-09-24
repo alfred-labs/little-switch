@@ -27,6 +27,8 @@ extension ApplicationCoordinator {
     }
 
     public func connectCodex() async throws -> CoordinatorSnapshot {
+        try beginCodexDesktopOperation()
+        defer { finishCodexDesktopOperation() }
         _ = await responsesWireVerdicts()
         let profileManager = try codexProfileDependency()
         var candidate = pendingCodexSettings?.applying(to: configuration) ?? configuration
@@ -89,6 +91,8 @@ extension ApplicationCoordinator {
     }
 
     public func applyCodexSettings() async throws -> CoordinatorSnapshot {
+        try beginCodexDesktopOperation()
+        defer { finishCodexDesktopOperation() }
         _ = await responsesWireVerdicts()
         guard configuration.codex.connected, hasPendingCodexChanges else {
             return await snapshot()
@@ -153,6 +157,8 @@ extension ApplicationCoordinator {
     }
 
     public func disconnectCodex() async throws -> CoordinatorSnapshot {
+        try beginCodexDesktopOperation()
+        defer { finishCodexDesktopOperation() }
         let profileManager = try codexProfileDependency()
 
         let previous = configuration
@@ -205,13 +211,55 @@ extension ApplicationCoordinator {
         guard let controller = codexController else { return false }
         guard await controller.isRunning() else { return false }
         try await controller.quitAndWait()
+        if configuration.chatgpt.connected || chatGPTDesktopRestoration.requiresRestoration {
+            // Transfer the owed desktop relaunch before shutdown can suppress
+            // this transaction's open helper while waiting for it to finish.
+            chatGPTDesktopRestoration = .relaunchRequired
+        }
         return true
     }
 
     private func openCodexApplyingDesktopState() async {
+        guard !isShuttingDown else { return }
         guard let controller = codexController else { return }
         try? codexProfileManager?.enableDesktopMaximumEffort()
-        _ = try? await controller.open()
+        if configuration.chatgpt.connected {
+            do {
+                try await startChatGPTListener(installTrust: false)
+                try checkChatGPTOperation()
+                try await openManagedChatGPT(
+                    using: controller,
+                    environment: ChatGPTLaunchEnvironment.connected(inheriting: inheritedEnvironment)
+                )
+                chatGPTStatus = .connected
+            } catch { chatGPTStatus = .needsAttention }
+        } else {
+            do {
+                try await controller.open()
+                chatGPTManagedLaunchID = nil
+                chatGPTDesktopRestoration = .normal
+            } catch {}
+        }
+    }
+
+    private func beginCodexDesktopOperation() throws {
+        guard !isShuttingDown else { throw CancellationError() }
+        guard chatGPTOperation == nil, !codexDesktopOperationInProgress else {
+            throw ChatGPTConnectionError.operationInProgress
+        }
+        codexDesktopOperationInProgress = true
+    }
+
+    private func finishCodexDesktopOperation() {
+        codexDesktopOperationInProgress = false
+        let waiters = codexDesktopOperationWaiters
+        codexDesktopOperationWaiters.removeAll()
+        for waiter in waiters { waiter.resume() }
+    }
+
+    func waitForCodexDesktopOperation() async {
+        guard codexDesktopOperationInProgress else { return }
+        await withCheckedContinuation { codexDesktopOperationWaiters.append($0) }
     }
 
     private func isAvailableCodexMapping(_ mapping: ModelMapping) -> Bool {

@@ -10,6 +10,7 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
     public var codexRequestCount: Int
     public var proxyRunning: Bool
     public var hasPendingCodexChanges: Bool
+    public var chatGPTStatus: ChatGPTConnectionStatus = .disconnected
     /// Claude route mappings edited while connected, waiting for Apply.
     public var hasPendingClaudeMappings: Bool
     public var hasPendingClaudeDesktopChanges: Bool

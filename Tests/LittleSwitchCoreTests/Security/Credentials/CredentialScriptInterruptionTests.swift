@@ -11,34 +11,47 @@ struct CredentialScriptInterruptionTests {
         let process = Process()
         process.executableURL = URL(filePath: "/bin/sleep")
         process.arguments = ["5"]
+        let terminated = AsyncTestGate()
+        process.terminationHandler = { _ in
+            Task { await terminated.open() }
+        }
         try process.run()
-        defer {
+
+        do {
+            let interrupt = ProcessCredentialScriptRunner.InterruptBox()
+            interrupt.interrupt()
+            if escalated {
+                interrupt.escalate()
+                interrupt.interrupt()
+            }
+            interrupt.adopt(0)
+            interrupt.adopt(process.processIdentifier)
+            try await terminated.wait(timeout: .seconds(1), description: "the interrupted child to terminate")
+
+            #expect(!process.isRunning)
+            #expect(process.terminationReason == .uncaughtSignal)
+            #expect(process.terminationStatus == (escalated ? SIGKILL : SIGTERM))
+            interrupt.reachedTermination()
+            interrupt.interrupt()
+            interrupt.escalate()
+            interrupt.adopt(process.processIdentifier)
+            #expect(!process.isRunning)
+            #expect(process.terminationStatus == (escalated ? SIGKILL : SIGTERM))
+        } catch {
             if process.isRunning {
                 kill(process.processIdentifier, SIGKILL)
             }
-            process.waitUntilExit()
+            // Cleanup must still await Foundation's termination delivery when the test was cancelled.
+            let cleanup = Task {
+                try await terminated.wait(timeout: .seconds(1), description: "the cleanup child to terminate")
+            }
+            do {
+                try await cleanup.value
+            } catch {
+                Issue.record(error)
+            }
+            throw error
         }
-        let interrupt = ProcessCredentialScriptRunner.InterruptBox()
-        interrupt.interrupt()
-        if escalated {
-            interrupt.escalate()
-            interrupt.interrupt()
-        }
-        interrupt.adopt(0)
-        interrupt.adopt(process.processIdentifier)
-        for _ in 0..<100 where process.isRunning {
-            try await Task.sleep(for: .milliseconds(10))
-        }
-
-        #expect(!process.isRunning)
-        if !process.isRunning {
-            #expect(process.terminationReason == .uncaughtSignal)
-            #expect(process.terminationStatus == (escalated ? SIGKILL : SIGTERM))
-        }
-        interrupt.reachedTermination()
-        interrupt.interrupt()
-        interrupt.escalate()
-        interrupt.adopt(process.processIdentifier)
     }
 
     @Test("Cancellation during the output drain prevents a completed script from returning its token")

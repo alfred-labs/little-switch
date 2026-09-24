@@ -9,16 +9,17 @@ public final class AsyncHTTPTransport: UpstreamTransport, @unchecked Sendable {
     private let client: HTTPClient
     private let timeout: TimeAmount
 
-    public init(timeout: TimeAmount = AsyncHTTPTransport.defaultTimeout) {
-        let configuration = Self.httpClientConfiguration()
+    public init(timeout: TimeAmount = AsyncHTTPTransport.defaultTimeout, followsRedirects: Bool = true) {
+        let configuration = Self.httpClientConfiguration(followsRedirects: followsRedirects)
         self.client = HTTPClient(eventLoopGroupProvider: .singleton, configuration: configuration)
         self.timeout = timeout
     }
 
-    package static func httpClientConfiguration() -> HTTPClient.Configuration {
+    package static func httpClientConfiguration(followsRedirects: Bool = true) -> HTTPClient.Configuration {
         var configuration = HTTPClient.Configuration()
         configuration.proxy = nil
         configuration.decompression = .enabled(limit: .ratio(25))
+        if !followsRedirects { configuration.redirectConfiguration = .disallow }
         return configuration
     }
 

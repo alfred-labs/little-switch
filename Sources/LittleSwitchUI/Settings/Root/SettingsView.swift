@@ -35,6 +35,8 @@ public struct SettingsView: View {
     private let onCodexAutoReview: @MainActor (ModelMapping?) async -> Void
     private let onConnectCodex: @MainActor () async -> Void
     private let onApplyCodex: @MainActor () async -> Void
+    private let onOpenChatGPT: @MainActor () async -> Void
+    private let onDisconnectChatGPT: @MainActor () async -> Void
     private let onOpenCodeDefault: @MainActor (ModelMapping?) async -> Void
     private let onConnectOpenCode: @MainActor () async -> Void
     private let onApplyOpenCode: @MainActor () async -> Void
@@ -76,7 +78,9 @@ public struct SettingsView: View {
         onRestoreOpenCode: @escaping @MainActor () async -> Void,
         onMonitoringDraft: @escaping @MainActor (MonitoringPendingSettings?) async -> Void = { _ in },
         onApplyMonitoring: @escaping @MainActor (MonitoringApplyInput) async -> Bool = { _ in false },
-        onTestMonitoring: @escaping @MainActor () async -> Void = {}
+        onTestMonitoring: @escaping @MainActor () async -> Void = {},
+        onOpenChatGPT: @escaping @MainActor () async -> Void = {},
+        onDisconnectChatGPT: @escaping @MainActor () async -> Void = {}
     ) {
         self.model = model
         self.onLaunchAtLoginEnabled = onLaunchAtLoginEnabled
@@ -100,6 +104,8 @@ public struct SettingsView: View {
         self.onCodexAutoReview = onCodexAutoReview
         self.onConnectCodex = onConnectCodex
         self.onApplyCodex = onApplyCodex
+        self.onOpenChatGPT = onOpenChatGPT
+        self.onDisconnectChatGPT = onDisconnectChatGPT
         self.onOpenCodeDefault = onOpenCodeDefault
         self.onConnectOpenCode = onConnectOpenCode
         self.onApplyOpenCode = onApplyOpenCode
@@ -189,6 +195,8 @@ public struct SettingsView: View {
                         onConnect: onConnectCodex,
                         onApply: onApplyCodex
                     )
+                case .chatGPT:
+                    ChatGPTSettingsView(model: model, onOpen: onOpenChatGPT, onDisconnect: onDisconnectChatGPT)
                 case .openCode:
                     OpenCodeSettingsView(
                         model: model,

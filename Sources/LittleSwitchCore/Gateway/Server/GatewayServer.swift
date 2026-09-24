@@ -76,6 +76,7 @@ public actor GatewayServer {
 
     private let configuration: GatewayServerConfiguration
     private let runnerFactory: any GatewayServerRunnerFactory
+    private let stopsAdmissionsOnStop: Bool
     private var hasStarted = false
     private var activeRunID: UUID?
     private var serverTask: Task<Void, Never>?
@@ -92,7 +93,8 @@ public actor GatewayServer {
         trafficRecorder: any TrafficRecording = NoopTrafficRecorder(),
         runnerFactory: (any GatewayServerRunnerFactory)? = nil,
         tlsIdentity: GatewayTLSIdentity? = nil,
-        monitoring: GatewayMonitoring? = nil
+        monitoring: GatewayMonitoring? = nil,
+        stopsAdmissionsOnStop: Bool = true
     ) {
         self.configuration = GatewayServerConfiguration(
             state: state,
@@ -106,6 +108,7 @@ public actor GatewayServer {
         )
         self.runnerFactory =
             runnerFactory ?? LiveGatewayServerRunnerFactory()
+        self.stopsAdmissionsOnStop = stopsAdmissionsOnStop
     }
 
     public var isRunning: Bool {
@@ -172,7 +175,9 @@ public actor GatewayServer {
         guard let task = serverTask else {
             return
         }
-        await configuration.state.stopAdmissions()
+        if stopsAdmissionsOnStop {
+            await configuration.state.stopAdmissions()
+        }
         task.cancel()
         await task.value
     }

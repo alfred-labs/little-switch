@@ -101,7 +101,12 @@ extension ApplicationCoordinator {
             trafficRecorder: trafficRecorder,
             tlsProvisioner: LiveGatewayTLSProvisioner(),
             customToolCapabilities: CustomToolCapabilityCache(
-                storeURL: root.appending(path: "Cache/CustomToolCapabilities.json"))
+                storeURL: root.appending(path: "Cache/CustomToolCapabilities.json")
+            ),
+            chatGPTGatewayBuilder: LiveChatGPTGatewayBuilder(
+                historyFileURL: root.appending(path: "ChatGPT/conversations.json"),
+                trafficRecorder: trafficRecorder
+            )
         )
     }
 }

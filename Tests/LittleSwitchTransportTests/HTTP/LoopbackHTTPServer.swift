@@ -11,15 +11,17 @@ final class LoopbackHTTPServer: @unchecked Sendable {
     private let statusCode: Int
     private let contentType: String
     private let body: Data
+    private let location: String?
     private(set) var port: UInt16?
 
-    init(statusCode: Int, contentType: String, body: Data) throws {
+    init(statusCode: Int, contentType: String, body: Data, location: String? = nil) throws {
         let parameters = NWParameters.tcp
         parameters.requiredLocalEndpoint = .hostPort(host: .ipv4(.loopback), port: .any)
         listener = try NWListener(using: parameters)
         self.statusCode = statusCode
         self.contentType = contentType
         self.body = body
+        self.location = location
     }
 
     func start() async throws {
@@ -89,8 +91,9 @@ final class LoopbackHTTPServer: @unchecked Sendable {
     }
 
     private func respond(_ connection: NWConnection) {
+        let redirect = location.map { "Location: \($0)\r\n" } ?? ""
         let head =
-            "HTTP/1.1 \(statusCode) OK\r\nContent-Type: \(contentType)\r\nContent-Encoding: gzip\r\nContent-Length: \(body.count)\r\nConnection: close\r\n\r\n"
+            "HTTP/1.1 \(statusCode) OK\r\nContent-Type: \(contentType)\r\nContent-Encoding: gzip\r\n\(redirect)Content-Length: \(body.count)\r\nConnection: close\r\n\r\n"
         let response = Data(head.utf8) + body
         connection.send(
             content: response,

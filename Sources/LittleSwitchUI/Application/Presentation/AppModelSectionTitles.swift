@@ -9,6 +9,7 @@ extension AppModel.Section {
         case .monitoring: L10n.string("Monitoring")
         case .claude: L10n.string("Claude")
         case .codex: L10n.string("Codex")
+        case .chatGPT: L10n.string("ChatGPT")
         case .openCode: L10n.string("OpenCode")
         }
     }

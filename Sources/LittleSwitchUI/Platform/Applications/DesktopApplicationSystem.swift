@@ -43,16 +43,25 @@ enum DesktopApplicationSystem {
         )
     }
 
-    static func open(_ url: URL, workspace: NSWorkspace) async throws {
+    static func open(_ url: URL, workspace: NSWorkspace, environment: [String: String] = [:]) async throws {
+        _ = try await openTracked(url, workspace: workspace, environment: environment)
+    }
+
+    static func openTracked(
+        _ url: URL, workspace: NSWorkspace, environment: [String: String]
+    ) async throws -> NSRunningApplication {
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = true
         configuration.createsNewApplicationInstance = false
-        let _: Void = try await withCheckedThrowingContinuation { continuation in
-            workspace.openApplication(at: url, configuration: configuration) { _, error in
+        configuration.environment = environment
+        return try await withCheckedThrowingContinuation { continuation in
+            workspace.openApplication(at: url, configuration: configuration) { application, error in
                 if let error {
                     continuation.resume(throwing: error)
+                } else if let application {
+                    continuation.resume(returning: application)
                 } else {
-                    continuation.resume(returning: ())
+                    continuation.resume(throwing: NSWorkspaceCodexController.Error.applicationNotFound)
                 }
             }
         }

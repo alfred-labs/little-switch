@@ -36,8 +36,12 @@ struct CoverageRepositoryScopeTests {
     // Explicit inventory preserves the existing reviewed exclusions. Domain moves
     // update paths; any additional exclusion still requires a named justification.
     private static let reviewedExclusions = [
+        "Sources/LittleSwitchCore/Protocols/ChatGPT/ChatGPTNativeContract.swift",
+        "Sources/LittleSwitchCore/Protocols/ChatGPT/ChatGPTResponsesContract.swift",
+
         // Common/domain splits verified absent from the full llvm-cov raw report.
         "Sources/LittleSwitchCommon/Domain/Clients/GatewayClient.swift",
+        "Sources/LittleSwitchCommon/Domain/Clients/ChatGPT/ChatGPTConnectionStatus.swift",
         "Sources/LittleSwitchCommon/Domain/Monitoring/Export/OTLPExportFailure.swift",
         "Sources/LittleSwitchCommon/Domain/Providers/Capabilities/CustomToolCapabilityMode.swift",
         "Sources/LittleSwitchCommon/Domain/Providers/Capabilities/ModelImageInputWire.swift",
@@ -91,6 +95,7 @@ struct CoverageRepositoryScopeTests {
         "Sources/LittleSwitchUI/Settings/Clients/ClaudeCode/ClaudeCodeSettingsView.swift",
         "Sources/LittleSwitchUI/Features/Clients/Codex/CodexApplicationController.swift",
         "Sources/LittleSwitchUI/Settings/Clients/Codex/CodexSettingsView.swift",
+        "Sources/LittleSwitchUI/Settings/Clients/ChatGPT/ChatGPTSettingsView.swift",
         "Sources/LittleSwitchUI/Features/Clients/Codex/LittleSwitchApplicationDelegateCodexProducts.swift",
         "Sources/LittleSwitchUI/Features/Clients/LittleSwitchApplicationDelegateDesktopApplications.swift",
         "Sources/LittleSwitchUI/Settings/Clients/Codex/ModelCatalogHeader.swift",

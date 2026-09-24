@@ -105,7 +105,7 @@ struct ApplicationMenuTests {
         #expect(source.contains("case .owner:"))
         #expect(
             source.contains(
-                "await coordinator?.shutdown(mode: terminationState.mode)"
+                "await coordinator.shutdown(mode: terminationState.mode) == false"
             )
         )
     }

@@ -13,6 +13,7 @@ final class AppModel {
         case monitoring = "Monitoring"
         case claude = "Claude"
         case codex = "Codex"
+        case chatGPT = "ChatGPT"
         case openCode = "OpenCode"
 
         var id: String { rawValue }
@@ -25,6 +26,7 @@ final class AppModel {
             case .monitoring: "waveform.path.ecg"
             case .claude: "sparkles"
             case .codex: "chevron.left.forwardslash.chevron.right"
+            case .chatGPT: "bubble.left.and.bubble.right"
             case .openCode: "terminal"
             }
         }
@@ -41,7 +43,7 @@ final class AppModel {
             switch self {
             case .common: [.common]
             case .backends: [.providers, .webSearch, .monitoring]
-            case .apps: [.claude, .codex, .openCode]
+            case .apps: [.claude, .codex, .chatGPT, .openCode]
             }
         }
     }
@@ -64,6 +66,8 @@ final class AppModel {
     var codexRequestCount: Int
     var proxyRunning: Bool
     var hasPendingCodexChanges: Bool
+    var chatGPTStatus: ChatGPTConnectionStatus
+    @ObservationIgnored private var chatGPTSnapshotSequence: UInt64
     var hasPendingClaudeMappings: Bool
     var hasPendingClaudeDesktopChanges: Bool
     @ObservationIgnored private var claudeDesktopSnapshotSequence: UInt64
@@ -111,6 +115,8 @@ final class AppModel {
         codexRequestCount = snapshot.codexRequestCount
         proxyRunning = snapshot.proxyRunning
         hasPendingCodexChanges = snapshot.hasPendingCodexChanges
+        chatGPTStatus = snapshot.chatGPTStatus
+        chatGPTSnapshotSequence = snapshot.monitoringSnapshotSequence
         hasPendingClaudeMappings = snapshot.hasPendingClaudeMappings
         hasPendingClaudeDesktopChanges = snapshot.hasPendingClaudeDesktopChanges
         claudeDesktopSnapshotSequence = snapshot.monitoringSnapshotSequence
@@ -269,6 +275,7 @@ final class AppModel {
         codexRequestCount = snapshot.codexRequestCount
         proxyRunning = snapshot.proxyRunning
         hasPendingCodexChanges = snapshot.hasPendingCodexChanges
+        updateChatGPTStatus(snapshot.chatGPTStatus, snapshotSequence: snapshot.monitoringSnapshotSequence)
         hasPendingClaudeMappings = snapshot.hasPendingClaudeMappings
         updateClaudeDesktopPendingChanges(
             snapshot.hasPendingClaudeDesktopChanges,
@@ -349,6 +356,12 @@ final class AppModel {
 }
 
 extension AppModel {
+    func updateChatGPTStatus(_ status: ChatGPTConnectionStatus, snapshotSequence: UInt64) {
+        guard snapshotSequence >= chatGPTSnapshotSequence else { return }
+        chatGPTSnapshotSequence = snapshotSequence
+        setIfChanged(\.chatGPTStatus, to: status)
+    }
+
     /// Assigns through the key path only when the value differs, so every
     /// gateway-state field shares one equality gate instead of each mutator
     /// hand-copying the guard (the publish storm the copies existed to

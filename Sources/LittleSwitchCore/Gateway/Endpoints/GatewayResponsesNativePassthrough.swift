@@ -53,26 +53,7 @@ package enum CodexNativePassthrough {
     }
 
     static func forwardedHeaders(_ incoming: HTTPHeaders, endpoint: Endpoint) -> HTTPHeaders {
-        var forwarded = incoming
-        let connectionTokens = forwarded[HTTPField.Name.connection.rawName].flatMap { value in
-            value.split(separator: ",").map {
-                $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            }
-        }
-        for name in [
-            "connection",
-            "content-length",
-            "host",
-            "keep-alive",
-            "proxy-authenticate",
-            "proxy-authorization",
-            "te",
-            "trailer",
-            "transfer-encoding",
-            "upgrade",
-        ] + connectionTokens {
-            forwarded.remove(name: name)
-        }
+        var forwarded = HTTPForwardingHeaders.endToEnd(incoming)
         // Responses bodies have been decoded and normalized. Image bodies
         // stay opaque, so their encoding must continue to describe the bytes.
         if endpoint == .responses {

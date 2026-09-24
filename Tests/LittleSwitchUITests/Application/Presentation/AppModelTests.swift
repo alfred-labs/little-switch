@@ -13,13 +13,15 @@ struct AppModelTests {
         #expect(
             AppModel.SidebarGroup.allCases.map(\.title) == [
                 L10n.string("Common"), L10n.string("Backends"), L10n.string("Apps"),
-            ])
+            ]
+        )
         #expect(AppModel.SidebarGroup.common.sections == [.common])
         #expect(AppModel.SidebarGroup.backends.sections == [.providers, .webSearch, .monitoring])
         #expect(
             AppModel.SidebarGroup.apps.sections == [
-                .claude, .codex, .openCode,
-            ])
+                .claude, .codex, .chatGPT, .openCode,
+            ]
+        )
         #expect(AppModel().selectedSection == .claude)
         #expect(AppModel.Section.allCases.first == .common)
         #expect(AppModel.Section.common.systemImage == "slider.horizontal.3")
@@ -37,6 +39,7 @@ struct AppModelTests {
                 "Monitoring",
                 "Claude",
                 "Codex",
+                "ChatGPT",
                 "OpenCode",
             ]
         )
@@ -48,6 +51,7 @@ struct AppModelTests {
                 "waveform.path.ecg",
                 "sparkles",
                 "chevron.left.forwardslash.chevron.right",
+                "bubble.left.and.bubble.right",
                 "terminal",
             ]
         )
@@ -462,7 +466,8 @@ struct AppModelSelectionTests {
                 claudeCodeStatus: .needsAttention,
                 hasPendingClaudeCodeChanges: true,
                 claudeCodeMappedRouteIDs: ["claude-sonnet-5"]
-            ))
+            )
+        )
 
         #expect(model.connected)
         #expect(!model.autoMode)

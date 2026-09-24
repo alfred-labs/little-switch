@@ -8,6 +8,10 @@ extension ApplicationCoordinator {
     }
 
     public func openDesktopApplication(_ application: DesktopApplication) async throws {
+        if application == .codex, configuration.chatgpt.connected {
+            _ = try await openChatGPT()
+            return
+        }
         guard let desktopApplications else {
             throw DesktopApplicationLaunchError.notInstalled(application)
         }

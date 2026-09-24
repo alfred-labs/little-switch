@@ -27,6 +27,16 @@ public actor ApplicationCoordinator {
     package let desktopApplications: (any DesktopApplicationManaging)?
     package let codexProfileManager: (any CodexProfileManaging)?
     package let codexController: (any CodexApplicationControlling)?
+    let chatGPTGatewayBuilder: (any ChatGPTGatewayBuilding)?
+    let inheritedEnvironment: [String: String]
+    var chatGPTServer: (any GatewayServing)?
+    var chatGPTGatewayState: GatewayState?
+    var chatGPTManagedLaunchID: UUID?
+    var chatGPTOperation: Task<Void, any Swift.Error>?
+    var chatGPTStatus: ChatGPTConnectionStatus = .disconnected
+    var chatGPTDesktopRestoration: ChatGPTDesktopRestorationState = .unobserved
+    var codexDesktopOperationInProgress = false
+    var codexDesktopOperationWaiters: [CheckedContinuation<Void, Never>] = []
     package let claudeCodeProfileManager: (any ClaudeCodeProfileManaging)?
     package let openCodeProfileManager: (any OpenCodeProfileManaging)?
     package let discoveryTransport: any UpstreamTransport
@@ -118,7 +128,9 @@ public actor ApplicationCoordinator {
         credentialScriptRunner: any CredentialScriptRunning = ProcessCredentialScriptRunner(),
         credentialRefresher: CredentialRefresher? = nil,
         tlsProvisioner: (any GatewayTLSProvisioning)? = nil,
-        monitoringExporter: MonitoringExportService? = nil
+        monitoringExporter: MonitoringExportService? = nil,
+        chatGPTGatewayBuilder: (any ChatGPTGatewayBuilding)? = nil,
+        inheritedEnvironment: [String: String] = ProcessInfo.processInfo.environment
     ) {
         self.configurationStore = configurationStore
         self.secretStore = secretStore
@@ -129,6 +141,8 @@ public actor ApplicationCoordinator {
         self.desktopApplications = desktopApplications
         self.codexProfileManager = codexProfileManager
         self.codexController = codexController
+        self.chatGPTGatewayBuilder = chatGPTGatewayBuilder
+        self.inheritedEnvironment = inheritedEnvironment
         self.claudeCodeProfileManager = claudeCodeProfileManager
         self.openCodeProfileManager = openCodeProfileManager
         self.discoveryTransport = discoveryTransport
@@ -156,7 +170,9 @@ public actor ApplicationCoordinator {
         let probeAdmission = ModelImageProbeAdmission()
         imageProbeAdmission = probeAdmission
         imageInputRegistry = ModelImageInputRegistry(
-            prober: ModelImageInputProber(transport: discoveryTransport), admission: probeAdmission)
+            prober: ModelImageInputProber(transport: discoveryTransport),
+            admission: probeAdmission
+        )
         configuration = AppConfiguration()
     }
 
@@ -186,7 +202,9 @@ public actor ApplicationCoordinator {
         monitoringExporter: MonitoringExportService? = nil,
         providerWireProber: (any ProviderWireProbing)? = nil,
         imageInputProber: (any ModelImageInputProbing)? = nil,
-        customToolCapabilities: CustomToolCapabilityCache? = nil
+        customToolCapabilities: CustomToolCapabilityCache? = nil,
+        chatGPTGatewayBuilder: (any ChatGPTGatewayBuilding)? = nil,
+        inheritedEnvironment: [String: String] = ProcessInfo.processInfo.environment
     ) {
         self.configurationStore = configurationStore
         self.secretStore = secretStore
@@ -197,6 +215,8 @@ public actor ApplicationCoordinator {
         self.desktopApplications = desktopApplications
         self.codexProfileManager = codexProfileManager
         self.codexController = codexController
+        self.chatGPTGatewayBuilder = chatGPTGatewayBuilder
+        self.inheritedEnvironment = inheritedEnvironment
         self.claudeCodeProfileManager = claudeCodeProfileManager
         self.openCodeProfileManager = openCodeProfileManager
         self.discoveryTransport = discoveryTransport
@@ -224,7 +244,9 @@ public actor ApplicationCoordinator {
         let probeAdmission = ModelImageProbeAdmission()
         imageProbeAdmission = probeAdmission
         imageInputRegistry = ModelImageInputRegistry(
-            prober: imageInputProber ?? ModelImageInputProber(transport: discoveryTransport), admission: probeAdmission)
+            prober: imageInputProber ?? ModelImageInputProber(transport: discoveryTransport),
+            admission: probeAdmission
+        )
         configuration = AppConfiguration()
     }
 
@@ -302,6 +324,8 @@ public actor ApplicationCoordinator {
         result.imageInputDiagnostics = imageInputDiagnostics
         result.imageInputPersistenceFailures = imageInputPersistenceFailures
         result.responsesWireVerdicts = catalogResponsesWireVerdicts
+        await reconcileChatGPTConnection()
+        result.chatGPTStatus = chatGPTStatus
         return result
     }
 }
@@ -532,6 +556,7 @@ extension ApplicationCoordinator {
             startupGeneration: nil,
             permitsRestart: true,
             task: Task {
+                await stopChatGPTListener()
                 await cleanupGatewayServer(server, transport: nil)
             }
         )
@@ -574,6 +599,7 @@ extension ApplicationCoordinator {
             startupGeneration: startup?.generation,
             permitsRestart: false,
             task: Task {
+                await stopChatGPTListener()
                 if let startup {
                     if let result = try? await startup.task.value {
                         await cleanupGatewayServer(

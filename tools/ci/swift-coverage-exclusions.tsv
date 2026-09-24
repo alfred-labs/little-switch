@@ -62,6 +62,8 @@ Sources/LittleSwitchUI/Features/Clients/ClaudeCode/ClaudeCodeConnectionStatus.sw
 Sources/LittleSwitchUI/Settings/Clients/ClaudeCode/ClaudeCodeSettingsView.swift	SwiftUI Claude Code settings presentation boundary.
 Sources/LittleSwitchUI/Features/Clients/Codex/CodexApplicationController.swift	NSWorkspace-backed Codex application lifecycle boundary.
 Sources/LittleSwitchUI/Settings/Clients/Codex/CodexSettingsView.swift	SwiftUI Codex settings presentation boundary.
+Sources/LittleSwitchUI/Settings/Clients/ChatGPT/ChatGPTSettingsView.swift	Native SwiftUI ChatGPT settings and toolbar boundary; coordinator lifecycle, action policy, polling, and hosted native control dispatch remain measured and tested separately.
+Sources/LittleSwitchCommon/Domain/Clients/ChatGPT/ChatGPTConnectionStatus.swift	Enum cases emit no executable coverage regions; lifecycle transitions and presentation mappings remain measured.
 Sources/LittleSwitchUI/Features/Clients/Codex/LittleSwitchApplicationDelegateCodexProducts.swift	AppKit Codex settings action and confirmation boundary.
 Sources/LittleSwitchUI/Settings/Clients/Codex/ModelCatalogHeader.swift	SwiftUI catalog heading and enabled count presentation boundary.
 Sources/LittleSwitchUI/Settings/Clients/Codex/ModelCatalogView.swift	SwiftUI provider model cards and native switch presentation boundary.
@@ -109,3 +111,5 @@ Sources/LittleSwitchUI/Platform/Updates/DeveloperIDSignatureProbe.swift	Security
 Sources/LittleSwitchUI/Platform/Updates/SoftwareUpdateProviding.swift	Compile-time protocol declaration emits no executable coverage regions.
 Sources/LittleSwitchUI/Platform/Updates/SparkleSoftwareUpdateController.swift	Sparkle framework adapter boundary.
 Sources/LittleSwitchUI/Settings/Search/WebSearchProviderPicker.swift	SwiftUI provider picker presentation boundary; arrow-key navigation projection is measured in WebSearchProviderNavigation and click selection in WebSearchSettingsControlsTests, with native keyboard interaction validated through Computer Use.
+Sources/LittleSwitchCore/Protocols/ChatGPT/ChatGPTNativeContract.swift	Nested raw-value contract enums emit no executable coverage regions; ChatGPT request validation, native rendering and Responses projection remain measured.
+Sources/LittleSwitchCore/Protocols/ChatGPT/ChatGPTResponsesContract.swift	Nested raw-value contract enums emit no executable coverage regions; ChatGPT request validation, native rendering and Responses projection remain measured.

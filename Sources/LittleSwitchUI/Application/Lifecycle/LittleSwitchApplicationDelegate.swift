@@ -169,7 +169,7 @@ public final class LittleSwitchApplicationDelegate: NSObject, NSApplicationDeleg
 
     public func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !terminationStarted else {
-            return .terminateNow
+            return .terminateLater
         }
         guard confirmQuitDiscardingPendingChanges() else {
             return .terminateCancel
@@ -180,9 +180,18 @@ public final class LittleSwitchApplicationDelegate: NSObject, NSApplicationDeleg
         pollingTask?.cancel()
         signalMonitor.stop()
         statusItemController?.stop()
-        Task {
+        Task { [self] in
             await startupTask?.value
-            await coordinator?.shutdown(mode: terminationState.mode)
+            if let coordinator, await coordinator.shutdown(mode: terminationState.mode) == false {
+                terminationStarted = false
+                model.apply(await coordinator.snapshot())
+                present(ChatGPTConnectionError.rollbackFailed)
+                statusItemController?.start()
+                pollingTask = Task { await pollRequestCount() }
+                signalMonitor.start { [weak self] in self?.requestHandoffTermination() }
+                sender.reply(toApplicationShouldTerminate: false)
+                return
+            }
             await trafficStore.stop()
             await usageHistoryStore.stop()
             sender.reply(toApplicationShouldTerminate: true)
@@ -441,6 +450,12 @@ extension LittleSwitchApplicationDelegate {
             },
             onTestMonitoring: { [weak self] in
                 await self?.testMonitoringExport()
+            },
+            onOpenChatGPT: { [weak self] in
+                await self?.perform { try await $0.openChatGPT() }
+            },
+            onDisconnectChatGPT: { [weak self] in
+                await self?.perform { try await $0.disconnectChatGPT() }
             }
         )
         settingsWindow = makeSettingsWindow(hosting: view)

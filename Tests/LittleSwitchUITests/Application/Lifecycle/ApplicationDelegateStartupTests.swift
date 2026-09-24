@@ -30,12 +30,18 @@ struct DelegateStartupTests {
         )
         let coordinatorShutdown = try #require(
             source.range(
-                of: "await coordinator?.shutdown(mode: terminationState.mode)",
+                of: "await coordinator.shutdown(mode: terminationState.mode) == false",
                 range: startupCompletion.upperBound..<source.endIndex
             )
         )
         #expect(cancellation.lowerBound < startupCompletion.lowerBound)
         #expect(startupCompletion.lowerBound < coordinatorShutdown.lowerBound)
+        let refusal = try #require(source.range(of: "sender.reply(toApplicationShouldTerminate: false)"))
+        let trafficStop = try #require(source.range(of: "await trafficStore.stop()"))
+        #expect(coordinatorShutdown.lowerBound < refusal.lowerBound)
+        #expect(refusal.lowerBound < trafficStop.lowerBound)
+        #expect(source[coordinatorShutdown.lowerBound..<refusal.lowerBound].contains("terminationStarted = false"))
+        #expect(source[refusal.upperBound..<trafficStop.lowerBound].contains("return"))
     }
 
     @Test("Every delegate startup failure synchronizes the gateway menu")

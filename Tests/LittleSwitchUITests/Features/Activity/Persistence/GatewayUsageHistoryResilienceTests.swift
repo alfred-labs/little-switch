@@ -99,7 +99,8 @@ struct GatewayUsageHistoryResilienceTests {
         // Hide the table after the schema exists: the next store loads with
         // its day in memory (the read fails into a fresh history), and every
         // flush write fails until the table returns.
-        try await DatabaseQueue(path: fileURL.path).write { database in
+        let fixtureQueue = try retryFixtureQueue(fileURL: fileURL)
+        try await fixtureQueue.write { database in
             try database.execute(sql: "ALTER TABLE usageDay RENAME TO usageDayHidden")
         }
 
@@ -114,7 +115,7 @@ struct GatewayUsageHistoryResilienceTests {
             await store.fold(GatewayUsageEvent(finishedAt: now, outcome: .succeeded, client: .codex))
         }
         try await Task.sleep(for: .milliseconds(150))
-        let hidden = try await DatabaseQueue(path: fileURL.path).read { database in
+        let hidden = try await fixtureQueue.read { database in
             try Int.fetchOne(
                 database,
                 sql: "SELECT requests FROM usageDayHidden WHERE day = ?",
@@ -125,12 +126,12 @@ struct GatewayUsageHistoryResilienceTests {
 
         // Restore the table and wait for the store's own retry to land the
         // pending delta — nothing else folds, so only the re-armed flush can.
-        try await DatabaseQueue(path: fileURL.path).write { database in
+        try await fixtureQueue.write { database in
             try database.execute(sql: "ALTER TABLE usageDayHidden RENAME TO usageDay")
         }
         try await Task.sleep(for: .milliseconds(400))
 
-        let stored = try await DatabaseQueue(path: fileURL.path).read { database in
+        let stored = try await fixtureQueue.read { database in
             try Int.fetchOne(
                 database,
                 sql: "SELECT requests FROM usageDay WHERE day = ?",
@@ -154,7 +155,8 @@ struct GatewayUsageHistoryResilienceTests {
         await seeding.fold(GatewayUsageEvent(finishedAt: now, outcome: .succeeded, client: .claude))
         await seeding.stop()
 
-        try await DatabaseQueue(path: fileURL.path).write { database in
+        let fixtureQueue = try retryFixtureQueue(fileURL: fileURL)
+        try await fixtureQueue.write { database in
             try database.execute(sql: "ALTER TABLE usageDay RENAME TO usageDayHidden")
         }
 
@@ -168,12 +170,12 @@ struct GatewayUsageHistoryResilienceTests {
             await store.fold(GatewayUsageEvent(finishedAt: now, outcome: .succeeded, client: .codex))
         }
 
-        try await DatabaseQueue(path: fileURL.path).write { database in
+        try await fixtureQueue.write { database in
             try database.execute(sql: "ALTER TABLE usageDayHidden RENAME TO usageDay")
         }
         try await Task.sleep(for: .milliseconds(2_400))
 
-        let stored = try await DatabaseQueue(path: fileURL.path).read { database in
+        let stored = try await fixtureQueue.read { database in
             try Int.fetchOne(
                 database,
                 sql: "SELECT requests FROM usageDay WHERE day = ?",
@@ -182,5 +184,13 @@ struct GatewayUsageHistoryResilienceTests {
         }
         #expect(stored == 3)
         await store.stop()
+    }
+
+    private func retryFixtureQueue(fileURL: URL) throws -> DatabaseQueue {
+        var configuration = Configuration()
+        // Restoring the table can overlap the store's autonomous retry.
+        // Bound fixture lock waiting without masking the missing-table failure.
+        configuration.busyMode = .timeout(5)
+        return try DatabaseQueue(path: fileURL.path, configuration: configuration)
     }
 }

@@ -9,6 +9,7 @@ public struct AppConfiguration: Codable, Equatable, Sendable {
     public var connected: Bool
     public var claudeCode: ClaudeCodeConfiguration
     public var codex: CodexConfiguration
+    public var chatgpt: ChatGPTConfiguration
     public var openCode: OpenCodeConfiguration
     public var webSearch: WebSearchConfiguration
     public var monitoring: MonitoringConfiguration
@@ -23,6 +24,7 @@ public struct AppConfiguration: Codable, Equatable, Sendable {
         connected: Bool = false,
         claudeCode: ClaudeCodeConfiguration = .disconnected,
         codex: CodexConfiguration = .disconnected,
+        chatgpt: ChatGPTConfiguration = .disconnected,
         openCode: OpenCodeConfiguration = .disconnected,
         webSearch: WebSearchConfiguration = .disabled,
         monitoring: MonitoringConfiguration = .init(),
@@ -36,6 +38,7 @@ public struct AppConfiguration: Codable, Equatable, Sendable {
         self.connected = connected
         self.claudeCode = claudeCode
         self.codex = codex
+        self.chatgpt = chatgpt
         self.openCode = openCode
         self.webSearch = webSearch
         self.monitoring = monitoring
@@ -51,6 +54,7 @@ public struct AppConfiguration: Codable, Equatable, Sendable {
         case connected
         case claudeCode
         case codex
+        case chatgpt
         case openCode
         case webSearch
         case monitoring
@@ -220,6 +224,7 @@ public struct AppConfiguration: Codable, Equatable, Sendable {
             ) ?? .disconnected
         claudeCode.defaultModel = claudeCode.defaultModel.map(ClaudeRouteCompatibility.canonicalID)
         codex = try values.decodeIfPresent(CodexConfiguration.self, forKey: .codex) ?? .disconnected
+        chatgpt = try values.decodeIfPresent(ChatGPTConfiguration.self, forKey: .chatgpt) ?? .disconnected
         openCode =
             try values.decodeIfPresent(
                 OpenCodeConfiguration.self,

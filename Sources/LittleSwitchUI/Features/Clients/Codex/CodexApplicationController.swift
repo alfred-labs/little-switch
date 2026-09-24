@@ -2,11 +2,28 @@ import AppKit
 import Foundation
 import LittleSwitchCommon
 
-public protocol CodexApplicationControlling: ApplicationRelaunching {}
+public protocol CodexApplicationControlling: ApplicationRelaunching {
+    func open(environment: [String: String]) async throws
+    func openTracked(environment: [String: String]) async throws -> UUID
+    func isRunning(launchID: UUID) async -> Bool
+}
+
+extension CodexApplicationControlling {
+    public func openTracked(environment: [String: String]) async throws -> UUID {
+        throw ChatGPTConnectionError.unavailable
+    }
+
+    public func isRunning(launchID: UUID) async -> Bool { false }
+
+    public func open(environment: [String: String]) async throws {
+        guard environment.isEmpty else { throw ChatGPTConnectionError.unavailable }
+        try await open()
+    }
+}
 
 @MainActor
-public final class NSWorkspaceCodexController: CodexApplicationControlling {
-    public enum Error: Swift.Error, Equatable {
+final class NSWorkspaceCodexController: CodexApplicationControlling {
+    enum Error: Swift.Error, Equatable {
         case applicationNotFound
         case quitTimedOut
     }
@@ -15,8 +32,9 @@ public final class NSWorkspaceCodexController: CodexApplicationControlling {
 
     private let workspace: NSWorkspace
     private let fileManager: FileManager
+    private var trackedLaunch: (id: UUID, application: NSRunningApplication)?
 
-    public init(
+    init(
         workspace: NSWorkspace = .shared,
         fileManager: FileManager = .default
     ) {
@@ -24,11 +42,11 @@ public final class NSWorkspaceCodexController: CodexApplicationControlling {
         self.fileManager = fileManager
     }
 
-    public func isRunning() -> Bool {
+    func isRunning() -> Bool {
         !runningApplications.isEmpty
     }
 
-    public func quitAndWait() async throws {
+    func quitAndWait() async throws {
         for application in runningApplications {
             application.terminate()
         }
@@ -43,11 +61,28 @@ public final class NSWorkspaceCodexController: CodexApplicationControlling {
         throw Error.quitTimedOut
     }
 
-    public func open() async throws {
+    func open() async throws {
+        try await open(environment: [:])
+    }
+
+    func open(environment: [String: String]) async throws {
+        _ = try await openTracked(environment: environment)
+    }
+
+    func isRunning(launchID: UUID) -> Bool {
+        guard let trackedLaunch, trackedLaunch.id == launchID else { return false }
+        return !trackedLaunch.application.isTerminated
+    }
+
+    func openTracked(environment: [String: String]) async throws -> UUID {
         guard let applicationURL else {
             throw Error.applicationNotFound
         }
-        try await DesktopApplicationSystem.open(applicationURL, workspace: workspace)
+        let application = try await DesktopApplicationSystem.openTracked(
+            applicationURL, workspace: workspace, environment: environment)
+        let id = UUID()
+        trackedLaunch = (id, application)
+        return id
     }
 
     private var runningApplications: [NSRunningApplication] {
