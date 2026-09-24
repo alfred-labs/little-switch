@@ -1,6 +1,7 @@
 import Foundation
 import HTTPTypes
 import HummingbirdTesting
+import LittleSwitchWire
 import NIOCore
 import Testing
 
@@ -39,16 +40,12 @@ struct GatewayCustomHistoryFallbackTests {
         let requests = await transport.requests
         #expect(requests.count == 2)
         let first = try #require(requests.first)
-        let custom = try chatJSONObject(first.body)
-        if chat {
-            let messages = try #require(custom["messages"] as? [[String: Any]])
-            let call = try #require((messages.first?["tool_calls"] as? [[String: Any]])?.first)
-            #expect(call["type"] as? String == "function")
-        } else {
-            let input = try #require(custom["input"] as? [[String: Any]])
-            #expect(input.first?["type"] as? String == "function_call")
-            #expect(input[1]["type"] as? String == "function_call_output")
-        }
+        let custom = try JSONValue.parse(first.body)
+        let history = try #require(custom.object?[chat ? "messages" : "input"]?.array)
+        let source = try #require(JSONValue.parse(original).object?["input"]?.array)
+        #expect(history.count == source.count)
+        #expect(try history.prefix(2).map(historyArchiveItem) == Array(source.prefix(2)))
+        #expect(history.allSatisfy { $0.object?["tool_calls"] == nil && $0.object?["call_id"] == nil })
         let returned = try #require(requests.last)
         #expect(returned.url == "https://api.openai.com/v1/responses")
         #expect(returned.body == original)

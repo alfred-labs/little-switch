@@ -68,6 +68,8 @@ package enum OpenAIResponsesChatCompletions {
         )
         let toolBindings = flattened.bindings
         let declaredToolBindings = flattened.declaredBindings
+        let historicalNames = ResponsesToolNamespaces.historicalNames(
+            root[OpenAIResponsesRequestEnvelope.Key.input.rawValue] as? [[String: Any]] ?? [], bindings: toolBindings)
         var request: [String: Any] = ["model": targetModel]
         try ResponsesChatCompletionsOptions.copy(from: root, to: &request)
         let converted = flattened.tools.compactMap(chatTool)
@@ -81,23 +83,12 @@ package enum OpenAIResponsesChatCompletions {
         }
         try ChatAllowedToolSelection.apply(to: &request)
 
-        // Only declarations actually sent to this provider keep custom history
-        // active. Preserve the original name catalog for excluded-name safety.
-        let selectedCustomNames = Set(
-            (request["tools"] as? [[String: Any]] ?? []).compactMap {
-                ($0["custom"] as? [String: Any])?["name"] as? String
-            })
-        var history = root
-        history["tools"] = flattened.tools.filter {
-            $0["type"] as? String == "custom"
-                && ($0["name"] as? String).map(selectedCustomNames.contains) == true
-        }
-        do {
-            history = try ResponsesCustomToolHistory.normalized(history, bindings: toolBindings)
-        } catch {
-            throw Error.invalidRequest
-        }
-        guard let input = history["input"] else { throw Error.invalidRequest }
+        let history = try ResponsesCustomToolHistory.normalizedForChat(
+            root,
+            tools: flattened.tools,
+            selectedTools: request[OpenAIResponsesRequestEnvelope.Key.tools.rawValue] as? [[String: Any]] ?? [],
+            bindings: toolBindings)
+        guard let input = history.request["input"] else { throw Error.invalidRequest }
         var messages: [[String: Any]] = []
         if let instructions = nonemptyString(root["instructions"]) {
             messages.append(["role": "system", "content": instructions])
@@ -113,6 +104,8 @@ package enum OpenAIResponsesChatCompletions {
         let toolNameCatalog = ProviderToolNameCatalog(
             declared: requestNames.declared.union(inheritedToolNameCatalog?.declared ?? []),
             historical: ProviderToolNameCatalog.history(in: request, wire: .chatCompletions)
+                .union(historicalNames)
+                .union(history.archivedNames)
                 .union(inheritedToolNameCatalog?.historical ?? []))
         switch mode {
         case .buffered:

@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 import Testing
 
 @testable import LittleSwitchCore
@@ -65,16 +66,10 @@ struct NativeCustomToolHistoryParityTests {
         #expect(name != "retired__patch")
         #expect(normalized.declaredToolBindings.isEmpty)
         let input = try #require(chatJSONObject(normalized.body)["input"] as? [[String: Any]])
-        var expectedCall = call
-        expectedCall["name"] = name
-        expectedCall["type"] = "function_call"
-        expectedCall["arguments"] = try chatReasoningText(
-            chatJSONData(["input": try #require(call["input"] as? String)]))
-        expectedCall.removeValue(forKey: "namespace")
-        expectedCall.removeValue(forKey: "input")
-        var expectedOutput = history[1]
-        expectedOutput["type"] = "function_call_output"
-        #expect(input as NSArray == [expectedCall, expectedOutput] as NSArray)
+        #expect(input.count == 2)
+        #expect(try historyArchiveItem(WireJSONCompatibility.value(input[0])) == WireJSONCompatibility.value(call))
+        #expect(
+            try historyArchiveItem(WireJSONCompatibility.value(input[1])) == WireJSONCompatibility.value(history[1]))
         let contract = try ProviderToolContract(wire: .responses, requestBody: normalized.body)
         #expect(throws: ProviderToolContract.Error.undeclaredTool(name: name)) {
             try contract.validateBuffered(

@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import LittleSwitchWire
 
 /// Flattens the namespaced tools Codex exposes into plain function tools.
 ///
@@ -20,6 +21,15 @@ package enum ResponsesToolNamespaces {
         package init(namespace: String, name: String) {
             self.namespace = namespace
             self.name = name
+        }
+
+        package static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.namespace.utf8.elementsEqual(rhs.namespace.utf8) && lhs.name.utf8.elementsEqual(rhs.name.utf8)
+        }
+
+        package func hash(into hasher: inout Hasher) {
+            hasher.combine(Data(namespace.utf8))
+            hasher.combine(Data(name.utf8))
         }
     }
 
@@ -213,5 +223,23 @@ package enum ResponsesToolNamespaces {
             return nil
         }
         return name
+    }
+
+    /// Reserve names before retired calls become messages. Their spelling must
+    /// not subsequently resolve to a different current namespaced tool.
+    static func historicalNames(_ history: [[String: Any]], bindings: [String: Binding]) -> Set<String> {
+        let callTypes = [
+            OpenAIResponsesInputFunctionCallType.functionCall.rawValue,
+            OpenAIResponsesInputCustomCallType.customToolCall.rawValue,
+        ]
+        typealias CallKey = OpenAIResponsesInputFunctionCall.Key
+        return Set(
+            history.compactMap { item in
+                guard callTypes.contains(item[CallKey.type.rawValue] as? String ?? ""),
+                    let name = item[CallKey.name.rawValue] as? String
+                else { return nil }
+                guard let namespace = nonemptyName(item[CallKey.namespace.rawValue]) else { return name }
+                return replayName(bindings: bindings, namespace: namespace, name: name)
+            })
     }
 }

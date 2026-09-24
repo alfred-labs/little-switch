@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 import Testing
 
 @testable import LittleSwitchCore
@@ -11,7 +12,7 @@ struct CustomHistoryFallbackEdgeTests {
             ["model": "route", "input": "Hello"],
             ["model": "route", "input": [["type": "message", "role": "user", "content": "Hello"]]],
         ] {
-            #expect(try ResponsesCustomToolHistory.normalized(root) as NSDictionary == root as NSDictionary)
+            #expect(try ResponsesCustomToolHistory.normalized(root).request as NSDictionary == root as NSDictionary)
         }
     }
 
@@ -22,7 +23,7 @@ struct CustomHistoryFallbackEdgeTests {
         var input = try #require(root["input"] as? [[String: Any]])
         input[0].removeValue(forKey: "namespace")
         root["input"] = input
-        #expect(try ResponsesCustomToolHistory.normalized(root) as NSDictionary == root as NSDictionary)
+        #expect(try ResponsesCustomToolHistory.normalized(root).request as NSDictionary == root as NSDictionary)
     }
 
     @Test("Malformed declarations do not make retired history callable")
@@ -37,12 +38,13 @@ struct CustomHistoryFallbackEdgeTests {
             ],
         ]
         root["tools"] = tools
-        let normalized = try ResponsesCustomToolHistory.normalized(root)
+        let normalized = try ResponsesCustomToolHistory.normalized(root).request
         let outputTools = try #require(normalized["tools"] as? [[String: Any]])
         #expect(try chatJSONData(outputTools) == chatJSONData(tools))
         let input = try #require(normalized["input"] as? [[String: Any]])
-        #expect(input.first?["type"] as? String == "function_call")
-        #expect(input[1]["type"] as? String == "function_call_output")
+        let source = try #require(root["input"] as? [[String: Any]])
+        #expect(try historyArchiveItem(WireJSONCompatibility.value(input[0])) == WireJSONCompatibility.value(source[0]))
+        #expect(try historyArchiveItem(WireJSONCompatibility.value(input[1])) == WireJSONCompatibility.value(source[1]))
     }
 
     @Test("Malformed custom calls and results fail before an upstream request")

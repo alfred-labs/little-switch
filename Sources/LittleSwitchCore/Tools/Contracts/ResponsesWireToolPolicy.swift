@@ -36,7 +36,9 @@ enum ResponsesWireToolPolicy {
         return true
     }
 
-    static func nameCatalog(_ request: OpenAIResponsesRequestEnvelope) throws -> ProviderToolNameCatalog {
+    static func nameCatalog(
+        _ request: OpenAIResponsesRequestEnvelope, bindings: [String: ResponsesToolNamespaces.Binding] = [:]
+    ) throws -> ProviderToolNameCatalog {
         // Catalogue construction receives identities only; unknown request and
         // schema subtrees cannot authorize a tool and are never serialized here.
         let identities = OpenAIResponsesRequestEnvelope(
@@ -44,7 +46,12 @@ enum ResponsesWireToolPolicy {
             toolChoice: request.toolChoice.value.map { .value(identityProjection($0)) } ?? .null,
             tools: .value(identityProjection(request.tools.value ?? .array([])))
         )
-        return try ProviderToolContractCatalog(wire: .responses, requestBody: WireCodec.encode(identities)).nameCatalog
+        let catalog = try ProviderToolContractCatalog(wire: .responses, requestBody: WireCodec.encode(identities))
+            .nameCatalog
+        let history = try objects(identities.input.value?.array ?? [])
+        return ProviderToolNameCatalog(
+            declared: catalog.declared,
+            historical: ResponsesToolNamespaces.historicalNames(history, bindings: bindings))
     }
 
     private static func view(_ presence: JSONPresence<JSONValue>) -> Any? {

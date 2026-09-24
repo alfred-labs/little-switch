@@ -24,11 +24,11 @@ package struct ProviderToolNamespaceResolver: Sendable {
     private let declaredNames: Set<String>
     private let plainNames: Set<String>
     private let historicalNames: Set<String>
-    private let childNames: [String: [String]]
+    private let childNames: [Data: [String]]
     /// Last namespace segment → child name → the wire names that pair
     /// declares. Nested dictionaries keep the lookup collision-free without
     /// a key struct whose fields Periphery would flag as assign-only.
-    private let namespacePairs: [String: [String: [String]]]
+    private let namespacePairs: [Data: [Data: [String]]]
 
     package init(
         declaredBindings: [String: ResponsesToolNamespaces.Binding],
@@ -36,23 +36,25 @@ package struct ProviderToolNamespaceResolver: Sendable {
     ) {
         let declaredNames = nameCatalog.declared.union(declaredBindings.keys)
         let plainNames = declaredNames.subtracting(declaredBindings.keys)
-        var childNames = Dictionary(uniqueKeysWithValues: plainNames.map { ($0, [$0]) })
-        var namespacePairs: [String: [String: [String]]] = [:]
+        var childNames = Dictionary(uniqueKeysWithValues: plainNames.map { (Data($0.utf8), [$0]) })
+        var namespacePairs: [Data: [Data: [String]]] = [:]
         for name in plainNames {
             let tokens = Self.tokens(name)
             if tokens.count >= 2 {
-                namespacePairs[tokens[tokens.count - 2], default: [:]][tokens[tokens.count - 1], default: []].append(
+                namespacePairs[Data(tokens[tokens.count - 2].utf8), default: [:]][
+                    Data(tokens[tokens.count - 1].utf8), default: []
+                ].append(
                     name)
             }
         }
         for (wireName, binding) in declaredBindings {
-            childNames[binding.name, default: []].append(wireName)
+            childNames[Data(binding.name.utf8), default: []].append(wireName)
             let segments = binding.namespace.split(separator: ".")
             if let lastSegment = segments.last {
                 namespacePairs[
-                    String(lastSegment),
+                    Data(lastSegment.utf8),
                     default: [:]
-                ][binding.name, default: []].append(wireName)
+                ][Data(binding.name.utf8), default: []].append(wireName)
             }
         }
         self.exact = declaredBindings
@@ -72,13 +74,13 @@ package struct ProviderToolNamespaceResolver: Sendable {
             return exact.first { $0.value == ResponsesToolNamespaces.Binding(namespace: namespace, name: emitted) }?
                 .key
         }
-        if declaredNames.contains(emitted) {
+        if declaredNames.contains(where: { $0.utf8.elementsEqual(emitted.utf8) }) {
             return emitted
         }
         guard !historicalNames.contains(emitted) else {
             return nil
         }
-        if let candidates = childNames[emitted] {
+        if let candidates = childNames[Data(emitted.utf8)] {
             // A complete child name is already the most specific match.
             // Ambiguity here must not select a different, shorter identity.
             return uniqueNamespaceCandidate(candidates)
@@ -101,16 +103,16 @@ package struct ProviderToolNamespaceResolver: Sendable {
             let binding = ResponsesToolNamespaces.Binding(namespace: namespace, name: name)
             return bindings.values.contains(binding) ? binding : nil
         }
-        if declaredNames.contains(name) {
-            return exact[name]
+        if declaredNames.contains(where: { $0.utf8.elementsEqual(name.utf8) }) {
+            return Self.exactValue(name, in: exact)
         }
-        if let binding = bindings[name] {
+        if let binding = Self.exactValue(name, in: bindings) {
             return binding
         }
         guard let wireName = wireName(for: name, namespace: nil) else {
             return nil
         }
-        return exact[wireName]
+        return Self.exactValue(wireName, in: exact)
     }
 
     /// `functions.collaboration.spawn_agent`: split on `__` and `.` and match
@@ -120,9 +122,7 @@ package struct ProviderToolNamespaceResolver: Sendable {
     private func tokenCandidates(_ emitted: String) -> [String]? {
         let tokens = Self.tokens(emitted)
         guard tokens.count >= 2,
-            let pair = namespacePairs[tokens[tokens.count - 2]]?[
-                tokens[tokens.count - 1]
-            ]
+            let pair = namespacePairs[Data(tokens[tokens.count - 2].utf8)]?[Data(tokens[tokens.count - 1].utf8)]
         else {
             return nil
         }
@@ -144,7 +144,7 @@ package struct ProviderToolNamespaceResolver: Sendable {
         let matches =
             childNames
             .filter {
-                emitted.hasSuffix("__\($0.key)") || emitted.hasSuffix("_\($0.key)")
+                emitted.utf8.reversed().starts(with: (Data("_".utf8) + $0.key).reversed())
             }
             .sorted { $0.key.count > $1.key.count }
         guard let best = matches.first else {
@@ -156,5 +156,9 @@ package struct ProviderToolNamespaceResolver: Sendable {
     private func uniqueNamespaceCandidate(_ candidates: [String]) -> String? {
         guard candidates.count == 1, exact[candidates[0]] != nil else { return nil }
         return candidates[0]
+    }
+
+    private static func exactValue<Value>(_ key: String, in values: [String: Value]) -> Value? {
+        values.first { $0.key.utf8.elementsEqual(key.utf8) }?.value
     }
 }

@@ -52,7 +52,7 @@ struct CustomHistoryAllowedSelectionParityTests {
         }
         let name = ResponsesToolNamespaces.replayName(bindings: bindings, namespace: "workspace", name: "patch")
         #expect(declaredNames == ["selected", name])
-        #expect(historicalNames == [name])
+        #expect(historicalNames == (selection.subset == "included" ? [name] : [name, "patch"]))
         #expect(
             upstream as NSDictionary == (try expected(wire: wire, selection: selection, name: name)) as NSDictionary)
         #expect(try ResponsesProviderState.normalize(body: original, providerID: nil) == original)
@@ -104,6 +104,14 @@ struct CustomHistoryAllowedSelectionParityTests {
                 ["type": "\(responseType)_output", "call_id": "call_old_patch", "output": customHistoryFallbackOutput],
                 ["type": "message", "role": "user", "content": "Continue"],
             ]
+        }
+        if !custom {
+            let original = try #require(chatJSONObject(customHistoryFallbackRequest())["input"] as? [[String: Any]])
+            let archived = try original.prefix(2).map { try expectedHistoryArchive($0, chat: wire == "chat") }
+            result[wire == "chat" ? "messages" : "input"] =
+                archived + [
+                    wire == "chat" ? ["role": "user", "content": "Continue"] : original[2]
+                ]
         }
         if selection.subset != "empty" {
             var tools: [[String: Any]] = [

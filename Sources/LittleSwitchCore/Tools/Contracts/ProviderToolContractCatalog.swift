@@ -9,6 +9,17 @@ struct ProviderToolContractCatalog: Sendable {
         let name: String
         let namespace: String?
         let kind: Kind
+
+        static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.kind == rhs.kind && lhs.name.utf8.elementsEqual(rhs.name.utf8)
+                && lhs.namespace.map { Data($0.utf8) } == rhs.namespace.map { Data($0.utf8) }
+        }
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(kind)
+            hasher.combine(Data(name.utf8))
+            hasher.combine(namespace.map { Data($0.utf8) })
+        }
     }
 
     private var identities: Set<Identity> = []
@@ -74,7 +85,10 @@ struct ProviderToolContractCatalog: Sendable {
     }
 
     func validatePrefix(_ prefix: String, kind: Kind) throws {
-        guard allowedIdentities.contains(where: { $0.kind == kind && $0.namespace == nil && $0.name.hasPrefix(prefix) })
+        guard
+            allowedIdentities.contains(where: {
+                $0.kind == kind && $0.namespace == nil && $0.name.utf8.starts(with: prefix.utf8)
+            })
         else {
             throw ProviderToolContract.Error.undeclaredTool(name: prefix)
         }

@@ -2796,16 +2796,6 @@
       "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/OpenAIResponsesChatCompletions.swift",
       "literal" : {
         "kind" : "string",
-        "value" : "custom"
-      },
-      "ordinal" : 1,
-      "rule" : "discriminantValue"
-    },
-    {
-      "anchor" : "enum OpenAIResponsesChatCompletions/static func prepare(body:Data,targetModel:String,providerID:UUID?,mode:ResponsesChatCompletionsMode,inheritedToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedDeclaredToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedToolNameCatalog:ProviderToolNameCatalog?,inheritedToolSearchContract:ResponsesClientToolSearchContract?,originalBody:Data?)throws->PreparedResponsesChatCompletionsRequest",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/OpenAIResponsesChatCompletions.swift",
-      "literal" : {
-        "kind" : "string",
         "value" : "system"
       },
       "ordinal" : 1,
@@ -2847,16 +2837,6 @@
       "literal" : {
         "kind" : "string",
         "value" : "model"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum OpenAIResponsesChatCompletions/static func prepare(body:Data,targetModel:String,providerID:UUID?,mode:ResponsesChatCompletionsMode,inheritedToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedDeclaredToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedToolNameCatalog:ProviderToolNameCatalog?,inheritedToolSearchContract:ResponsesClientToolSearchContract?,originalBody:Data?)throws->PreparedResponsesChatCompletionsRequest",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/OpenAIResponsesChatCompletions.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "name"
       },
       "ordinal" : 1,
       "rule" : "subscriptKey"
@@ -2976,29 +2956,9 @@
       "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/OpenAIResponsesChatCompletions.swift",
       "literal" : {
         "kind" : "string",
-        "value" : "tools"
-      },
-      "ordinal" : 4,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum OpenAIResponsesChatCompletions/static func prepare(body:Data,targetModel:String,providerID:UUID?,mode:ResponsesChatCompletionsMode,inheritedToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedDeclaredToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedToolNameCatalog:ProviderToolNameCatalog?,inheritedToolSearchContract:ResponsesClientToolSearchContract?,originalBody:Data?)throws->PreparedResponsesChatCompletionsRequest",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/OpenAIResponsesChatCompletions.swift",
-      "literal" : {
-        "kind" : "string",
         "value" : "type"
       },
       "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum OpenAIResponsesChatCompletions/static func prepare(body:Data,targetModel:String,providerID:UUID?,mode:ResponsesChatCompletionsMode,inheritedToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedDeclaredToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedToolNameCatalog:ProviderToolNameCatalog?,inheritedToolSearchContract:ResponsesClientToolSearchContract?,originalBody:Data?)throws->PreparedResponsesChatCompletionsRequest",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/OpenAIResponsesChatCompletions.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "type"
-      },
-      "ordinal" : 2,
       "rule" : "subscriptKey"
     },
     {
@@ -3030,36 +2990,6 @@
       },
       "ordinal" : 1,
       "rule" : "dictionaryKey"
-    },
-    {
-      "anchor" : "enum OpenAIResponsesChatCompletions/static func prepare(body:Data,targetModel:String,providerID:UUID?,mode:ResponsesChatCompletionsMode,inheritedToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedDeclaredToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedToolNameCatalog:ProviderToolNameCatalog?,inheritedToolSearchContract:ResponsesClientToolSearchContract?,originalBody:Data?)throws->PreparedResponsesChatCompletionsRequest/binding selectedCustomNames",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/OpenAIResponsesChatCompletions.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "custom"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum OpenAIResponsesChatCompletions/static func prepare(body:Data,targetModel:String,providerID:UUID?,mode:ResponsesChatCompletionsMode,inheritedToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedDeclaredToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedToolNameCatalog:ProviderToolNameCatalog?,inheritedToolSearchContract:ResponsesClientToolSearchContract?,originalBody:Data?)throws->PreparedResponsesChatCompletionsRequest/binding selectedCustomNames",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/OpenAIResponsesChatCompletions.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "name"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum OpenAIResponsesChatCompletions/static func prepare(body:Data,targetModel:String,providerID:UUID?,mode:ResponsesChatCompletionsMode,inheritedToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedDeclaredToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedToolNameCatalog:ProviderToolNameCatalog?,inheritedToolSearchContract:ResponsesClientToolSearchContract?,originalBody:Data?)throws->PreparedResponsesChatCompletionsRequest/binding selectedCustomNames",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/OpenAIResponsesChatCompletions.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "tools"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
     },
     {
       "anchor" : "enum OpenAIResponsesChatCompletions/static func prepare(body:Data,targetModel:String,providerID:UUID?,mode:ResponsesChatCompletionsMode,inheritedToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedDeclaredToolBindings:[String:ResponsesToolNamespaces.Binding],inheritedToolNameCatalog:ProviderToolNameCatalog?,inheritedToolSearchContract:ResponsesClientToolSearchContract?,originalBody:Data?)throws->PreparedResponsesChatCompletionsRequest/binding toolStreamingEnabled",
@@ -4337,266 +4267,6 @@
       "literal" : {
         "kind" : "string",
         "value" : "type"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func activeCustomTools(_:[[String:Any]],bindings:[String:ResponsesToolNamespaces.Binding])->Set<Identity>",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "custom"
-      },
-      "ordinal" : 1,
-      "rule" : "discriminantValue"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func activeCustomTools(_:[[String:Any]],bindings:[String:ResponsesToolNamespaces.Binding])->Set<Identity>",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "custom"
-      },
-      "ordinal" : 2,
-      "rule" : "discriminantValue"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func activeCustomTools(_:[[String:Any]],bindings:[String:ResponsesToolNamespaces.Binding])->Set<Identity>",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "namespace"
-      },
-      "ordinal" : 1,
-      "rule" : "discriminantValue"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func activeCustomTools(_:[[String:Any]],bindings:[String:ResponsesToolNamespaces.Binding])->Set<Identity>",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "name"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func activeCustomTools(_:[[String:Any]],bindings:[String:ResponsesToolNamespaces.Binding])->Set<Identity>",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "name"
-      },
-      "ordinal" : 2,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func activeCustomTools(_:[[String:Any]],bindings:[String:ResponsesToolNamespaces.Binding])->Set<Identity>",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "tools"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func activeCustomTools(_:[[String:Any]],bindings:[String:ResponsesToolNamespaces.Binding])->Set<Identity>",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "type"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func activeCustomTools(_:[[String:Any]],bindings:[String:ResponsesToolNamespaces.Binding])->Set<Identity>",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "type"
-      },
-      "ordinal" : 2,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func activeCustomTools(_:[[String:Any]],bindings:[String:ResponsesToolNamespaces.Binding])->Set<Identity>",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "type"
-      },
-      "ordinal" : 3,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "custom_tool_call"
-      },
-      "ordinal" : 1,
-      "rule" : "discriminantValue"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "custom_tool_call_output"
-      },
-      "ordinal" : 1,
-      "rule" : "discriminantValue"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "arguments"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "call_id"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "call_id"
-      },
-      "ordinal" : 2,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "input"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "input"
-      },
-      "ordinal" : 2,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "input"
-      },
-      "ordinal" : 3,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "name"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "output"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "type"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "type"
-      },
-      "ordinal" : 2,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "type"
-      },
-      "ordinal" : 3,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "type"
-      },
-      "ordinal" : 4,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]/binding active",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "tools"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]/binding data",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "input"
-      },
-      "ordinal" : 1,
-      "rule" : "dictionaryKey"
-    },
-    {
-      "anchor" : "enum ResponsesCustomToolHistory/static func normalized(_:[String:Any],bindings:[String:ResponsesToolNamespaces.Binding])throws->[String:Any]/binding identity",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesCustomToolHistory.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "namespace"
       },
       "ordinal" : 1,
       "rule" : "subscriptKey"

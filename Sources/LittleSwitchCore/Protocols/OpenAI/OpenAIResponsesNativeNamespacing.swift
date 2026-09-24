@@ -53,6 +53,22 @@ package enum OpenAIResponsesNativeNamespacing {
                 changed = true
             }
         }
+        if let choice = rewritten.toolChoice.value {
+            let flattened = try ResponsesWireToolPolicy.choice(choice, bindings: declaredToolBindings)
+            if flattened != choice {
+                rewritten.toolChoice = flattened == .null ? .null : .value(flattened)
+                changed = true
+            }
+        }
+        let names = try ResponsesWireToolPolicy.nameCatalog(rewritten, bindings: toolBindings)
+        if try ResponsesWireToolPolicy.applySelection(to: &rewritten) { changed = true }
+        let customHistory = try ResponsesCustomToolHistory.normalized(rewritten, bindings: toolBindings)
+        let toolNameCatalog = ProviderToolNameCatalog(
+            declared: names.declared, historical: names.historical.union(customHistory.archivedNames))
+        if try customHistory.request.wireJSON() != rewritten.wireJSON() {
+            rewritten = customHistory.request
+            changed = true
+        }
         if let items = objectArray(rewritten.input.value) {
             var converted: [JSONValue] = []
             converted.reserveCapacity(items.count)
@@ -85,20 +101,6 @@ package enum OpenAIResponsesNativeNamespacing {
                 }
             }
             if changed { rewritten.input = .value(.array(converted)) }
-        }
-        if let choice = rewritten.toolChoice.value {
-            let flattened = try ResponsesWireToolPolicy.choice(choice, bindings: declaredToolBindings)
-            if flattened != choice {
-                rewritten.toolChoice = flattened == .null ? .null : .value(flattened)
-                changed = true
-            }
-        }
-        let toolNameCatalog = try ResponsesWireToolPolicy.nameCatalog(rewritten)
-        if try ResponsesWireToolPolicy.applySelection(to: &rewritten) { changed = true }
-        let customHistory = try ResponsesCustomToolHistory.normalized(rewritten, bindings: toolBindings)
-        if try customHistory.wireJSON() != rewritten.wireJSON() {
-            rewritten = customHistory
-            changed = true
         }
         var finalJSON = try rewritten.wireJSON()
         let fields = try WireObject(finalJSON).additionalFields(excluding: [])

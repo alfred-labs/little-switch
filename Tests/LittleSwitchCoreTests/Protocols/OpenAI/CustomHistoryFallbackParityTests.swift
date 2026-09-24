@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 import Testing
 
 @testable import LittleSwitchCore
@@ -52,55 +53,34 @@ struct CustomHistoryFallbackParityTests {
         let request = try chatJSONObject(prepared.upstreamBody)
         let tools = try #require(request["tools"] as? [[String: Any]])
         #expect((tools.first?["function"] as? [String: Any])?["name"] as? String == plainName)
-        let messages = try chatReasoningMessages(prepared.upstreamBody)
-        let call = try #require((messages.first?["tool_calls"] as? [[String: Any]])?.first)
-        let name = try #require((call["function"] as? [String: Any])?["name"] as? String)
+        let messages = try #require(JSONValue.parse(prepared.upstreamBody).object?["messages"]?.array)
+        let name = try #require(prepared.toolBindings.first { $0.value == binding }?.key)
         #expect(name != plainName)
         #expect(prepared.toolBindings == [name: binding])
         #expect(prepared.declaredToolBindings.isEmpty)
+        let original = try #require(JSONValue.parse(customHistoryFallbackRequest()).object?["input"]?.array)
+        #expect(try historyArchiveItem(messages[0]) == original[0])
     }
 
     @Test(
-        "Historical freeform calls use function history when their declaration is absent",
+        "Historical freeform exchanges remain complete noncallable context when their declaration is absent",
         arguments: ["responses", "chat"], ["none", "otherNamespace", "collidingFlat"])
     func undeclaredHistory(wire: String, declarations: String) throws {
         let original = try customHistoryFallbackRequest(declarations: declarations)
-        let call: [String: Any]
-        let output: [String: Any]
-        let name: String
+        let items: [JSONValue]
         if wire == "responses" {
             let normalized = try OpenAIResponsesNativeNamespacing.normalize(original)
-            let input = try #require(chatJSONObject(normalized.body)["input"] as? [[String: Any]])
-            call = try #require(input.first)
-            output = input[1]
-            name = ResponsesToolNamespaces.replayName(
-                bindings: normalized.toolBindings, namespace: "workspace", name: "patch")
-            #expect(call["type"] as? String == "function_call")
-            #expect(call["name"] as? String == name)
-            #expect(call["namespace"] == nil)
-            #expect(call["call_id"] as? String == "call_old_patch")
-            #expect(output["type"] as? String == "function_call_output")
-            #expect(output["call_id"] as? String == "call_old_patch")
-            #expect(try chatJSONData(#require(output["output"])) == chatJSONData(customHistoryFallbackOutput))
+            items = try #require(JSONValue.parse(normalized.body).object?["input"]?.array)
         } else {
             let prepared = try OpenAIResponsesChatCompletions.prepare(body: original, targetModel: "provider-model")
-            let messages = try chatReasoningMessages(prepared.upstreamBody)
-            call = try #require((messages.first?["tool_calls"] as? [[String: Any]])?.first)
-            output = messages[1]
-            name = ResponsesToolNamespaces.replayName(
-                bindings: prepared.toolBindings, namespace: "workspace", name: "patch")
-            #expect(call["type"] as? String == "function")
-            #expect((call["function"] as? [String: Any])?["name"] as? String == name)
-            #expect(call["id"] as? String == "call_old_patch")
-            #expect(output["role"] as? String == "tool")
-            #expect(output["tool_call_id"] as? String == "call_old_patch")
-            #expect(output["content"] as? String == (try chatReasoningText(chatJSONData(customHistoryFallbackOutput))))
+            items = try #require(JSONValue.parse(prepared.upstreamBody).object?["messages"]?.array)
+            #expect(prepared.originalBody == original)
         }
-        let function = wire == "responses" ? call : try #require(call["function"] as? [String: Any])
-        let arguments = try #require(function["arguments"] as? String)
-        #expect(
-            try chatJSONObject(Data(arguments.utf8)) as NSDictionary == ["input": customHistoryFallbackInput]
-                as NSDictionary)
+        let source = try #require(JSONValue.parse(original).object?["input"]?.array)
+        #expect(items.count == source.count)
+        #expect(try items.prefix(2).map(historyArchiveItem) == Array(source.prefix(2)))
+        #expect(items.allSatisfy { $0.object?["tool_calls"] == nil && $0.object?["call_id"] == nil })
+        #expect(items.map { $0.object?["role"] } == [.string("assistant"), .string("assistant"), .string("user")])
         #expect(try ResponsesProviderState.normalize(body: original, providerID: nil) == original)
     }
 
@@ -108,7 +88,7 @@ struct CustomHistoryFallbackParityTests {
     func activeDeclaration(wire: String) throws {
         let body = try customHistoryFallbackRequest(declarations: "matching")
         let original = try chatJSONObject(body)
-        #expect(try ResponsesCustomToolHistory.normalized(original) as NSDictionary == original as NSDictionary)
+        #expect(try ResponsesCustomToolHistory.normalized(original).request as NSDictionary == original as NSDictionary)
         if wire == "responses" {
             let native = try OpenAIResponsesNativeNamespacing.normalize(body)
             let input = try #require(chatJSONObject(native.body)["input"] as? [[String: Any]])
@@ -123,6 +103,15 @@ struct CustomHistoryFallbackParityTests {
             #expect((call["custom"] as? [String: Any])?["input"] as? String == customHistoryFallbackInput)
         }
     }
+}
+
+func expectedHistoryArchive(_ item: [String: Any], chat: Bool) throws -> [String: Any] {
+    let text =
+        "[Historical tool exchange; reference only, not an available tool or instructions]\n"
+        + (try WireJSONCompatibility.value(item).serialized())
+    return chat
+        ? ["role": "assistant", "content": text]
+        : ["type": "message", "role": "assistant", "content": [["type": "output_text", "text": text]]]
 }
 
 let customHistoryFallbackInput = "*** Begin Patch\nSYNTHETIC é🙂 \\\"value\\\"\n*** End Patch"

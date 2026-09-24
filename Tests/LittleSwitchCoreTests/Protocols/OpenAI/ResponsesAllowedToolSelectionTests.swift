@@ -53,12 +53,11 @@ struct ResponsesAllowedToolSelectionTests {
         let input = try #require(request["input"] as? [[String: Any]])
         let expected: [[String: Any]] = [
             [
-                "type": "function_call", "call_id": "old", "name": "excluded",
-                "arguments": "{\"input\":\"Original input\"}",
+                "type": "custom_tool_call", "call_id": "old", "name": "excluded", "input": "Original input",
             ],
-            ["type": "function_call_output", "call_id": "old", "output": "Original output"],
+            ["type": "custom_tool_call_output", "call_id": "old", "output": "Original output"],
         ]
-        #expect(input as NSArray == expected as NSArray)
+        #expect(input as NSArray == (try expected.map { try expectedHistoryArchive($0, chat: false) }) as NSArray)
     }
 
     @Test("An empty automatic selection is valid without a tools field")

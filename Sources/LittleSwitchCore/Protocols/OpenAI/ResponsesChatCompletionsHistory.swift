@@ -19,23 +19,24 @@ enum ResponsesChatCompletionsHistory {
             throw OpenAIResponsesChatCompletions.Error.invalidRequest
         }
         var droppedMailCount = 0
-        var pendingCalls: Set<String> = []
-        var pendingImages: [[String: Any]] = []
+        var pendingCalls: Set<Data> = []
+        var pendingContext: [[String: Any]] = []
         for item in items {
             let discriminator = item[OpenAIResponsesUserMessage.Key.type.rawValue]
             // EasyInputMessage omits type, but a supplied null or invalid value
             // must not acquire the same interpretation as an absent discriminator.
             let kind = discriminator == nil ? "message" : discriminator as? String
-            if !pendingImages.isEmpty, kind != "function_call_output", kind != "custom_tool_call_output" {
+            let contextCanWait = ["function_call_output", "custom_tool_call_output", "message"].contains(kind ?? "")
+            if !pendingContext.isEmpty, !contextCanWait {
                 throw OpenAIResponsesChatCompletions.Error.invalidRequest
             }
             switch kind {
             case "message":
-                try appendMessage(item, to: &messages)
+                try appendOrDeferMessage(item, to: &messages, pendingCalls: pendingCalls, context: &pendingContext)
             case "function_call", "custom_tool_call":
                 let call = try toolCall(item, bindings: bindings)
                 if let id = item[OpenAIResponsesInputFunctionCall.Key.callId.rawValue] as? String {
-                    pendingCalls.insert(id)
+                    pendingCalls.insert(Data(id.utf8))
                 }
                 var message = takeAssistant(from: &messages)
                 var calls = message["tool_calls"] as? [[String: Any]] ?? []
@@ -45,11 +46,11 @@ enum ResponsesChatCompletionsHistory {
             case "function_call_output", "custom_tool_call_output":
                 let output = try ResponsesChatCompletionsToolOutput.project(item: item)
                 messages.append(output.toolMessage)
-                pendingImages.append(contentsOf: output.imageMessages)
-                if let callID = item["call_id"] as? String { pendingCalls.remove(callID) }
+                pendingContext.append(contentsOf: output.imageMessages)
+                if let callID = item["call_id"] as? String { pendingCalls.remove(Data(callID.utf8)) }
                 if pendingCalls.isEmpty {
-                    messages.append(contentsOf: pendingImages)
-                    pendingImages.removeAll()
+                    messages.append(contentsOf: pendingContext)
+                    pendingContext.removeAll()
                 }
             case "reasoning":
                 if let fields = try ResponsesChatCompletionsReasoning.fields(from: item, providerID: providerID) {
@@ -76,8 +77,29 @@ enum ResponsesChatCompletionsHistory {
                 throw OpenAIResponsesChatCompletions.Error.invalidRequest
             }
         }
-        guard pendingImages.isEmpty else { throw OpenAIResponsesChatCompletions.Error.invalidRequest }
+        guard pendingContext.isEmpty else { throw OpenAIResponsesChatCompletions.Error.invalidRequest }
         return droppedMailCount
+    }
+
+    private static func appendOrDeferMessage(
+        _ item: [String: Any],
+        to messages: inout [[String: Any]],
+        pendingCalls: Set<Data>,
+        context: inout [[String: Any]]
+    ) throws {
+        let extendsAssistant =
+            messages.last?[OpenAIResponsesReplayMessage.Key.role.rawValue] as? String
+            == OpenAIChatRequestAssistantRole.assistant.rawValue
+            && item[OpenAIResponsesReplayMessage.Key.role.rawValue] as? String
+                == OpenAIResponsesReplayMessageRole.assistant.rawValue
+        if pendingCalls.isEmpty || extendsAssistant {
+            try appendMessage(item, to: &messages)
+        } else {
+            // Context cannot separate results of a parallel assistant turn.
+            var projected: [[String: Any]] = []
+            try appendMessage(item, to: &projected)
+            context.append(contentsOf: projected)
+        }
     }
 
     private static func toolCall(

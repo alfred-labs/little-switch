@@ -1,4 +1,5 @@
 import Foundation
+import LittleSwitchWire
 import Testing
 
 @testable import LittleSwitchCore
@@ -55,7 +56,12 @@ struct HistoryDeduplicationIdentityTests {
             }
         let root = try #require(try JSONSerialization.jsonObject(with: projected) as? [String: Any])
         let ids: [String]
-        if chat {
+        if !active {
+            let items = try #require(JSONValue.parse(projected).object?[chat ? "messages" : "input"]?.array)
+            ids = try items.map(historyArchiveItem)
+                .filter { $0.object?["type"] == .string("custom_tool_call") }
+                .compactMap { $0.object?["call_id"]?.string }
+        } else if chat {
             ids = (root["messages"] as? [[String: Any]] ?? [])
                 .flatMap { $0["tool_calls"] as? [[String: Any]] ?? [] }.compactMap { $0["id"] as? String }
         } else {

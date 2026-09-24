@@ -35,12 +35,9 @@ struct ResponsesWireHistoryValidationTests {
         let normalized = try OpenAIResponsesNativeNamespacing.normalize(body)
         let input = try #require(JSONValue.parse(normalized.body).object?["input"]?.array)
         #expect(input.count == 2)
-        #expect(input[0].object?["type"] == .string("function_call"))
-        #expect(input[0].object?["namespace"] == .string(""))
-        #expect(
-            try input[1]
-                == JSONValue.parse(
-                    #"{"type":"function_call_output","id":"output","call_id":"call","output":"result"}"#))
+        let original = try #require(JSONValue.parse(body).object?["input"]?.array)
+        #expect(try input.map(historyArchiveItem) == original)
+        #expect(try historyArchiveItem(input[0]).object?["namespace"] == .string(""))
     }
 
     @Test func presentEmptyChatUsageDefaultsToZeroCounters() throws {
