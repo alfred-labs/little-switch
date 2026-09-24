@@ -1,6 +1,7 @@
 ## Improvements
 
 - **Use LittleSwitch models in ChatGPT Chat.** A dedicated ChatGPT connection adds your selected models alongside ChatGPT's own choices. Start text conversations, receive streaming replies, and return to custom-model conversations from the chat history.
+- Update announcements use shorter wording in English and French.
 
 ## Fixes
 

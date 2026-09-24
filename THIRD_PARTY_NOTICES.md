@@ -56,6 +56,13 @@ It also uses the MIT-licensed [GRDB](https://github.com/groue/GRDB.swift) SQLite
 toolkit; its MIT license text ships in `Contents/Resources/Licenses` with the
 other package licenses.
 
+The application also embeds the MIT-licensed
+[Sparkle](https://github.com/sparkle-project/Sparkle) update framework. During
+bundle assembly, LittleSwitch shortens the ordinary update announcement in its
+English and French string resources. Sparkle's executable code and other strings
+are unchanged; its original license and third-party notices are included with
+the package licenses.
+
 The application build copies the unmodified `LICENSE` and `NOTICE` files for
 every resolved package into `Contents/Resources/Licenses`. Those files are the
 authoritative attribution and license texts shipped with the application.

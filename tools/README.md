@@ -82,6 +82,14 @@ tasks retain the ordered shell calls to Apple signing and notarization tools,
 Git and GitHub. Integration fixtures exercise these calls against temporary
 repositories and synthetic artifacts.
 
+Application bundle assembly shortens Sparkle's ordinary update announcement in
+English (`Base`) and French using `sparkle-update-copy.sh`. Only the copied
+framework resources are changed, before signing; the SwiftPM artifact remains
+untouched. Development builds reseal the framework with an ad-hoc signature when
+no Developer ID is configured. Bundle verification checks the customized text.
+A missing upstream string key fails the build so Sparkle upgrades require review
+rather than silently restoring the original announcement.
+
 For an explicitly started local Prometheus/Loki lab, `mise run monitoring:readiness`
 waits for both services and `mise run monitoring:probe` inserts synthetic OTLP JSON,
 then verifies the matching metric and log through their query APIs. The separate

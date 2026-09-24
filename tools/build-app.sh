@@ -48,6 +48,7 @@ if [ ! -d "$sparkle_framework" ]; then
     exit 1
 fi
 /usr/bin/ditto "$sparkle_framework" "$bundle/Contents/Frameworks/Sparkle.framework"
+/bin/sh "$project_root/tools/sparkle-update-copy.sh" apply "$bundle/Contents/Frameworks/Sparkle.framework"
 bundled_executable="$bundle/Contents/MacOS/LittleSwitch"
 if ! xcrun otool -l "$bundled_executable" | /usr/bin/grep -Fq 'path @executable_path/../Frameworks'; then
     xcrun install_name_tool \
@@ -127,6 +128,10 @@ if [ -n "$sign_identity" ]; then
         --sign "$sign_identity" "$bundle/Contents/Frameworks/Sparkle.framework"
     /usr/bin/codesign --force --options runtime --timestamp \
         --sign "$sign_identity" "$bundle"
+else
+    # Resource customization invalidates Sparkle's original seal even in a
+    # development build. Reseal without requiring a Developer ID identity.
+    xcrun codesign --force --sign - "$bundle/Contents/Frameworks/Sparkle.framework"
 fi
 
 echo "$bundle"

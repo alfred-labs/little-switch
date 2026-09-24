@@ -60,6 +60,7 @@ test "$(xcrun lipo -archs "$binary")" = "arm64"
 
 # Sparkle rides inside the bundle and the executable must find it there.
 test -d "$sparkle_framework"
+/bin/sh "$project_root/tools/sparkle-update-copy.sh" verify "$sparkle_framework"
 if ! xcrun otool -l "$binary" | /usr/bin/grep -Fq 'path @executable_path/../Frameworks'; then
     echo "The executable lacks the bundle Frameworks rpath" >&2
     exit 1

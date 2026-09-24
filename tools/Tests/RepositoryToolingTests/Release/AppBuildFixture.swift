@@ -6,6 +6,9 @@ struct AppBuildFixture {
 
     var productDirectory: String { ".build/out/Products/Release" }
     var bundleDirectory: String { "build/LittleSwitch.app/Contents" }
+    var sparkleDirectory: String {
+        ".build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
+    }
 
     init(root: URL) throws {
         self.root = root
@@ -13,7 +16,9 @@ struct AppBuildFixture {
             "PATH": root.appendingPathComponent("bin").path + ":/usr/bin:/bin:/usr/sbin:/sbin",
             "FAKE_ROOT": root.path,
         ]
-        for script in ["tools/build-app.sh", "tools/swift-release.sh", "tools/ci/verify-bundle.sh"] {
+        for script in [
+            "tools/build-app.sh", "tools/swift-release.sh", "tools/ci/verify-bundle.sh", "tools/sparkle-update-copy.sh",
+        ] {
             let source = try RepositoryFixture.root().appendingPathComponent(script)
             if FileManager.default.fileExists(atPath: source.path) {
                 try write(script, String(contentsOf: source, encoding: .utf8), executable: true)
@@ -34,9 +39,24 @@ struct AppBuildFixture {
         for dependency in ["hummingbird", "async-http-client", "swift-nio"] {
             try write(".build/checkouts/\(dependency)/LICENSE.txt", "fixture license\n")
         }
-        try write(
-            ".build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework/fixture",
-            "sparkle")
+        try write("\(sparkleDirectory)/fixture", "sparkle")
+        for (language, summary) in [
+            "Base": "%1$@ %2$@ is now available—you have %3$@. Would you like to download it now?",
+            "fr": "%1$@ %2$@ est disponible ; vous utilisez la version %3$@. Voulez-vous le télécharger maintenant ?",
+        ] {
+            try write(
+                "\(sparkleDirectory)/Resources/\(language).lproj/Sparkle.strings",
+                """
+                "%@ %@ is now available—you have %@. Would you like to download it now?" = "\(summary)";
+                "Install Update" = "Install Update";
+                "Remind Me Later" = "Remind Me Later";
+                "Skip This Version" = "Skip This Version";
+                "A new version of %@ is available!" = "A new version of %@ is available!";
+                "%@ %@ is now available—you have %@. This is an important update; would you like to download it now?" = "Critical update";
+                "%1$@ %2$@ has been downloaded and is ready to use! Would you like to install it and relaunch %1$@ now?" = "Ready to install";
+                """
+            )
+        }
         try write("\(productDirectory)/LittleSwitch", "current executable\n", executable: true)
         try write(".build/arm64-apple-macosx/release/LittleSwitch", "stale executable\n", executable: true)
         for target in ["LittleSwitchCore", "LittleSwitchUI"] {
@@ -110,6 +130,7 @@ struct AppBuildFixture {
                 esac
                 ;;
             lipo) echo arm64 ;;
+            codesign) test "$2" = --force && test "$3" = --sign && test "$4" = - ;;
             dwarfdump)
                 case "$(cat "$3")" in
                     'current executable') uuid=11111111-1111-1111-1111-111111111111 ;;
