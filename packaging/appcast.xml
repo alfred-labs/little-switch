@@ -5,6 +5,19 @@
         <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
         <description>LittleSwitch releases</description>
         <item>
+            <title>0.6.6</title>
+            <pubDate>Fri, 25 Sep 2026 15:48:42 +0000</pubDate>
+            <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
+            <sparkle:version>30</sparkle:version>
+            <sparkle:shortVersionString>0.6.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Improvements</h2>
+<ul><li><strong>Choose a dedicated model for ChatGPT Chat.</strong> After updating, select it once in Settings → ChatGPT, independently of Codex&apos;s default and exposed models. Chat shows that model alongside its native choices, without using the reasoning slider to switch between LittleSwitch models.</li><li><strong>Connect Codex and ChatGPT together.</strong> The Codex switch connects or disconnects both with one desktop relaunch. On first use, LittleSwitch asks for a Chat model; the choice is kept when you disconnect.</li><li>ChatGPT settings use two compact sections with shorter explanations. A relaunch notice appears only when applying a pending model change to a connected Chat.</li></ul>
+<h2>Fixes</h2>
+<ul><li>Pending Chat model changes survive navigation and leave the active model unchanged until Apply. A failed connection or relaunch keeps a recovery path through Reload or Disconnect.</li><li>Queued Chat requests stop if their selected model changes or becomes unavailable, preventing a request from using an outdated model selection.</li></ul>]]></description>
+            <enclosure url="https://github.com/alfred-labs/little-switch/releases/download/v0.6.6/LittleSwitch-0.6.6-arm64.dmg" length="23053602" type="application/octet-stream" sparkle:edSignature="TZ/3azNC58f6FXuWNn6ZZde3mhrfvLA6sYagPqmsqNeMh62VDKWjFI9Bskkhl0eEicrIgWnzhRx1MdMWPXJ7Ag=="/>
+        </item>
+        <item>
             <title>0.6.5</title>
             <pubDate>Thu, 24 Sep 2026 11:08:01 +0000</pubDate>
             <link>https://raw.githubusercontent.com/alfred-labs/little-switch/main/packaging/appcast.xml</link>
