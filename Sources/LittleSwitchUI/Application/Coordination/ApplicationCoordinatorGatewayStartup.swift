@@ -113,13 +113,14 @@ extension ApplicationCoordinator {
             providers: configuration.providers,
             mappings: configuration.mappings,
             codex: configuration.codex,
+            chatgpt: configuration.chatgpt,
             webSearch: configuration.webSearch,
             modelIndicator: configuration.modelIndicator
         )
     }
 
     package func routingSnapshot() -> RoutingSnapshot {
-        gatewayRoutingSnapshot(for: configuration)
+        gatewayRoutingSnapshot(for: applyingDesktopRouting(to: configuration))
     }
 
     package func replaceGatewayRoutingIfNeeded(
@@ -139,10 +140,12 @@ extension ApplicationCoordinator {
             states.append(startupState)
         }
         for state in states {
+            let configuration = applyingDesktopRouting(to: configuration)
             await state.replace(
                 providers: configuration.providers,
                 mappings: configuration.mappings,
                 codex: configuration.codex,
+                chatgpt: configuration.chatgpt,
                 webSearch: configuration.webSearch,
                 modelIndicator: configuration.modelIndicator,
                 credentialChangedProviderIDs: credentialChangedProviderIDs

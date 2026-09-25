@@ -14,9 +14,6 @@ enum ChatGPTNativeContract {
         case id
         case displayText = "display_text"
         case slugs
-        case intelligencePresets = "intelligence_presets"
-        case modelSlug = "model_slug"
-        case selectedDisplayTitle = "selected_display_title"
         case category
         case defaultModel = "default_model"
         case humanCategoryName = "human_category_name"

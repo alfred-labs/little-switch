@@ -31,6 +31,9 @@ extension AppModel {
         if hasPendingCodexChanges {
             names.append("Codex")
         }
+        if hasPendingChatGPTChanges {
+            names.append("ChatGPT")
+        }
         if hasPendingOpenCodeChanges {
             names.append("OpenCode")
         }

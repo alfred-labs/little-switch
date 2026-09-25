@@ -11,6 +11,20 @@ import Testing
 @testable import LittleSwitchCore
 
 struct ChatGPTGatewayNativeTests {
+    @Test func missingChatSelectionDoesNotExposeCodexCatalog() async throws {
+        let fixture = chatGPTGatewayFixture(selected: false)
+        let native = #"{"models":[{"slug":"native","title":"Native"}]}"#
+        let transport = RecordingGatewayTransport(responses: [
+            HTTPClientResponse(status: .ok, body: .bytes(ByteBuffer(string: native)))
+        ])
+        try await chatGPTApplication(fixture: fixture, transport: transport).test(.router) { client in
+            let response = try await client.execute(uri: "/backend-api/models", method: .get)
+            let object = try chatJSONObject(Data(response.body.readableBytesView))
+            let models = try #require(object["models"] as? [[String: Any]])
+            #expect(models.compactMap { $0["slug"] as? String } == ["native"])
+        }
+    }
+
     @Test func nativeConditionalResponsePreservesNotModified() async throws {
         let transport = RecordingGatewayTransport(responses: [
             HTTPClientResponse(status: .notModified, headers: ["etag": "same"])
@@ -101,14 +115,19 @@ struct ChatGPTGatewayNativeTests {
     }
 }
 
-func chatGPTGatewayFixture() -> GatewayFixture {
+func chatGPTGatewayFixture(selected: Bool = true) -> GatewayFixture {
     let provider = Provider(
         name: "Example",
         baseURL: "https://provider.invalid",
         authMode: .none,
         models: [DiscoveredModel(id: "chat-model")]
     )
-    let snapshot = RoutingSnapshot(generation: 1, providers: [provider], mappings: [:])
+    let snapshot = RoutingSnapshot(
+        generation: 1,
+        providers: [provider],
+        mappings: [:],
+        chatgpt: ChatGPTConfiguration(
+            model: selected ? ModelMapping(providerID: provider.id, modelID: "chat-model") : nil))
     return GatewayFixture(snapshot: snapshot, state: GatewayState(snapshot: snapshot), secrets: MemorySecretStore())
 }
 

@@ -7,6 +7,37 @@ import Testing
 @MainActor
 @Suite("ChatGPT settings presentation")
 struct ChatGPTPresentationTests {
+    @Test("The Chat choice is required and independent of Codex exposure")
+    func independentChoice() {
+        let provider = Provider(
+            name: "Synthetic",
+            baseURL: "http://127.0.0.1:12345",
+            authMode: .none,
+            models: [DiscoveredModel(id: "chat")],
+            status: .ready
+        )
+        var snapshot = CoordinatorSnapshot(configuration: .init(providers: [provider]))
+        let model = AppModel(snapshot: snapshot)
+        #expect(!model.canOpenChatGPT)
+        #expect(!model.prepareDesktopConnection())
+        #expect(model.isChoosingChatModelForConnection)
+        #expect(model.selectedSection == .chatGPT)
+        let choice = ModelMapping(providerID: provider.id, modelID: "chat")
+        snapshot.configuration.chatgpt.model = choice
+        snapshot.configuration.codex.excludedModels = [choice]
+        model.apply(snapshot)
+        #expect(model.canOpenChatGPT)
+        #expect(model.prepareDesktopConnection())
+        snapshot.hasPendingChatGPTChanges = true
+        model.apply(snapshot)
+        #expect(!model.canOpenChatGPT)
+        #expect(model.canApplyChatGPTSettings)
+        #expect(model.pendingChangeNames.contains("ChatGPT"))
+        snapshot.configuration.chatgpt.model = .init(providerID: provider.id, modelID: "missing")
+        model.apply(snapshot)
+        #expect(!model.canOpenChatGPT)
+    }
+
     @Test("Polling publishes lifecycle progress and rejects an older response after an action")
     func polling() {
         let model = AppModel()

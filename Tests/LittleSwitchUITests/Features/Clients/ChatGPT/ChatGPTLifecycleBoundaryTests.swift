@@ -15,7 +15,7 @@ struct ChatGPTLifecycleBoundaryTests {
                 "CODEX_APP_SERVER_CHATGPT_BASE_URL": ChatGPTLaunchEnvironment.apiBaseURL,
                 "TEST_PARENT": "inherited",
             ])
-        _ = try await fixture.coordinator.disconnectChatGPT()
+        _ = try await fixture.coordinator.disconnectDesktopClients()
         #expect(fixture.controller.environments.last == ["TEST_PARENT": "inherited"])
         #expect(!fixture.store.configuration.chatgpt.connected)
         #expect(await !fixture.server.isRunning)
@@ -47,10 +47,10 @@ struct ChatGPTLifecycleBoundaryTests {
         #expect(!events.recorded.contains("open-normal"))
         await coordinator.shutdown(mode: .handoff)
     }
-    @Test func disconnectingAnAlreadyDisconnectedClientDoesNotRelaunchDesktop() async throws {
+    @Test func disconnectingAlreadyDisconnectedClientsDoesNotRelaunchDesktop() async throws {
         let fixture = try await ChatGPTFixture.make()
         let before = await fixture.coordinator.snapshot()
-        let after = try await fixture.coordinator.disconnectChatGPT()
+        let after = try await fixture.coordinator.disconnectDesktopClients()
         #expect(after.configuration == before.configuration)
         #expect(after.chatGPTStatus == .disconnected)
         #expect(fixture.events.recorded.isEmpty)
@@ -85,7 +85,7 @@ struct ChatGPTLifecycleBoundaryTests {
             try? await release.wait()
         }
         let operation = Task {
-            if disconnect { return try await fixture.coordinator.disconnectChatGPT() }
+            if disconnect { return try await fixture.coordinator.disconnectDesktopClients() }
             return try await fixture.coordinator.connectChatGPT()
         }
         try await entered.wait(description: "desktop transaction entered quit")
@@ -115,8 +115,8 @@ struct ChatGPTLifecycleBoundaryTests {
 
     @Test func connectionErrorsProvideDistinctActionableDescriptions() {
         let errors: [ChatGPTConnectionError] = [
-            .unavailable, .noModels, .pendingCodex, .trustRequired, .operationInProgress, .rollbackFailed,
-            .conflictingEnvironment, .certificateBundleUnavailable,
+            .unavailable, .noModels, .trustRequired, .operationInProgress, .rollbackFailed,
+            .conflictingEnvironment, .certificateBundleUnavailable, .settingsChanged,
         ]
         let descriptions = errors.compactMap(\.errorDescription)
         #expect(descriptions.count == errors.count)

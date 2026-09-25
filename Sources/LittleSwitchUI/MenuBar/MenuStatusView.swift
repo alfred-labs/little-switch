@@ -59,7 +59,7 @@ public struct MenuStatusView: View {
                 icon: .codex,
                 detail: StatusMenuCopy.detail(
                     StatusMenuCopy.customModelCount(model.codexCustomModelCount),
-                    hasPendingChanges: model.hasPendingCodexChanges
+                    hasPendingChanges: model.hasPendingCodexChanges || model.hasPendingChatGPTChanges
                 ),
                 connected: model.codexConnected,
                 disabled: model.isBusy,

@@ -19,9 +19,10 @@ struct ChatGPTCatalogTests {
               "configurable_thinking_effort":false,"reasoning_type":"none"}],
              "versions":[{"id":"native-version","slugs":["native"],
                           "intelligence_presets":[{"model_slug":"native","title":"Native"}]},
-                         {"id":"little-switch","display_text":"LittleSwitch","slugs":["local:small"],
-                          "intelligence_presets":[{"model_slug":"local:small","title":"Local/Small",
-                                                   "selected_display_title":"Local/Small"}]}],
+                         {"id":"little-switch","display_text":"Local/Small","slugs":["local:small"]}],
+             "categories":[{"category":"little-switch:local:small","default_model":"local:small",
+                            "human_category_name":"Local/Small","human_category_short_name":"Local/Small",
+                            "short_explainer":null,"supported_models":["local:small"],"tagline":null,"title":"Local/Small"}],
              "workspace_model_policy":{"selection":{"model":"native"},"new_thread_precedence":"prefer_policy"}}
             """#.utf8)
 
@@ -138,6 +139,7 @@ struct ChatGPTCatalogTests {
         #"{"models":[],"versions":[{"id":"LITTLE-SWITCH"}]}"#,
         #"{"models":[],"categories":[{"category":"little-switch:local"}]}"#,
         #"{"models":[],"categories":[{"category":"LITTLE-SWITCH:LOCAL"}]}"#,
+        #"{"models":[],"versions":[{"id":"native"}],"categories":[{"category":"LITTLE-SWITCH:LOCAL"}]}"#,
     ])
     func introducedIdentifierCollisionIsRejected(native: String) {
         #expect(throws: ChatGPTCatalog.MergeError.identifierCollision) {
@@ -169,12 +171,14 @@ struct ChatGPTCatalogTests {
                         {"slug":"other","title":"Other","description":"LittleSwitch",
                          "enabled_tools":[],"configurable_thinking_effort":false,"reasoning_type":"none"}],
              "versions":[null,{"id":"native-version","opaque":{"a":"b"}},
-                         {"id":"little-switch","display_text":"LittleSwitch","slugs":["local:\"a\\b","other"],
-                          "intelligence_presets":[{"model_slug":"local:\"a\\b","title":"Étoile 星 🚀",
-                                                   "selected_display_title":"Étoile 星 🚀"},
-                                                  {"model_slug":"other","title":"Other",
-                                                   "selected_display_title":"Other"}]}],
-             "categories":[{"category":"native-category","opaque":[true,42]}],
+                         {"id":"little-switch","display_text":"Étoile 星 🚀","slugs":["local:\"a\\b","other"]}],
+             "categories":[{"category":"native-category","opaque":[true,42]},
+                           {"category":"little-switch:local:\"a\\b","default_model":"local:\"a\\b",
+                            "human_category_name":"Étoile 星 🚀","human_category_short_name":"Étoile 星 🚀",
+                            "short_explainer":null,"supported_models":["local:\"a\\b"],"tagline":null,"title":"Étoile 星 🚀"},
+                           {"category":"little-switch:other","default_model":"other",
+                            "human_category_name":"Other","human_category_short_name":"Other",
+                            "short_explainer":null,"supported_models":["other"],"tagline":null,"title":"Other"}],
              "unknown_root":{"unicode":"Étoile 星","number":1234567890123456789}}
             """#.utf8)
         let result = try ChatGPTCatalog.merge(

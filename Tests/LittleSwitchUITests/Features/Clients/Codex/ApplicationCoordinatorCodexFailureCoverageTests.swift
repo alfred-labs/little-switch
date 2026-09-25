@@ -96,13 +96,15 @@ struct CoordinatorCodexFailureCoverageTests {
         fixture.store.failFutureSaves(at: [1])
 
         await #expect(throws: ScriptedConfigurationStore.Error.saveInjected) {
-            _ = try await fixture.coordinator.disconnectCodex()
+            _ = try await fixture.coordinator.disconnectDesktopClients()
         }
 
         // The rollback re-applies the previous managed profile.
         #expect((await fixture.coordinator.snapshot()).configuration.codex.connected)
-        #expect(fixture.controller.quitAttempts == 1)
-        #expect(fixture.controller.openAttempts == 1)
+        // Persistence failed after opening the normal app. Stop it before
+        // restoring the managed profile, then reopen on that restored profile.
+        #expect(fixture.controller.quitAttempts == 2)
+        #expect(fixture.controller.openAttempts == 2)
         await fixture.coordinator.shutdown(mode: .handoff)
     }
 
@@ -230,12 +232,12 @@ struct CoordinatorCodexFailureCoverageTests {
         case .restore:
             fixture.profile.failRestores(on: [1])
             await #expect(throws: ScriptedCodexProfileManager.Error.restoreInjected) {
-                _ = try await fixture.coordinator.disconnectCodex()
+                _ = try await fixture.coordinator.disconnectDesktopClients()
             }
         case .save:
             fixture.store.failFutureSaves(at: [1])
             await #expect(throws: ScriptedConfigurationStore.Error.saveInjected) {
-                _ = try await fixture.coordinator.disconnectCodex()
+                _ = try await fixture.coordinator.disconnectDesktopClients()
             }
         }
 
@@ -255,10 +257,13 @@ struct CoordinatorCodexFailureCoverageTests {
             fixture.profile.failActivations(on: [1])
         }
 
-        await #expect(throws: ApplicationCoordinator.Error.rollbackFailed) {
-            _ = try await fixture.coordinator.disconnectCodex()
+        await #expect(throws: ChatGPTConnectionError.rollbackFailed) {
+            _ = try await fixture.coordinator.disconnectDesktopClients()
         }
         #expect((await fixture.coordinator.snapshot()).configuration.codex.connected)
+        #expect(await !fixture.coordinator.shutdown(mode: .handoff))
+        let recovered = try await fixture.coordinator.disconnectDesktopClients()
+        #expect(!recovered.configuration.codex.connected)
         await fixture.coordinator.shutdown(mode: .handoff)
     }
 }

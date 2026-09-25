@@ -85,6 +85,7 @@ extension ApplicationCoordinator {
             return false
         }
         pendingCodexSettings = nil
+        pendingChatGPTSettings = nil
         pendingClaudeCodeSettings = nil
         pendingOpenCodeSettings = nil
         pendingWebSearchSettings = nil

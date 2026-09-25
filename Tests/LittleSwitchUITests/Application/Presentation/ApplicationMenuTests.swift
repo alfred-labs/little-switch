@@ -24,7 +24,7 @@ struct ApplicationMenuTests {
         ].map { try source(named: $0) }
 
         #expect(delegate.contains("try await coordinator.connect()"))
-        #expect(delegate.contains("try await $0.connectCodex()"))
+        #expect(delegate.contains("try await $0.connectDesktopClients()"))
         #expect(delegate.contains("try await $0.applyCodexSettings()"))
         #expect(delegate.contains("Apply these LittleSwitch settings to"))
         #expect(!delegate.contains("Connect Claude to LittleSwitch"))

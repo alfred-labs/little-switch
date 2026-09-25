@@ -181,7 +181,12 @@ func managedChatGPTApplication(
 ) throws -> Application<ChatGPTGatewayResponder> {
     var provider = chatGPTGatewayFixture().snapshot.providers[0]
     provider.responsesWireOverride = .native
-    let state = GatewayState(snapshot: RoutingSnapshot(generation: 1, providers: [provider], mappings: [:]))
+    let state = GatewayState(
+        snapshot: RoutingSnapshot(
+            generation: 1,
+            providers: [provider],
+            mappings: [:],
+            chatgpt: ChatGPTConfiguration(model: ModelMapping(providerID: provider.id, modelID: "chat-model"))))
     return Application(
         responder: ChatGPTGatewayResponder(
             state: state,

@@ -24,7 +24,7 @@ struct ChatGPTRecoveryRestorationTests {
         if disconnectFailure == "save" { fixture.store.failNextSave() }
         if disconnectFailure == "open" { fixture.controller.failOpen = true }
 
-        await #expect(throws: (any Error).self) { try await fixture.coordinator.disconnectChatGPT() }
+        await #expect(throws: (any Error).self) { try await fixture.coordinator.disconnectDesktopClients() }
 
         #expect(fixture.controller.running)
         #expect(!fixture.controller.environments.isEmpty)
@@ -33,7 +33,7 @@ struct ChatGPTRecoveryRestorationTests {
         #expect(await fixture.coordinator.snapshot().chatGPTStatus == .needsAttention)
         #expect(await fixture.mainServer.isRunning)
         #expect(await fixture.server.isRunning == recovered)
-        _ = try await fixture.coordinator.disconnectChatGPT()
+        _ = try await fixture.coordinator.disconnectDesktopClients()
         #expect(!fixture.store.configuration.chatgpt.connected)
         await fixture.coordinator.shutdown(mode: .handoff)
     }
@@ -45,7 +45,7 @@ struct ChatGPTRecoveryRestorationTests {
         await fixture.server.stop()
         let environmentCount = fixture.controller.environments.count
         fixture.store.failNextSave()
-        await #expect(throws: (any Error).self) { try await fixture.coordinator.disconnectChatGPT() }
+        await #expect(throws: (any Error).self) { try await fixture.coordinator.disconnectDesktopClients() }
         #expect(fixture.controller.running)
         #expect(
             fixture.controller.environments.dropFirst(environmentCount).allSatisfy { $0["CODEX_API_BASE_URL"] == nil }

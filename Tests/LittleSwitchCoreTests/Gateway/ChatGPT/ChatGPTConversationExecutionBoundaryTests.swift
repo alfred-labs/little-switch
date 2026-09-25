@@ -69,7 +69,11 @@ struct ChatGPTExecutionBoundaryTests {
         let operation = Task {
             try? await release.wait()
             return try await responder.conversationResponse(
-                historyRequest(), owner: String(repeating: "a", count: 64), history: history, context: context)
+                historyRequest(),
+                owner: String(repeating: "a", count: 64),
+                history: history,
+                context: context,
+                capture: await fixture.state.routingCapture())
         }
         operation.cancel()
         await release.open()

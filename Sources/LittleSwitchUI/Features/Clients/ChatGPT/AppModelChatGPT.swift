@@ -6,11 +6,35 @@ extension AppModel {
     }
 
     var canOpenChatGPT: Bool {
-        !chatGPTBusy && !codexExposedModelOptions.isEmpty && !hasPendingCodexChanges
+        !chatGPTBusy && hasAvailableChatGPTModel && !hasPendingChatGPTChanges
+    }
+
+    var hasAvailableChatGPTModel: Bool {
+        configuration.chatgpt.resolvedModel(in: providers) != nil
+    }
+
+    var canApplyChatGPTSettings: Bool {
+        !chatGPTBusy && hasAvailableChatGPTModel && hasPendingChatGPTChanges
+    }
+
+    var canConnectDesktopClients: Bool {
+        !chatGPTBusy && hasAvailableChatGPTModel && !codexExposedModelOptions.isEmpty
+            && !hasUnavailableCodexAutoReviewModel
+    }
+
+    /// First-use navigation is presentation state; the coordinator owns the model draft.
+    func prepareDesktopConnection() -> Bool {
+        guard hasAvailableChatGPTModel else {
+            isChoosingChatModelForConnection = true
+            selectedSection = .chatGPT
+            return false
+        }
+        return true
     }
 
     var canDisconnectChatGPT: Bool {
-        !chatGPTBusy && (configuration.chatgpt.connected || chatGPTStatus == .needsAttention)
+        !chatGPTBusy
+            && (configuration.codex.connected || configuration.chatgpt.connected || chatGPTStatus == .needsAttention)
     }
 
     var chatGPTStatusTitle: String {

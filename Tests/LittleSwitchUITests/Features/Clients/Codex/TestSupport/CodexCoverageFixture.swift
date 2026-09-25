@@ -52,7 +52,8 @@ struct CodexCoverageFixture {
             codexController: includeDependencies ? controller : nil,
             discoveryTransport: ScriptedCatalogTransport(),
             gatewayTransport: TestGatewayTransport(),
-            gatewayServerOverride: TestGatewayServer()
+            gatewayServerOverride: TestGatewayServer(),
+            inheritedEnvironment: [:]
         )
         _ = try await coordinator.start()
         return Self(

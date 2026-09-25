@@ -48,6 +48,12 @@ In **Settings → Codex**, **Exposed models** lists the catalog shared by Codex 
 
 Native OpenAI models and Codex image generation/editing retain Codex's ChatGPT sign-in or configured OpenAI API key. The gateway relays `/v1/images/generations` and `/v1/images/edits` with the original image data and authentication. Upstream requests use a ten-minute default timeout.
 
+### ChatGPT
+
+In **Settings → ChatGPT**, choose one model for Chat, independently of Codex's default and exposed models. The Codex switch connects both Codex and ChatGPT with a single desktop relaunch. On first use, LittleSwitch asks you to choose the Chat model before connecting.
+
+Chat keeps its native models and adds your chosen LittleSwitch model. Apply saves a new choice and reopens the desktop app if connected. Disconnecting through the Codex switch restores both connections and keeps your Chat model choice. Conversations with the LittleSwitch model are stored locally on this Mac.
+
 ### OpenCode
 
 OpenCode has its own default model and connection state, independent of Codex. Apply writes `model`, `provider.little-switch`, and `mcp.web` to `~/.config/opencode/opencode.json`. The provider uses `@ai-sdk/openai` against `https://127.0.0.1:11436/v1`. Requests go through `/v1/responses`. Restore settings reverts transactionally while preserving other keys.

@@ -54,15 +54,19 @@ package struct ChatGPTGatewayResponder: HTTPResponder {
             return try errorResponse(.contentTooLarge, "ChatGPT request is too large")
         }
         do {
-            let snapshot = await state.capture()
-            let models = Set(snapshot.codex.exposedModels(in: snapshot.providers).map(CodexCatalog.slug))
+            let capture = await state.routingCapture()
+            let snapshot = capture.snapshot
+            let models = Set(
+                snapshot.chatgpt.resolvedModel(in: snapshot.providers).map { [CodexCatalog.slug(for: $0)] } ?? [])
             let route = try ChatGPTManagedRoute.resolve(
                 path: request.uri.string,
                 method: request.method,
                 body: body,
                 models: models
             )
-            if let response = try await managedResponse(route, request: request, context: context) { return response }
+            if let response = try await managedResponse(route, request: request, context: context, capture: capture) {
+                return response
+            }
             if let response = try await historyListResponse(request, url: url, body: body) { return response }
         } catch is CancellationError {
             throw CancellationError()
@@ -76,9 +80,10 @@ package struct ChatGPTGatewayResponder: HTTPResponder {
             }
             guard isCatalog(request), upstream.status == .ok else { return nativeResponse(upstream) }
             let snapshot = await state.capture()
-            let models = snapshot.codex.exposedModels(in: snapshot.providers).map {
-                ChatGPTCatalogModel(slug: CodexCatalog.slug(for: $0), title: $0.displayName)
-            }
+            let models =
+                snapshot.chatgpt.resolvedModel(in: snapshot.providers).map {
+                    [ChatGPTCatalogModel(slug: CodexCatalog.slug(for: $0), title: $0.displayName)]
+                } ?? []
             let bytes = Data(try await upstream.body.collect(upTo: 8 * 1_024 * 1_024).readableBytesView)
             let merged = try ChatGPTCatalog.merge(nativeData: bytes, models: models)
             return nativeJSONResponse(merged, headers: upstream.headers)

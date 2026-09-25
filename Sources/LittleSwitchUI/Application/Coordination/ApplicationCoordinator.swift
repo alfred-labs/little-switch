@@ -37,6 +37,9 @@ public actor ApplicationCoordinator {
     var chatGPTManagedLaunchID: UUID?
     var chatGPTOperation: Task<Void, any Swift.Error>?
     var chatGPTStatus: ChatGPTConnectionStatus = .disconnected
+    package var pendingChatGPTSettings: ChatGPTSettingsDraft?
+    var desktopRoutingSelection: DesktopRoutingSelection?
+    var desktopProfileRestorationRequired = false
     var chatGPTDesktopRestoration: ChatGPTDesktopRestorationState = .unobserved
     var codexDesktopOperationInProgress = false
     var codexDesktopOperationWaiters: [CheckedContinuation<Void, Never>] = []

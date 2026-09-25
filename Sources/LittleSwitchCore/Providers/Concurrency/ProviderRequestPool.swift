@@ -397,7 +397,8 @@ extension ProviderRequestPool {
         let route = configuration.routes[
             ProviderRequestRouteKey(
                 client: admission.client,
-                modelIdentifier: admission.modelIdentifier
+                modelIdentifier: admission.modelIdentifier,
+                purpose: admission.purpose
             )]
         return route
             == ProviderRequestRouteTarget(

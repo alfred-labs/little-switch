@@ -57,7 +57,9 @@ struct SettingsLayoutTests {
         )
         let monitor = try #require(source.range(of: "signalMonitor.start"))
 
-        #expect(source.contains("SettingsWindowChrome.apply(to: window)"))
+        let factory = try self.source(named: "Settings/Shared/SettingsWindowFactory.swift")
+        #expect(source.contains("SettingsWindowFactory.make(hosting: view)"))
+        #expect(factory.contains("SettingsWindowChrome.apply(to: window)"))
         #expect(appearance.lowerBound < monitor.lowerBound)
     }
 

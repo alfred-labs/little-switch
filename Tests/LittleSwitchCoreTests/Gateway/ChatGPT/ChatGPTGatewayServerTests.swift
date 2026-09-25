@@ -40,7 +40,11 @@ struct ChatGPTGatewayServerTests {
         let file = directory.appending(path: "ChatGPT/conversations.json")
         var provider = chatGPTGatewayFixture().snapshot.providers[0]
         provider.responsesWireOverride = .native
-        let snapshot = RoutingSnapshot(generation: 1, providers: [provider], mappings: [:])
+        let snapshot = RoutingSnapshot(
+            generation: 1,
+            providers: [provider],
+            mappings: [:],
+            chatgpt: ChatGPTConfiguration(model: ModelMapping(providerID: provider.id, modelID: "chat-model")))
         let fixture = GatewayFixture(
             snapshot: snapshot,
             state: GatewayState(snapshot: snapshot),

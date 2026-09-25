@@ -3,94 +3,127 @@ import SwiftUI
 
 struct ChatGPTSettingsView: View {
     @Bindable var model: AppModel
+    let onModel: @MainActor (ModelMapping?) async -> Void
+    let onApply: @MainActor () async -> Void
+    let onConnect: @MainActor () async -> Void
     let onOpen: @MainActor () async -> Void
     let onDisconnect: @MainActor () async -> Void
 
     var body: some View {
         SettingsPage {
-            SettingsSection(L10n.resource("Text conversations")) {
+            SettingsSection(L10n.resource("Model")) {
+                SettingsCard {
+                    Grid(horizontalSpacing: 14, verticalSpacing: 0) {
+                        SettingsMappingRow(L10n.string("ChatGPT")) {
+                            modelPicker
+                        }
+                    }
+                }
+                Text(L10n.resource("This choice does not change Codex models."))
+                    .settingsSupportingText()
+                if model.hasPendingChatGPTChanges && model.configuration.chatgpt.connected {
+                    Text(L10n.resource("Applying will relaunch ChatGPT."))
+                        .settingsSupportingText()
+                }
+                if model.modelOptions.isEmpty {
+                    Text(L10n.resource("Add and refresh a provider to make its models available."))
+                        .settingsSupportingText()
+                    Button(L10n.resource("Add a Provider…")) { model.selectedSection = .providers }
+                } else if !model.hasAvailableChatGPTModel {
+                    Text(L10n.resource("Choose an available model for Chat before connecting."))
+                        .settingsSupportingText()
+                }
+                if model.isChoosingChatModelForConnection {
+                    Text(L10n.resource("Choose the model for Chat, then connect Codex and ChatGPT together."))
+                        .settingsSupportingText()
+                }
+            }
+            SettingsSection(L10n.resource("Connection")) {
                 SettingsCard {
                     LabeledContent {
-                        Text(model.chatGPTStatusTitle)
+                        Text(L10n.resource("Codex"))
+                            .foregroundStyle(.secondary)
                     } label: {
-                        Text(L10n.resource("Connection"))
+                        Text(L10n.resource("Enabled with"))
                     }
                     .settingsRow()
-                    .accessibilityLabel(L10n.resource("ChatGPT connection"))
-                    .accessibilityValue(model.chatGPTStatusTitle)
-                }
-                Text(
-                    L10n.resource(
-                        "Chat with your enabled provider models in the ChatGPT desktop app. Conversations are saved locally on this Mac."
-                    )
-                )
-                .settingsSupportingText()
-            }
-            SettingsSection(L10n.resource("Available models")) {
-                SettingsCard {
-                    HStack {
-                        Text(L10n.resource("\(model.codexExposedModelOptions.count) enabled"))
-                            .monospacedDigit()
-                        Spacer(minLength: 12)
-                        Button(L10n.resource("Manage in Codex…")) { model.selectedSection = .codex }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(L10n.resource("Enabled with"))
+                    .accessibilityValue(L10n.resource("Codex"))
+                    LabeledContent {
+                        Text(L10n.resource("On this Mac"))
+                            .foregroundStyle(.secondary)
+                    } label: {
+                        Text(L10n.resource("Chat history"))
                     }
                     .settingsRow()
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(L10n.resource("Chat history"))
+                    .accessibilityValue(L10n.resource("On this Mac"))
                 }
-                Text(L10n.resource("The model catalog is shared with Codex. Native models remain available."))
+                .accessibilityElement(children: .contain)
+                Text(L10n.resource("Native ChatGPT models remain available."))
                     .settingsSupportingText()
-                if model.hasPendingCodexChanges {
-                    Text(L10n.resource("Apply Codex changes before opening ChatGPT."))
-                        .settingsSupportingText()
-                } else if model.codexExposedModelOptions.isEmpty {
-                    Text(L10n.resource("Enable a model in Codex before connecting ChatGPT."))
-                        .settingsSupportingText()
-                }
-            }
-            SettingsSection(L10n.resource("Desktop app")) {
-                Text(
-                    L10n.resource(
-                        "Open ChatGPT from LittleSwitch to connect. Connecting or reloading reopens the desktop app shared with Codex."
-                    )
-                )
-                .settingsSupportingText()
-                Text(L10n.resource("A fresh launch outside LittleSwitch uses the normal connection."))
-                    .settingsSupportingText()
-                Text(
-                    L10n.resource(
-                        "After changing the shared model selection, reload ChatGPT to refresh its model list."
-                    )
-                )
-                .settingsSupportingText()
                 if model.chatGPTStatus == .needsAttention {
-                    Label(
-                        L10n.resource(
-                            "Open ChatGPT again to recover the connection, or disconnect to restore its normal launch."
-                        ),
-                        systemImage: "exclamationmark.triangle"
-                    )
-                    .settingsSupportingText()
+                    Text(L10n.resource("Reload the desktop app to recover the connection, or disconnect both apps."))
+                        .settingsSupportingText()
                 }
             }
         }
         .toolbar {
             SettingsToolbarActions {
-                Text(model.chatGPTStatusTitle)
-                    .font(SettingsLayout.Typography.toolbarLabel)
-                    .foregroundStyle(.secondary)
-                if model.canDisconnectChatGPT || model.configuration.chatgpt.connected {
-                    Button(L10n.resource("Disconnect")) { Task { await onDisconnect() } }
-                        .disabled(!model.canDisconnectChatGPT)
-                        .accessibilityLabel(L10n.resource("Disconnect ChatGPT"))
+                if model.hasPendingChatGPTChanges {
+                    SettingsPendingNotice()
+                } else {
+                    Text(model.chatGPTStatusTitle)
+                        .font(SettingsLayout.Typography.toolbarLabel)
+                        .foregroundStyle(.secondary)
                 }
-                Button(
-                    model.configuration.chatgpt.connected
-                        ? L10n.string("Open / Reload ChatGPT") : L10n.string("Connect ChatGPT"),
-                    systemImage: "arrow.clockwise"
-                ) { Task { await onOpen() } }
-                .disabled(!model.canOpenChatGPT)
-                .keyboardShortcut("s", modifiers: .command)
-                .accessibilityHint(L10n.resource("Reopens ChatGPT from LittleSwitch with the enabled models"))
+                if model.isChoosingChatModelForConnection {
+                    Button(L10n.resource("Cancel")) { model.isChoosingChatModelForConnection = false }
+                        .disabled(model.chatGPTBusy)
+                    Button(L10n.resource("Connect Codex and ChatGPT"), systemImage: "checkmark") {
+                        Task { await onConnect() }
+                    }
+                    .disabled(!model.canConnectDesktopClients)
+                    .keyboardShortcut("s", modifiers: .command)
+                } else {
+                    if model.canDisconnectChatGPT || model.configuration.chatgpt.connected {
+                        Button(L10n.resource("Disconnect")) { Task { await onDisconnect() } }
+                            .disabled(!model.canDisconnectChatGPT)
+                            .accessibilityLabel(L10n.resource("Disconnect Codex and ChatGPT"))
+                    }
+                    if model.configuration.chatgpt.connected {
+                        Button(L10n.resource("Reload"), systemImage: "arrow.clockwise") { Task { await onOpen() } }
+                            .disabled(!model.canOpenChatGPT || !model.canConnectDesktopClients)
+                            .accessibilityLabel(L10n.resource("Reload Codex and ChatGPT"))
+                    }
+                    Button(L10n.resource("Apply"), systemImage: "checkmark") { Task { await onApply() } }
+                        .disabled(!model.canApplyChatGPTSettings)
+                        .keyboardShortcut("s", modifiers: .command)
+                }
             }
         }
+    }
+
+    private var modelPicker: some View {
+        Picker(
+            L10n.resource("Model for Chat"),
+            selection: Binding<ModelMapping?>(
+                get: { model.configuration.chatgpt.model },
+                set: { mapping in Task { await onModel(mapping) } }
+            )
+        ) {
+            if model.configuration.chatgpt.model == nil {
+                Text(L10n.resource("Choose a model…")).tag(nil as ModelMapping?)
+            }
+            ForEach(model.modelOptions) { option in
+                Text(option.label).tag(Optional(option.mapping))
+            }
+            if let mapping = model.configuration.chatgpt.model, !model.hasAvailableChatGPTModel {
+                Text(L10n.resource("Unavailable: \(mapping.modelID)")).tag(Optional(mapping))
+            }
+        }
+        .disabled(model.chatGPTBusy || model.modelOptions.isEmpty)
     }
 }

@@ -153,7 +153,7 @@ struct CoordinatorCodexSettingsCoverageTests {
             connected: true,
             codexRunning: true
         )
-        let disconnected = try await fixture.coordinator.disconnectCodex()
+        let disconnected = try await fixture.coordinator.disconnectDesktopClients()
         #expect(!disconnected.configuration.codex.connected)
         #expect(fixture.controller.quitAttempts == 1)
         #expect(fixture.controller.openAttempts == 1)

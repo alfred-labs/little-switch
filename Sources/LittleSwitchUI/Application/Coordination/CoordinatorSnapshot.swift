@@ -11,6 +11,7 @@ public struct CoordinatorSnapshot: Equatable, Sendable {
     public var proxyRunning: Bool
     public var hasPendingCodexChanges: Bool
     public var chatGPTStatus: ChatGPTConnectionStatus = .disconnected
+    public var hasPendingChatGPTChanges = false
     /// Claude route mappings edited while connected, waiting for Apply.
     public var hasPendingClaudeMappings: Bool
     public var hasPendingClaudeDesktopChanges: Bool

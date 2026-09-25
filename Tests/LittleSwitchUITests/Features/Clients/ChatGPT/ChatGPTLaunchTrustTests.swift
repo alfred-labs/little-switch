@@ -71,13 +71,13 @@ struct ChatGPTLaunchTrustTests {
         #expect(managed["CODEX_CA_CERTIFICATE"] != source.path)
         _ = try await fixture.coordinator.connectCodex()
         #expect(fixture.controller.environments.last == managed)
-        _ = try await fixture.coordinator.disconnectCodex()
-        #expect(fixture.controller.environments.last == managed)
         fixture.store.failNextSave()
-        await #expect(throws: (any Error).self) { try await fixture.coordinator.disconnectChatGPT() }
+        await #expect(throws: (any Error).self) { try await fixture.coordinator.disconnectDesktopClients() }
         #expect(fixture.controller.environments.last == managed)
-        _ = try await fixture.coordinator.disconnectChatGPT()
+        #expect(fixture.store.configuration.codex.connected && fixture.store.configuration.chatgpt.connected)
+        _ = try await fixture.coordinator.disconnectDesktopClients()
         #expect(fixture.controller.environments.last == original)
+        #expect(!fixture.store.configuration.codex.connected && !fixture.store.configuration.chatgpt.connected)
         #expect(try String(contentsOf: source, encoding: .utf8) == fixture.authorityPEM)
         await fixture.coordinator.shutdown(mode: .handoff)
     }

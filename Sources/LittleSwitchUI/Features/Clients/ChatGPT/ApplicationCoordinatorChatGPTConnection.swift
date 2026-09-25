@@ -21,7 +21,9 @@ extension ApplicationCoordinator {
             chatGPTManagedLaunchID == launchID, chatGPTGatewayState === state,
             chatGPTStatus == .connected || chatGPTStatus == .ready
         else { return }
-        guard listenerRunning, state != nil, state === gatewayState else {
+        guard listenerRunning, state != nil, state === gatewayState,
+            configuration.chatgpt.resolvedModel(in: configuration.providers) != nil
+        else {
             chatGPTStatus = .needsAttention
             return
         }

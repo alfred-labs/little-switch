@@ -133,7 +133,12 @@ private struct ChatGPTResponseLifetimeFixture: Sendable {
     init() throws {
         var provider = chatGPTGatewayFixture().snapshot.providers[0]
         provider.responsesWireOverride = .native
-        state = GatewayState(snapshot: .init(generation: 1, providers: [provider], mappings: [:]))
+        state = GatewayState(
+            snapshot: .init(
+                generation: 1,
+                providers: [provider],
+                mappings: [:],
+                chatgpt: ChatGPTConfiguration(model: ModelMapping(providerID: provider.id, modelID: "chat-model"))))
         history = try ChatGPTHistoryStore()
         owner = try ChatGPTRequestBoundary.accountPartition(headers: chatGPTOwnerHeaders)
         transport = RecordingGatewayTransport(responses: [

@@ -11,7 +11,7 @@ package enum ChatGPTCatalog {
     }
 
     package static func merge(nativeData: Data, models: [ChatGPTCatalogModel]) throws -> Data {
-        guard !models.isEmpty else { return nativeData }
+        guard let firstModel = models.first else { return nativeData }
         guard var root = try? JSONSerialization.jsonObject(with: nativeData) as? [String: Any],
             let nativeModels = root[Field.models.rawValue] as? [[String: Any]]
         else { throw MergeError.invalidNativeCatalog }
@@ -23,8 +23,11 @@ package enum ChatGPTCatalog {
         if !versions.isEmpty {
             try rejectIdentifierCollision(
                 "little-switch", in: versions, key: Field.id.rawValue)
-            root[Field.versions.rawValue] = versions + [versionRecord(models)]
-        } else if !categories.isEmpty {
+            root[Field.versions.rawValue] = versions + [versionRecord(models, title: firstModel.title)]
+        }
+        // Preset-free versions resolve their selectable options through the
+        // matching category. A slug alone does not survive native selection validation.
+        if !versions.isEmpty || !categories.isEmpty {
             for model in models {
                 try rejectIdentifierCollision(
                     "little-switch:\(model.slug)", in: categories, key: Field.category.rawValue)
@@ -84,18 +87,11 @@ package enum ChatGPTCatalog {
         ]
     }
 
-    private static func versionRecord(_ models: [ChatGPTCatalogModel]) -> [String: Any] {
+    private static func versionRecord(_ models: [ChatGPTCatalogModel], title: String) -> [String: Any] {
         [
             Field.id.rawValue: "little-switch",
-            Field.displayText.rawValue: "LittleSwitch",
+            Field.displayText.rawValue: title,
             Field.slugs.rawValue: models.map(\.slug),
-            Field.intelligencePresets.rawValue: models.map { model in
-                [
-                    Field.modelSlug.rawValue: model.slug,
-                    Field.title.rawValue: model.title,
-                    Field.selectedDisplayTitle.rawValue: model.title,
-                ]
-            },
         ]
     }
 

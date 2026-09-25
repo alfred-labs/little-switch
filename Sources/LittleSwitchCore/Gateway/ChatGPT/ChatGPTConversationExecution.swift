@@ -8,18 +8,21 @@ extension ChatGPTGatewayResponder {
         _ request: ChatGPTConversationRequest,
         owner: String,
         history: ChatGPTHistoryStore,
-        context: Context
+        context: Context,
+        capture: GatewayRoutingCapture
     ) async throws -> Response {
         let id = request.conversationID ?? ChatGPTConversationID.make()
         let channel = ChatGPTStreamChannel()
         let ready = AsyncThrowingStream<ChatGPTPendingTurn, any Error>.makeStream(bufferingPolicy: .bufferingNewest(1))
-        let gateway = GatewayResponder(
+        var selectedGateway = GatewayResponder(
             state: state,
             transport: transport,
             secretStore: secretStore,
             trafficRecorder: trafficRecorder,
             monitoring: monitoring
         )
+        selectedGateway.chatGPTRoutingCapture = capture
+        let gateway = selectedGateway
         let task = try await activeTurns.start(key: .init(owner: owner, conversationID: id)) {
             do {
                 try Task.checkCancellation()

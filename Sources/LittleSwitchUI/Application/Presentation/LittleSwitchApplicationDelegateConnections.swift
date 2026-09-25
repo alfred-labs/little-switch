@@ -40,10 +40,16 @@ extension LittleSwitchApplicationDelegate {
             return
         }
         let disconnecting = model.codexConnected
+        if !disconnecting, !model.prepareDesktopConnection() {
+            showMainWindow()
+            return
+        }
         let message =
             disconnecting
-            ? L10n.string("Disconnect Codex from LittleSwitch? Codex will return to its previous configuration.")
-            : L10n.string("Connect Codex to LittleSwitch with the exposed provider models?")
+            ? L10n.string(
+                "Disconnect Codex and ChatGPT from LittleSwitch? The desktop app will reopen with its normal connection."
+            )
+            : L10n.string("Connect Codex and ChatGPT to LittleSwitch? The desktop app will reopen once.")
         let confirmed =
             disconnecting
             ? confirmDiscardingPendingChanges(message, actionTitle: L10n.string("Disconnect"))
@@ -56,9 +62,9 @@ extension LittleSwitchApplicationDelegate {
             do {
                 let snapshot =
                     if disconnecting {
-                        try await coordinator.disconnectCodex()
+                        try await coordinator.disconnectDesktopClients()
                     } else {
-                        try await coordinator.connectCodex()
+                        try await coordinator.connectDesktopClients()
                     }
                 model.apply(snapshot)
             } catch {

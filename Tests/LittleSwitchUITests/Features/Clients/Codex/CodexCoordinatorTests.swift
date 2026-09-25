@@ -230,12 +230,13 @@ struct CodexCoordinatorTests {
         defer { fixture.remove() }
         _ = try await fixture.coordinator.connectCodex()
 
-        let disconnected = try await fixture.coordinator.disconnectCodex()
+        let disconnected = try await fixture.coordinator.disconnectDesktopClients()
 
         #expect(!disconnected.configuration.codex.connected)
         #expect(fixture.codexProfile.restoreCount == 1)
-        #expect(fixture.codexController.quitCount == 0)
-        #expect(fixture.codexController.openCount == 0)
+        #expect(fixture.codexController.quitCount == 1)
+        #expect(fixture.codexController.openCount == 1)
+        #expect(!disconnected.configuration.chatgpt.connected)
         #expect(!disconnected.configuration.connected)
         #expect(fixture.claudeController.quitCount == 0)
         #expect(fixture.claudeController.openCount == 0)
@@ -415,7 +416,8 @@ struct CodexCoordinatorFixture {
             codexController: codexController,
             discoveryTransport: StaticCatalogTransport(),
             gatewayTransport: TestGatewayTransport(),
-            gatewayServerOverride: TestGatewayServer()
+            gatewayServerOverride: TestGatewayServer(),
+            inheritedEnvironment: [:]
         )
         _ = try await coordinator.start()
         store.clearSaves()

@@ -31,17 +31,9 @@ struct SettingsToolbarStatusAccessibilityTests {
         model.selectedSection = .common
         let windowTitle = "Toolbar status accessibility test"
         let windowIdentifier = "\(windowTitle) \(UUID())"
-        let controller = NSHostingController(rootView: settingsView(model: model))
-        controller.sizingOptions = [.minSize]
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 1_200, height: 840),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
-            backing: .buffered,
-            defer: false
-        )
-        window.contentViewController = controller
+        let window = SettingsWindowFactory.make(hosting: settingsView(model: model))
         window.setAccessibilityIdentifier(windowIdentifier)
-        window.isReleasedWhenClosed = false
+        #expect(window.frame.size == NSSize(width: 1_200, height: 840))
         defer {
             let restoreFocus = window.isKeyWindow
             window.orderOut(nil)
@@ -57,13 +49,11 @@ struct SettingsToolbarStatusAccessibilityTests {
                 }
             }
         }
-        SettingsWindowChrome.apply(to: window)
-        window.setContentSize(NSSize(width: 1_200, height: 840))
-        window.center()
         window.makeKeyAndOrderFront(nil)
-        // This visible AX scenario owns activation; the offscreen control host
-        // intentionally does not, and the runner's startup activation can lapse.
-        NSApp.activate()
+        // A command-line host has no foreground application to yield activation
+        // to it. This visible AX scenario deliberately takes focus, like About,
+        // then restores the previous application in the defer above.
+        NSApp.activate(ignoringOtherApps: true)
         try await waitForReadyWindow(window)
         try await bootstrap.activateAccessibility()
         let toolbar = try #require(window.toolbar)

@@ -13,6 +13,7 @@ private enum TestHostError: Error {
     case missingTestExecutable
     case missingTestBundle(path: String)
     case missingTestingEntryPoint
+    case applicationNotReady(String)
 }
 
 @MainActor
@@ -35,7 +36,7 @@ private final class TestHostDelegate: NSObject, NSApplicationDelegate {
     private func run() async {
         do {
             if activatesApplication {
-                activateApplication()
+                try await activateApplication()
             }
             let environment = ProcessInfo.processInfo.environment
             guard let executablePath = environment["LITTLESWITCH_SWIFT_TEST_EXECUTABLE"] else {
@@ -81,7 +82,7 @@ private final class TestHostDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func activateApplication() {
+    private func activateApplication() async throws {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 320, height: 160),
             styleMask: [.titled],
@@ -93,7 +94,24 @@ private final class TestHostDelegate: NSObject, NSApplicationDelegate {
         window.center()
         window.makeKeyAndOrderFront(nil)
         hostWindow = window
-        NSApp.activate()
+        NSApp.activate(ignoringOtherApps: true)
+        // AppKit delivers activation asynchronously. Wait for the visible host
+        // before scheduling MainActor test work through Swift Testing.
+        let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+        while !isReady(window) {
+            guard ContinuousClock.now < deadline else {
+                throw TestHostError.applicationNotReady(
+                    "running=\(NSApp.isRunning), active=\(NSApp.isActive), key=\(window.isKeyWindow), "
+                        + "onActiveSpace=\(window.isOnActiveSpace), occlusion=\(window.occlusionState.rawValue)"
+                )
+            }
+            try await Task.sleep(for: .milliseconds(16))
+        }
+    }
+
+    private func isReady(_ window: NSWindow) -> Bool {
+        NSApp.isRunning && NSApp.isActive && window.isKeyWindow
+            && window.isOnActiveSpace && window.occlusionState.contains(.visible)
     }
 
     private func restorePreviousApplication() {

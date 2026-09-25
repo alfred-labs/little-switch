@@ -15,7 +15,12 @@ struct ChatGPTGatewayCancellationTests {
         var provider = chatGPTGatewayFixture().snapshot.providers[0]
         provider.responsesWireOverride = .native
         provider.maximumParallelRequests = 1
-        let state = GatewayState(snapshot: .init(generation: 1, providers: [provider], mappings: [:]))
+        let state = GatewayState(
+            snapshot: .init(
+                generation: 1,
+                providers: [provider],
+                mappings: [:],
+                chatgpt: ChatGPTConfiguration(model: ModelMapping(providerID: provider.id, modelID: "chat-model"))))
         let history = try ChatGPTHistoryStore()
         let owner = try ChatGPTRequestBoundary.accountPartition(headers: chatGPTOwnerHeaders)
         let transport = ChatGPTWaitingTransport()

@@ -21,20 +21,24 @@ package protocol ProviderRequestPooling: Sendable {
 package struct ProviderRequestRouteKey: Hashable, Sendable {
     package var client: GatewayClient
     package var modelIdentifier: String
+    package var purpose: ProviderRequestPurpose
 
-    package init(client: GatewayClient, modelIdentifier: String) {
+    package init(client: GatewayClient, modelIdentifier: String, purpose: ProviderRequestPurpose = .conversation) {
         self.client = client
         self.modelIdentifier = modelIdentifier
+        self.purpose = purpose
     }
 
     package static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.client.providerRequestPoolDiscriminator == rhs.client.providerRequestPoolDiscriminator
             && lhs.modelIdentifier == rhs.modelIdentifier
+            && lhs.purpose == rhs.purpose
     }
 
     package func hash(into hasher: inout Hasher) {
         hasher.combine(client.providerRequestPoolDiscriminator)
         hasher.combine(modelIdentifier)
+        hasher.combine(purpose)
     }
 }
 
@@ -83,8 +87,8 @@ package struct ProviderRequestPoolConfiguration: Equatable, Sendable {
     }
 }
 
-package enum ProviderRequestPurpose: Equatable, Sendable {
-    case conversation, imageProbe
+package enum ProviderRequestPurpose: Hashable, Sendable {
+    case conversation, chatGPTConversation, imageProbe
 }
 
 package struct ProviderRequestAdmission: Equatable, Sendable {

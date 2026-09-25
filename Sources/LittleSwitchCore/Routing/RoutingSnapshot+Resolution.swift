@@ -42,6 +42,13 @@ extension RoutingSnapshot {
         codexRoutingTargets[model]
     }
 
+    public func resolveChatGPT(model: String) -> CodexModelTarget? {
+        guard let target = chatgpt.resolvedModel(in: providers), CodexCatalog.slug(for: target) == model else {
+            return nil
+        }
+        return target
+    }
+
     private var codexRoutingTargets: [String: CodexModelTarget] {
         var targets = validCodexTargets
         let legacy = Dictionary(grouping: codex.exposedModels(in: providers)) {
@@ -108,6 +115,12 @@ extension RoutingSnapshot {
                 providerID: target.provider.id,
                 modelID: target.model.id
             )
+        }
+        if let target = chatgpt.resolvedModel(in: providers) {
+            routes[
+                ProviderRequestRouteKey(
+                    client: .codex, modelIdentifier: CodexCatalog.slug(for: target), purpose: .chatGPTConversation
+                )] = ProviderRequestRouteTarget(providerID: target.provider.id, modelID: target.model.id)
         }
         return ProviderRequestPoolConfiguration(
             providers: providers.map { provider in

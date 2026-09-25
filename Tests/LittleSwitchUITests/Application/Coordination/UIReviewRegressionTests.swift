@@ -28,7 +28,7 @@ struct UIReviewRegressionTests {
             switch mutation {
             case .connect: _ = try await fixture.coordinator.connectCodex()
             case .apply: _ = try await fixture.coordinator.applyCodexSettings()
-            case .disconnect: _ = try await fixture.coordinator.disconnectCodex()
+            case .disconnect: _ = try await fixture.coordinator.disconnectDesktopClients()
             }
         }
 

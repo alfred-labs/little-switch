@@ -20,6 +20,7 @@ extension ApplicationCoordinator {
         let monitoringStatus = await monitoringStatusSnapshot()
         monitoringSnapshotSequence &+= 1
         var effectiveConfiguration = configuration
+        effectiveConfiguration = applyingChatGPTDraft(to: effectiveConfiguration)
         if let pendingClaudeMappings {
             effectiveConfiguration.mappings = pendingClaudeMappings
         }
@@ -78,6 +79,7 @@ extension ApplicationCoordinator {
         result.responsesWireVerdicts = catalogResponsesWireVerdicts
         await reconcileChatGPTConnection()
         result.chatGPTStatus = chatGPTStatus
+        result.hasPendingChatGPTChanges = hasPendingChatGPTChanges
         return result
     }
 }

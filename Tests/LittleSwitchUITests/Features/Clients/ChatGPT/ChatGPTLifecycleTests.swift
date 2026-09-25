@@ -61,6 +61,8 @@ struct ChatGPTFixture {
         trusted: Bool = true,
         hasIdentity: Bool = true,
         hasModels: Bool = true,
+        hasChatModel: Bool = true,
+        hasCodexExposure: Bool = true,
         hasController: Bool = true,
         failListenerStart: Bool = false,
         environment: [String: String] = ["TEST_PARENT": "inherited"]
@@ -81,6 +83,14 @@ struct ChatGPTFixture {
         )
         var configuration = AppConfiguration(providers: hasModels ? [provider] : [])
         configuration.chatgpt.connected = connected
+        if hasChatModel {
+            configuration.chatgpt.model = ModelMapping(providerID: provider.id, modelID: "applied")
+        }
+        if !hasCodexExposure {
+            configuration.codex.excludedModels = ["applied", "replacement"].map {
+                ModelMapping(providerID: provider.id, modelID: $0)
+            }
+        }
         let store = RecordingConfigurationStore(configuration: configuration)
         let controller = ChatGPTTestController(events: events)
         let codexProfile = TestCodexProfileManager()
@@ -163,7 +173,7 @@ final class ChatGPTTestController: CodexApplicationControlling {
     var launchID = UUID()
     var failQuit = false
     var failOpen = false
-    var onQuit: (@MainActor () async -> Void)?
+    var onQuit: (@MainActor () async throws -> Void)?
     var onOpen: (@MainActor ([String: String]) async -> Void)?
     var environments: [[String: String]] = []
     init(events: SharedEventLog) { self.events = events }
@@ -174,7 +184,7 @@ final class ChatGPTTestController: CodexApplicationControlling {
         return launchID
     }
     func quitAndWait() async throws {
-        await onQuit?()
+        try await onQuit?()
         if failQuit { throw CancellationError() }
         events.append("quit")
         running = false

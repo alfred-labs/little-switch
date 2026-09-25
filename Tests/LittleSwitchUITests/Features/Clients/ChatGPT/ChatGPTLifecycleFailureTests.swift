@@ -85,9 +85,10 @@ struct ChatGPTLifecycleFailureTests {
     @Test("Disconnect restores normal launch and preserves the shared service and model configuration")
     func disconnect() async throws {
         let fixture = try await ChatGPTFixture.make()
-        let connected = try await fixture.coordinator.connectChatGPT()
-        let result = try await fixture.coordinator.disconnectChatGPT()
+        let connected = try await fixture.coordinator.connectDesktopClients()
+        let result = try await fixture.coordinator.disconnectDesktopClients()
         var expected = connected.configuration
+        expected.codex.connected = false
         expected.chatgpt.connected = false
         #expect(result.configuration == expected)
         #expect(result.chatGPTStatus == .disconnected)
@@ -108,12 +109,12 @@ struct ChatGPTLifecycleFailureTests {
         if failure == "quit" { fixture.controller.failQuit = true }
         if failure == "launch" { fixture.controller.failOpen = true }
         if failure == "save" { fixture.store.failNextSave() }
-        await #expect(throws: (any Error).self) { try await fixture.coordinator.disconnectChatGPT() }
+        await #expect(throws: (any Error).self) { try await fixture.coordinator.disconnectDesktopClients() }
         #expect(fixture.store.configuration.chatgpt.connected)
         #expect(await fixture.server.isRunning)
         #expect(await fixture.coordinator.snapshot().chatGPTStatus == .needsAttention)
         fixture.controller.failQuit = false
-        _ = try await fixture.coordinator.disconnectChatGPT()
+        _ = try await fixture.coordinator.disconnectDesktopClients()
         await fixture.coordinator.shutdown(mode: .handoff)
     }
 
@@ -155,7 +156,7 @@ struct ChatGPTLifecycleFailureTests {
         }
         let connect = Task { try await fixture.coordinator.connectChatGPT() }
         try await entered.wait(description: "ChatGPT reached desktop quit")
-        await #expect(throws: (any Error).self) { try await fixture.coordinator.disconnectChatGPT() }
+        await #expect(throws: (any Error).self) { try await fixture.coordinator.disconnectDesktopClients() }
         #expect(await fixture.coordinator.shutdown(mode: mode))
         await #expect(throws: (any Error).self) { try await connect.value }
         #expect(!fixture.events.recorded.contains("open-managed"))
@@ -165,32 +166,34 @@ struct ChatGPTLifecycleFailureTests {
         await release.open()
     }
 
-    @Test("A pending Codex model draft blocks ChatGPT before trust or relaunch")
+    @Test("A pending Codex model draft does not block the independent Chat connection")
     func pendingCodex() async throws {
         let fixture = try await ChatGPTFixture.make()
         let connected = try await fixture.coordinator.connectCodex()
         let provider = try #require(connected.configuration.providers.first)
         _ = try await fixture.coordinator.setCodexDefaultModel(.init(providerID: provider.id, modelID: "replacement"))
-        let before = fixture.events.recorded
-        await #expect(throws: (any Error).self) { try await fixture.coordinator.connectChatGPT() }
-        #expect(fixture.events.recorded == before)
+        let before = fixture.codexProfile.activations
+        _ = try await fixture.coordinator.connectChatGPT()
+        #expect(fixture.codexProfile.activations == before)
         #expect(await fixture.coordinator.snapshot().hasPendingCodexChanges)
         await fixture.coordinator.shutdown(mode: .handoff)
     }
 
-    @Test("Codex profile relaunches and desktop Open preserve the managed ChatGPT environment")
+    @Test("Codex relaunches preserve the managed ChatGPT environment until both clients disconnect")
     func codexRelaunch() async throws {
         let fixture = try await ChatGPTFixture.make()
         _ = try await fixture.coordinator.connectChatGPT()
         _ = try await fixture.coordinator.connectCodex()
         #expect(fixture.controller.environments.last?["CODEX_API_BASE_URL"] == ChatGPTLaunchEnvironment.apiBaseURL)
-        _ = try await fixture.coordinator.disconnectCodex()
+        try await fixture.coordinator.openDesktopApplication(.codex)
         #expect(
             fixture.controller.environments.last?["CODEX_APP_SERVER_CHATGPT_BASE_URL"]
                 == ChatGPTLaunchEnvironment.apiBaseURL
         )
-        try await fixture.coordinator.openDesktopApplication(.codex)
         #expect(fixture.controller.environments.last?["CODEX_API_BASE_URL"] == ChatGPTLaunchEnvironment.apiBaseURL)
+        _ = try await fixture.coordinator.disconnectDesktopClients()
+        #expect(fixture.controller.environments.last == ["TEST_PARENT": "inherited"])
+        #expect(!fixture.store.configuration.codex.connected && !fixture.store.configuration.chatgpt.connected)
         await fixture.coordinator.shutdown(mode: .handoff)
     }
 

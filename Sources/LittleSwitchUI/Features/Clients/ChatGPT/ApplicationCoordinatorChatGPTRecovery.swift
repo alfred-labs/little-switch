@@ -67,7 +67,8 @@ extension ApplicationCoordinator {
         defer { chatGPTOperation = nil }
         do {
             try await operation.value
-            chatGPTStatus = .ready
+            chatGPTStatus =
+                configuration.chatgpt.resolvedModel(in: configuration.providers) == nil ? .needsAttention : .ready
         } catch {
             chatGPTStatus = .needsAttention
         }
@@ -87,7 +88,16 @@ extension ApplicationCoordinator {
     func prepareChatGPTShutdown(mode: ApplicationShutdownMode) async -> Bool {
         chatGPTOperation?.cancel()
         _ = try? await chatGPTOperation?.value
-        if mode == .userQuit, configuration.chatgpt.connected || chatGPTDesktopRestoration.requiresRestoration {
+        // A cancelled transaction may leave restoration owned only in memory.
+        // Keep this instance available for recovery before handing off that state.
+        if mode == .handoff, desktopProfileRestorationRequired {
+            chatGPTStatus = .needsAttention
+            return false
+        }
+        let requiresRestoration =
+            configuration.chatgpt.connected || chatGPTDesktopRestoration.requiresRestoration
+            || desktopProfileRestorationRequired
+        if mode == .userQuit && requiresRestoration {
             guard let controller = codexController else {
                 chatGPTStatus = .needsAttention
                 return false
@@ -115,7 +125,13 @@ extension ApplicationCoordinator {
     }
 
     private func restoreSharedCodexProfileForShutdown() throws {
-        guard configuration.codex.connected else { return }
+        if !configuration.codex.connected {
+            guard desktopProfileRestorationRequired else { return }
+            guard let codexProfileManager else { throw ChatGPTConnectionError.rollbackFailed }
+            try codexProfileManager.restore()
+            desktopProfileRestorationRequired = false
+            return
+        }
         guard let codexProfileManager, case .connected(let applied) = appliedCodexState else {
             throw ChatGPTConnectionError.rollbackFailed
         }
@@ -129,6 +145,7 @@ extension ApplicationCoordinator {
             try configurationStore.save(candidate)
             configuration = candidate
             appliedCodexState = .disconnected
+            desktopProfileRestorationRequired = false
         } catch {
             try codexProfileManager.activate(
                 providers: applied.providers,

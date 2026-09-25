@@ -23,24 +23,7 @@ extension ApplicationCoordinator {
         try await connectChatGPT()
     }
 
-    public func disconnectChatGPT() async throws -> CoordinatorSnapshot {
-        try beginChatGPTOperation()
-        guard configuration.chatgpt.connected || chatGPTDesktopRestoration.requiresRestoration else {
-            return await snapshot()
-        }
-        chatGPTStatus = .disconnecting
-        let operation = Task { try await self.disconnectChatGPTTransaction() }
-        chatGPTOperation = operation
-        defer { chatGPTOperation = nil }
-        try await withTaskCancellationHandler {
-            try await operation.value
-        } onCancel: {
-            operation.cancel()
-        }
-        return await snapshot()
-    }
-
-    private func beginChatGPTOperation() throws {
+    func beginChatGPTOperation() throws {
         guard !isShuttingDown else { throw CancellationError() }
         guard chatGPTOperation == nil, !codexDesktopOperationInProgress else {
             throw ChatGPTConnectionError.operationInProgress
@@ -53,33 +36,45 @@ extension ApplicationCoordinator {
     }
 
     private func connectChatGPTTransaction() async throws {
+        let previous = configuration
         let wasConnected = configuration.chatgpt.connected
         let previousDesktop = chatGPTDesktopRestoration
-        var quit = false
+        var quit = DesktopQuitState.untouched
         do {
             guard let controller = codexController else { throw ChatGPTConnectionError.unavailable }
-            guard !configuration.codex.exposedModels(in: configuration.providers).isEmpty else {
+            var candidate = applyingChatGPTDraft(to: configuration)
+            guard candidate.chatgpt.resolvedModel(in: candidate.providers) != nil else {
                 throw ChatGPTConnectionError.noModels
             }
-            guard !hasPendingCodexChanges else { throw ChatGPTConnectionError.pendingCodex }
             _ = try ChatGPTLaunchEnvironment.connected(inheriting: inheritedEnvironment)
             try await startGateway(snapshot: routingSnapshot())
             try checkChatGPTOperation()
             try await startChatGPTListener(installTrust: true)
             try checkChatGPTOperation()
+            try validateDesktopSettings(unchangedSince: previous)
             // Starting the listener must succeed before interrupting the app.
+            quit = .requested
             try await controller.quitAndWait()
-            quit = true
+            quit = .completed
             chatGPTDesktopRestoration = .relaunchRequired
+            try validateDesktopSettings(unchangedSince: previous)
+            candidate.chatgpt.connected = true
+            desktopRoutingSelection = DesktopRoutingSelection(configuration: candidate)
+            await replaceGatewayRouting(with: candidate)
             try checkChatGPTOperation()
             try await openManagedChatGPT(using: controller)
             try checkChatGPTOperation()
-            var candidate = configuration
-            candidate.chatgpt.connected = true
+            try validateDesktopSettings(unchangedSince: previous)
+            candidate = retainingCurrentImageObservations(in: candidate)
             try configurationStore.save(candidate)
             configuration = candidate
+            desktopRoutingSelection = nil
+            await replaceGatewayRoutingIfNeeded()
+            pendingChatGPTSettings = nil
             chatGPTStatus = .connected
         } catch {
+            desktopRoutingSelection = nil
+            await replaceGatewayRoutingIfNeeded()
             let restored = await rollbackChatGPTLaunch(to: previousDesktop, quit: quit)
             chatGPTStatus = wasConnected || !restored ? .needsAttention : .disconnected
             guard restored else { throw ChatGPTConnectionError.rollbackFailed }
@@ -88,69 +83,6 @@ extension ApplicationCoordinator {
             }
             throw error
         }
-    }
-
-    private func disconnectChatGPTTransaction() async throws {
-        let previousDesktop = chatGPTDesktopRestoration
-        var quit = false
-        do {
-            guard let controller = codexController else { throw ChatGPTConnectionError.unavailable }
-            try await controller.quitAndWait()
-            quit = true
-            chatGPTDesktopRestoration = .relaunchRequired
-            try checkChatGPTOperation()
-            try await controller.open(environment: normalDesktopEnvironment)
-            chatGPTManagedLaunchID = nil
-            chatGPTDesktopRestoration = .normal
-            try checkChatGPTOperation()
-            var candidate = configuration
-            candidate.chatgpt.connected = false
-            try configurationStore.save(candidate)
-            configuration = candidate
-            await stopChatGPTListener()
-            chatGPTStatus = .disconnected
-        } catch {
-            let restored = await rollbackChatGPTLaunch(to: previousDesktop, quit: quit)
-            chatGPTStatus = .needsAttention
-            guard restored else { throw ChatGPTConnectionError.rollbackFailed }
-            throw error
-        }
-    }
-
-    private func rollbackChatGPTLaunch(to previous: ChatGPTDesktopRestorationState, quit: Bool) async -> Bool {
-        // Shutdown owns the normal relaunch once this transaction settles.
-        guard !isShuttingDown else { return true }
-        if quit, let controller = codexController {
-            do {
-                let running = await controller.isRunning()
-                guard !isShuttingDown else { return true }
-                if running { try await controller.quitAndWait() }
-                chatGPTDesktopRestoration = .relaunchRequired
-                guard !isShuttingDown else { return true }
-                // Saved intent cannot establish the desktop's previous launch
-                // environment. Even a known managed launch can only be restored
-                // while its listener remains available and trusted.
-                let restoreManaged = await canRestoreManagedChatGPT(previous)
-                guard !isShuttingDown else { return true }
-                if restoreManaged {
-                    try await openManagedChatGPT(using: controller)
-                } else {
-                    try await controller.open(environment: normalDesktopEnvironment)
-                    chatGPTManagedLaunchID = nil
-                    chatGPTDesktopRestoration = .normal
-                }
-            } catch { return false }
-        }
-        if !configuration.chatgpt.connected { await stopChatGPTListener() }
-        return true
-    }
-
-    private func canRestoreManagedChatGPT(_ previous: ChatGPTDesktopRestorationState) async -> Bool {
-        guard previous == .managed,
-            tlsProvisioner?.isTrusted(secretStore: secretStore) == true,
-            let chatGPTServer
-        else { return false }
-        return await chatGPTServer.isRunning
     }
 
     var normalDesktopEnvironment: [String: String] {

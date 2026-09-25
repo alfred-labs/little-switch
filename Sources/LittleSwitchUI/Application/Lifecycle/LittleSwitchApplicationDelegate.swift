@@ -452,46 +452,19 @@ extension LittleSwitchApplicationDelegate {
                 await self?.testMonitoringExport()
             },
             onOpenChatGPT: { [weak self] in
-                await self?.perform { try await $0.openChatGPT() }
+                await self?.perform { try await $0.connectDesktopClients() }
             },
             onDisconnectChatGPT: { [weak self] in
-                await self?.perform { try await $0.disconnectChatGPT() }
+                await self?.disconnectDesktopClients()
+            },
+            onChatGPTModel: { [weak self] mapping in
+                await self?.perform { try await $0.setChatGPTModel(mapping) }
+            },
+            onApplyChatGPT: { [weak self] in
+                await self?.perform { try await $0.applyChatGPTSettings() }
             }
         )
-        settingsWindow = makeSettingsWindow(hosting: view)
+        settingsWindow = SettingsWindowFactory.make(hosting: view)
     }
 
-    private func makeSettingsWindow(hosting view: some View) -> NSWindow {
-        let window = NSWindow(
-            contentRect: NSRect(
-                x: 0,
-                y: 0,
-                width: SettingsLayout.windowWidth,
-                height: SettingsLayout.windowHeight
-            ),
-            styleMask: [
-                .titled,
-                .closable,
-                .miniaturizable,
-                .resizable,
-            ],
-            backing: .buffered,
-            defer: false
-        )
-        let controller = NSHostingController(rootView: view)
-        // Let the SwiftUI content minimum own the native resize constraint.
-        controller.sizingOptions = [.minSize]
-        window.contentViewController = controller
-        SettingsWindowChrome.apply(to: window)
-        window.setFrame(
-            NSRect(
-                origin: window.frame.origin,
-                size: NSSize(width: SettingsLayout.windowWidth, height: SettingsLayout.windowHeight)
-            ),
-            display: false
-        )
-        window.center()
-        window.isReleasedWhenClosed = false
-        return window
-    }
 }

@@ -67,6 +67,8 @@ final class AppModel {
     var proxyRunning: Bool
     var hasPendingCodexChanges: Bool
     var chatGPTStatus: ChatGPTConnectionStatus
+    var hasPendingChatGPTChanges: Bool
+    var isChoosingChatModelForConnection = false
     @ObservationIgnored private var chatGPTSnapshotSequence: UInt64
     var hasPendingClaudeMappings: Bool
     var hasPendingClaudeDesktopChanges: Bool
@@ -116,6 +118,7 @@ final class AppModel {
         proxyRunning = snapshot.proxyRunning
         hasPendingCodexChanges = snapshot.hasPendingCodexChanges
         chatGPTStatus = snapshot.chatGPTStatus
+        hasPendingChatGPTChanges = snapshot.hasPendingChatGPTChanges
         chatGPTSnapshotSequence = snapshot.monitoringSnapshotSequence
         hasPendingClaudeMappings = snapshot.hasPendingClaudeMappings
         hasPendingClaudeDesktopChanges = snapshot.hasPendingClaudeDesktopChanges
@@ -193,59 +196,6 @@ final class AppModel {
         }
     }
 
-    var codexConnected: Bool {
-        configuration.codex.connected
-    }
-
-    var codexPrimaryAction: CodexPrimaryAction {
-        codexConnected ? .apply : .connect
-    }
-
-    var codexPrimaryActionTitle: String {
-        L10n.string("Apply")
-    }
-
-    var canPerformCodexPrimaryAction: Bool {
-        guard !codexExposedModelOptions.isEmpty, !hasUnavailableCodexAutoReviewModel, !isBusy else {
-            return false
-        }
-        switch codexPrimaryAction {
-        case .connect:
-            return true
-        case .apply:
-            return hasPendingCodexChanges
-        }
-    }
-
-    var codexPrimaryActionAccessibilityHint: String {
-        if hasUnavailableCodexAutoReviewModel {
-            return L10n.string("Choose an available approval review model before applying changes")
-        }
-        if codexExposedModelOptions.isEmpty {
-            return codexConnected
-                ? L10n.string("Expose at least one available model before applying changes")
-                : L10n.string("Expose at least one available model before connecting Codex")
-        }
-        if isBusy {
-            return L10n.string("An operation is in progress")
-        }
-        switch codexPrimaryAction {
-        case .connect:
-            return L10n.string("Connects Codex to LittleSwitch")
-        case .apply:
-            return hasPendingCodexChanges
-                ? L10n.string("Applies pending settings")
-                : L10n.string("No pending settings")
-        }
-    }
-
-    var codexPrimaryActionAccessibilityValue: String {
-        guard codexConnected else {
-            return L10n.string("Codex disconnected")
-        }
-        return hasPendingCodexChanges ? L10n.string("Changes pending") : L10n.string("No pending changes")
-    }
-
     var claudeCustomModelCount: Int {
         let routeIDs = Set(ClaudeRoute.all.map(\.id))
         let availableMappings = Set(modelOptions.map(\.mapping))
@@ -276,6 +226,10 @@ final class AppModel {
         proxyRunning = snapshot.proxyRunning
         hasPendingCodexChanges = snapshot.hasPendingCodexChanges
         updateChatGPTStatus(snapshot.chatGPTStatus, snapshotSequence: snapshot.monitoringSnapshotSequence)
+        hasPendingChatGPTChanges = snapshot.hasPendingChatGPTChanges
+        if configuration.codex.connected && configuration.chatgpt.connected {
+            isChoosingChatModelForConnection = false
+        }
         hasPendingClaudeMappings = snapshot.hasPendingClaudeMappings
         updateClaudeDesktopPendingChanges(
             snapshot.hasPendingClaudeDesktopChanges,

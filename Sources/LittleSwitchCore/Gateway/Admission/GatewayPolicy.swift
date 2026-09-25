@@ -24,6 +24,7 @@ package struct GatewayRequestAdmission: Sendable {
     package let providerID: UUID
     package let targetModelID: String
     package let retainedBodyBytes: Int
+    package let purpose: ProviderRequestPurpose
 
     package init(
         eventID: UUID,
@@ -32,7 +33,8 @@ package struct GatewayRequestAdmission: Sendable {
         modelIdentifier: String,
         providerID: UUID,
         targetModelID: String,
-        retainedBodyBytes: Int
+        retainedBodyBytes: Int,
+        purpose: ProviderRequestPurpose = .conversation
     ) {
         self.eventID = eventID
         self.capture = capture
@@ -41,6 +43,7 @@ package struct GatewayRequestAdmission: Sendable {
         self.providerID = providerID
         self.targetModelID = targetModelID
         self.retainedBodyBytes = retainedBodyBytes
+        self.purpose = purpose
     }
 }
 
@@ -184,6 +187,7 @@ public actor GatewayState {
         providers: [Provider],
         mappings: [String: ModelMapping],
         codex: CodexConfiguration? = nil,
+        chatgpt: ChatGPTConfiguration? = nil,
         webSearch: WebSearchConfiguration? = nil,
         modelIndicator: ModelIndicator? = nil,
         credentialChangedProviderIDs: Set<UUID> = []
@@ -197,6 +201,7 @@ public actor GatewayState {
             providers: providers,
             mappings: mappings,
             codex: codex ?? snapshot.codex,
+            chatgpt: chatgpt ?? snapshot.chatgpt,
             webSearch: webSearch ?? snapshot.webSearch,
             modelIndicator: modelIndicator ?? snapshot.modelIndicator
         )
@@ -277,7 +282,8 @@ public actor GatewayState {
                     client: admission.client,
                     modelIdentifier: admission.modelIdentifier,
                     targetModelID: admission.targetModelID,
-                    retainedBodyBytes: admission.retainedBodyBytes
+                    retainedBodyBytes: admission.retainedBodyBytes,
+                    purpose: admission.purpose
                 )
             )
         } catch GatewayAdmissionError.notAcceptingRequests {

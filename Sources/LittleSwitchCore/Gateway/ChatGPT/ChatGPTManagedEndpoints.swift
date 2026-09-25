@@ -4,7 +4,9 @@ import Hummingbird
 import NIOCore
 
 extension ChatGPTGatewayResponder {
-    func managedResponse(_ route: ChatGPTManagedRoute, request: Request, context: Context) async throws -> Response? {
+    func managedResponse(
+        _ route: ChatGPTManagedRoute, request: Request, context: Context, capture: GatewayRoutingCapture
+    ) async throws -> Response? {
         if case .native = route { return nil }
         let owner = try ChatGPTRequestBoundary.accountPartition(headers: request.headers)
         guard let history else { throw ChatGPTActiveTurns.Failure.stopped }
@@ -25,7 +27,8 @@ extension ChatGPTGatewayResponder {
             }
             return jsonResponse(try JSONEncoder().encode(metadata))
         case .generate(let decoded):
-            return try await conversationResponse(decoded, owner: owner, history: history, context: context)
+            return try await conversationResponse(
+                decoded, owner: owner, history: history, context: context, capture: capture)
         case .detail(let id):
             return try await jsonResponse(history.conversation(id: id, owner: owner).nativeData())
         case .status(let id):

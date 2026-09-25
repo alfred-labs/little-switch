@@ -156,45 +156,6 @@ extension ApplicationCoordinator {
         }
     }
 
-    public func disconnectCodex() async throws -> CoordinatorSnapshot {
-        try beginCodexDesktopOperation()
-        defer { finishCodexDesktopOperation() }
-        let profileManager = try codexProfileDependency()
-
-        let previous = configuration
-        let previousAppliedState = appliedCodexState
-        // Quit before restoring: the app's quit-time config flush would
-        // otherwise rewrite the managed profile over the restored one.
-        let shouldRelaunchCodex = try await quitCodexForProfileChange()
-        do {
-            try profileManager.restore()
-            configuration.codex.connected = false
-            try configurationStore.save(configuration)
-            await replaceGatewayRoutingIfNeeded()
-            pendingCodexSettings = nil
-            appliedCodexState = .disconnected
-            if shouldRelaunchCodex {
-                await openCodexApplyingDesktopState()
-            }
-            return await snapshot()
-        } catch {
-            let rollbackSucceeded = await rollbackCodexApply(
-                to: previous,
-                appliedState: previousAppliedState,
-                profileManager: profileManager
-            )
-            // The quit already happened; hand the user back a running app
-            // reading the rolled-back profile whatever the rollback did.
-            if shouldRelaunchCodex {
-                await openCodexApplyingDesktopState()
-            }
-            guard rollbackSucceeded else {
-                throw Error.rollbackFailed
-            }
-            throw error
-        }
-    }
-
     private func codexProfileDependency() throws -> any CodexProfileManaging {
         guard let codexProfileManager else {
             throw Error.codexUnavailable
@@ -278,22 +239,24 @@ extension ApplicationCoordinator {
             providers: configuration.providers,
             mappings: configuration.mappings,
             codex: configuration.codex,
+            chatgpt: configuration.chatgpt,
             webSearch: configuration.webSearch,
             modelIndicator: configuration.modelIndicator
         )
     }
 
-    private func replaceGatewayRouting(with configuration: AppConfiguration) async {
+    func replaceGatewayRouting(with configuration: AppConfiguration) async {
         await gatewayState?.replace(
             providers: configuration.providers,
             mappings: configuration.mappings,
             codex: configuration.codex,
+            chatgpt: configuration.chatgpt,
             webSearch: configuration.webSearch,
             modelIndicator: configuration.modelIndicator
         )
     }
 
-    private func rollbackCodexApply(
+    func rollbackCodexApply(
         to previous: AppConfiguration,
         appliedState: AppliedCodexState,
         profileManager: any CodexProfileManaging

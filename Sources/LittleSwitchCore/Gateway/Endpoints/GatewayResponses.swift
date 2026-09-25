@@ -45,7 +45,12 @@ extension GatewayResponder {
         eventID: UUID
     ) async throws -> Response {
         try Task.checkCancellation()
-        let capture = try await dependencies.snapshotCapturer.capture(state: state)
+        let capture: GatewayRoutingCapture
+        if let chatGPTRoutingCapture {
+            capture = chatGPTRoutingCapture
+        } else {
+            capture = try await dependencies.snapshotCapturer.capture(state: state)
+        }
         try Task.checkCancellation()
         let incomingBody: Data
         switch try await collectDecodedResponsesBody(request) {
@@ -58,7 +63,7 @@ extension GatewayResponder {
         trafficRecorder.record(eventID: eventID, action: .claudeRequestBody(incomingBody))
         let incomingHeaders = nioHeaders(request.headers)
         guard let metadata = responsesRoutingMetadata(body: incomingBody, capture: capture) else {
-            if CodexNativePassthrough.isNativeRequest(incomingBody) {
+            if chatGPTRoutingCapture == nil, CodexNativePassthrough.isNativeRequest(incomingBody) {
                 return try await nativeResponsesResponse(
                     body: incomingBody, incomingHeaders: incomingHeaders, eventID: eventID
                 )
@@ -123,7 +128,8 @@ extension GatewayResponder {
                 modelIdentifier: metadata.model,
                 providerID: metadata.target.provider.id,
                 targetModelID: metadata.target.model.id,
-                retainedBodyBytes: incomingBody.count
+                retainedBodyBytes: incomingBody.count,
+                purpose: chatGPTRoutingCapture == nil ? .conversation : .chatGPTConversation
             ),
             errorStyle: .openAI
         )
@@ -318,7 +324,8 @@ extension GatewayResponder {
     ) -> ResponsesRoutingMetadata? {
         guard let root = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
             let model = root["model"] as? String,
-            let target = capture.snapshot.resolveCodex(model: model)
+            let target = chatGPTRoutingCapture == nil
+                ? capture.snapshot.resolveCodex(model: model) : capture.snapshot.resolveChatGPT(model: model)
         else {
             return nil
         }
