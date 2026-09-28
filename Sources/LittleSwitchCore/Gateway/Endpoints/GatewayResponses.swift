@@ -92,23 +92,44 @@ extension GatewayResponder {
             providerID: metadata.target.provider.id)
         let secret: String?
         do {
+            guard let revision = capture.providerRevision(for: metadata.target.provider.id) else {
+                throw GatewayAdmissionError.invalidated
+            }
             secret = try await state.providerCredential(
-                providerID: metadata.target.provider.id,
-                capture: capture,
-                secretStore: secretStore
-            )
+                providerID: metadata.target.provider.id, capture: capture, secretStore: secretStore)
+            responder.responsesWebSocketProvider = .init(id: metadata.target.provider.id, revision: revision)
+        } catch is CancellationError {
+            throw CancellationError()
         } catch GatewayAdmissionError.invalidated {
             await GatewayMonitoringScope.current?.admission(.invalidated)
             throw HandledAdmissionFailure(style: .openAI, kind: .queue)
         } catch {
-            return openAIError(
-                status: .internalServerError,
-                message: "Could not read provider credential"
-            )
+            return openAIError(status: .internalServerError, message: "Could not read provider credential")
         }
 
         try await responder.probeResponsesImageInput(body: prepared.body, target: metadata.target, credential: secret)
 
+        try await admitResponsesRequest(
+            eventID: eventID, capture: capture, metadata: metadata, retainedBodyBytes: incomingBody.count)
+        try Task.checkCancellation()
+        return try await responder.admittedResponsesResponse(
+            TransparentResponsesContext(
+                body: incomingBody,
+                model: metadata.model,
+                target: metadata.target,
+                credential: secret,
+                incomingHeaders: incomingHeaders,
+                eventID: eventID,
+                streaming: metadata.streaming
+            ),
+            prepared: prepared,
+            configuration: capture.snapshot.webSearch
+        )
+    }
+
+    private func admitResponsesRequest(
+        eventID: UUID, capture: GatewayRoutingCapture, metadata: ResponsesRoutingMetadata, retainedBodyBytes: Int
+    ) async throws {
         trafficRecorder.record(
             eventID: eventID,
             action: .routed(
@@ -128,24 +149,10 @@ extension GatewayResponder {
                 modelIdentifier: metadata.model,
                 providerID: metadata.target.provider.id,
                 targetModelID: metadata.target.model.id,
-                retainedBodyBytes: incomingBody.count,
+                retainedBodyBytes: retainedBodyBytes,
                 purpose: chatGPTRoutingCapture == nil ? .conversation : .chatGPTConversation
             ),
             errorStyle: .openAI
-        )
-        try Task.checkCancellation()
-        return try await responder.admittedResponsesResponse(
-            TransparentResponsesContext(
-                body: incomingBody,
-                model: metadata.model,
-                target: metadata.target,
-                credential: secret,
-                incomingHeaders: incomingHeaders,
-                eventID: eventID,
-                streaming: metadata.streaming
-            ),
-            prepared: prepared,
-            configuration: capture.snapshot.webSearch
         )
     }
 
@@ -178,7 +185,8 @@ extension GatewayResponder {
             // Native image turns still need an explicit completion budget.
             normalized = try OpenAIResponsesNativeNamespacing.normalize(rewritten)
             upstreamBody = try ResponsesChatCompletionsReasoning.nativeRequestBody(
-                normalized.body, providerID: context.target.provider.id)
+                normalized.body,
+                providerID: context.target.provider.id)
         } catch {
             return openAIError(status: .badRequest, message: "Invalid Responses request")
         }
@@ -220,6 +228,8 @@ extension GatewayResponder {
                 toolNameCatalog: normalized.toolNameCatalog
             )
             try Task.checkCancellation()
+        } catch let failure as ResponsesWebSocketFailure {
+            throw failure
         } catch is CancellationError {
             throw CancellationError()
         } catch {

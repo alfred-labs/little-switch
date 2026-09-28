@@ -1,5 +1,6 @@
 import AsyncHTTPClient
 import Foundation
+import HTTPTypes
 import Hummingbird
 import LittleSwitchCommon
 import LittleSwitchTransport
@@ -8,18 +9,29 @@ import NIOCore
 extension GatewayResponder {
     /// Native Responses bytes remain opaque to the adapters, but HTTP 200 only
     /// opens an SSE exchange. Observe its error events before recording success.
-    package func nativeResponsesStream(_ upstream: HTTPClientResponse, eventID: UUID) -> Response {
+    package func nativeResponsesStream(
+        _ upstream: HTTPClientResponse, eventID: UUID, requestedStreaming: Bool = false
+    ) -> Response {
         recordUpstreamResponseHead(eventID: eventID, attempt: 0, response: upstream)
+        let contentTypes = upstream.headers[HTTPField.Name.contentType.rawName]
+        // The native Codex backend can omit Content-Type on a successful SSE
+        // response. In that case the request's stream flag defines the format.
+        // Keep explicit media types and HTTP errors authoritative.
+        let streaming =
+            contentTypes.contains { $0.lowercased().contains("text/event-stream") }
+            || (contentTypes.isEmpty && requestedStreaming)
         guard (200..<300).contains(upstream.status.code),
-            upstream.headers["content-type"].contains(where: { $0.lowercased().contains("text/event-stream") })
+            streaming
         else { return streamingResponse(upstream, eventID: eventID, attempt: 0) }
 
+        var headers = gatewayResponseHeaders(upstream.headers)
+        if contentTypes.isEmpty { headers[.contentType] = "text/event-stream" }
         let trace = upstreamResponseTrace(eventID: eventID, attempt: 0)
         let maximumBytes = maximumErrorBytes
         let recorder = trafficRecorder
         return Response(
             status: .init(code: Int(upstream.status.code), reasonPhrase: upstream.status.reasonPhrase),
-            headers: gatewayResponseHeaders(upstream.headers),
+            headers: headers,
             body: ResponseBody(contentLength: nil) { writer in
                 defer { trace.finish() }
                 var outcome = NativeResponsesStreamOutcome(maximumBytes: maximumBytes)

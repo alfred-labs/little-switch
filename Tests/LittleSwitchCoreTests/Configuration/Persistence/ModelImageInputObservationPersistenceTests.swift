@@ -6,7 +6,7 @@ import Testing
 
 @Suite("Image observation persistence")
 struct ImageInputObservationPersistenceTests {
-    @Test("Observation roundtrips through direct Provider and configuration v8")
+    @Test("Observation roundtrips through direct Provider and configuration v10")
     func roundtrip() throws {
         var provider = Provider(name: "Example", baseURL: "https://provider.example", authMode: .none)
         provider.imageInputObservations = [try observation(provider)]
@@ -39,7 +39,7 @@ struct ImageInputObservationPersistenceTests {
         configuration["providers"] = [object]
         let loaded = try JSONDecoder().decode(
             AppConfiguration.self, from: JSONSerialization.data(withJSONObject: configuration))
-        #expect(loaded.version == 9)
+        #expect(loaded.version == 11)
         #expect(loaded.providers.first?.imageInputObservations == [valid])
     }
 

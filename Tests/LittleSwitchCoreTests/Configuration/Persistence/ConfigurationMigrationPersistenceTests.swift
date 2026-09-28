@@ -17,7 +17,7 @@ struct ConfigurationMigrationPersistenceTests {
         ).write(to: fixture.file)
 
         let migrated = try fixture.store.load()
-        #expect(migrated.version == 9)
+        #expect(migrated.version == 11)
         #expect(migrated.webSearch == .disabled)
         #expect(migrated.codex == .disconnected)
         #expect(migrated.claudeCode == .disconnected)
@@ -91,7 +91,7 @@ struct ConfigurationMigrationPersistenceTests {
         try Data(versionTwoJSON.utf8).write(to: fixture.file)
 
         let migrated = try fixture.store.load()
-        #expect(migrated.version == 9)
+        #expect(migrated.version == 11)
         #expect(migrated.connected)
         #expect(migrated.codex == .disconnected)
         #expect(migrated.claudeCode == .disconnected)
@@ -122,7 +122,7 @@ struct ConfigurationMigrationPersistenceTests {
         try Data(versionThree.utf8).write(to: fixture.file)
 
         let migrated = try fixture.store.load()
-        #expect(migrated.version == 9)
+        #expect(migrated.version == 11)
         #expect(migrated.claudeCode == .disconnected)
         #expect(migrated.openCode == .disconnected)
     }
@@ -152,7 +152,7 @@ struct ConfigurationMigrationPersistenceTests {
         try Data(versionFour.utf8).write(to: fixture.file)
 
         let migrated = try fixture.store.load()
-        #expect(migrated.version == 9)
+        #expect(migrated.version == 11)
         #expect(migrated.claudeCode == .disconnected)
         #expect(migrated.codex == .disconnected)
         #expect(migrated.openCode == .disconnected)
@@ -184,7 +184,7 @@ struct ConfigurationMigrationPersistenceTests {
         try Data(versionFive.utf8).write(to: fixture.file)
 
         let migrated = try fixture.store.load()
-        #expect(migrated.version == 9)
+        #expect(migrated.version == 11)
     }
 
     @Test(
@@ -199,7 +199,7 @@ struct ConfigurationMigrationPersistenceTests {
             modelID: "unrelated-model"
         )
 
-        #expect(migrated.version == 9)
+        #expect(migrated.version == 11)
         #expect(try #require(migrated.providers.first).maximumParallelRequests == 2)
     }
 
@@ -215,7 +215,7 @@ struct ConfigurationMigrationPersistenceTests {
             modelID: "glm"
         )
 
-        #expect(migrated.version == 9)
+        #expect(migrated.version == 11)
         #expect(try #require(migrated.providers.first).maximumParallelRequests == 4)
     }
 
@@ -248,7 +248,7 @@ struct ConfigurationMigrationPersistenceTests {
             maximumParallelRequests: "12"
         )
 
-        #expect(migrated.version == 9)
+        #expect(migrated.version == 11)
         #expect(try #require(migrated.providers.first).maximumParallelRequests == 12)
     }
 
@@ -339,7 +339,7 @@ struct ConfigurationMigrationPersistenceTests {
 }
 
 extension ConfigurationMigrationPersistenceTests {
-    @Test("A missing monitoring section defaults in every supported version", arguments: 1...9)
+    @Test("A missing monitoring section defaults in every supported version", arguments: 1...11)
     func missingMonitoringPreservesExistingSettings(storedVersion: Int) throws {
         let fixture = try fixture()
         defer { try? FileManager.default.removeItem(at: fixture.directory) }
@@ -368,11 +368,11 @@ extension ConfigurationMigrationPersistenceTests {
             relaunchTargets: RelaunchTargets(claude: true, codex: true, claudeCode: true, openCode: true),
             modelIndicator: .routed
         )
-        let encoded = try JSONEncoder().encode(expected)
+        let encoded = try configurationFixtureData(expected)
         var object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         object.removeValue(forKey: "monitoring")
         try JSONSerialization.data(withJSONObject: object).write(to: fixture.file)
-        expected.version = 9
+        expected.version = 11
 
         #expect(try fixture.store.load() == expected)
     }
@@ -401,7 +401,7 @@ extension ConfigurationMigrationPersistenceTests {
         #expect(try fixture.store.load() == configuration)
     }
 
-    @Test("Unsupported configuration versions fail before decoding fields", arguments: [Int.min, 0, 10, Int.max])
+    @Test("Unsupported configuration versions fail before decoding fields", arguments: [Int.min, 0, 12, Int.max])
     func unsupportedMonitoringVersion(storedVersion: Int) throws {
         let fixture = try fixture()
         defer { try? FileManager.default.removeItem(at: fixture.directory) }

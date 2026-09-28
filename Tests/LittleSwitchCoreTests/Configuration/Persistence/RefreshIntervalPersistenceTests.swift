@@ -35,7 +35,9 @@ struct RefreshIntervalPersistenceTests {
         #expect(try store.load() == withInterval)
 
         // A configuration written before the field existed decodes it as nil.
-        let data = try Data(contentsOf: store.fileURL)
+        var legacy = withInterval
+        legacy.version = 9
+        let data = try configurationFixtureData(legacy)
         var object = try #require(
             JSONSerialization.jsonObject(with: data) as? [String: Any]
         )

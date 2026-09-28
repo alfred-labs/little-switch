@@ -141,6 +141,8 @@ public struct GatewayResponder: HTTPResponder {
     package var responsesProviderID: UUID?
     package var responsesImageGeneration: UUID?
     package var customToolRoutingCapture: GatewayRoutingCapture?
+    package var responsesWebSocketContext: ResponsesWebSocketExchangeContext?
+    package var responsesWebSocketProvider: ResponsesUpstreamProvider?
     /// Only the native Chat adapter supplies this capture on its synthetic request.
     /// HTTP headers never select this routing or admission context.
     package var chatGPTRoutingCapture: GatewayRoutingCapture?

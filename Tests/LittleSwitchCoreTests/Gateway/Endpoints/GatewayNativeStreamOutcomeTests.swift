@@ -71,8 +71,8 @@ struct GatewayNativeStreamOutcomeTests {
 
     @Test(
         "Native SSE errors stay byte-identical and record a failed request", arguments: ["error", "response.failed"],
-        ["\n\n", "\r\r"])
-    func nativeFailure(type: String, separator: String) async throws {
+        [("\n\n", false), ("\n\n", true), ("\r\r", false), ("\r\r", true)])
+    func nativeFailure(type: String, framing: (separator: String, declaresType: Bool)) async throws {
         let error: [String: Any] = [
             "type": "invalid_request_error", "code": "invalid_encrypted_content",
             "message": "Synthetic private provider detail", "param": NSNull(),
@@ -82,11 +82,13 @@ struct GatewayNativeStreamOutcomeTests {
             ? ["type": type, "error": error, "sequence_number": 1]
             : ["type": type, "response": ["id": "resp_fail", "status": "failed", "output": [], "error": error]]
         let json = try #require(String(data: responseData(event), encoding: .utf8))
-        let wire = "event: \(type)\ndata: \(json)\(separator)"
+        let wire = "event: \(type)\ndata: \(json)\(framing.separator)"
         let fixture = try GatewayTests().makeFixture()
         let transport = RecordingGatewayTransport(responses: [
             streamingResponse(
-                status: .ok, headers: ["content-type": "text/event-stream"], chunks: wire.map(String.init))
+                status: .ok,
+                headers: framing.declaresType ? ["content-type": "text/event-stream"] : [:],
+                chunks: wire.map(String.init))
         ])
         let traffic = TrafficTestRecorder()
         let app = GatewayTests().makeApplication(fixture: fixture, transport: transport, trafficRecorder: traffic)
@@ -96,6 +98,7 @@ struct GatewayNativeStreamOutcomeTests {
                 method: .post,
                 body: ByteBuffer(string: #"{"model":"gpt-6-astra","input":"Synthetic probe","stream":true}"#))
             #expect(result.status == .ok)
+            #expect(result.headers[.contentType] == "text/event-stream")
             #expect(String(buffer: result.body) == wire)
         }
         let recorded = try #require(traffic.events.first)

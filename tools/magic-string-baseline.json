@@ -82,16 +82,6 @@
       "rule" : "subscriptKey"
     },
     {
-      "anchor" : "extension GatewayResponder/func nativeResponsesStream(_:HTTPClientResponse,eventID:UUID)->Response",
-      "file" : "Sources/LittleSwitchCore/Gateway/Endpoints/GatewayNativeResponsesStream.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "content-type"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
       "anchor" : "struct NativeResponsesStreamOutcome/func observe(_:ServerSentEventFrame)",
       "file" : "Sources/LittleSwitchCore/Gateway/Endpoints/GatewayNativeResponsesStream.swift",
       "literal" : {
@@ -4486,16 +4476,6 @@
       "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesProviderState.swift",
       "literal" : {
         "kind" : "string",
-        "value" : "input"
-      },
-      "ordinal" : 2,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesProviderState/static func degradedBody(_:Data)throws->Data",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesProviderState.swift",
-      "literal" : {
-        "kind" : "string",
         "value" : "type"
       },
       "ordinal" : 1,
@@ -4559,16 +4539,6 @@
         "value" : "input"
       },
       "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum ResponsesProviderState/static func normalize(body:Data,providerID:UUID?)throws->Data",
-      "file" : "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesProviderState.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "input"
-      },
-      "ordinal" : 2,
       "rule" : "subscriptKey"
     },
     {
@@ -9179,16 +9149,6 @@
         "value" : "namespace"
       },
       "ordinal" : 2,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "struct ProviderToolContract/func validateResponseFrame(_:[String:Any],event:String?)throws/binding type",
-      "file" : "Sources/LittleSwitchCore/Tools/Contracts/ProviderToolContract.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "type"
-      },
-      "ordinal" : 1,
       "rule" : "subscriptKey"
     },
     {

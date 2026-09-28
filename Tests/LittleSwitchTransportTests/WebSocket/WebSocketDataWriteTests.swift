@@ -1,0 +1,138 @@
+import NIOCore
+import NIOWebSocket
+import Testing
+
+@testable import LittleSwitchTransport
+
+@Suite(.timeLimit(.minutes(1)))
+struct WebSocketDataWriteTests {
+    @Test func sendKeepsItsQueueBudgetUntilTheLastFragmentIsWritten() async throws {
+        let fixture = try await WebSocketDataWriteFixture.start(fragment: 2)
+        let completion = WebSocketSendCompletion()
+        do {
+            try await fixture.run { connection in
+                let send = Task {
+                    try await connection.outbound.send(.text("12345678"))
+                    await completion.finish()
+                }
+                try await fixture.received.get()
+                try await Task.sleep(for: .milliseconds(30))
+                #expect(await completion.finished == false)
+                await #expect {
+                    try await connection.outbound.send(.text("x"))
+                } throws: { error in
+                    guard let failure = error as? UpstreamWebSocketSendFailure else { return false }
+                    return failure.cause.kind == .outboundQueueFull && failure.submission == .notSubmitted
+                }
+                try await fixture.release()
+                try await send.value
+                #expect(await completion.finished)
+                try await connection.outbound.send(.text("next"))
+            }
+            try await fixture.stop()
+        } catch {
+            try? await fixture.stop()
+            throw error
+        }
+    }
+
+    @Test(arguments: [1, 2])
+    func failedFragmentIsReportedAsPossiblySubmitted(fragment: Int) async throws {
+        let fixture = try await WebSocketDataWriteFixture.start(fragment: fragment)
+        do {
+            await #expect {
+                try await fixture.run { connection in
+                    let send = Task {
+                        await Self.expectSendFailure(connection.outbound, kind: .writeFailed)
+                    }
+                    try await fixture.received.get()
+                    try await fixture.release(failing: true)
+                    await send.value
+                }
+            } throws: { error in
+                (error as? UpstreamWebSocketFailure)?.kind == .writeFailed
+            }
+            try await fixture.stop()
+        } catch {
+            try? await fixture.stop()
+            throw error
+        }
+    }
+
+    @Test func cancellingAHeldDataWriteReleasesThePump() async throws {
+        let fixture = try await WebSocketDataWriteFixture.start()
+        do {
+            await #expect {
+                try await fixture.run { connection in
+                    let send = Task { await Self.expectSendFailure(connection.outbound, kind: .cancelled) }
+                    try await fixture.received.get()
+                    send.cancel()
+                    await send.value
+                }
+            } throws: { error in
+                (error as? UpstreamWebSocketFailure)?.kind == .cancelled
+            }
+            try await fixture.stop()
+        } catch {
+            try? await fixture.stop()
+            throw error
+        }
+    }
+
+    @Test func peerCloseReleasesAHeldDataWriteWithoutLosingItsCloseMetadata() async throws {
+        let fixture = try await WebSocketDataWriteFixture.start()
+        do {
+            try await fixture.run { connection in
+                async let peer = connection.inbound.consume { _ in }
+                let send = Task { await Self.expectSendFailure(connection.outbound, kind: .connectionClosing) }
+                try await fixture.received.get()
+                var close = ByteBuffer()
+                close.writeInteger(UInt16(1_000))
+                try await fixture.server.send(.init(fin: true, opcode: .connectionClose, data: close))
+                #expect(try await peer == .init(code: 1_000, reason: nil))
+                await send.value
+            }
+            try await fixture.stop()
+        } catch {
+            try? await fixture.stop()
+            throw error
+        }
+    }
+
+    @Test func aWrittenPongCannotAcknowledgeAHeldDataFragment() async throws {
+        let fixture = try await WebSocketDataWriteFixture.start()
+        let completion = WebSocketSendCompletion()
+        do {
+            try await fixture.run { connection in
+                async let peer = connection.inbound.consume { _ in }
+                let send = Task {
+                    try await connection.outbound.send(.text("12345678"))
+                    await completion.finish()
+                }
+                try await fixture.received.get()
+                try await fixture.server.send(.init(fin: true, opcode: .ping, data: ByteBuffer(string: "ping")))
+                try await fixture.pongWritten.get()
+                #expect(await completion.finished == false)
+                try await fixture.release()
+                try await send.value
+                try await connection.outbound.close()
+                #expect(try await peer == .init(code: 1_000, reason: nil))
+            }
+            try await fixture.stop()
+        } catch {
+            try? await fixture.stop()
+            throw error
+        }
+    }
+
+    private static func expectSendFailure(
+        _ outbound: any UpstreamWebSocketOutbound, kind: UpstreamWebSocketFailure.Kind
+    ) async {
+        await #expect {
+            try await outbound.send(.text("12345678"))
+        } throws: { error in
+            guard let failure = error as? UpstreamWebSocketSendFailure else { return false }
+            return failure.cause.kind == kind && failure.submission == .mayHaveBeenSubmitted
+        }
+    }
+}

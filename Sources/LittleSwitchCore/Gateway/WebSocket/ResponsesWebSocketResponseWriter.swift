@@ -16,22 +16,28 @@ package actor ResponsesWebSocketResponseProjection {
     private let streaming: Bool
     private let maximumBytes: Int
     private let emit: @Sendable (Data) async throws -> Void
+    private let checkpoint: (@Sendable (ResponsesWebSocketEventResult) async throws -> Void)?
+    private let streamID: String?
     private var decoder: ServerSentEventDecoder
     private var events: ResponsesWebSocketEvents
     private var buffered = Data()
     private var finished = false
+    private var lastTerminal: ResponsesWebSocketEventResult?
 
     package init(
         status: Int,
         streaming: Bool,
         streamID: String?,
         maximumBytes: Int,
-        emit: @escaping @Sendable (Data) async throws -> Void
+        emit: @escaping @Sendable (Data) async throws -> Void,
+        checkpoint: (@Sendable (ResponsesWebSocketEventResult) async throws -> Void)? = nil
     ) {
         self.status = status
         self.streaming = streaming && (200..<300).contains(status)
         self.maximumBytes = maximumBytes
         self.emit = emit
+        self.checkpoint = checkpoint
+        self.streamID = streamID
         decoder = ServerSentEventDecoder(maximumFrameBytes: maximumBytes)
         events = ResponsesWebSocketEvents(streamID: streamID, maximumBytes: maximumBytes)
     }
@@ -69,12 +75,29 @@ package actor ResponsesWebSocketResponseProjection {
 
     package func result() throws -> ResponsesWebSocketEventResult {
         guard finished else { throw ResponsesWebSocketEvents.Error.missingTerminal }
+        if var result = lastTerminal, checkpoint != nil {
+            result.published = true
+            return result
+        }
         return try events.finish()
     }
 
     private func forward(_ frames: [ServerSentEventFrame]) async throws {
         for frame in frames where !frame.terminal {
-            if let message = try events.accept(frame.data) { try await emit(message) }
+            let startsResponse =
+                try JSONValue.parse(frame.data).object?[OpenAIResponsesCreatedEvent.Key.type.rawValue]?.string
+                == OpenAIResponsesCreatedEventType.responseCreated.rawValue
+            if checkpoint != nil, lastTerminal != nil, startsResponse {
+                events = ResponsesWebSocketEvents(streamID: streamID, maximumBytes: maximumBytes)
+                lastTerminal = nil
+            }
+            if let message = try events.accept(frame.data) {
+                try await emit(message)
+            } else if let checkpoint {
+                let terminal = try events.finish()
+                lastTerminal = terminal
+                try await checkpoint(terminal)
+            }
         }
     }
 

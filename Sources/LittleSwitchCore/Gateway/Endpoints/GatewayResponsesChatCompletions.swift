@@ -69,6 +69,8 @@ extension GatewayResponder {
                 toolNameCatalog: prepared.toolNameCatalog
             )
             try Task.checkCancellation()
+        } catch let failure as ResponsesWebSocketFailure {
+            throw failure
         } catch is CancellationError {
             throw CancellationError()
         } catch {

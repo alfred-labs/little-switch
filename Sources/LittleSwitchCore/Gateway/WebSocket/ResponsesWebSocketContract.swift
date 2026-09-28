@@ -13,9 +13,23 @@ enum ResponsesWebSocketContract {
         case sequenceNumber = "sequence_number"
     }
 
+    /// Steering control payloads are not part of the generated event projection.
+    enum ControlField: String {
+        case steer
+    }
+
+    enum SteeringField: String {
+        case id
+        case previousResponseID = "previous_response_id"
+    }
+
     enum Event: String {
         case create = "response.create"
         case steer = "response.steer"
+        case steerSubmitted = "response.steer.submitted"
+        case steerAccepted = "response.steer.accepted"
+        case steerPending = "response.steer.pending"
+        case steerFailed = "response.steer.failed"
     }
 
     enum Kind: String {

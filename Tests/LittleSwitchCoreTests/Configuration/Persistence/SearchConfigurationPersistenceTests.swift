@@ -9,7 +9,7 @@ import Testing
 struct SearchConfigurationPersistenceTests {
     @Test("The application keeps its schema and disabled search default")
     func defaults() {
-        #expect(AppConfiguration().version == 9)
+        #expect(AppConfiguration().version == 11)
         #expect(AppConfiguration().webSearch == .disabled)
     }
 

@@ -45,6 +45,9 @@ extension GatewayResponder {
         toolNameCatalog: ProviderToolNameCatalog? = nil
     ) async throws -> GatewayModelExchange {
         try Task.checkCancellation()
+        // HTTP bridge follow-ups share the original admission and its frozen
+        // credentials/settings. Revalidate new WS commands at their write boundary,
+        // not every sub-exchange of an already admitted HTTP turn.
         let projection = try await customToolProjection(request: request, body: body, traffic: traffic, wire: wire)
         guard projection.upstreamBody.count <= maximumRequestBytes else {
             throw ProviderToolContract.Error.invalidRequest
@@ -59,7 +62,15 @@ extension GatewayResponder {
             traffic.headers = TrafficRedactor.headers(outgoing.headers)
             trafficRecorder.record(eventID: eventID, action: .upstreamRequest(traffic))
         }
-        var response = try await transport.execute(outgoing)
+        let nativeResponse = try await webSocketModelResponse(
+            outgoing, projection: projection, wire: wire, eventID: eventID)
+        var response: HTTPClientResponse
+        if let nativeResponse {
+            response = nativeResponse
+        } else {
+            try await responsesWebSocketContext?.requireFallbackAllowed()
+            response = try await transport.execute(outgoing)
+        }
         if let monitoring = GatewayMonitoringScope.current {
             response.body = .stream(MonitoringProviderBody(body: response.body, context: monitoring))
         }
@@ -101,13 +112,39 @@ extension GatewayResponder {
             }
             if wire == .responses, let responsesProviderID {
                 validated = try await ResponsesProviderStateResponse.tagged(
-                    validated, providerID: responsesProviderID, maximumBytes: maximumErrorBytes
+                    validated,
+                    providerID: responsesProviderID,
+                    maximumBytes: maximumErrorBytes
                 )
             }
             return GatewayModelExchange(response: validated, trace: trace)
         } catch {
             trace.finish()
             throw error
+        }
+    }
+
+    private func webSocketModelResponse(
+        _ request: HTTPClientRequest, projection: CustomToolProjection, wire: ProviderToolContract.Wire, eventID: UUID
+    ) async throws -> HTTPClientResponse? {
+        if wire == .responses, projection.isIdentity, let context = responsesWebSocketContext {
+            let provider = responsesWebSocketProvider
+            return try await context.execute(
+                request: request,
+                body: projection.upstreamBody,
+                provider: provider,
+                observeControl: { [trafficRecorder] type in
+                    trafficRecorder.record(
+                        eventID: eventID, action: .annotation(.init(kind: "websocket-steering", message: type)))
+                },
+                validateProvider: { [state] in
+                    guard let provider else { return }
+                    try await state.validateResponsesProvider(provider)
+                })
+        } else if wire == .responses, responsesWebSocketContext?.turn.generate == false {
+            return try ResponsesWebSocketExchangeContext.warmup(body: projection.upstreamBody)
+        } else {
+            return nil
         }
     }
 }

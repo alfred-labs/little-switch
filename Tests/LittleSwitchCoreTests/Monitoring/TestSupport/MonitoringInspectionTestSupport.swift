@@ -11,5 +11,8 @@ extension MonitoringMetricsSnapshot {
 
 extension MonitoringUsageAccumulator {
     /// Container state is independently capped at 64; these are the retained payload bytes.
-    var retainedByteCount: Int { keyBytes.count + sample.count }
+    var retainedByteCount: Int {
+        keyBytes.count + sample.count + (responseID?.utf8.count ?? 0)
+            + ledger.responses.keys.reduce(0) { $0 + $1.utf8.count }
+    }
 }

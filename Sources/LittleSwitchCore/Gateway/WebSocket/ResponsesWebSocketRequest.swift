@@ -24,15 +24,10 @@ struct ResponsesWebSocketRequest: Sendable {
                     status: 400, code: "invalid_request_error", message: "Invalid JSON object")
             }
             streamID = try Self.streamID(in: fields)
-            if fields[EventKey.type.rawValue]?.string == ResponsesWebSocketContract.Event.steer.rawValue {
-                throw ResponsesWebSocketFailure(
-                    status: 400,
-                    code: "steering_not_supported",
-                    message: "Mid-turn steering is not supported",
-                    streamID: streamID,
-                    parameter: EventKey.type.rawValue)
-            }
-            guard fields[EventKey.type.rawValue]?.string == ResponsesWebSocketContract.Event.create.rawValue else {
+            guard let type = fields[EventKey.type.rawValue]?.string,
+                [ResponsesWebSocketContract.Event.create.rawValue, ResponsesWebSocketContract.Event.steer.rawValue]
+                    .contains(type)
+            else {
                 throw Self.invalid("Expected response.create", streamID: streamID, parameter: EventKey.type.rawValue)
             }
             previousResponseID = try Self.previousResponseID(in: fields, streamID: streamID)
@@ -87,6 +82,14 @@ struct ResponsesWebSocketRequest: Sendable {
     init(_ envelope: Envelope) throws {
         let streamID = envelope.streamID
         var fields = envelope.fields
+        guard fields[EventKey.type.rawValue]?.string != ResponsesWebSocketContract.Event.steer.rawValue else {
+            throw ResponsesWebSocketFailure(
+                status: 400,
+                code: "steering_not_supported",
+                message: "Mid-turn steering is not supported",
+                streamID: streamID,
+                parameter: EventKey.type.rawValue)
+        }
         guard let model = fields[OpenAIResponsesRoutingRequest.Key.model.rawValue]?.string,
             !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         else {
@@ -175,7 +178,8 @@ struct ResponsesWebSocketRequest: Sendable {
             body: body,
             generate: generate,
             previousResponseID: previousResponseID,
-            replacesHistory: replacesHistory)
+            replacesHistory: replacesHistory,
+            incrementalInput: self.input.data)
     }
 
     private static func input(_ value: JSONValue?, streamID: String?) throws -> [JSONValue] {

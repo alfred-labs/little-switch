@@ -46,6 +46,11 @@ package actor MonitoringRequestContext {
         await monitoring.store.recordDrop(signal: .metrics, reason: .invalidUsage, count: UInt64(count))
     }
 
+    package func oversizedUsage(count: Int) async {
+        guard count > 0, !finished else { return }
+        await monitoring.store.recordDrop(signal: .metrics, reason: .oversize, count: UInt64(count))
+    }
+
     package func estimatedInput(_ tokens: Int) {
         guard !finished, tokens >= 0 else { return }
         estimatedInputTokens = saturatedGatewayUsageSum(estimatedInputTokens ?? 0, tokens)

@@ -1,5 +1,6 @@
 import Foundation
 import LittleSwitchTransport
+import LittleSwitchWire
 
 package struct ProviderToolContract: Sendable {
     package enum Wire: Equatable, Sendable {
@@ -166,6 +167,12 @@ package struct ProviderToolContract: Sendable {
     }
 
     private mutating func validateResponseFrame(_ root: [String: Any], event: String?) throws {
+        let type = root[OpenAIResponsesCreatedEvent.Key.type.rawValue] as? String ?? event ?? ""
+        if type == OpenAIResponsesCreatedEventType.responseCreated.rawValue {
+            // Automatic steering successors inherit declarations, not the
+            // preceding response's output-item identities.
+            responseCalls.removeAll(keepingCapacity: true)
+        }
         if let part = root["part"] {
             guard let part = part as? [String: Any] else { throw Error.invalidResponse }
             try validateBlock(part)
@@ -180,7 +187,6 @@ package struct ProviderToolContract: Sendable {
                 try validateResponseItem(item)
             }
         }
-        let type = root["type"] as? String ?? event ?? ""
         let function = type.hasPrefix("response.function_call_arguments.")
         let custom = type.hasPrefix("response.custom_tool_call_input.")
         if function || custom {

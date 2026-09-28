@@ -80,6 +80,8 @@ extension GatewayResponder {
             return try await nativePassthroughResponse(
                 body: nativeBody, incomingHeaders: incomingHeaders, endpoint: .responses, eventID: eventID
             )
+        } catch let failure as ResponsesWebSocketFailure {
+            throw failure
         } catch is CancellationError {
             throw CancellationError()
         } catch {

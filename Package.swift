@@ -37,6 +37,10 @@ let package = Package(
             exact: "2.7.0"
         ),
         .package(
+            url: "https://github.com/hummingbird-project/swift-websocket.git",
+            exact: "1.6.1"
+        ),
+        .package(
             url: "https://github.com/apple/swift-async-algorithms.git",
             exact: "1.1.5"
         ),
@@ -55,6 +59,10 @@ let package = Package(
         .package(
             url: "https://github.com/apple/swift-nio-http2.git",
             exact: "1.45.0"
+        ),
+        .package(
+            url: "https://github.com/apple/swift-nio-transport-services.git",
+            exact: "1.28.0"
         ),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", exact: "2.37.2"),
         .package(url: "https://github.com/apple/swift-log.git", exact: "1.15.0"),
@@ -87,6 +95,12 @@ let package = Package(
             dependencies: [
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOHTTP1", package: "swift-nio"),
+                .product(name: "NIOWebSocket", package: "swift-nio"),
+                .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl"),
+                .product(name: "Logging", package: "swift-log"),
+                .product(name: "WSCore", package: "swift-websocket"),
                 .product(name: "libzstd", package: "zstd"),
             ]
         ),
@@ -169,6 +183,9 @@ let package = Package(
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
+                .product(name: "NIOWebSocket", package: "swift-nio"),
+                .product(name: "NIOSSL", package: "swift-nio-ssl"),
                 .product(name: "libzstd", package: "zstd"),
             ]
         ),

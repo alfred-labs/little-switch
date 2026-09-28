@@ -1,16 +1,20 @@
 import CoreFoundation
 import Foundation
+import LittleSwitchWire
 
 /// Provider state travels with the durable Responses item, so switching models
 /// or restarting the gateway never depends on an in-memory response-ID cache.
 package enum ResponsesProviderState {
+    private typealias InputKey = OpenAIResponsesRequestEnvelope.Key
+    private enum LegacyKey: String { case accountID = "account_id" }
+
     package enum Error: Swift.Error, Equatable {
         case invalidState
     }
 
     package static func normalize(body: Data, providerID: UUID?) throws -> Data {
         var root = try responsesStreamObject(body)
-        guard let input = root["input"] as? [[String: Any]] else { return body }
+        guard let input = try inputItems(root) else { return body }
         var changed = false
         var normalized: [[String: Any]] = []
         for item in input {
@@ -24,7 +28,7 @@ package enum ResponsesProviderState {
                     } else {
                         changed = true
                     }
-                } else if providerID != nil, expanded != nil, entry["type"] as? String == "compaction" {
+                } else if providerID != nil, entry["type"] as? String == "compaction" {
                     // This checkpoint already carries a portable summary. Keep
                     // its original encrypted state only for a return to OpenAI.
                     changed = true
@@ -41,6 +45,26 @@ package enum ResponsesProviderState {
         return try responsesStreamData(root)
     }
 
+    /// Expands portable checkpoints before tool discovery without admitting any private state.
+    /// The caller keeps its durable source and selects a provider before normalization.
+    package static func expandedPortableBody(_ body: Data) throws -> Data {
+        var root = try responsesStreamObject(body)
+        guard let input = try inputItems(root) else { return body }
+        var changed = false
+        var expanded: [[String: Any]] = []
+        for item in input {
+            if let items = try ResponsesCompactionPayload.expand(item: item) {
+                changed = true
+                expanded.append(contentsOf: items)
+            } else {
+                expanded.append(item)
+            }
+        }
+        guard changed else { return body }
+        root[InputKey.input.rawValue] = expanded
+        return try responsesStreamData(root)
+    }
+
     /// The notice left in place of an opaque checkpoint when no provider can
     /// read it, so the continuing model knows earlier context exists but
     /// cannot be recovered.
@@ -54,7 +78,7 @@ package enum ResponsesProviderState {
     /// switches. Owned payloads stay untouched.
     package static func degradedBody(_ body: Data) throws -> Data {
         var root = try responsesStreamObject(body)
-        guard let input = root["input"] as? [[String: Any]] else { return body }
+        guard let input = try inputItems(root) else { return body }
         var changed = false
         var degraded: [[String: Any]] = []
         for item in input {
@@ -71,6 +95,15 @@ package enum ResponsesProviderState {
         guard changed else { return body }
         root["input"] = degraded
         return try responsesStreamData(root)
+    }
+
+    /// Validate the whole input before projection: a malformed neighboring item
+    /// must never turn provider-state filtering into a transparent passthrough.
+    private static func inputItems(_ root: [String: Any]) throws -> [[String: Any]]? {
+        guard let input = root[InputKey.input.rawValue], !(input is NSNull) else { return nil }
+        if input is String { return nil }
+        guard let items = input as? [[String: Any]] else { throw Error.invalidState }
+        return items
     }
 
     private static func isForeignCheckpoint(_ item: [String: Any]) throws -> Bool {
@@ -137,7 +170,9 @@ package enum ResponsesProviderState {
     /// Internal tool loops already contain admitted raw state as well as newly
     /// tagged output. Open only the latter; repeating ingress normalization
     /// would discard the raw state admitted for this provider on the first pass.
-    package static func restoreTaggedReasoning(_ item: [String: Any], providerID: UUID?) throws -> [String: Any]? {
+    package static func restoreTaggedReasoning(
+        _ item: [String: Any], providerID: UUID?
+    ) throws -> [String: Any]? {
         try taggedReasoning(item, providerID: providerID).item
     }
 
@@ -147,11 +182,23 @@ package enum ResponsesProviderState {
         let encrypted = item["encrypted_content"] as? String
         let payload = encrypted.flatMap { try? responsesStreamObject(Data($0.utf8)) }
         if let payload, payload["type"] as? String == "little_switch_reasoning" {
-            guard nonnegativeResponsesIndex(payload["version"]) == 1,
-                let identifier = payload["provider_id"] as? String, let origin = UUID(uuidString: identifier),
+            guard let version = nonnegativeResponsesIndex(payload["version"]),
+                let identifier = payload["provider_id"] as? String, let storedProviderID = UUID(uuidString: identifier),
                 let original = payload["item"] as? [String: Any], isReasoning(original)
             else { throw Error.invalidState }
-            return (true, providerID == origin ? original : nil)
+            let accountID: UUID
+            switch version {
+            case 1:
+                accountID = storedProviderID
+            case 2:
+                guard let identifier = payload[LegacyKey.accountID.rawValue] as? String,
+                    let decoded = UUID(uuidString: identifier)
+                else { throw Error.invalidState }
+                accountID = decoded
+            default:
+                throw Error.invalidState
+            }
+            return (true, providerID == storedProviderID && accountID == storedProviderID ? original : nil)
         }
         return (false, item)
     }

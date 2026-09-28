@@ -7,6 +7,7 @@ package struct ResponsesWebSocketTurn: Sendable {
     package let generate: Bool
     package let previousResponseID: String?
     package let replacesHistory: Bool
+    package let incrementalInput: Data?
 
     package init(
         id: UUID,
@@ -14,7 +15,8 @@ package struct ResponsesWebSocketTurn: Sendable {
         body: Data,
         generate: Bool,
         previousResponseID: String?,
-        replacesHistory: Bool
+        replacesHistory: Bool,
+        incrementalInput: Data? = nil
     ) {
         self.id = id
         self.streamID = streamID
@@ -22,6 +24,7 @@ package struct ResponsesWebSocketTurn: Sendable {
         self.generate = generate
         self.previousResponseID = previousResponseID
         self.replacesHistory = replacesHistory
+        self.incrementalInput = incrementalInput
     }
 }
 

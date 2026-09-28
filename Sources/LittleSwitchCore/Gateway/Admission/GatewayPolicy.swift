@@ -70,10 +70,14 @@ package actor GatewayRoutingMutationGuard {
         providerID: UUID,
         secretStore: any SecretStore
     ) throws -> String? {
+        try requireAvailable(providerID: providerID)
+        return try secretStore.read(providerID: providerID)
+    }
+
+    package func requireAvailable(providerID: UUID) throws {
         guard !providerByToken.values.contains(providerID) else {
             throw GatewayAdmissionError.invalidated
         }
-        return try secretStore.read(providerID: providerID)
     }
 }
 
@@ -165,6 +169,16 @@ public actor GatewayState {
 
     package func requireCustomToolRevision(_ revision: UInt64, providerID: UUID) throws {
         guard providerRevisions[providerID] == revision else { throw GatewayAdmissionError.invalidated }
+    }
+
+    /// New WS commands must not reuse authentication while its settings are
+    /// changing. Already-admitted HTTP exchanges and automatic successors keep
+    /// their frozen snapshot; only explicit creates/steers cross this boundary.
+    package func validateResponsesProvider(_ provider: ResponsesUpstreamProvider) async throws {
+        try await routingMutationGuard.requireAvailable(providerID: provider.id)
+        guard acceptingRequests, providerRevisions[provider.id] == provider.revision,
+            snapshot.providers.contains(where: { $0.id == provider.id })
+        else { throw GatewayAdmissionError.invalidated }
     }
 
     package func providerCredential(

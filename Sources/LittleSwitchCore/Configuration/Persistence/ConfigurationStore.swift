@@ -11,6 +11,7 @@ public protocol ConfigurationStoring: Sendable {
 public struct ConfigurationStore: Sendable {
     public enum Error: Swift.Error, Equatable {
         case unsupportedVersion(Int)
+        case duplicateProviderID(UUID)
         case invalidMaximumParallelRequests(providerID: UUID, value: Int)
     }
 
@@ -35,7 +36,7 @@ public struct ConfigurationStore: Sendable {
         let data = try Data(contentsOf: fileURL)
         let decoder = JSONDecoder()
         let storedVersion = try decoder.decode(StoredConfigurationVersion.self, from: data).version
-        guard (1...9).contains(storedVersion) else {
+        guard (1...11).contains(storedVersion) else {
             throw Error.unsupportedVersion(storedVersion)
         }
         let configuration = try decoder.decode(
@@ -53,15 +54,7 @@ public struct ConfigurationStore: Sendable {
     }
 
     public func save(_ configuration: AppConfiguration) throws {
-        for provider in configuration.providers {
-            guard Provider.maximumParallelRequestsRange.contains(provider.maximumParallelRequests)
-            else {
-                throw Error.invalidMaximumParallelRequests(
-                    providerID: provider.id,
-                    value: provider.maximumParallelRequests
-                )
-            }
-        }
+        try StoredProviderValidation.validate(configuration.providers)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         let data = try encoder.encode(configuration)

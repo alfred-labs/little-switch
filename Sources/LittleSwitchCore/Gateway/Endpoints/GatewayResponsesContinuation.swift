@@ -14,7 +14,17 @@ extension GatewayResponder {
         }
         var responder = self
         responder.responsesProviderID = context.target.provider.id
+        let usesAdapter = await resolvesChatCompletionsAdapter(context.target.provider)
+        let requiresFallback = usesAdapter || prepared.compaction != nil || prepared.webSearch != nil
+        if requiresFallback {
+            try await responsesWebSocketContext?.requireFallbackAllowed()
+        }
+        if let socket = responsesWebSocketContext, !socket.turn.generate, requiresFallback {
+            let response = try ResponsesWebSocketExchangeContext.warmup(body: prepared.body)
+            return streamingResponse(response, eventID: context.eventID, attempt: 0, errorStyle: .openAI)
+        }
         if let compactionPlan = prepared.compaction {
+            responder.responsesWebSocketContext = nil
             return try await responder.responsesCompactionResponse(
                 plan: compactionPlan,
                 target: GatewayCompactionTarget(route: context.target, credential: context.credential),
@@ -22,7 +32,9 @@ extension GatewayResponder {
                 eventID: context.eventID
             )
         }
-        if let response = try await responder.dispatchResponsesWebSearch(
+        var searchResponder = responder
+        searchResponder.responsesWebSocketContext = nil
+        if let response = try await searchResponder.dispatchResponsesWebSearch(
             GatewayResponsesWebSearchAdmission(
                 body: prepared.body,
                 configuration: configuration,

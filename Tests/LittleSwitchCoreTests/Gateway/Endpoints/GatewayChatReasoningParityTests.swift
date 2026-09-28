@@ -101,6 +101,7 @@ struct GatewayChatReasoningParityTests {
         #expect(payload["type"] as? String == "little_switch_reasoning")
         #expect(payload["version"] as? Int == 1)
         #expect(payload["provider_id"] as? String == providerID.uuidString)
+        #expect(payload["account_id"] == nil)
         #expect((item["summary"] as? [Any])?.isEmpty == true)
     }
 }

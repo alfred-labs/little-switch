@@ -25,6 +25,7 @@ package struct MonitoringProviderBody: AsyncSequence, Sendable {
         private var accumulator = MonitoringUsageAccumulator()
         private var reported: GatewayUsageTotals?
         private var invalidCount = 0
+        private var oversizedCount = 0
         private var ended = false
 
         fileprivate init(
@@ -64,6 +65,11 @@ package struct MonitoringProviderBody: AsyncSequence, Sendable {
                 let delta = accumulator.invalidSampleCount - invalidCount
                 invalidCount = accumulator.invalidSampleCount
                 await context.invalidUsage(count: delta)
+            }
+            if accumulator.oversizedSampleCount > oversizedCount {
+                let delta = accumulator.oversizedSampleCount - oversizedCount
+                oversizedCount = accumulator.oversizedSampleCount
+                await context.oversizedUsage(count: delta)
             }
         }
     }

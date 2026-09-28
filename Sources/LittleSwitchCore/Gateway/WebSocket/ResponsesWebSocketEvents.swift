@@ -140,4 +140,5 @@ package struct ResponsesWebSocketEventResult: Sendable {
     package let terminal: Data
     package let responseID: String?
     package let output: Data?
+    package var published = false
 }

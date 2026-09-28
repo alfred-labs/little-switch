@@ -49,7 +49,8 @@ private struct LiveGatewayServerRunner: GatewayServerRunning {
         let server = try GatewayWebSocketServer.make(
             responder: responder,
             requiredAuthorityPort: configuration.requiredAuthorityPort,
-            tlsConfiguration: configuration.tlsIdentity?.tlsConfiguration
+            tlsConfiguration: configuration.tlsIdentity?.tlsConfiguration,
+            upstreamTransport: try NIOUpstreamWebSocketTransport()
         )
         let application = Application(
             responder: responder,

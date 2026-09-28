@@ -3,6 +3,7 @@ import HTTPTypes
 import Hummingbird
 import HummingbirdCore
 import HummingbirdWebSocket
+import LittleSwitchTransport
 import Logging
 import NIOCore
 import NIOSSL
@@ -15,7 +16,8 @@ package enum GatewayWebSocketServer {
         responder: GatewayResponder,
         requiredAuthorityPort: Int?,
         tlsConfiguration: TLSConfiguration? = nil,
-        limits: ResponsesWebSocketLimits = .init()
+        limits: ResponsesWebSocketLimits = .init(),
+        upstreamTransport: (any UpstreamWebSocketTransport)? = nil
     ) throws -> HTTPServerBuilder {
         let policy = GatewayWebSocketHandshakePolicy(requiredAuthorityPort: requiredAuthorityPort)
         let makeChild = { @Sendable (httpResponder: @escaping HTTPChannelHandler.Responder) in
@@ -48,10 +50,12 @@ package enum GatewayWebSocketServer {
                             try await outbound.close(code, reason: reason)
                         }
                     }
-                    try await ResponsesWebSocketSession(responder: responder, request: request, limits: limits)
-                        .run(messages: messages) { data in
-                            try await outbound.writeTextMessage(responseText(data))
-                        }
+                    try await ResponsesWebSocketSession(
+                        responder: responder, request: request, limits: limits, upstreamTransport: upstreamTransport
+                    )
+                    .run(messages: messages) { data in
+                        try await outbound.writeTextMessage(responseText(data))
+                    }
                 }
             }
             return GatewayWebSocketChannel(base: channel)

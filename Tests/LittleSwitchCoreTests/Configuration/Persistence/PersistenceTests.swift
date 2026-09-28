@@ -107,7 +107,7 @@ struct PersistenceTests {
             backupDirectory: directory.appending(path: "backups")
         )
         #expect(try store.load() == AppConfiguration())
-        #expect(AppConfiguration().version == 9)
+        #expect(AppConfiguration().version == 11)
     }
 
     @Test("Unsupported and malformed configuration is rejected")
@@ -123,7 +123,7 @@ struct PersistenceTests {
         try Data(
             #"""
             {
-              "version": 10,
+              "version": 12,
               "providers": [{
                 "id": "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
                 "name": "Future",
@@ -138,7 +138,7 @@ struct PersistenceTests {
             }
             """#.utf8
         ).write(to: file)
-        #expect(throws: ConfigurationStore.Error.unsupportedVersion(10)) {
+        #expect(throws: ConfigurationStore.Error.unsupportedVersion(12)) {
             try store.load()
         }
 

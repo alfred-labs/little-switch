@@ -6,7 +6,7 @@ import Testing
 
 @Suite("Claude route configuration migration")
 struct ClaudeRouteMigrationTests {
-    @Test("Fable upgrades preserve the provider mapping and the selected context", arguments: 1...8)
+    @Test("Fable upgrades preserve the provider mapping and the selected context", arguments: 1...9)
     func migratesFable(storedVersion: Int) throws {
         let provider = Provider(
             name: "Gateway",
@@ -23,9 +23,9 @@ struct ClaudeRouteMigrationTests {
             claudeCode: ClaudeCodeConfiguration(
                 connected: true, defaultModel: "claude-fable-5", contextMode: .extended1M)
         )
-        let migrated = try JSONDecoder().decode(AppConfiguration.self, from: JSONEncoder().encode(original))
+        let migrated = try JSONDecoder().decode(AppConfiguration.self, from: configurationFixtureData(original))
         var expected = original
-        expected.version = 9
+        expected.version = 11
         expected.mappings = ["claude-fable-5-1": mapping, "claude-sonnet-5": mapping]
         expected.claudeCode.defaultModel = "claude-fable-5-1"
         #expect(migrated == expected)
@@ -44,7 +44,7 @@ struct ClaudeRouteMigrationTests {
             mappings: ["claude-fable-5": legacy, "claude-fable-5-1": current, "unknown": legacy],
             claudeCode: ClaudeCodeConfiguration(defaultModel: "claude-fable-5-1")
         )
-        let migrated = try JSONDecoder().decode(AppConfiguration.self, from: JSONEncoder().encode(original))
+        let migrated = try JSONDecoder().decode(AppConfiguration.self, from: configurationFixtureData(original))
         #expect(migrated.mappings == ["claude-fable-5-1": current])
         #expect(migrated.claudeCode.defaultModel == "claude-fable-5-1")
     }

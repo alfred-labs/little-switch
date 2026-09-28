@@ -10,21 +10,47 @@ package struct ResponsesWebSocketExecutor: Sendable {
     let responder: GatewayResponder
     let request: Request
     let limits: ResponsesWebSocketLimits
+    var upstream: ResponsesUpstreamSession?
 
     package func execute(
         _ turn: ResponsesWebSocketTurn,
-        emit: @escaping @Sendable (Data) async throws -> Void
+        emit: @escaping @Sendable (Data) async throws -> Void,
+        checkpoint: (@Sendable (ResponsesWebSocketEventResult, [JSONValue]) async throws -> Void)? = nil
     ) async throws -> ResponsesWebSocketEventResult {
-        if !turn.generate { return try await warmup(turn, emit: emit) }
-        let response = try await responder.respond(to: httpRequest(body: turn.body))
+        if !turn.generate, upstream == nil { return try await warmup(turn, emit: emit) }
+        var selected = responder
+        if let upstream {
+            selected.responsesWebSocketContext = ResponsesWebSocketExchangeContext(session: upstream, turn: turn)
+        }
+        let response = try await selected.respond(to: httpRequest(body: turn.body))
+        let nativeCheckpoint: (@Sendable (ResponsesWebSocketEventResult) async throws -> Void)?
+        if let upstream, let checkpoint, await upstream.usesNative(turn.id) {
+            nativeCheckpoint = { result in
+                let input =
+                    if let identifier = result.responseID {
+                        await upstream.appliedInput(turnID: turn.id, responseID: identifier)
+                    } else { [JSONValue]() }
+                try await checkpoint(result, input)
+            }
+        } else {
+            nativeCheckpoint = nil
+        }
         let projection = ResponsesWebSocketResponseProjection(
             status: response.status.code,
             streaming: response.headers[.contentType]?.lowercased().contains("text/event-stream") == true,
             streamID: turn.streamID,
             maximumBytes: limits.maxResponseBytes,
-            emit: emit)
-        try await response.body.write(ResponsesWebSocketResponseWriter(projection: projection))
-        return try await projection.result()
+            emit: emit,
+            checkpoint: nativeCheckpoint)
+        do {
+            try await response.body.write(ResponsesWebSocketResponseWriter(projection: projection))
+            let result = try await projection.result()
+            if result.responseID == nil { await upstream?.abort(turn.id) }
+            return result
+        } catch {
+            await upstream?.abort(turn.id)
+            throw error
+        }
     }
 
     package func httpRequest(body: Data) -> Request {

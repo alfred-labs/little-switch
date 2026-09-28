@@ -6,8 +6,11 @@ import LittleSwitchWire
 package struct ResponsesWebSocketState: Sendable {
     private struct ActiveTurn: Sendable {
         let turn: ResponsesWebSocketTurn
-        let input: ResponsesWebSocketInput
-        let retainedBytes: Int
+        var input: ResponsesWebSocketInput
+        var retainedBytes: Int
+        let parentInput: ResponsesWebSocketInput?
+        let requestInput: ResponsesWebSocketInput
+        var checkpointed = false
     }
 
     private let limits: ResponsesWebSocketLimits
@@ -49,7 +52,12 @@ package struct ResponsesWebSocketState: Sendable {
             queue.append(request)
             queuedBytes += request.retainedBytes
         } catch {
-            history.evictParent(envelope.previousResponseID, streamID: envelope.streamID)
+            // Rejected controls never began a response turn and cannot consume
+            // its parent. Only a failed create invalidates same-lane history.
+            let type = envelope.fields[OpenAIResponsesCreatedEvent.Key.type.rawValue]?.string
+            if type == ResponsesWebSocketContract.Event.create.rawValue {
+                history.evictParent(envelope.previousResponseID, streamID: envelope.streamID)
+            }
             throw error
         }
     }
@@ -88,7 +96,8 @@ package struct ResponsesWebSocketState: Sendable {
             removeQueued(at: index)
             let input = parent?.input.appending(request.input) ?? request.input
             let turn = request.turn(input: input)
-            active[turn.id] = ActiveTurn(turn: turn, input: input, retainedBytes: bytes)
+            active[turn.id] = ActiveTurn(
+                turn: turn, input: input, retainedBytes: bytes, parentInput: parent?.input, requestInput: request.input)
             activeBytes += bytes
             if let previous = request.previousResponseID { history.touch(previous) }
             return .success(turn)
@@ -125,6 +134,49 @@ package struct ResponsesWebSocketState: Sendable {
             history.evictParent(owned.previousResponseID, streamID: owned.streamID)
             throw error
         }
+    }
+
+    /// An automatic continuation retains the original admission but each public
+    /// response becomes a reusable checkpoint before its terminal is written.
+    package mutating func checkpoint(
+        _ turn: ResponsesWebSocketTurn, completion: ResponsesWebSocketCompletion?, appliedInput: [JSONValue]
+    ) throws {
+        guard var owned = active[turn.id] else { return }
+        guard let completion else {
+            history.evictParent(turn.previousResponseID, streamID: turn.streamID)
+            return
+        }
+        guard let output = try JSONValue.parse(completion.output).array,
+            output.allSatisfy({ $0.object != nil })
+        else { throw ResponsesWebSocketEvents.Error.invalidEvent }
+        let addition = try ResponsesWebSocketInput(appliedInput + output)
+        let expanded = owned.input.bytes(appending: addition)
+        let growth = max(0, expanded - owned.input.data.count) * 2
+        guard growth <= limits.maxActiveBytes - activeBytes else {
+            throw ResponsesWebSocketEvents.Error.tooLarge
+        }
+        if !owned.checkpointed, !appliedInput.isEmpty, let parent = owned.parentInput {
+            owned.input =
+                parent
+                .appending(try ResponsesWebSocketInput(appliedInput))
+                .appending(owned.requestInput)
+                .appending(try ResponsesWebSocketInput(output))
+        } else {
+            owned.input = turn.replacesHistory ? try ResponsesWebSocketInput(output) : owned.input.appending(addition)
+        }
+        owned.checkpointed = true
+        owned.retainedBytes += growth
+        activeBytes += growth
+        active[turn.id] = owned
+        history.store(
+            responseID: completion.responseID,
+            streamID: turn.streamID,
+            input: owned.input,
+            maximumBytes: limits.maxHistoryBytes)
+    }
+
+    package mutating func releaseCheckpointed(_ turn: ResponsesWebSocketTurn) {
+        if let owned = active.removeValue(forKey: turn.id) { activeBytes -= owned.retainedBytes }
     }
 
     private mutating func removeQueued(at index: Int) {
