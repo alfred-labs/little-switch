@@ -46,8 +46,9 @@ SOFTWARE.
 The application uses the following Apache License 2.0 Swift packages and their
 transitive dependencies:
 
-- Hummingbird
+- Hummingbird, HummingbirdWebSocket, Swift WebSocket, and CompressNIO
 - AsyncHTTPClient
+- Swift Async Algorithms
 - SwiftNIO and SwiftNIO HTTP/2
 - Swift Service Lifecycle
 - Apple and Swift Server ecosystem support packages resolved by SwiftPM

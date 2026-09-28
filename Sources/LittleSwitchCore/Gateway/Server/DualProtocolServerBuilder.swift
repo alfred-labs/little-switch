@@ -16,16 +16,14 @@ import NIOSSL
 /// lazy value immediately; the sniffer installs the chosen pipeline once a
 /// byte arrives, and `handle` awaits the real HTTP value.
 package enum DualProtocolServerBuilder {
-    package static func make(
-        tlsConfiguration: TLSConfiguration
+    package static func make<Child: ServerChildChannel>(
+        tlsConfiguration: TLSConfiguration,
+        makeChild: @escaping @Sendable (@escaping HTTPChannelHandler.Responder) -> Child
     ) throws -> HTTPServerBuilder {
         let sslContext = try NIOSSLContext(configuration: tlsConfiguration)
         return .init { responder in
-            // HTTP1Channel(responder:configuration: .init()) is exactly what
-            // .http1() builds; the direct construction exists only because
-            // HTTPServerBuilder.buildChildChannel is package-scoped.
             DualProtocolChannel(
-                http: HTTP1Channel(responder: responder, configuration: .init()),
+                http: makeChild(responder),
                 sslContext: sslContext
             )
         }
@@ -34,16 +32,16 @@ package enum DualProtocolServerBuilder {
 
 /// Bridges the lazy setup: the value appears once the sniffer has chosen
 /// the wire protocol, and everyone else waits on it.
-final class DualProtocolChannelState: @unchecked Sendable {
+final class DualProtocolChannelState<Value: Sendable>: @unchecked Sendable {
     private let lock = NSLock()
-    private var continuation: CheckedContinuation<Result<HTTP1Channel.Value, any Error>, Never>?
-    private var result: Result<HTTP1Channel.Value, any Error>?
+    private var continuation: CheckedContinuation<Result<Value, any Error>, Never>?
+    private var result: Result<Value, any Error>?
     private var settled = false
 
     /// First caller wins: channel events can race (a close behind a decided
     /// setup, an error behind a success), and `handle` must never observe a
     /// failure that a byte already superseded.
-    func complete(_ result: Result<HTTP1Channel.Value, any Error>) {
+    func complete(_ result: Result<Value, any Error>) {
         lock.lock()
         defer { lock.unlock() }
         guard !settled else {
@@ -58,8 +56,8 @@ final class DualProtocolChannelState: @unchecked Sendable {
         }
     }
 
-    func waitForValue() async throws -> HTTP1Channel.Value {
-        let outcome: Result<HTTP1Channel.Value, any Error> =
+    func waitForValue() async throws -> Value {
+        let outcome: Result<Value, any Error> =
             await withCheckedContinuation { continuation in
                 lock.lock()
                 defer { lock.unlock() }
@@ -73,19 +71,19 @@ final class DualProtocolChannelState: @unchecked Sendable {
     }
 }
 
-struct DualProtocolChannelValue: ServerChildChannelValue {
+struct DualProtocolChannelValue<ChildValue: Sendable>: ServerChildChannelValue {
     let channel: any Channel
-    let state: DualProtocolChannelState
+    let state: DualProtocolChannelState<ChildValue>
 }
 
-struct DualProtocolChannel: ServerChildChannel {
-    typealias Value = DualProtocolChannelValue
+struct DualProtocolChannel<Child: ServerChildChannel>: ServerChildChannel {
+    typealias Value = DualProtocolChannelValue<Child.Value>
 
-    let http: HTTP1Channel
+    let http: Child
     let sslContext: NIOSSLContext
 
     func setup(channel: any Channel, logger: Logger) -> EventLoopFuture<Value> {
-        let state = DualProtocolChannelState()
+        let state = DualProtocolChannelState<Child.Value>()
         let sniffer = ProtocolSniffHandler(
             plainSetup: { channel, logger in
                 http.setup(channel: channel, logger: logger)

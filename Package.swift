@@ -33,6 +33,14 @@ let package = Package(
             exact: "2.26.0"
         ),
         .package(
+            url: "https://github.com/hummingbird-project/hummingbird-websocket.git",
+            exact: "2.7.0"
+        ),
+        .package(
+            url: "https://github.com/apple/swift-async-algorithms.git",
+            exact: "1.1.5"
+        ),
+        .package(
             url: "https://github.com/swift-server/async-http-client.git",
             exact: "1.36.0"
         ),
@@ -99,10 +107,12 @@ let package = Package(
                 "LittleSwitchWire",
                 "LittleSwitchTransport",
                 "LittleSwitchSearch",
+                .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdCore", package: "hummingbird"),
                 .product(name: "HummingbirdTLS", package: "hummingbird"),
+                .product(name: "HummingbirdWebSocket", package: "hummingbird-websocket"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOHTTP2", package: "swift-nio-http2"),
@@ -186,6 +196,8 @@ let package = Package(
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOEmbedded", package: "swift-nio"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
+                .product(name: "NIOWebSocket", package: "swift-nio"),
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "libzstd", package: "zstd"),
             ]

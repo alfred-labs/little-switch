@@ -6,6 +6,11 @@ import LittleSwitchCommon
 extension GatewayResponder {
     public func respond(to request: Request, context: Context) async throws -> Response {
         _ = context
+        return try await respond(to: request)
+    }
+
+    /// WebSocket turns enter the same lifecycle without a second loopback request.
+    package func respond(to request: Request) async throws -> Response {
         let eventID = UUID()
         let external = !ProductIdentity.isInternalGatewayPath(request.uri.path)
         let recordsTraffic = external || GatewayRoute.resolve(request.uri.path) == .webSearchMCP

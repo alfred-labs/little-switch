@@ -46,14 +46,11 @@ private struct LiveGatewayServerRunner: GatewayServerRunning {
             trafficRecorder: configuration.trafficRecorder,
             monitoring: configuration.monitoring
         )
-        let server: HTTPServerBuilder
-        if let tlsIdentity = configuration.tlsIdentity {
-            server = try DualProtocolServerBuilder.make(
-                tlsConfiguration: tlsIdentity.tlsConfiguration
-            )
-        } else {
-            server = .http1()
-        }
+        let server = try GatewayWebSocketServer.make(
+            responder: responder,
+            requiredAuthorityPort: configuration.requiredAuthorityPort,
+            tlsConfiguration: configuration.tlsIdentity?.tlsConfiguration
+        )
         let application = Application(
             responder: responder,
             server: server,

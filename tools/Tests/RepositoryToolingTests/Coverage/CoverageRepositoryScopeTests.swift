@@ -45,6 +45,7 @@ struct CoverageRepositoryScopeTests {
         "Sources/LittleSwitchCommon/Domain/Monitoring/Export/OTLPExportFailure.swift",
         "Sources/LittleSwitchCommon/Domain/Providers/Capabilities/CustomToolCapabilityMode.swift",
         "Sources/LittleSwitchCommon/Domain/Providers/Capabilities/ModelImageInputWire.swift",
+        "Sources/LittleSwitchCore/Gateway/WebSocket/ResponsesWebSocketContract.swift",
         "Sources/LittleSwitchCore/Protocols/OpenAI/Compaction/ResponsesCompactionContract.swift",
         "Sources/LittleSwitchCore/Protocols/OpenAI/ResponsesImagePartContract.swift",
         "Sources/LittleSwitchCore/Providers/Capabilities/ModelImageInputProbing.swift",

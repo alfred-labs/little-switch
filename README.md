@@ -18,6 +18,7 @@ Each Claude route (Fable 5, Opus 5, Sonnet 5, Haiku 4.5, Sonnet 4.6) maps indepe
 ## Features
 
 - **Anthropic Messages & SSE proxy** with tool-declaration validation, portable history replay, and targeted initial-usage normalization when a provider starts at zero.
+- **Responses WebSockets** with concurrent agent streams, conversation forks, and model switching between turns through the existing provider adapters.
 - **Independent `provider/model` mapping** for each of the five Claude routes.
 - **Local or remote providers**, with optional Bearer or `X-Api-Key` authentication.
 - **Context window detection** with Ollama enrichment and manual per-model override.
@@ -47,6 +48,8 @@ Disabling or quitting LittleSwitch restores your previous profiles.
 In **Settings → Codex**, **Exposed models** lists the catalog shared by Codex and OpenCode. Apply writes the profile to Codex's configuration. Quitting or disabling LittleSwitch restores the previous state.
 
 Native OpenAI models and Codex image generation/editing retain Codex's ChatGPT sign-in or configured OpenAI API key. The gateway relays `/v1/images/generations` and `/v1/images/edits` with the original image data and authentication. Upstream requests use a ten-minute default timeout.
+
+Responses clients can connect over WebSocket at `/v1/responses`. Each turn uses the current routing configuration; independent `stream_id` lanes can run concurrently. Providers continue to use HTTP/SSE. The bounded conversation cache lasts for one connection, up to 60 minutes: reconnecting or referencing an evicted response requires replaying the full history. Mid-turn steering is not supported.
 
 ### ChatGPT
 

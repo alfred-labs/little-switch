@@ -103,11 +103,11 @@ struct DualProtocolChannelMachineryTests {
 
     private func makeChannelAndState() throws -> (
         channel: EmbeddedChannel,
-        state: DualProtocolChannelState
+        state: DualProtocolChannelState<HTTP1Channel.Value>
     ) {
         let channel = EmbeddedChannel()
         let http = makeHTTPChannel()
-        let state = DualProtocolChannelState()
+        let state = DualProtocolChannelState<HTTP1Channel.Value>()
         let sniffer = ProtocolSniffHandler(
             plainSetup: { channel, logger in
                 http.setup(channel: channel, logger: logger)
@@ -137,7 +137,7 @@ struct DualProtocolChannelMachineryTests {
     func failingSetup() async throws {
         struct Injected: Error {}
         let channel = EmbeddedChannel()
-        let state = DualProtocolChannelState()
+        let state = DualProtocolChannelState<HTTP1Channel.Value>()
         let sniffer = ProtocolSniffHandler(
             plainSetup: { channel, _ in
                 channel.eventLoop.makeFailedFuture(Injected())
@@ -161,7 +161,7 @@ struct DualProtocolChannelMachineryTests {
     func handleReturnsEarlyOnFailure() async throws {
         struct Injected: Error {}
         let channel = EmbeddedChannel()
-        let state = DualProtocolChannelState()
+        let state = DualProtocolChannelState<HTTP1Channel.Value>()
         state.complete(.failure(Injected()))
         let issued = try GatewayTLSIdentityFactory.make()
         let identity = try GatewayTLSIdentity(
@@ -252,7 +252,7 @@ extension DualProtocolChannelMachineryTests {
         }
         let channel = EmbeddedChannel()
         let recorder = Recorder()
-        let state = DualProtocolChannelState()
+        let state = DualProtocolChannelState<HTTP1Channel.Value>()
         let gate = channel.eventLoop.makePromise(of: Void.self)
         let sniffer = ProtocolSniffHandler<HTTP1Channel.Value>(
             plainSetup: { channel, logger in
