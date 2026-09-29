@@ -40,7 +40,7 @@ struct ModelImageInputRegistryTests {
         let prober = RegistryTestProber(outcome: .inconclusive(.wrongAnswer))
         await prober.release.open()
         let registry = ModelImageInputRegistry(prober: prober, admission: RegistryTestAdmission()) {
-            Date(timeIntervalSince1970: Double(clock.now()) / 1_000)
+            Date(timeIntervalSince1970: Double(clock.nowMilliseconds()) / 1_000)
         }
         let diagnostics = ImageProbeDiagnosticRecorder()
         await registry.setHandlers(
@@ -50,9 +50,9 @@ struct ModelImageInputRegistryTests {
             })
         try await registry.configure(provider: provider, generation: UUID())
         #expect(try await probeTask(registry, provider).value?.outcome == .inconclusive(.wrongAnswer))
-        clock.advance(by: 3_599_000)
+        await clock.advance(by: 3_599_000)
         #expect(try await probeTask(registry, provider).value == nil)
-        clock.advance(by: 1_000)
+        await clock.advance(by: 1_000)
         #expect(try await probeTask(registry, provider).value != nil)
         #expect(await prober.calls.count == 2)
         #expect(await registry.observations() == [observation])

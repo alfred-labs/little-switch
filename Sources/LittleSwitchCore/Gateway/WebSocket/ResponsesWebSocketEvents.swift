@@ -122,7 +122,8 @@ package struct ResponsesWebSocketEvents {
         if result[ResponseKey.error.rawValue]?.object == nil {
             result[ResponseKey.error.rawValue] = .object([
                 ErrorKey.type.rawValue: .string(ResponsesWebSocketContract.ErrorType.serverError.rawValue),
-                ErrorKey.code.rawValue: result.removeValue(forKey: ErrorKey.code.rawValue) ?? .string("upstream_error"),
+                ErrorKey.code.rawValue: result.removeValue(forKey: ErrorKey.code.rawValue)
+                    ?? .string(ResponsesWebSocketContract.ErrorCode.upstreamError.rawValue),
                 ErrorKey.message.rawValue: result.removeValue(forKey: ErrorKey.message.rawValue)
                     ?? .string("Provider response failed"),
                 ErrorKey.param.rawValue: result.removeValue(forKey: ErrorKey.param.rawValue) ?? .null,

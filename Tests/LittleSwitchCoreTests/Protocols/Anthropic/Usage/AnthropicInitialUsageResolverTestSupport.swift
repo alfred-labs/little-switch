@@ -81,7 +81,7 @@ actor ResolverClockAdvancingTransport: UpstreamTransport {
     func execute(_ request: HTTPClientRequest) async throws -> HTTPClientResponse {
         _ = request
         requestCount += 1
-        clock.advance(by: advanceBy)
+        await clock.advance(by: advanceBy)
         return response
     }
 }
@@ -109,33 +109,12 @@ actor ResolverGatedTransport: UpstreamTransport {
     }
 }
 
-final class ResolverTestClock: @unchecked Sendable {
-    private let lock = NSLock()
-    private var milliseconds: UInt64
-
-    init(milliseconds: UInt64) {
-        self.milliseconds = milliseconds
-    }
-
-    func now() -> UInt64 {
-        lock.lock()
-        defer { lock.unlock() }
-        return milliseconds
-    }
-
-    func advance(by delta: UInt64) {
-        lock.lock()
-        milliseconds += delta
-        lock.unlock()
-    }
-}
-
 struct ResolverTestTiming: AnthropicInitialUsageTiming {
     let clock: ResolverTestClock
     let deadline: ResolverTestGate
 
     func nowMilliseconds() -> UInt64 {
-        clock.now()
+        clock.nowMilliseconds()
     }
 
     func waitForDeadline() async throws {

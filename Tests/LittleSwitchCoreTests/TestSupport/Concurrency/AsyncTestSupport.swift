@@ -119,7 +119,7 @@ func valueWithinTimeout<Value: Sendable>(
 }
 
 actor AsyncTestGate {
-    private var isOpen = false
+    private(set) var isOpen = false
     private var waiters: [UUID: CheckedContinuation<Void, Never>] = [:]
 
     func open() {

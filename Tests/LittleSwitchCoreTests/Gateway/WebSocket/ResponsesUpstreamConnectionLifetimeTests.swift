@@ -7,6 +7,36 @@ import Testing
 
 @Suite("Native upstream connection lifetime", .timeLimit(.minutes(1)))
 struct ResponsesUpstreamConnectionLifetimeTests {
+    @Test("Cancellation or disconnect before the first event releases admission", arguments: [false, true])
+    func interruptedAdmission(cancellation: Bool) async throws {
+        let websocket = SyntheticResponsesWebSocketTransport(automaticReplies: false)
+        let connection = ResponsesUpstreamConnection(
+            key: .init(provider: nil, endpoint: "https://example.invalid/v1/responses", model: "model"),
+            request: try UpstreamWebSocketRequest(url: #require(URL(string: "wss://example.invalid/v1/responses"))),
+            maximumBytes: 4_096
+        ) { _ in }
+        let runner = Task { await connection.run(transport: websocket) }
+        defer { runner.cancel() }
+        let exchange = Task {
+            try await connection.exchange(
+                Data(#"{"type":"response.create","model":"model","input":[]}"#.utf8),
+                previousResponseID: nil,
+                observeControl: { _ in },
+                validateProvider: {})
+        }
+        defer { exchange.cancel() }
+        try await websocket.waitForRequests(1)
+        if cancellation { exchange.cancel() } else { await websocket.disconnect() }
+        await #expect {
+            _ = try await valueWithinTimeout(exchange, description: "interrupted initial admission")
+        } throws: { error in
+            cancellation ? error is CancellationError : (error as? UpstreamWebSocketFailure)?.kind == .connectionLost
+        }
+        try await valueWithinTimeout(runner, description: "interrupted admission cleanup")
+        #expect(await connection.usable == false)
+        #expect(await websocket.activeConnections == 0)
+    }
+
     @Test("Cancelling readiness completes without starting or closing the connection")
     func cancelledReadiness() async throws {
         let connection = try makeConnection()
@@ -57,25 +87,31 @@ struct ResponsesUpstreamConnectionLifetimeTests {
     @Test(
         "An unacknowledged submitted steer fails and releases a terminal response", arguments: [false, true])
     func unacknowledgedSteering(withAcceptedSteering: Bool) async throws {
+        let clock = ResolverTestClock()
         let websocket = SyntheticResponsesWebSocketTransport(automaticReplies: false)
         let controls = WebSocketEventRecorder()
-        let connection = try makeConnection { await controls.append($0) }
+        let connection = try makeConnection(clock: clock) { await controls.append($0) }
         let runner = Task { await connection.run(transport: websocket) }
         defer { runner.cancel() }
         let (observations, observer) = AsyncStream<String>.makeStream(bufferingPolicy: .bufferingOldest(8))
         defer { observer.finish() }
-        let response = try await connection.exchange(
-            Data(#"{"type":"response.create","model":"gpt-6-astra","input":[]}"#.utf8),
-            previousResponseID: nil,
-            observeControl: { observer.yield($0) },
-            validateProvider: {})
+        let responseTask = Task {
+            try await connection.exchange(
+                Data(#"{"type":"response.create","model":"gpt-6-astra","input":[]}"#.utf8),
+                previousResponseID: nil,
+                observeControl: { observer.yield($0) },
+                validateProvider: {})
+        }
+        defer { responseTask.cancel() }
         let received = AsyncTestGate()
         let completed = AsyncTestGate()
         let consumer = Task {
+            let response = try await responseTask.value
             for try await _ in response.body { await received.open() }
             await completed.open()
         }
         defer { consumer.cancel() }
+        try await websocket.waitForRequests(1)
         try await websocket.publish(#"{"type":"response.created","response":{"id":"r1","output":[]}}"#)
         try await received.wait(description: "created response before steering")
         try await connection.steer(
@@ -88,10 +124,9 @@ struct ResponsesUpstreamConnectionLifetimeTests {
                 makeSteering(#"{"type":"response.steer","previous_response_id":"r1","input":"also simpler"}"#))
         }
         try await websocket.publish(#"{"type":"response.completed","response":{"id":"r1","output":[]}}"#)
-        let completedBeforeCleanup =
-            (try? await completed.wait(timeout: .seconds(1), description: "steering acknowledgement deadline"))
-            != nil
-        #expect(completedBeforeCleanup)
+        try await clock.waitForSleeps(1)
+        await clock.advance(by: .seconds(5))
+        try await valueWithinTimeout(consumer, description: "steering acknowledgement deadline")
         #expect(await connection.hasPendingSteering == false)
         #expect(await connection.usable == false)
         let failures = try await controls.values().filter { $0["type"] == "response.steer.failed" }
@@ -133,6 +168,7 @@ struct ResponsesUpstreamConnectionLifetimeTests {
         }
         harness.enqueue(#"{"type":"response.create","model":"gpt-6-astra","input":"first"}"#)
         try await websocket.waitForRequests(1)
+        try await websocket.waitForRequests(1)
         try await websocket.publish(#"{"type":"response.created","response":{"id":"r1","output":[]}}"#)
         _ = try await harness.events.wait(type: "response.created")
         harness.enqueue(#"{"type":"response.steer","previous_response_id":"r1","input":"first update"}"#)
@@ -149,6 +185,7 @@ struct ResponsesUpstreamConnectionLifetimeTests {
     }
 
     private func makeConnection(
+        clock: ResolverTestClock = ResolverTestClock(),
         control: @escaping @Sendable (Data) async throws -> Void = { _ in }
     ) throws -> ResponsesUpstreamConnection {
         let url = try #require(URL(string: "wss://example.invalid/v1/responses"))
@@ -156,7 +193,8 @@ struct ResponsesUpstreamConnectionLifetimeTests {
             key: .init(provider: nil, endpoint: "https://example.invalid/v1/responses", model: "gpt-6-astra"),
             request: try UpstreamWebSocketRequest(url: url),
             maximumBytes: 4_096,
-            steeringAcknowledgementTimeout: .milliseconds(5),
+            steeringAcknowledgementTimeout: .seconds(5),
+            clock: clock,
             control: control)
     }
 

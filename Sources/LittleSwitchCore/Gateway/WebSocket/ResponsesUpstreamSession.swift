@@ -2,7 +2,6 @@ import AsyncAlgorithms
 import AsyncHTTPClient
 import Foundation
 import HTTPTypes
-import LittleSwitchCommon
 import LittleSwitchTransport
 import LittleSwitchWire
 import NIOHTTP1
@@ -109,6 +108,7 @@ package actor ResponsesUpstreamSession {
     private enum Lifecycle { case accepting, finished }
     private let transport: any UpstreamWebSocketTransport
     private let limits: ResponsesWebSocketLimits
+    private let clock: ResponsesUpstreamClock
     private let control: @Sendable (Data) async throws -> Void
     private let openings = AsyncChannel<ResponsesUpstreamConnection>()
     private var lanes: [String: ResponsesUpstreamConnection] = [:]
@@ -116,18 +116,19 @@ package actor ResponsesUpstreamSession {
     private var unsupported: Set<String> = []
     private var lifecycle = Lifecycle.accepting
 
-    package init(
+    package init<C: Clock>(
         transport: any UpstreamWebSocketTransport,
         limits: ResponsesWebSocketLimits,
+        clock: C = ContinuousClock(),
         control: @escaping @Sendable (Data) async throws -> Void
-    ) {
+    ) where C.Duration == Duration {
         self.transport = transport
         self.limits = limits
+        self.clock = ResponsesUpstreamClock(clock)
         self.control = control
     }
 
     package func run() async {
-        defer { finish() }
         await withDiscardingTaskGroup { group in
             for await connection in openings {
                 guard case .accepting = lifecycle else { break }
@@ -135,11 +136,14 @@ package actor ResponsesUpstreamSession {
             }
             group.cancelAll()
         }
+        await finish()
     }
 
-    package func finish() {
+    package func finish() async {
+        guard case .accepting = lifecycle else { return }
         lifecycle = .finished
         openings.finish()
+        for connection in lanes.values { await connection.cancel() }
     }
 
     package func usesNative(_ turnID: UUID) -> Bool { turns[turnID] != nil }
@@ -225,6 +229,8 @@ package actor ResponsesUpstreamSession {
                 maximumBytes: limits.maxResponseBytes,
                 maximumPendingSteers: limits.maxQueuedRequests,
                 steeringAcknowledgementTimeout: limits.steeringAcknowledgementTimeout,
+                closeGrace: .seconds(limits.closeGraceSeconds),
+                clock: clock,
                 validateSteering: {
                     try key.steeringProjection.validate($0, model: key.model)
                 },
@@ -253,7 +259,7 @@ package actor ResponsesUpstreamSession {
                 observeControl: policy.observeControl,
                 validateProvider: policy.validateProvider)
             try requireAccepting()
-            turns[turn.id] = connection
+            if response.status == .ok { turns[turn.id] = connection } else { turns.removeValue(forKey: turn.id) }
             return response
         } catch let failure as UpstreamWebSocketFailure where failure.kind == .upgradeRejected {
             try requireAccepting()

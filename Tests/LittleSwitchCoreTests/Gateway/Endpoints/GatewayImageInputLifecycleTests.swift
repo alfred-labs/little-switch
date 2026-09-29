@@ -13,7 +13,7 @@ struct GatewayImageInputLifecycleTests {
         let prober = RegistryTestProber(outcome: .unsupported)
         await prober.release.open()
         let first = ModelImageInputRegistry(prober: prober, admission: RegistryTestAdmission()) {
-            Date(timeIntervalSince1970: Double(clock.now()) / 1_000)
+            Date(timeIntervalSince1970: Double(clock.nowMilliseconds()) / 1_000)
         }
         try await first.configure(provider: provider, generation: UUID())
         _ = try await first.probeIfNeeded(provider: provider, model: provider.models[0], wire: .responses, secret: nil)
@@ -44,15 +44,15 @@ struct GatewayImageInputLifecycleTests {
         #expect(await prober.calls.count == 1)
         await first.shutdown()
         let restarted = ModelImageInputRegistry(prober: prober, admission: RegistryTestAdmission()) {
-            Date(timeIntervalSince1970: Double(clock.now()) / 1_000)
+            Date(timeIntervalSince1970: Double(clock.nowMilliseconds()) / 1_000)
         }
         try await restarted.configure(provider: provider, generation: UUID())
-        clock.advance(by: 604_799_000)
+        await clock.advance(by: 604_799_000)
         #expect(
             try await restarted.probeIfNeeded(
                 provider: provider, model: provider.models[0], wire: .responses, secret: nil) == nil)
         #expect(await prober.calls.count == 1)
-        clock.advance(by: 1_000)
+        await clock.advance(by: 1_000)
         #expect(
             try await restarted.probeIfNeeded(
                 provider: provider, model: provider.models[0], wire: .responses, secret: nil)?.outcome == .unsupported)

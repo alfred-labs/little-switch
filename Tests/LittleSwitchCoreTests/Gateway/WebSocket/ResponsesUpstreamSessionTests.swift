@@ -52,18 +52,25 @@ actor SyntheticResponsesWebSocketTransport: UpstreamWebSocketTransport {
     let automaticReplies: Bool
     let steerGate: AsyncTestGate?
     let sendFailure: UpstreamWebSocketSendFailure?
+    let successfulRequests: Int
     private(set) var requests: [JSONObject] = []
     private(set) var connections = 0
     private(set) var activeConnections = 0
+    private(set) var processedMessages = 0
+    private(set) var closeRequests = 0
     private(set) var handshakes: [UpstreamWebSocketRequest] = []
     private var continuations: [Int: AsyncThrowingStream<UpstreamWebSocketMessage, any Error>.Continuation] = [:]
 
     init(
-        automaticReplies: Bool = true, steerGate: AsyncTestGate? = nil, sendFailure: UpstreamWebSocketSendFailure? = nil
+        automaticReplies: Bool = true,
+        steerGate: AsyncTestGate? = nil,
+        sendFailure: UpstreamWebSocketSendFailure? = nil,
+        successfulRequests: Int = 0
     ) {
         self.automaticReplies = automaticReplies
         self.steerGate = steerGate
         self.sendFailure = sendFailure
+        self.successfulRequests = successfulRequests
     }
 
     func withConnection(
@@ -84,7 +91,7 @@ actor SyntheticResponsesWebSocketTransport: UpstreamWebSocketTransport {
         try await operation(
             .init(
                 handshake: .init(version: .http1_1, status: .switchingProtocols),
-                inbound: SyntheticResponsesInbound(stream: stream),
+                inbound: SyntheticResponsesInbound(stream: stream, owner: self),
                 outbound: outbound))
     }
 
@@ -96,7 +103,7 @@ actor SyntheticResponsesWebSocketTransport: UpstreamWebSocketTransport {
             throw GatewayTestError.failure
         }
         requests.append(request)
-        if let sendFailure { throw sendFailure }
+        if let sendFailure, requests.count > successfulRequests { throw sendFailure }
         if request["type"] == "response.steer", let steerGate { try await steerGate.wait() }
         guard automaticReplies else { return }
         let response: JSONValue = ["id": .string("resp_\(requests.count)"), "output": []]
@@ -123,6 +130,19 @@ actor SyntheticResponsesWebSocketTransport: UpstreamWebSocketTransport {
             await self.requests.count >= count ? true : nil
         }
     }
+
+    func didProcessMessage() { processedMessages += 1 }
+
+    func close(_ continuation: AsyncThrowingStream<UpstreamWebSocketMessage, any Error>.Continuation) {
+        closeRequests += 1
+        continuation.finish()
+    }
+
+    func waitForMessages(_ count: Int) async throws {
+        _ = try await eventually(description: "processed native upstream messages") {
+            await self.processedMessages >= count ? true : nil
+        }
+    }
 }
 
 struct NativeResponsesSessionHarness: Sendable {
@@ -132,12 +152,13 @@ struct NativeResponsesSessionHarness: Sendable {
     let input: AsyncStream<Data>.Continuation
     let http = RecordingGatewayTransport(responses: [])
 
-    init(
+    init<C: Clock>(
         websocket: any UpstreamWebSocketTransport,
         fixture supplied: GatewayFixture? = nil,
         traffic: any TrafficRecording = NoopTrafficRecorder(),
-        limits: ResponsesWebSocketLimits = .init()
-    ) throws {
+        limits: ResponsesWebSocketLimits = .init(),
+        clock: C = ContinuousClock()
+    ) throws where C.Duration == Duration {
         let fixture = try supplied ?? GatewayTests().makeFixture()
         let responder = GatewayResponder(
             state: fixture.state,
@@ -146,7 +167,11 @@ struct NativeResponsesSessionHarness: Sendable {
             requiredAuthorityPort: nil,
             trafficRecorder: traffic)
         session = ResponsesWebSocketSession(
-            responder: responder, request: webSocketHTTPRequest(), limits: limits, upstreamTransport: websocket)
+            responder: responder,
+            request: webSocketHTTPRequest(),
+            limits: limits,
+            upstreamTransport: websocket,
+            clock: clock)
         (messages, input) = AsyncStream<Data>.makeStream(bufferingPolicy: .bufferingOldest(128))
     }
 
@@ -159,10 +184,14 @@ struct NativeResponsesSessionHarness: Sendable {
 
 private struct SyntheticResponsesInbound: UpstreamWebSocketInbound {
     let stream: AsyncThrowingStream<UpstreamWebSocketMessage, any Error>
+    let owner: SyntheticResponsesWebSocketTransport
     func consume(
         _ onMessage: @escaping @Sendable (UpstreamWebSocketMessage) async throws -> Void
     ) async throws -> UpstreamWebSocketPeerClose {
-        for try await message in stream { try await onMessage(message) }
+        for try await message in stream {
+            try await onMessage(message)
+            await owner.didProcessMessage()
+        }
         return .init(code: 1_000, reason: nil)
     }
 }
@@ -171,5 +200,5 @@ private struct SyntheticResponsesOutbound: UpstreamWebSocketOutbound {
     let owner: SyntheticResponsesWebSocketTransport
     let continuation: AsyncThrowingStream<UpstreamWebSocketMessage, any Error>.Continuation
     func send(_ message: UpstreamWebSocketMessage) async throws { try await owner.send(message, to: continuation) }
-    func close(code: UInt16, reason: String?) async throws { continuation.finish() }
+    func close(code: UInt16, reason: String?) async throws { await owner.close(continuation) }
 }

@@ -11,18 +11,21 @@ package struct ResponsesWebSocketSession: Sendable {
     private let limits: ResponsesWebSocketLimits
     private let lifetime: Duration
     private let upstreamTransport: (any UpstreamWebSocketTransport)?
+    private let clock: ResponsesUpstreamClock
 
-    package init(
+    package init<C: Clock>(
         responder: GatewayResponder,
         request: Request,
         limits: ResponsesWebSocketLimits = .init(),
         lifetime: Duration? = nil,
-        upstreamTransport: (any UpstreamWebSocketTransport)? = nil
-    ) {
+        upstreamTransport: (any UpstreamWebSocketTransport)? = nil,
+        clock: C = ContinuousClock()
+    ) where C.Duration == Duration {
         executor = ResponsesWebSocketExecutor(responder: responder, request: request, limits: limits)
         self.limits = limits
         self.lifetime = lifetime ?? .seconds(limits.connectionLifetimeSeconds)
         self.upstreamTransport = upstreamTransport
+        self.clock = ResponsesUpstreamClock(clock)
     }
 
     package func run<Messages: AsyncSequence & Sendable>(
@@ -31,7 +34,7 @@ package struct ResponsesWebSocketSession: Sendable {
         let channel = AsyncChannel<Event>()
         let sink = Sink(channel: channel)
         let upstream = upstreamTransport.map {
-            ResponsesUpstreamSession(transport: $0, limits: limits, control: sink.send)
+            ResponsesUpstreamSession(transport: $0, limits: limits, clock: clock, control: sink.send)
         }
         var selectedExecutor = executor
         selectedExecutor.upstream = upstream

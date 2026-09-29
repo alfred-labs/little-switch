@@ -172,7 +172,7 @@ struct AnthropicInitialUsageResolverTests {
             try await resolver.estimate(request: context(), transport: transport)
         }
         try await providerGate.waitUntilEntered(count: 1)
-        clock.advance(by: 1_000)
+        await clock.advance(by: 1_000)
         await deadline.releaseAll()
 
         #expect(

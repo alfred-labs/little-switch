@@ -44,6 +44,7 @@ let package = Package(
             url: "https://github.com/apple/swift-async-algorithms.git",
             exact: "1.1.5"
         ),
+        .package(url: "https://github.com/apple/swift-atomics.git", exact: "1.3.1"),
         .package(
             url: "https://github.com/swift-server/async-http-client.git",
             exact: "1.36.0"
@@ -203,6 +204,7 @@ let package = Package(
         .testTarget(
             name: "LittleSwitchCoreTests",
             dependencies: [
+                .product(name: "Atomics", package: "swift-atomics"),
                 "LittleSwitchCommon",
                 "LittleSwitchWire",
                 "LittleSwitchCore",

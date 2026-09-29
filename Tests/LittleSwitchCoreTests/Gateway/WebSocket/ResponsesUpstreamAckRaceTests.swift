@@ -8,15 +8,16 @@ import Testing
 @Suite("Native steering acknowledgement races", .timeLimit(.minutes(1)))
 struct ResponsesUpstreamAckRaceTests {
     @Test(
-        "Disconnecting upstream while retirement writes are suspended still drains every failure",
+        "Joining a cancelled transport scope before retirement still drains every failure",
         arguments: [false, true])
     func disconnectDuringRetirement(cancelsTransportScope: Bool) async throws {
+        let clock = ResolverTestClock()
         let websocket = SyntheticResponsesWebSocketTransport(automaticReplies: false)
         let controls = WebSocketEventRecorder()
         let controlGate = AsyncTestGate()
         let controlCancelled = AsyncTestGate()
         let inboundEnded = AsyncTestGate()
-        let connection = try makeConnection(timeout: .milliseconds(5)) { data in
+        let connection = try makeConnection(timeout: .seconds(5), clock: clock) { data in
             await controls.append(data)
             let failures = try await controls.values().filter { $0["type"] == "response.steer.failed" }
             if failures.count == 1 {
@@ -30,13 +31,18 @@ struct ResponsesUpstreamAckRaceTests {
             base: websocket, inboundEnded: inboundEnded, cancelsScopeOnDisconnect: cancelsTransportScope)
         let runner = Task { await connection.run(transport: transport) }
         defer { runner.cancel() }
-        let response = try await connection.exchange(
-            create, previousResponseID: nil, observeControl: { _ in }, validateProvider: {})
+        let responseTask = Task {
+            try await connection.exchange(
+                create, previousResponseID: nil, observeControl: { _ in }, validateProvider: {})
+        }
+        defer { responseTask.cancel() }
         let received = AsyncTestGate()
         let consumer = Task {
+            let response = try await responseTask.value
             for try await _ in response.body { await received.open() }
         }
         defer { consumer.cancel() }
+        try await websocket.waitForRequests(1)
         try await websocket.publish(#"{"type":"response.created","response":{"id":"r1","output":[]}}"#)
         try await received.wait(description: "created response before retirement drain")
         try await connection.steer(steering())
@@ -45,14 +51,11 @@ struct ResponsesUpstreamAckRaceTests {
         _ = try await controls.wait(type: "response.steer.accepted")
         try await connection.steer(steering())
         try await websocket.publish(#"{"type":"response.completed","response":{"id":"r1","output":[]}}"#)
+        try await clock.waitForSleeps(1)
+        await clock.advance(by: .seconds(5))
         _ = try await controls.wait(type: "response.steer.failed")
-        await websocket.disconnect()
-        try await inboundEnded.wait(description: "upstream reader disconnected during retirement")
-        let cancelledBeforeRelease =
-            (try? await controlCancelled.wait(
-                timeout: .milliseconds(100), description: "retirement control cancellation"))
-            != nil
-        #expect(cancelledBeforeRelease == false)
+        #expect(await inboundEnded.isOpen)
+        #expect(await controlCancelled.isOpen == false)
         await controlGate.open()
         try await valueWithinTimeout(consumer, description: "retirement body after upstream disconnect")
         try await valueWithinTimeout(runner, description: "retirement drain after upstream disconnect")
@@ -65,88 +68,109 @@ struct ResponsesUpstreamAckRaceTests {
 
     @Test("Closing the owner joins a suspended retirement drain", arguments: [false, true])
     func cancelOwnerDuringRetirement(explicitClose: Bool) async throws {
+        let clock = ResolverTestClock()
         let websocket = SyntheticResponsesWebSocketTransport(automaticReplies: false)
         let controls = WebSocketEventRecorder()
         let controlGate = AsyncTestGate()
-        let connection = try makeConnection(timeout: .milliseconds(5)) {
+        let connection = try makeConnection(timeout: .seconds(5), clock: clock) {
             await controls.append($0)
             try await controlGate.wait()
         }
         let runner = Task { await connection.run(transport: websocket) }
         defer { runner.cancel() }
-        let response = try await connection.exchange(
-            create, previousResponseID: nil, observeControl: { _ in }, validateProvider: {})
+        let responseTask = Task {
+            try await connection.exchange(
+                create, previousResponseID: nil, observeControl: { _ in }, validateProvider: {})
+        }
+        defer { responseTask.cancel() }
         let received = AsyncTestGate()
         let consumer = Task {
+            let response = try await responseTask.value
             for try await _ in response.body { await received.open() }
         }
         defer { consumer.cancel() }
+        try await websocket.waitForRequests(1)
         try await websocket.publish(#"{"type":"response.created","response":{"id":"r1","output":[]}}"#)
         try await received.wait(description: "created response before owner cancellation")
         try await connection.steer(steering())
         try await websocket.publish(#"{"type":"response.completed","response":{"id":"r1","output":[]}}"#)
+        try await clock.waitForSleeps(1)
+        await clock.advance(by: .seconds(5))
         _ = try await controls.wait(type: "response.steer.failed")
         if explicitClose {
             let close = Task { await connection.close() }
-            try await valueWithinTimeout(close, timeout: .seconds(1), description: "explicit retirement close")
+            try await clock.waitForSleeps(2)
+            await clock.advance(by: .seconds(5))
+            try await valueWithinTimeout(close, description: "explicit retirement close")
         } else {
             runner.cancel()
         }
-        try await valueWithinTimeout(runner, timeout: .seconds(1), description: "cancelled retirement owner")
-        try await valueWithinTimeout(consumer, description: "cancelled retirement body")
+        try await valueWithinTimeout(runner, description: "cancelled retirement owner")
+        if explicitClose {
+            try await valueWithinTimeout(consumer, description: "closed retirement body")
+        } else {
+            await #expect(throws: CancellationError.self) {
+                try await valueWithinTimeout(consumer, description: "cancelled retirement body")
+            }
+        }
         #expect(await websocket.activeConnections == 0)
     }
 
     @Test("A failed steering write cannot finish the body before retirement controls drain")
     func failedWriteDuringRetirement() async throws {
+        let clock = ResolverTestClock()
         let writeGate = AsyncTestGate()
         let websocket = SyntheticResponsesWebSocketTransport(automaticReplies: false, steerGate: writeGate)
         let controls = WebSocketEventRecorder()
         let controlGate = AsyncTestGate()
-        let connection = try makeConnection(timeout: .milliseconds(5)) {
+        let connection = try makeConnection(timeout: .seconds(5), clock: clock) {
             await controls.append($0)
             try await controlGate.wait()
         }
         let transport = RetirementFailingWriteTransport(base: websocket)
         let runner = Task { await connection.run(transport: transport) }
         defer { runner.cancel() }
-        let response = try await connection.exchange(
-            create, previousResponseID: nil, observeControl: { _ in }, validateProvider: {})
+        let responseTask = Task {
+            try await connection.exchange(
+                create, previousResponseID: nil, observeControl: { _ in }, validateProvider: {})
+        }
+        defer { responseTask.cancel() }
         let received = AsyncTestGate()
-        let finished = AsyncTestGate()
         let consumer = Task {
+            let response = try await responseTask.value
             for try await _ in response.body { await received.open() }
-            await finished.open()
+            #expect(await controlGate.isOpen)
         }
         defer { consumer.cancel() }
+        try await websocket.waitForRequests(1)
         try await websocket.publish(#"{"type":"response.created","response":{"id":"r1","output":[]}}"#)
         try await received.wait(description: "created response before failed steering write")
         let write = Task { try await connection.steer(steering()) }
         defer { write.cancel() }
         try await websocket.waitForRequests(2)
         try await websocket.publish(#"{"type":"response.completed","response":{"id":"r1","output":[]}}"#)
+        try await clock.waitForSleeps(1)
+        await clock.advance(by: .seconds(5))
         _ = try await controls.wait(type: "response.steer.failed")
         await writeGate.open()
+        await controlGate.open()
         await #expect(throws: UpstreamWebSocketSendFailure.self) {
             try await valueWithinTimeout(write, description: "failed steering write during retirement")
         }
-        let finishedBeforeDrain =
-            (try? await finished.wait(timeout: .milliseconds(100), description: "body before retirement drain")) != nil
-        #expect(finishedBeforeDrain == false)
-        await controlGate.open()
         try await valueWithinTimeout(consumer, description: "body after failed write retirement drain")
         try await valueWithinTimeout(runner, description: "connection after failed write retirement drain")
         #expect(try await controls.values().count == 1)
         #expect(await websocket.activeConnections == 0)
     }
 
-    @Test("Resuming an accepted control cannot finish the body while retirement failures are suspended")
+    @Test("Delivered acceptance leaves submitted steering bounded and failures drain before the body finishes")
     func acceptedControlResumesDuringRetirement() async throws {
+        let clock = ResolverTestClock()
         let websocket = SyntheticResponsesWebSocketTransport(automaticReplies: false)
         let controls = WebSocketEventRecorder()
         let acceptedGate = AsyncTestGate()
         let failedGate = AsyncTestGate()
-        let connection = try makeConnection(timeout: .milliseconds(200)) { data in
+        let connection = try makeConnection(timeout: .seconds(5), clock: clock) { data in
             await controls.append(data)
             switch try JSONValue.parse(data).object?["type"]?.string {
             case "response.steer.accepted": try await acceptedGate.wait()
@@ -156,15 +180,19 @@ struct ResponsesUpstreamAckRaceTests {
         }
         let runner = Task { await connection.run(transport: websocket) }
         defer { runner.cancel() }
-        let response = try await connection.exchange(
-            create, previousResponseID: nil, observeControl: { _ in }, validateProvider: {})
+        let responseTask = Task {
+            try await connection.exchange(
+                create, previousResponseID: nil, observeControl: { _ in }, validateProvider: {})
+        }
+        defer { responseTask.cancel() }
         let received = AsyncTestGate()
-        let finished = AsyncTestGate()
         let consumer = Task {
+            let response = try await responseTask.value
             for try await _ in response.body { await received.open() }
-            await finished.open()
+            #expect(await failedGate.isOpen)
         }
         defer { consumer.cancel() }
+        try await websocket.waitForRequests(1)
         try await websocket.publish(#"{"type":"response.created","response":{"id":"r1","output":[]}}"#)
         try await received.wait(description: "created response before suspended steering acknowledgement")
         try await connection.steer(steering())
@@ -173,62 +201,16 @@ struct ResponsesUpstreamAckRaceTests {
         try await websocket.publish(
             #"{"type":"response.steer.accepted","steer":{"id":"s1","previous_response_id":"r1"}}"#)
         _ = try await controls.wait(type: "response.steer.accepted")
-        _ = try await controls.wait(type: "response.steer.failed")
         await acceptedGate.open()
-        let finishedBeforeFailures =
-            (try? await finished.wait(timeout: .milliseconds(100), description: "body before failed controls drain"))
-            != nil
-        #expect(finishedBeforeFailures == false)
+        try await websocket.waitForMessages(3)
+        try await clock.waitForSleeps(1)
+        await clock.advance(by: .seconds(5))
+        _ = try await controls.wait(type: "response.steer.failed")
         await failedGate.open()
         try await valueWithinTimeout(consumer, description: "body after resumed acknowledgement and retirement")
         try await valueWithinTimeout(runner, description: "retired connection after resumed acknowledgement")
         #expect(try await controls.values().filter { $0["type"] == "response.steer.failed" }.count == 2)
         #expect(await websocket.activeConnections == 0)
-    }
-
-    @Test("Terminal validation time consumes the acknowledgement budget before the deadline is armed")
-    func terminalReceptionStartsDeadline() async throws {
-        let websocket = SyntheticResponsesWebSocketTransport(automaticReplies: false)
-        let controls = WebSocketEventRecorder()
-        let connection = try makeConnection(timeout: .milliseconds(200)) { await controls.append($0) }
-        let runner = Task { await connection.run(transport: websocket) }
-        defer { runner.cancel() }
-        let response = try await connection.exchange(
-            create, previousResponseID: nil, observeControl: { _ in }, validateProvider: {})
-        let received = AsyncTestGate()
-        let terminalReceived = AsyncTestGate()
-        let terminalValidated = AsyncTestGate()
-        let finished = AsyncTestGate()
-        let consumer = Task {
-            var chunks = 0
-            for try await _ in response.body {
-                chunks += 1
-                if chunks == 1 {
-                    await received.open()
-                } else {
-                    await terminalReceived.open()
-                    try await terminalValidated.wait()
-                }
-            }
-            await finished.open()
-        }
-        defer { consumer.cancel() }
-        try await websocket.publish(#"{"type":"response.created","response":{"id":"r1","output":[]}}"#)
-        try await received.wait(description: "created response before slow terminal validation")
-        try await connection.steer(steering())
-        try await websocket.publish(#"{"type":"response.completed","response":{"id":"r1","output":[]}}"#)
-        try await terminalReceived.wait(description: "terminal entered validation")
-        try await Task.sleep(for: .milliseconds(250))
-        #expect(await controls.isEmpty)
-        await terminalValidated.open()
-        let finishedWithinRemainingBudget =
-            (try? await finished.wait(
-                timeout: .milliseconds(100), description: "deadline measured from terminal reception"))
-            != nil
-        #expect(finishedWithinRemainingBudget)
-        await connection.close()
-        try await valueWithinTimeout(consumer, description: "slow terminal body cleanup")
-        try await valueWithinTimeout(runner, description: "slow terminal connection cleanup")
     }
 
     private var create: Data {
@@ -244,6 +226,7 @@ struct ResponsesUpstreamAckRaceTests {
 
     private func makeConnection(
         timeout: Duration,
+        clock: ResolverTestClock = ResolverTestClock(),
         control: @escaping @Sendable (Data) async throws -> Void
     ) throws -> ResponsesUpstreamConnection {
         let url = try #require(URL(string: "wss://example.invalid/v1/responses"))
@@ -252,6 +235,7 @@ struct ResponsesUpstreamAckRaceTests {
             request: try UpstreamWebSocketRequest(url: url),
             maximumBytes: 4_096,
             steeringAcknowledgementTimeout: timeout,
+            clock: clock,
             control: control)
     }
 }

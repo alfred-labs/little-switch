@@ -1,19 +1,18 @@
 import Foundation
 
 /// Each caller owns its wait independently of the connection's lifetime.
-actor ResponsesUpstreamReadiness {
-    private var result: Result<Void, any Error>?
-    private var waiters: [UUID: CheckedContinuation<Void, any Error>] = [:]
+actor ResponsesUpstreamReadiness<Value: Sendable> {
+    private var result: Result<Value, any Error>?
+    private var waiters: [UUID: CheckedContinuation<Value, any Error>] = [:]
 
-    func wait() async throws {
+    func wait() async throws -> Value {
         try Task.checkCancellation()
         if let result {
-            try result.get()
-            return
+            return try result.get()
         }
         let identifier = UUID()
-        try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
+        let value = try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Value, any Error>) in
                 if Task.isCancelled {
                     continuation.resume(throwing: CancellationError())
                 } else if let result {
@@ -26,9 +25,10 @@ actor ResponsesUpstreamReadiness {
             Task { await self.cancel(identifier) }
         }
         try Task.checkCancellation()
+        return value
     }
 
-    func resolve(_ result: Result<Void, any Error>) {
+    func resolve(_ result: Result<Value, any Error>) {
         guard self.result == nil else { return }
         self.result = result
         let pending = waiters.values
