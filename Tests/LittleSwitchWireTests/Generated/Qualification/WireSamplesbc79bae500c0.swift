@@ -1,6 +1,7 @@
 // Generated codec qualification registry. Do not edit.
 enum WireSamplesbc79bae500c0 {
     static let samples: [WireGeneratedSample] = [
+        WireSamples197679f8c9cc.samples,
         WireSamples20edb3a8958d.samples,
         WireSamples2171099f1b7d.samples,
         WireSamples33a6f8e768d9.samples,
@@ -8,6 +9,7 @@ enum WireSamplesbc79bae500c0 {
         WireSamples4d6e2e1b88cb.samples,
         WireSamples707c2bff66bc.samples,
         WireSamples746c248920d9.samples,
+        WireSamples779a4eb5a57f.samples,
         WireSamples8f502e75e0bc.samples,
         WireSamples9f4f8f1d3e15.samples,
         WireSamplesa79a9a1104d4.samples,

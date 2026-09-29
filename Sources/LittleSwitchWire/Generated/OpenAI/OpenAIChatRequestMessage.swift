@@ -2,19 +2,22 @@
 // Source: OpenAIChatMessage #/definitions/ChatCompletionMessageParam
 // SDK: openai 7.15.0
 // Schema SHA256: 1c8afefdf7eb6e33f75a1f7cd15678903eed24156ab3c3b87e81928bd51177de
-// Projection SHA256: a676e4a96ec14a5c179123508486129b68b5862ef10610414b88454a498e89aa
+// Projection SHA256: 4aefd73f145963b44c7791bda49a7f65b402452a35350f11d724e561a5b62ab7
 // Compatibility SHA256: 17e6bf03d47495b1904e64676ea4fbca8f481e5a3d8aee3b4fb0b8be4ead52df
-// Projection: #/definitions/ChatCompletionMessageParam branches 1, 2, 3, 4
+// Projection: #/definitions/ChatCompletionMessageParam branches 0, 1, 2, 3, 4
 // Projection: #/definitions/ChatCompletionAssistantMessageParam fields content, refusal, role, tool_calls
+// Projection: #/definitions/ChatCompletionDeveloperMessageParam fields content, role
 // Projection: #/definitions/ChatCompletionSystemMessageParam fields content, role
 // Projection: #/definitions/ChatCompletionToolMessageParam fields content, role, tool_call_id
 // Projection: #/definitions/ChatCompletionUserMessageParam fields content, role
+// Projection: opaque #/definitions/ChatCompletionDeveloperMessageParam/properties/content
 // Projection: opaque #/definitions/ChatCompletionSystemMessageParam/properties/content
 // Projection: opaque #/definitions/ChatCompletionUserMessageParam/properties/content
 // Projection: opaque #/definitions/ChatCompletionAssistantMessageParam/properties/content
 // Projection: opaque #/definitions/ChatCompletionToolMessageParam/properties/content
 
 public indirect enum OpenAIChatRequestMessage: Sendable, WireCodable {
+    case developer(OpenAIChatRequestDeveloper)
     case system(OpenAIChatRequestSystem)
     case user(OpenAIChatRequestUser)
     case assistant(OpenAIChatRequestAssistant)
@@ -25,6 +28,7 @@ public indirect enum OpenAIChatRequestMessage: Sendable, WireCodable {
         let object = try WireObject(wireJSON)
         let discriminator: String = try object.required("role")
         switch discriminator {
+        case "developer": self = .developer(try OpenAIChatRequestDeveloper(wireJSON: wireJSON))
         case "system": self = .system(try OpenAIChatRequestSystem(wireJSON: wireJSON))
         case "user": self = .user(try OpenAIChatRequestUser(wireJSON: wireJSON))
         case "assistant": self = .assistant(try OpenAIChatRequestAssistant(wireJSON: wireJSON))
@@ -35,6 +39,7 @@ public indirect enum OpenAIChatRequestMessage: Sendable, WireCodable {
 
     public func wireJSON() throws -> JSONValue {
         switch self {
+        case .developer(let value): return try Self.encode(value)
         case .system(let value): return try Self.encode(value)
         case .user(let value): return try Self.encode(value)
         case .assistant(let value): return try Self.encode(value)
@@ -43,7 +48,7 @@ public indirect enum OpenAIChatRequestMessage: Sendable, WireCodable {
         case .unknown(let type, let payload):
             let object = try WireObject(payload)
             let discriminator: String = try object.required("role")
-            guard discriminator == type, !["system", "user", "assistant", "tool"].contains(type) else {
+            guard discriminator == type, !["developer", "system", "user", "assistant", "tool"].contains(type) else {
                 throw WireCodingError(.invalidDiscriminator)
             }
             return payload

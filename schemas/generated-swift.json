@@ -710,23 +710,31 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestAssistant.swift",
-      "sha256" : "96147eab622e57c8e745f0d17c7ec6b0b2b38ae11317b218457f25cae6eee747"
+      "sha256" : "01406937419c887c78bd7c739859cdf6b444dc1bff32833a729ebde53bffbb79"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestAssistantRole.swift",
-      "sha256" : "29548e39fb888df59788466041d65bc5b0b096ba6403766714bf405a0c17157a"
+      "sha256" : "06650bd2e2965ad5546ea25f0da9b97b7d8190597dee7693b027ce4ec040062d"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestCustom.swift",
-      "sha256" : "b973cb3aa71582ddcc4750d6f7a636797f5c9a5f2a1624a949e9e9713d4214fb"
+      "sha256" : "080baa0ecd08794d3faed6a02859400fade4b1b334ca74415198d0bc766c9255"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestCustomCall.swift",
-      "sha256" : "17599deb440650edd1ffc33883cea249b061053007b9bc5a355d05c5c7ce7d9b"
+      "sha256" : "43e012c8954308870226cd8a12b18ef27a4f5c4c4b0568aa53d136bdba7336c5"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestCustomCallType.swift",
-      "sha256" : "c4ba7af4fb00cead382d43497661905a0b08554a7c270d897a01bdf34e7958f2"
+      "sha256" : "f55b99e111920528421655553ded924e039c73e7ea3fdd3f3dbd32fab8028cce"
+    },
+    {
+      "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestDeveloper.swift",
+      "sha256" : "78f075f230d11b931091a9079b86b7a7c8d7e5769e8ce0ab9027afe8dade13dd"
+    },
+    {
+      "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestDeveloperRole.swift",
+      "sha256" : "4cbfd621878ed4a7684686c1c71d9c409e86cd1f8b6464d9a7c10969bba1b3db"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestEnvelope.swift",
@@ -734,47 +742,47 @@
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestFunction.swift",
-      "sha256" : "a3e2084198ed6b159c5057b61794659ce9b11b5d7153f6da5f3fdbf185d5e653"
+      "sha256" : "e908433f9f8ca0f4a5a9f4017a704674e6a91f1c021f0ad8c4dffd1961f172ae"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestFunctionCall.swift",
-      "sha256" : "45babe1317de114badfd23f1e912e349a9305e56828a440f04437080e75c609c"
+      "sha256" : "bd75215980946345a045efde010b6ae63c3ea37f62ae703ef63a389d77a79f8a"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestFunctionCallType.swift",
-      "sha256" : "f9c308b28bea032127ae104e14334748ea13050a2c1787cfbcea9dc22d4d1aad"
+      "sha256" : "d841cbc162f2a7517efd1da0da523e3a03cf51c109cc5662c61ddfcc0521ec16"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestMessage.swift",
-      "sha256" : "f673d4d981f9b7e3891ab4982a823ccf24aca6df0edffc69f3e42ecfe47b38e1"
+      "sha256" : "1d3d1bd6374c42f5f865340ab20727e22c796893c294306f5ac638b28c65cba7"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestSystem.swift",
-      "sha256" : "6dd861a556f8a7747ff3dc11cd2d8965d860e76a6c8447a942536914e387c72c"
+      "sha256" : "7e463994fc34485000832b17f1d543c2209b6353aa5b9939840898c3c623dcbe"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestSystemRole.swift",
-      "sha256" : "7e75230f93750bf4d277312af3e19ca172736838d0701d3c51a94a5a67bdba2c"
+      "sha256" : "0e6120afa92bbe862ccf86db61a6a76381ca147d02345b610e5563686a5f13bc"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestTool.swift",
-      "sha256" : "7b6a77d3f5da36b0e5a14251989924d9859e62f412ebd1445e278c1f134b5305"
+      "sha256" : "f9054108906074874cf51c7b678c4e7a54e84d3dee15d5deb74e59f68fbfdeec"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestToolCall.swift",
-      "sha256" : "992c4c156597d37e81ac88d56ff66aac938542fb251785c133ac83ca3685dd9d"
+      "sha256" : "37d8795eb21ca66efaa65f8fc292558ecf420c2343afa46dcc0322d603b0dc49"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestToolRole.swift",
-      "sha256" : "f39711ceb6cb64ec4848b670c1eba2ff94c0c2205f48f8dd7420fa59d4575403"
+      "sha256" : "9bf732bf5ebb9214de962e465dec19fc9e26ce3935b95022358815193550509d"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestUser.swift",
-      "sha256" : "39837ed4e2c03979f958aed4cf10cfeeaaadc1eea5dd42014f10e2823052a7e4"
+      "sha256" : "ed7b69c509905d6433ae05b02514c2805e2dd0b56c4eb929f761b28c46c095d0"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRequestUserRole.swift",
-      "sha256" : "62c787562f16222d5647d64d66fcfbede9bcb95dea22ff2f09d11f1c548e16df"
+      "sha256" : "4fda1d258c15245a3d20d2f97c4cb2d9b8866f28aca071f872a38f87bc1b15ca"
     },
     {
       "path" : "Sources/LittleSwitchWire/Generated/OpenAI/OpenAIChatRole.swift",
@@ -2734,27 +2742,35 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestAssistant/WireSamplesd95b1e34a6b1Part1.swift",
-      "sha256" : "7794bcd59824b252abd534d550c302a2d21d2fcdbf33858fe0758b81bba0dc16"
+      "sha256" : "60b69f611de5fef21cb6f71a0ccc1ea16e87bd96ac07206887ffde0e6165beb7"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestAssistant/WireSamplesd95b1e34a6b1Part2.swift",
-      "sha256" : "4fef690e898ee199ea5248108e28f7160a82b10e3e9ca7a84ffce0b65a58b0c5"
+      "sha256" : "959ba22cebdce4fd97570fb4cfee3c63bad0bad0a5f6fef001e6a49bdda080aa"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestAssistantRole/WireSamples2171099f1b7d.swift",
-      "sha256" : "4156b425f0fc529e6bea63fab4a29326b9755ba468bfb937ab7636b18e1de108"
+      "sha256" : "40ea2ac27747946e56633b560ab92a39ab3589621f2f9b1e3d56ccf6f1b13f52"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestCustom/WireSamples40b1382c47af.swift",
-      "sha256" : "bfd1fa1943efa337f76a4a49d9153a2bd5f30407039257c2084e5b29d3df5891"
+      "sha256" : "3acbc95cd94f2eef43980839f45534abb932d9162a0b71ab3d81b14e6b8250bd"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestCustomCall/WireSamples707c2bff66bc.swift",
-      "sha256" : "3f429a59d105752047ee0cb195856f30a2b385c8753a94426c93e254fea09f13"
+      "sha256" : "65ca359b6da6db9a3be6a6ad39d37776b7164d8decdb8f5257d4bdeb88be7fba"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestCustomCallType/WireSamples8f502e75e0bc.swift",
-      "sha256" : "2de90cefb18442272a4f24878f3a35280642d4b22c1a94968c7b783a2ecc1a41"
+      "sha256" : "610b758e4a47cecd36fbcb8a34355ffbc6c516eac99168ed20632636cf66120a"
+    },
+    {
+      "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestDeveloper/WireSamples779a4eb5a57f.swift",
+      "sha256" : "5f340efee7443a52c3720af715a90f82838ba06c48861f2590ab0b8f291bf508"
+    },
+    {
+      "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestDeveloperRole/WireSamples197679f8c9cc.swift",
+      "sha256" : "2bfeecdad4dea6e56a1bd3401dc9b7153df40c3529b722734c01d77e91c384ae"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestEnvelope/WireSamplesbd26befdbc68.swift",
@@ -2762,47 +2778,47 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestFunction/WireSamples746c248920d9.swift",
-      "sha256" : "65d25b572138fd90255043abf3981a576216dbbfd714da939142ac607e1062bb"
+      "sha256" : "d2f8567ae96c83900fffd473ee0adbefab2c3c4bbcf72aef8aada3f2b2df29c8"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestFunctionCall/WireSamples4d6e2e1b88cb.swift",
-      "sha256" : "1a44653f6dd8bebf3991c66c855b818547f8cdb4a50b3b981608d0f0df09788d"
+      "sha256" : "f82180f977338127144cae259aeaa101c864b50d48f63358c0705b6fb150abe7"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestFunctionCallType/WireSamplesa79a9a1104d4.swift",
-      "sha256" : "3cfdd4631f3cd0350bfbcd6f83f7df6306c37d001500b82f83b4e0b2d72764a4"
+      "sha256" : "b6346c1afcfc5b3da89b19c1775438511cdfb9f7f6020649e4bf591d4417b99b"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestMessage/WireSamplesb460f1239cf6.swift",
-      "sha256" : "009b64622821bb783f4bbbc07ca9dfe934dd124eb99072bfcb1595185de7ecb3"
+      "sha256" : "73fbb490cf5d330da629c42c99da82a7af7bad70d97d0da897bd3e160fe017d0"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestSystem/WireSamplesc273722c8f16.swift",
-      "sha256" : "39af89b81f57631c3e183636d86154547b9ff3cef6443ccac5436170611f618b"
+      "sha256" : "ebffb261b9137e3ebbf26f1ff802c51cda8b6fc4f14cadce321fb4cdb7fc322d"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestSystemRole/WireSamplesb16125d4d17d.swift",
-      "sha256" : "dce9cce7d0c84508ab99eaa3f1fbcf4cb8c1327b8962872556fc553cd106be58"
+      "sha256" : "447333e631d1e149fd1389ed20260d864a226c99a899a8b1db829b48d442aef6"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestTool/WireSamples9f4f8f1d3e15.swift",
-      "sha256" : "66f1cbaf1b8b41d82940acfafd798d4fbd42de4bc6549536100faeef73554abf"
+      "sha256" : "706bd0727247c9be7dc232a559bcc8d6a6f2d57e218d60f4f69f5a0cfdb341c8"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestToolCall/WireSamples33a6f8e768d9.swift",
-      "sha256" : "044db918f2c92cf62bb243475391cf6f38766c58a18756cd2840d6bc70d0ac13"
+      "sha256" : "03764ee10318751b3e37de596d48c79d3b35956539901f0279a138bdb8dc6643"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestToolRole/WireSamplesf853d0221046.swift",
-      "sha256" : "66873e877f780dc4b8e36c9b64e8da13fd86a69f78a37bebe5e9f59f1474fb84"
+      "sha256" : "e5e5deab91926bbce7adfe0f3fa032bbe8d76c47c100a25b3788edfdc9e999b7"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestUser/WireSamples20edb3a8958d.swift",
-      "sha256" : "eb16766f1969cd3e3a42dc5a93d8cce59c866d8180d0035b221406ffbcd82889"
+      "sha256" : "da8125864864ce5abb85216656d92b0ab05008c08208dc5f81087b1f996640d3"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRequestUserRole/WireSamplesfbb4945180cd.swift",
-      "sha256" : "4c3e387ece449375f347f8fbc6a61fea1be39e5b0d58534bd6aee62bcb59b89c"
+      "sha256" : "3cc5ba1782cbd27e2462f15394f3c0d8046d697c4c37e6d6baedbd9265dab398"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/OpenAIChatRole/WireSamples972841cb08fc.swift",
@@ -3926,7 +3942,7 @@
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/WireSamplesbc79bae500c0.swift",
-      "sha256" : "b9bac23f561f38d2598805e85dee0535c1f649e80b86f6ec842897257537f767"
+      "sha256" : "0a22014a9065b7d7077b7a07982a42b4ff5c0f1ca03b8a05c4e3fb5ff60dca9e"
     },
     {
       "path" : "Tests/LittleSwitchWireTests/Generated/Qualification/WireSamplesbe2612aa63ae.swift",
@@ -4082,7 +4098,7 @@
     },
     {
       "path" : "schemas/projections.json",
-      "sha256" : "9bcd452c3aac13ac834a746fe289003c3dd39a21e795eb83bce248ba9614ffe1"
+      "sha256" : "10c859041816bf5bee0052609e99db1dd0f74b17d279a9dbeab1f040b8a82c4d"
     },
     {
       "path" : "schemas/roots.json",

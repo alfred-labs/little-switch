@@ -1227,12 +1227,20 @@
       "root": "OpenAIChatMessage",
       "swiftName": "OpenAIChatRequestMessage",
       "branches": [
+        0,
         1,
         2,
         3,
         4
       ],
       "nodes": {
+        "#/definitions/ChatCompletionDeveloperMessageParam": {
+          "name": "OpenAIChatRequestDeveloper",
+          "fields": [
+            "content",
+            "role"
+          ]
+        },
         "#/definitions/ChatCompletionSystemMessageParam": {
           "name": "OpenAIChatRequestSystem",
           "fields": [
@@ -1281,6 +1289,7 @@
         }
       },
       "opaque": [
+        "#/definitions/ChatCompletionDeveloperMessageParam/properties/content",
         "#/definitions/ChatCompletionSystemMessageParam/properties/content",
         "#/definitions/ChatCompletionUserMessageParam/properties/content",
         "#/definitions/ChatCompletionAssistantMessageParam/properties/content",
