@@ -95,10 +95,10 @@ struct ResponsesUpstreamSteeringTests {
             harness.input.finish()
             task.cancel()
         }
-        harness.enqueue(#"{"type":"response.create","model":"gpt-6-astra","input":"first"}"#)
+        harness.enqueue(#"{"type":"response.create","stream_id":"tools","model":"gpt-6-astra","input":"first"}"#)
         try await websocket.waitForRequests(1)
         try await websocket.publish(#"{"type":"response.created","response":{"id":"r1","output":[]}}"#)
-        _ = try await harness.events.wait(type: "response.created")
+        _ = try await harness.events.wait(type: "response.created", streamID: "tools")
         harness.enqueue(#"{"type":"response.steer","previous_response_id":"r1","input":"smaller"}"#)
         try await websocket.waitForRequests(2)
         try await websocket.publish(
@@ -113,14 +113,18 @@ struct ResponsesUpstreamSteeringTests {
                 #"{"type":"response.completed","response":{"id":"r1","output":[{"type":"function_call","id":"item1","call_id":"call1","name":"lookup","arguments":"{}"}]}}"#
             )
         }
-        _ = try await harness.events.wait(type: "response.completed")
+        _ = try await harness.events.wait(type: "response.completed", streamID: "tools")
         let continuation =
-            #"{"type":"response.create","model":"gpt-6-astra","previous_response_id":"r1","instructions":"New settings","#
+            #"{"type":"response.create","stream_id":"tools","model":"gpt-6-astra","previous_response_id":"r1","instructions":"New settings","#
             + #""input":[{"type":"function_call_output","call_id":"call1","output":"done"}]}"#
         harness.enqueue(
-            #"{"type":"response.create","model":"gpt-6-sol","previous_response_id":"r1","input":"incompatible"}"#)
-        let rejection = try await harness.events.wait(type: "error")
+            #"{"type":"response.create","stream_id":"tools","model":"gpt-6-sol","previous_response_id":"r1","input":"incompatible"}"#
+        )
+        let rejection = try await eventually(description: "pending steering rejection") {
+            try await harness.events.values().first { $0["type"] == "error" }
+        }
         #expect(rejection["error"]?.object?["code"] == "pending_steering")
+        #expect(rejection["stream_id"] == "tools")
         #expect(await websocket.requests.count == 2)
         if earlyCreate {
             harness.enqueue(continuation)
@@ -147,12 +151,14 @@ struct ResponsesUpstreamSteeringTests {
                 $0["response"]?.object?["id"] == "r2" && $0["type"] == "response.completed"
             } ? true : nil
         }
-        harness.enqueue(#"{"type":"response.create","model":"gpt-6-sol","previous_response_id":"r2","input":"last"}"#)
+        harness.enqueue(
+            #"{"type":"response.create","stream_id":"tools","model":"gpt-6-sol","previous_response_id":"r2","input":"last"}"#
+        )
         try await websocket.waitForRequests(4)
         let replay = try #require(await websocket.requests.last?["input"]?.array)
         #expect(replay.count == 5)
-        #expect(replay[2].object?["content"] == "smaller")
-        #expect(replay[3].object?["type"] == "function_call_output")
+        #expect(replay[2].object?["type"] == "function_call_output")
+        #expect(replay[3].object?["content"] == "smaller")
         harness.input.finish()
         try await valueWithinTimeout(task, description: "tool pending cleanup")
     }

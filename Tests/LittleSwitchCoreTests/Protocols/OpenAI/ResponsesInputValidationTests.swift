@@ -18,9 +18,6 @@ struct ResponsesInputValidationTests {
             try ResponsesProviderState.normalize(body: body, providerID: destination)
         }
         #expect(throws: ResponsesProviderState.Error.invalidState) {
-            try ResponsesProviderState.expandedPortableBody(body)
-        }
-        #expect(throws: ResponsesProviderState.Error.invalidState) {
             try ResponsesProviderState.degradedBody(body)
         }
     }
@@ -34,7 +31,7 @@ struct ResponsesInputValidationTests {
                 try ResponsesProviderState.normalize(body: body, providerID: nil)
             }
             #expect(throws: ResponsesProviderState.Error.invalidState) {
-                try ResponsesProviderState.expandedPortableBody(body)
+                try ResponsesProviderState.degradedBody(body)
             }
         }
     }
@@ -44,7 +41,6 @@ struct ResponsesInputValidationTests {
         for raw in [#"{ "input": "raw user text", "metadata": {} }"#, #"{"model":"m"}"#, #"{"input":null}"#] {
             let body = Data(raw.utf8)
             #expect(try ResponsesProviderState.normalize(body: body, providerID: nil) == body)
-            #expect(try ResponsesProviderState.expandedPortableBody(body) == body)
             #expect(try ResponsesProviderState.degradedBody(body) == body)
         }
     }

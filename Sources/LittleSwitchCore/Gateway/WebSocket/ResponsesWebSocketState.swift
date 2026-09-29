@@ -25,8 +25,7 @@ package struct ResponsesWebSocketState: Sendable {
         self.limits = limits
     }
 
-    package mutating func enqueue(_ frame: Data) throws {
-        let envelope = try ResponsesWebSocketRequest.Envelope(frame, maximumBytes: limits.maxFrameBytes)
+    mutating func enqueue(_ envelope: ResponsesWebSocketRequest.Envelope) throws {
         do {
             let request = try ResponsesWebSocketRequest(envelope)
             guard queue.count < limits.maxQueuedRequests,
@@ -34,7 +33,7 @@ package struct ResponsesWebSocketState: Sendable {
             else {
                 throw ResponsesWebSocketFailure(
                     status: 429,
-                    code: "websocket_connection_limit_reached",
+                    code: .websocketConnectionLimitReached,
                     message: "WebSocket request queue is full",
                     streamID: request.streamID)
             }
@@ -42,7 +41,7 @@ package struct ResponsesWebSocketState: Sendable {
                 guard namedStreams.contains(streamID) || namedStreams.count < limits.maxNamedStreams else {
                     throw ResponsesWebSocketFailure(
                         status: 400,
-                        code: "websocket_stream_limit_reached",
+                        code: .websocketStreamLimitReached,
                         message: "WebSocket named stream limit reached",
                         streamID: streamID,
                         parameter: ResponsesWebSocketContract.RequestField.streamID.rawValue)
@@ -75,7 +74,7 @@ package struct ResponsesWebSocketState: Sendable {
                 return .failure(
                     ResponsesWebSocketFailure(
                         status: 400,
-                        code: "previous_response_not_found",
+                        code: .previousResponseNotFound,
                         message: "Previous response was not found",
                         streamID: request.streamID,
                         parameter: ResponsesWebSocketContract.RequestField.previousResponseID.rawValue))
@@ -87,7 +86,7 @@ package struct ResponsesWebSocketState: Sendable {
                 return .failure(
                     ResponsesWebSocketFailure(
                         status: 413,
-                        code: "request_too_large",
+                        code: .requestTooLarge,
                         message: "Reconstructed WebSocket request is too large",
                         streamID: request.streamID,
                         parameter: OpenAIResponsesRequestEnvelope.Key.input.rawValue))
@@ -120,7 +119,7 @@ package struct ResponsesWebSocketState: Sendable {
                 output.allSatisfy({ $0.object != nil })
             else {
                 throw ResponsesWebSocketFailure(
-                    status: 502, code: "invalid_response", message: "Invalid response history", streamID: owned.streamID
+                    status: 502, code: .invalidResponse, message: "Invalid response history", streamID: owned.streamID
                 )
             }
             let outputInput = try ResponsesWebSocketInput(output)
@@ -158,8 +157,8 @@ package struct ResponsesWebSocketState: Sendable {
         if !owned.checkpointed, !appliedInput.isEmpty, let parent = owned.parentInput {
             owned.input =
                 parent
-                .appending(try ResponsesWebSocketInput(appliedInput))
                 .appending(owned.requestInput)
+                .appending(try ResponsesWebSocketInput(appliedInput))
                 .appending(try ResponsesWebSocketInput(output))
         } else {
             owned.input = turn.replacesHistory ? try ResponsesWebSocketInput(output) : owned.input.appending(addition)

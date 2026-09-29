@@ -14,14 +14,18 @@ struct ResponsesWebSocketRequest: Sendable {
         let streamID: String?
         let previousResponseID: String?
 
+        var isSteering: Bool {
+            fields[EventKey.type.rawValue]?.string == ResponsesWebSocketContract.Event.steer.rawValue
+        }
+
         init(_ frame: Data, maximumBytes: Int) throws {
             guard frame.count <= maximumBytes else {
                 throw ResponsesWebSocketFailure(
-                    status: 413, code: "request_too_large", message: "WebSocket frame is too large")
+                    status: 413, code: .requestTooLarge, message: "WebSocket frame is too large")
             }
             guard let fields = try? WireCodec.decode(JSONValue.self, from: frame).value.object else {
                 throw ResponsesWebSocketFailure(
-                    status: 400, code: "invalid_request_error", message: "Invalid JSON object")
+                    status: 400, code: .invalidRequestError, message: "Invalid JSON object")
             }
             streamID = try Self.streamID(in: fields)
             guard let type = fields[EventKey.type.rawValue]?.string,
@@ -44,7 +48,7 @@ struct ResponsesWebSocketRequest: Sendable {
             else {
                 throw ResponsesWebSocketFailure(
                     status: 400,
-                    code: "invalid_stream_id",
+                    code: .invalidStreamID,
                     message: "Invalid WebSocket stream_id",
                     parameter: RequestField.streamID.rawValue)
             }
@@ -65,7 +69,7 @@ struct ResponsesWebSocketRequest: Sendable {
 
         static func invalid(_ message: String, streamID: String?, parameter: String) -> ResponsesWebSocketFailure {
             .init(
-                status: 400, code: "invalid_request_error", message: message, streamID: streamID, parameter: parameter)
+                status: 400, code: .invalidRequestError, message: message, streamID: streamID, parameter: parameter)
         }
     }
 
@@ -85,7 +89,7 @@ struct ResponsesWebSocketRequest: Sendable {
         guard fields[EventKey.type.rawValue]?.string != ResponsesWebSocketContract.Event.steer.rawValue else {
             throw ResponsesWebSocketFailure(
                 status: 400,
-                code: "steering_not_supported",
+                code: .steeringNotSupported,
                 message: "Mid-turn steering is not supported",
                 streamID: streamID,
                 parameter: EventKey.type.rawValue)

@@ -45,26 +45,6 @@ package enum ResponsesProviderState {
         return try responsesStreamData(root)
     }
 
-    /// Expands portable checkpoints before tool discovery without admitting any private state.
-    /// The caller keeps its durable source and selects a provider before normalization.
-    package static func expandedPortableBody(_ body: Data) throws -> Data {
-        var root = try responsesStreamObject(body)
-        guard let input = try inputItems(root) else { return body }
-        var changed = false
-        var expanded: [[String: Any]] = []
-        for item in input {
-            if let items = try ResponsesCompactionPayload.expand(item: item) {
-                changed = true
-                expanded.append(contentsOf: items)
-            } else {
-                expanded.append(item)
-            }
-        }
-        guard changed else { return body }
-        root[InputKey.input.rawValue] = expanded
-        return try responsesStreamData(root)
-    }
-
     /// The notice left in place of an opaque checkpoint when no provider can
     /// read it, so the continuing model knows earlier context exists but
     /// cannot be recovered.

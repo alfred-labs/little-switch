@@ -2,6 +2,7 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import LittleSwitchCommon
+import LittleSwitchWire
 import NIOHTTP1
 
 /// Codex's native upstreams for models outside the LittleSwitch catalog.
@@ -29,9 +30,13 @@ package enum CodexNativePassthrough {
     /// reserved slugs never pass through natively: an unresolved custom reviewer
     /// is a configuration error. Codex's own `codex-auto-review` stays native.
     static func isNativeRequest(_ body: Data) -> Bool {
+        guard let root = try? JSONValue.parse(body).object else { return false }
+        return isNativeRequest(root)
+    }
+
+    static func isNativeRequest(_ root: JSONObject) -> Bool {
         guard
-            let root = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
-            let model = root["model"] as? String,
+            let model = root[OpenAIResponsesRoutingRequest.Key.model.rawValue]?.string,
             !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
             model != CodexCatalog.managedAutoReviewModel,
             !model.contains("/"),
@@ -65,7 +70,7 @@ package enum CodexNativePassthrough {
 
 extension GatewayResponder {
     package func nativeResponsesResponse(
-        body: Data, incomingHeaders: HTTPHeaders, eventID: UUID
+        body: Data, incomingHeaders: HTTPHeaders, eventID: UUID, requestedStreaming: Bool
     ) async throws -> Response {
         do {
             // Native compaction is an upstream protocol operation. Preserve
@@ -78,7 +83,11 @@ extension GatewayResponder {
                 return openAIError(status: .contentTooLarge, message: "Expanded history is too large")
             }
             return try await nativePassthroughResponse(
-                body: nativeBody, incomingHeaders: incomingHeaders, endpoint: .responses, eventID: eventID
+                body: nativeBody,
+                incomingHeaders: incomingHeaders,
+                endpoint: .responses,
+                eventID: eventID,
+                requestedStreaming: requestedStreaming
             )
         } catch let failure as ResponsesWebSocketFailure {
             throw failure

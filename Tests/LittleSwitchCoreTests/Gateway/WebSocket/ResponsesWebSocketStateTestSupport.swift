@@ -4,6 +4,13 @@ import Testing
 
 @testable import LittleSwitchCore
 
+extension ResponsesWebSocketState {
+    // State receives an already decoded envelope; ingress owns the frame limit.
+    mutating func enqueue(_ frame: Data) throws {
+        try enqueue(ResponsesWebSocketRequest.Envelope(frame, maximumBytes: .max))
+    }
+}
+
 func webSocketStateRequest(
     stream: String? = nil, input: JSONValue = [], previous: String? = nil
 ) throws -> Data {

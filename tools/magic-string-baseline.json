@@ -92,41 +92,11 @@
       "rule" : "subscriptKey"
     },
     {
-      "anchor" : "extension GatewayResponder/func responsesRoutingMetadata(body:Data,capture:GatewayRoutingCapture)->ResponsesRoutingMetadata?",
-      "file" : "Sources/LittleSwitchCore/Gateway/Endpoints/GatewayResponses.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "model"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "extension GatewayResponder/func responsesRoutingMetadata(body:Data,capture:GatewayRoutingCapture)->ResponsesRoutingMetadata?",
-      "file" : "Sources/LittleSwitchCore/Gateway/Endpoints/GatewayResponses.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "stream"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
       "anchor" : "extension GatewayResponder/func consumeLiveChatCompletions(_:HTTPClientResponse,prepared:PreparedResponsesChatCompletionsRequest,traffic:GatewayUpstreamResponseTrace,session:inoutResponsesPublicStreamSession,writer:inoutanyResponseBodyWriter)asyncthrows",
       "file" : "Sources/LittleSwitchCore/Gateway/Endpoints/GatewayResponsesChatCompletions.swift",
       "literal" : {
         "kind" : "string",
         "value" : "content-type"
-      },
-      "ordinal" : 1,
-      "rule" : "subscriptKey"
-    },
-    {
-      "anchor" : "enum CodexNativePassthrough/static func isNativeRequest(_:Data)->Bool",
-      "file" : "Sources/LittleSwitchCore/Gateway/Endpoints/GatewayResponsesNativePassthrough.swift",
-      "literal" : {
-        "kind" : "string",
-        "value" : "model"
       },
       "ordinal" : 1,
       "rule" : "subscriptKey"

@@ -95,7 +95,7 @@ package struct ResponsesWebSocketSteering: Sendable {
     private static func invalid() -> ResponsesWebSocketFailure {
         .init(
             status: 400,
-            code: "invalid_input",
+            code: .invalidInput,
             message: "Invalid steering input",
             parameter: InputKey.input.rawValue)
     }

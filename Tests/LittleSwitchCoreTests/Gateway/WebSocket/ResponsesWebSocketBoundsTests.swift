@@ -14,7 +14,7 @@ struct ResponsesWebSocketBoundsTests {
         try webSocketStateSeed(&state, stream: "first", responseID: "first")
         try webSocketStateSeed(&state, stream: "second", responseID: "second")
         let rejected = try webSocketStateEnqueueFailure(webSocketStateRequest(stream: "third"), state: &state)
-        #expect(rejected.code == "websocket_stream_limit_reached")
+        #expect(rejected.code == .websocketStreamLimitReached)
         try state.enqueue(webSocketStateRequest(stream: "first"))
         try state.enqueue(webSocketStateRequest())
         #expect(try webSocketStateTurn(&state).streamID == "first")
@@ -49,15 +49,25 @@ struct ResponsesWebSocketBoundsTests {
     }
 
     @Test("Oversized frames never enter the queue")
-    func frameLimit() throws {
+    func frameLimit() async throws {
         var limits = ResponsesWebSocketLimits()
         limits.maxFrameBytes = 64
-        var state = ResponsesWebSocketState(limits: limits)
-        let rejected = try webSocketStateEnqueueFailure(
-            webSocketStateRequest(input: .string(String(repeating: "a", count: 100))), state: &state)
-        #expect(rejected.status == 413)
-        try state.enqueue(Data(#"{"type":"response.create","model":"route"}"#.utf8))
-        #expect(try webSocketStateTurn(&state).streamID == nil)
+        let websocket = SyntheticResponsesWebSocketTransport()
+        let harness = try NativeResponsesSessionHarness(websocket: websocket, limits: limits)
+        let task = harness.start()
+        defer {
+            harness.input.finish()
+            task.cancel()
+        }
+        harness.input.yield(try webSocketStateRequest(input: .string(String(repeating: "a", count: 100))))
+        let rejected = try await harness.events.wait(type: "error")
+        #expect(rejected["status"] == 413)
+        #expect(await websocket.requests.isEmpty)
+        harness.enqueue(#"{"type":"response.create","model":"gpt-6-astra"}"#)
+        _ = try await harness.events.wait(type: "response.completed")
+        #expect(await websocket.requests.count == 1)
+        harness.input.finish()
+        try await valueWithinTimeout(task, description: "frame ingress limit cleanup")
     }
 
     @Test("Memory-blocked lane heads cannot be overtaken by their smaller followers")
@@ -104,7 +114,7 @@ struct ResponsesWebSocketBoundsTests {
         try state.finish(reader, completion: nil)
         try webSocketStateSeed(&state, stream: "third", responseID: "third", input: "c")
         try state.enqueue(webSocketStateRequest(stream: "lookup", previous: "second"))
-        #expect(try webSocketStateRejection(state.next()).code == "previous_response_not_found")
+        #expect(try webSocketStateRejection(state.next()).code == .previousResponseNotFound)
         try state.enqueue(webSocketStateRequest(stream: "lookup", previous: "first"))
         #expect(try webSocketStateTurn(&state).previousResponseID == "first")
     }
@@ -118,7 +128,7 @@ struct ResponsesWebSocketBoundsTests {
         try webSocketStateSeed(&state, stream: "main", responseID: "large", input: "must never be truncated")
         for previous in ["small", "large"] {
             try state.enqueue(webSocketStateRequest(stream: "main", previous: previous))
-            #expect(try webSocketStateRejection(state.next()).code == "previous_response_not_found")
+            #expect(try webSocketStateRejection(state.next()).code == .previousResponseNotFound)
         }
     }
 

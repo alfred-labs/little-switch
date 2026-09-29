@@ -7,6 +7,25 @@ import Testing
 
 @Suite("Responses WebSocket HTTP projection")
 struct ResponsesWebSocketProjectionTests {
+    @Test("Malformed SSE is an invalid event before and after checkpoint publication", arguments: [false, true])
+    func malformedSSE(afterCheckpoint: Bool) async throws {
+        let projection = ResponsesWebSocketResponseProjection(
+            status: 200,
+            streaming: true,
+            streamID: "A",
+            maximumBytes: 4_096,
+            emit: { _ in },
+            checkpoint: { _ in })
+        if afterCheckpoint {
+            try await projection.append(
+                ByteBuffer(
+                    string: "data: {\"type\":\"response.completed\",\"response\":{\"id\":\"r\",\"output\":[]}}\n\n"))
+        }
+        await #expect(throws: ResponsesWebSocketEvents.Error.invalidEvent) {
+            try await projection.append(ByteBuffer(string: "data: invalid JSON\n\n"))
+        }
+    }
+
     @Test("Fragmented SSE preserves public events and holds the terminal")
     func fragmentedStream() async throws {
         let recorder = WebSocketEventRecorder()

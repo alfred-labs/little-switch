@@ -2,7 +2,6 @@ import AsyncHTTPClient
 import Foundation
 import Hummingbird
 import LittleSwitchCommon
-import LittleSwitchWire
 import NIOHTTP1
 
 extension GatewayResponder {
@@ -12,7 +11,8 @@ extension GatewayResponder {
         body: Data,
         incomingHeaders: HTTPHeaders,
         endpoint: CodexNativePassthrough.Endpoint,
-        eventID: UUID
+        eventID: UUID,
+        requestedStreaming: Bool = false
     ) async throws -> Response {
         guard !CodexNativePassthrough.isSentinelAuthorization(incomingHeaders) else {
             return openAIError(
@@ -37,19 +37,13 @@ extension GatewayResponder {
                 )
             )
         )
-        let upstream: HTTPClientResponse
+        var upstream: HTTPClientResponse
         do {
             try Task.checkCancellation()
             let native = try await nativeWebSocketPassthroughResponse(
                 upstreamRequest, body: body, endpoint: endpoint, eventID: eventID)
             if let native {
-                if let monitoring = GatewayMonitoringScope.current {
-                    var observed = native
-                    observed.body = .stream(MonitoringProviderBody(body: native.body, context: monitoring))
-                    upstream = observed
-                } else {
-                    upstream = native
-                }
+                upstream = native
             } else {
                 upstream = try await transport.execute(upstreamRequest)
             }
@@ -60,9 +54,10 @@ extension GatewayResponder {
         } catch {
             return openAIError(status: .badGateway, message: "Provider request failed")
         }
+        if let monitoring = GatewayMonitoringScope.current {
+            upstream.body = .stream(MonitoringProviderBody(body: upstream.body, context: monitoring))
+        }
         if endpoint == .responses {
-            let stream = ResponsesWebSocketContract.RequestField.stream.rawValue
-            let requestedStreaming = (try? JSONValue.parse(body).object?[stream]) == .boolean(true)
             return nativeResponsesStream(upstream, eventID: eventID, requestedStreaming: requestedStreaming)
         }
         recordUpstreamResponseHead(eventID: eventID, attempt: 0, response: upstream)

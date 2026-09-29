@@ -78,27 +78,25 @@ struct ResponsesPortableProvenanceTests {
         }
     }
 
-    @Test("Portable expansion preserves provenance until the provider is selected")
+    @Test("Portable expansion admits only the selected provider's private state")
     func portableExpansion() throws {
         let provider = UUID()
-        let account = provider
         let original: [String: Any] = ["type": "reasoning", "id": "rs_a", "encrypted_content": "private"]
-        let wrapped = try ResponsesProviderState.tagged(original, providerID: account)
+        let wrapped = try ResponsesProviderState.tagged(original, providerID: provider)
         let opaque: [String: Any] = ["type": "compaction", "encrypted_content": "native-checkpoint"]
         let checkpoint = try ResponsesCompactionFixture.owned(retained: [opaque, wrapped])
         let body = try responsesStreamData(["model": "route", "input": [checkpoint], "metadata": ["keep": "yes"]])
-        let expanded = try ResponsesProviderState.expandedPortableBody(body)
-        let root = try responsesStreamObject(expanded)
-        let items = try #require(root["input"] as? [[String: Any]])
-        #expect(items.contains { NSDictionary(dictionary: $0) == NSDictionary(dictionary: wrapped) })
-        #expect(items.contains { NSDictionary(dictionary: $0) == NSDictionary(dictionary: opaque) })
-        #expect(root["metadata"] as? [String: String] == ["keep": "yes"])
-        let normalized = try responsesStreamObject(
-            ResponsesProviderState.normalize(body: expanded, providerID: account))
-        let admitted = try #require(normalized["input"] as? [[String: Any]])
-        #expect(admitted.contains { NSDictionary(dictionary: $0) == NSDictionary(dictionary: original) })
-        #expect(!admitted.contains { $0["type"] as? String == "compaction" })
-        #expect(try ResponsesProviderState.expandedPortableBody(expanded) == expanded)
+        let summary: [String: Any] = [
+            "type": "message", "role": "assistant", "content": [["type": "output_text", "text": "Earlier work."]],
+        ]
+        for destination in [nil, provider, UUID()] {
+            let input =
+                if destination == nil { [opaque, summary] } else if destination == provider {
+                    [summary, original]
+                } else { [summary] }
+            let expected = try responsesStreamData(["model": "route", "input": input, "metadata": ["keep": "yes"]])
+            #expect(try ResponsesProviderState.normalize(body: body, providerID: destination) == expected)
+        }
     }
 
     @Test("A different provider compacts portable context while retaining the owner's exact state")

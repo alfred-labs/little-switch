@@ -15,7 +15,7 @@ struct ResponsesWebSocketHistoryTests {
         #expect(try #require(JSONValue.parse(webSocketStateInputData(fresh)).array).count == 1)
         try state.finish(fresh, completion: .init(responseID: "new", output: Data("[]".utf8)))
         try state.enqueue(webSocketStateRequest(stream: "main", previous: "old"))
-        #expect(try webSocketStateRejection(state.next()).code == "previous_response_not_found")
+        #expect(try webSocketStateRejection(state.next()).code == .previousResponseNotFound)
         try state.enqueue(webSocketStateRequest(stream: "main", previous: "new"))
         #expect(try webSocketStateTurn(&state).previousResponseID == "new")
     }
@@ -31,7 +31,7 @@ struct ResponsesWebSocketHistoryTests {
         try state.enqueue(webSocketStateRequest(stream: "fork", previous: "parent"))
         #expect(state.next() == nil)
         try state.finish(advance, completion: .init(responseID: "advanced", output: Data("[]".utf8)))
-        #expect(try webSocketStateRejection(state.next()).code == "previous_response_not_found")
+        #expect(try webSocketStateRejection(state.next()).code == .previousResponseNotFound)
     }
 
     @Test("A running fork retains its snapshot while the source lane advances")
@@ -97,7 +97,7 @@ struct ResponsesWebSocketHistoryTests {
         try webSocketStateSeed(&state, stream: "second", responseID: "duplicate", input: "new second")
         for identifier in ["duplicate", "second"] {
             try state.enqueue(webSocketStateRequest(stream: "reader", previous: identifier))
-            #expect(try webSocketStateRejection(state.next()).code == "previous_response_not_found")
+            #expect(try webSocketStateRejection(state.next()).code == .previousResponseNotFound)
         }
         try state.enqueue(webSocketStateRequest(stream: "first", input: "explicit replay"))
         #expect(try webSocketStateTurn(&state).previousResponseID == nil)

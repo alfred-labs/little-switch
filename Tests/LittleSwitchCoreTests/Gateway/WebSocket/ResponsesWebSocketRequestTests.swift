@@ -49,7 +49,7 @@ struct ResponsesWebSocketRequestTests {
     func invalidStream(stream: String) throws {
         var state = ResponsesWebSocketState()
         let failure = try webSocketStateEnqueueFailure(webSocketStateRequest(stream: stream), state: &state)
-        #expect(failure.code == "invalid_stream_id")
+        #expect(failure.code == .invalidStreamID)
         #expect(failure.parameter == "stream_id")
     }
 
@@ -62,7 +62,7 @@ struct ResponsesWebSocketRequestTests {
         #expect(try webSocketStateTurn(&state).streamID == name)
         #expect(try webSocketStateTurn(&state).streamID == nil)
         let invalid = Data(#"{"type":"response.create","model":"route","stream_id":null}"#.utf8)
-        #expect(try webSocketStateEnqueueFailure(invalid, state: &state).code == "invalid_stream_id")
+        #expect(try webSocketStateEnqueueFailure(invalid, state: &state).code == .invalidStreamID)
     }
 
     @Test("Background and server conversation state are explicitly unsupported")
@@ -91,7 +91,7 @@ struct ResponsesWebSocketRequestTests {
         let failure = try webSocketStateEnqueueFailure(
             Data(#"{"type":"response.steer","previous_response_id":"parent","input":"Change"}"#.utf8),
             state: &state)
-        #expect(failure.code == "steering_not_supported")
+        #expect(failure.code == .steeringNotSupported)
         #expect(state.next() == nil)
         try state.enqueue(webSocketStateRequest(stream: "main", previous: "parent"))
         #expect(try webSocketStateTurn(&state).previousResponseID == "parent")
@@ -106,7 +106,7 @@ struct ResponsesWebSocketRequestTests {
                 #"{"type":"response.steer","stream_id":"main","previous_response_id":"parent","input":"Change"}"#
                     .utf8),
             state: &state)
-        #expect(failure.code == "steering_not_supported")
+        #expect(failure.code == .steeringNotSupported)
         #expect(failure.streamID == "main")
         #expect(try JSONValue.parse(failure.encoded()).object?["stream_id"] == "main")
         try state.enqueue(webSocketStateRequest(stream: "main", previous: "parent"))
@@ -167,7 +167,7 @@ struct ResponsesWebSocketRequestTests {
                 let turn = try webSocketStateTurn(&state)
                 try state.finish(turn, completion: nil)
             } else {
-                #expect(try webSocketStateRejection(state.next()).code == "previous_response_not_found")
+                #expect(try webSocketStateRejection(state.next()).code == .previousResponseNotFound)
             }
         }
     }

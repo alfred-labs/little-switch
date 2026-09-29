@@ -3,17 +3,27 @@ import LittleSwitchWire
 
 package struct ResponsesWebSocketFailure: Error, Sendable {
     package let status: Int
-    package let code: String
+    package let code: ResponsesWebSocketContract.ErrorCode
     package let message: String
     package let streamID: String?
     package let parameter: String?
 
-    package init(status: Int, code: String, message: String, streamID: String? = nil, parameter: String? = nil) {
+    package init(
+        status: Int,
+        code: ResponsesWebSocketContract.ErrorCode,
+        message: String,
+        streamID: String? = nil,
+        parameter: String? = nil
+    ) {
         self.status = status
         self.code = code
         self.message = message
         self.streamID = streamID
         self.parameter = parameter
+    }
+
+    package func identifyingStream(_ streamID: String?) -> Self {
+        .init(status: status, code: code, message: message, streamID: self.streamID ?? streamID, parameter: parameter)
     }
 
     package func encoded() throws -> Data {
@@ -24,7 +34,7 @@ package struct ResponsesWebSocketFailure: Error, Sendable {
             OpenAIResponsesResponse.Key.status.rawValue: .integer(status),
             OpenAIResponsesResponse.Key.error.rawValue: [
                 OpenAIResponsesErrorEvent.Key.type.rawValue: .string(type.rawValue),
-                OpenAIResponsesErrorEvent.Key.code.rawValue: .string(code),
+                OpenAIResponsesErrorEvent.Key.code.rawValue: .string(code.rawValue),
                 OpenAIResponsesErrorEvent.Key.message.rawValue: .string(message),
                 OpenAIResponsesErrorEvent.Key.param.rawValue: parameter.map(JSONValue.string) ?? .null,
             ],

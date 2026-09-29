@@ -73,7 +73,7 @@ package struct ResponsesWebSocketExecutor: Sendable {
     ) async throws -> ResponsesWebSocketEventResult {
         let source = try JSONValue.parse(turn.body)
         guard let model = source.object?[OpenAIResponsesRoutingRequest.Key.model.rawValue]?.string else {
-            throw failure("invalid_request", "A model is required", turn: turn)
+            throw failure(.invalidRequest, "A model is required", turn: turn)
         }
         let capture = try await responder.dependencies.snapshotCapturer.capture(state: responder.state)
         try Task.checkCancellation()
@@ -85,7 +85,7 @@ package struct ResponsesWebSocketExecutor: Sendable {
             } catch {
                 throw ResponsesWebSocketFailure(
                     status: 400,
-                    code: "invalid_request_error",
+                    code: .invalidRequestError,
                     message: "Invalid Responses request",
                     streamID: turn.streamID,
                     parameter: "input")
@@ -95,12 +95,12 @@ package struct ResponsesWebSocketExecutor: Sendable {
             if request.headers[.authorization]?.caseInsensitiveCompare(sentinel) == .orderedSame {
                 throw ResponsesWebSocketFailure(
                     status: 401,
-                    code: "invalid_request_error",
+                    code: .invalidRequestError,
                     message: CodexNativePassthrough.sentinelRejectionMessage,
                     streamID: turn.streamID)
             }
         } else {
-            throw failure("model_not_found", "Unknown or invalid model", turn: turn)
+            throw failure(.modelNotFound, "Unknown or invalid model", turn: turn)
         }
         let responseID = "resp_ls_\(UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased())"
         var response: JSONObject = [
@@ -136,7 +136,9 @@ package struct ResponsesWebSocketExecutor: Sendable {
         return try events.finish()
     }
 
-    private func failure(_ code: String, _ message: String, turn: ResponsesWebSocketTurn) -> ResponsesWebSocketFailure {
+    private func failure(
+        _ code: ResponsesWebSocketContract.ErrorCode, _ message: String, turn: ResponsesWebSocketTurn
+    ) -> ResponsesWebSocketFailure {
         ResponsesWebSocketFailure(
             status: 400, code: code, message: message, streamID: turn.streamID, parameter: "model")
     }

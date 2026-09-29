@@ -1,6 +1,26 @@
 /// WebSocket envelope and request options absent from the generated public
 /// Responses projections. Projected provider fields use LittleSwitchWire keys.
-enum ResponsesWebSocketContract {
+package enum ResponsesWebSocketContract {
+    package enum ErrorCode: String, Sendable {
+        case invalidInput = "invalid_input"
+        case invalidRequest = "invalid_request"
+        case invalidRequestError = "invalid_request_error"
+        case invalidResponse = "invalid_response"
+        case invalidStreamID = "invalid_stream_id"
+        case modelNotFound = "model_not_found"
+        case pendingSteering = "pending_steering"
+        case previousResponseNotFound = "previous_response_not_found"
+        case requestTooLarge = "request_too_large"
+        case responseNotFound = "response_not_found"
+        case steeringNotSupported = "steering_not_supported"
+        case steeringAcknowledgementTimeout = "steering_acknowledgement_timeout"
+        case steeringConnectionRetired = "steering_connection_retired"
+        case tooManyPendingSteers = "too_many_pending_steers"
+        case upstreamError = "upstream_error"
+        case websocketConnectionLimitReached = "websocket_connection_limit_reached"
+        case websocketStreamLimitReached = "websocket_stream_limit_reached"
+    }
+
     enum RequestField: String {
         case previousResponseID = "previous_response_id"
         case stream, background, conversation, generate, prewarm

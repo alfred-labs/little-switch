@@ -83,7 +83,7 @@ struct ResponsesWebSocketStateTests {
         try state.finish(source, completion: nil)
         try state.enqueue(frame(stream: "source", input: "retry", previous: "parent"))
         let failure = try requestFailure(state.next())
-        #expect(failure.code == "previous_response_not_found")
+        #expect(failure.code == .previousResponseNotFound)
         #expect(failure.streamID == "source")
     }
 
@@ -107,7 +107,7 @@ struct ResponsesWebSocketStateTests {
     func errorEnvelope() throws {
         let error = ResponsesWebSocketFailure(
             status: 400,
-            code: "previous_response_not_found",
+            code: .previousResponseNotFound,
             message: "Previous response was not found",
             streamID: "agent_1",
             parameter: "previous_response_id")

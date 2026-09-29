@@ -178,7 +178,8 @@ extension GatewayTests {
         let body = Data(#"{"model":"z.ai/glm-5.2","input":"Continue the conversation."}"#.utf8)
         let result =
             if native {
-                try await responder.nativeResponsesResponse(body: body, incomingHeaders: [:], eventID: UUID())
+                try await responder.nativeResponsesResponse(
+                    body: body, incomingHeaders: [:], eventID: UUID(), requestedStreaming: false)
             } else {
                 try await responder.admittedResponsesResponse(
                     TransparentResponsesContext(

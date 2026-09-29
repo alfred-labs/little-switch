@@ -3,6 +3,7 @@ import Foundation
 import Hummingbird
 import LittleSwitchCommon
 import LittleSwitchTransport
+import LittleSwitchWire
 import NIOHTTP1
 
 package struct TransparentResponsesContext {
@@ -62,10 +63,14 @@ extension GatewayResponder {
 
         trafficRecorder.record(eventID: eventID, action: .claudeRequestBody(incomingBody))
         let incomingHeaders = nioHeaders(request.headers)
-        guard let metadata = responsesRoutingMetadata(body: incomingBody, capture: capture) else {
-            if chatGPTRoutingCapture == nil, CodexNativePassthrough.isNativeRequest(incomingBody) {
+        let root = try? JSONValue.parse(incomingBody).object
+        guard let root, let metadata = responsesRoutingMetadata(root: root, capture: capture) else {
+            if chatGPTRoutingCapture == nil, let root, CodexNativePassthrough.isNativeRequest(root) {
                 return try await nativeResponsesResponse(
-                    body: incomingBody, incomingHeaders: incomingHeaders, eventID: eventID
+                    body: incomingBody,
+                    incomingHeaders: incomingHeaders,
+                    eventID: eventID,
+                    requestedStreaming: root[ResponsesWebSocketContract.RequestField.stream.rawValue] == .boolean(true)
                 )
             }
             return openAIError(status: .badRequest, message: "Unknown or invalid model")
@@ -172,8 +177,7 @@ extension GatewayResponder {
         if needsChatCompletionsAdapter {
             return try await chatCompletionsResponsesResponse(context, attempt: attempt, forceText: forceText)
         }
-        let imageProjection = try await responsesImageInput(
-            body: context.body, target: context.target, wire: .responses, forceText: forceText)
+        let (responder, imageProjection) = try await nativeResponsesImageProjection(context, forceText: forceText)
         let upstreamBody: Data
         let normalized: OpenAIResponsesNativeNamespacing.Normalized
         do {
@@ -217,7 +221,7 @@ extension GatewayResponder {
         let exchange: GatewayModelExchange
         do {
             try Task.checkCancellation()
-            exchange = try await executeModelRequest(
+            exchange = try await responder.executeModelRequest(
                 upstreamRequest,
                 body: upstreamBody,
                 traffic: upstreamTraffic,
@@ -271,6 +275,25 @@ extension GatewayResponder {
         }
         return streamingResponse(
             upstreamResponse, eventID: context.eventID, attempt: attempt, errorStyle: .openAI, trace: exchange.trace)
+    }
+
+    private func nativeResponsesImageProjection(
+        _ context: TransparentResponsesContext, forceText: Bool
+    ) async throws -> (GatewayResponder, ResponsesImageInputProjection.Result) {
+        var responder = self
+        let imageProjection: ResponsesImageInputProjection.Result
+        if responder.responsesWebSocketContext != nil {
+            let acceptsImages = try await acceptsResponsesImages(
+                target: context.target, wire: .responses, forceText: forceText)
+            imageProjection = try ResponsesImageInputProjection.project(
+                body: context.body, acceptsImages: acceptsImages)
+            responder.responsesWebSocketContext?.steeringProjection = .managed(
+                providerID: context.target.provider.id, acceptsImages: acceptsImages)
+        } else {
+            imageProjection = try await responsesImageInput(
+                body: context.body, target: context.target, wire: .responses, forceText: forceText)
+        }
+        return (responder, imageProjection)
     }
 
     private enum ResponsesBodyError: Swift.Error {
@@ -329,11 +352,10 @@ extension GatewayResponder {
     }
 
     private func responsesRoutingMetadata(
-        body: Data,
+        root: JSONObject,
         capture: GatewayRoutingCapture
     ) -> ResponsesRoutingMetadata? {
-        guard let root = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
-            let model = root["model"] as? String,
+        guard let model = root[OpenAIResponsesRoutingRequest.Key.model.rawValue]?.string,
             let target = chatGPTRoutingCapture == nil
                 ? capture.snapshot.resolveCodex(model: model) : capture.snapshot.resolveChatGPT(model: model)
         else {
@@ -342,7 +364,7 @@ extension GatewayResponder {
         return ResponsesRoutingMetadata(
             model: model,
             target: target,
-            streaming: root["stream"] as? Bool ?? false
+            streaming: root[ResponsesWebSocketContract.RequestField.stream.rawValue]?.boolean ?? false
         )
     }
 }

@@ -135,7 +135,8 @@ struct NativeResponsesSessionHarness: Sendable {
     init(
         websocket: any UpstreamWebSocketTransport,
         fixture supplied: GatewayFixture? = nil,
-        traffic: any TrafficRecording = NoopTrafficRecorder()
+        traffic: any TrafficRecording = NoopTrafficRecorder(),
+        limits: ResponsesWebSocketLimits = .init()
     ) throws {
         let fixture = try supplied ?? GatewayTests().makeFixture()
         let responder = GatewayResponder(
@@ -145,7 +146,7 @@ struct NativeResponsesSessionHarness: Sendable {
             requiredAuthorityPort: nil,
             trafficRecorder: traffic)
         session = ResponsesWebSocketSession(
-            responder: responder, request: webSocketHTTPRequest(), upstreamTransport: websocket)
+            responder: responder, request: webSocketHTTPRequest(), limits: limits, upstreamTransport: websocket)
         (messages, input) = AsyncStream<Data>.makeStream(bufferingPolicy: .bufferingOldest(128))
     }
 

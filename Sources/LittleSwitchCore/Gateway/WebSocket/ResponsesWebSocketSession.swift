@@ -47,21 +47,15 @@ package struct ResponsesWebSocketSession: Sendable {
                     await forwardSteering(steeringMessages, upstream: upstream, channel: channel)
                 }
             }
-            group.addTask {
-                await read(messages, channel: channel)
-            }
-            group.addTask {
-                await expire(channel: channel)
-            }
+            group.addTask { await read(messages, channel: channel) }
+            group.addTask { await expire(channel: channel) }
             do {
                 loop: for await event in channel {
                     try Task.checkCancellation()
                     switch event {
                     case .received(let frame):
                         do {
-                            if try !steeringQueue.enqueue(frame, supported: upstream != nil) {
-                                try state.enqueue(frame)
-                            }
+                            try enqueue(frame, state: &state, steeringQueue: &steeringQueue)
                         } catch let failure as ResponsesWebSocketFailure {
                             try await send(failure.encoded())
                         }
@@ -80,12 +74,15 @@ package struct ResponsesWebSocketSession: Sendable {
                     case .checkpoint(let turn, let result, let input, let acknowledgement):
                         do {
                             try checkpoint(turn, result: result, input: input, state: &state)
-                            try await send(result.terminal)
-                            acknowledgement.finish()
                         } catch {
-                            acknowledgement.finish(throwing: error)
-                            throw error
+                            let failure =
+                                (error as? ResponsesWebSocketFailure)
+                                ?? ResponsesWebSocketFailure(
+                                    status: 502, code: .invalidResponse, message: "Provider response checkpoint failed")
+                            acknowledgement.finish(throwing: failure.identifyingStream(turn.streamID))
+                            continue
                         }
+                        try await forward(result.terminal, acknowledgement: acknowledgement, send: send)
                     case .readFailed(let error):
                         throw error
                     // swiftlint:disable:next pattern_matching_keywords
@@ -95,14 +92,14 @@ package struct ResponsesWebSocketSession: Sendable {
                             let failure =
                                 (error as? ResponsesWebSocketFailure)
                                 ?? ResponsesWebSocketFailure(
-                                    status: 502, code: "upstream_error", message: "Could not forward steering")
+                                    status: 502, code: .upstreamError, message: "Could not forward steering")
                             try await send(failure.encoded())
                         }
                     case .expired:
                         try await send(
                             ResponsesWebSocketFailure(
                                 status: 400,
-                                code: "websocket_connection_limit_reached",
+                                code: .websocketConnectionLimitReached,
                                 message: "Reconnect and replay context to continue"
                             ).encoded())
                         break loop
@@ -132,6 +129,19 @@ package struct ResponsesWebSocketSession: Sendable {
                 group.cancelAll()
                 throw error
             }
+        }
+    }
+
+    private func enqueue(
+        _ frame: Data,
+        state: inout ResponsesWebSocketState,
+        steeringQueue: inout ResponsesWebSocketSteeringQueue
+    ) throws {
+        let envelope = try ResponsesWebSocketRequest.Envelope(frame, maximumBytes: limits.maxFrameBytes)
+        if envelope.isSteering, upstreamTransport != nil {
+            try steeringQueue.enqueue(envelope)
+        } else {
+            try state.enqueue(envelope)
         }
     }
 
@@ -223,7 +233,7 @@ package struct ResponsesWebSocketSession: Sendable {
             try state.finish(turn, completion: context)
             return completed.terminal
         } catch {
-            if (error as? ResponsesWebSocketFailure)?.code == "pending_steering" {
+            if (error as? ResponsesWebSocketFailure)?.code == .pendingSteering {
                 // No request was submitted. Retain the original checkpoint so
                 // the client can return required input on its owning chain.
                 state.releaseCheckpointed(turn)
@@ -234,10 +244,10 @@ package struct ResponsesWebSocketSession: Sendable {
                 (error as? ResponsesWebSocketFailure)
                 ?? ResponsesWebSocketFailure(
                     status: 502,
-                    code: "upstream_error",
+                    code: .upstreamError,
                     message: "Provider response failed",
                     streamID: turn.streamID)
-            return try failure.encoded()
+            return try failure.identifyingStream(turn.streamID).encoded()
         }
     }
 

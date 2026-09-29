@@ -84,12 +84,15 @@ package actor ResponsesWebSocketResponseProjection {
 
     private func forward(_ frames: [ServerSentEventFrame]) async throws {
         for frame in frames where !frame.terminal {
-            let startsResponse =
-                try JSONValue.parse(frame.data).object?[OpenAIResponsesCreatedEvent.Key.type.rawValue]?.string
-                == OpenAIResponsesCreatedEventType.responseCreated.rawValue
-            if checkpoint != nil, lastTerminal != nil, startsResponse {
-                events = ResponsesWebSocketEvents(streamID: streamID, maximumBytes: maximumBytes)
-                lastTerminal = nil
+            if checkpoint != nil, lastTerminal != nil {
+                guard let event = try? JSONValue.parse(frame.data).object else {
+                    throw ResponsesWebSocketEvents.Error.invalidEvent
+                }
+                let type = event[OpenAIResponsesCreatedEvent.Key.type.rawValue]?.string
+                if type == OpenAIResponsesCreatedEventType.responseCreated.rawValue {
+                    events = ResponsesWebSocketEvents(streamID: streamID, maximumBytes: maximumBytes)
+                    lastTerminal = nil
+                }
             }
             if let message = try events.accept(frame.data) {
                 try await emit(message)

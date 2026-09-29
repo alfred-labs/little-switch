@@ -1,4 +1,3 @@
-import AsyncAlgorithms
 import AsyncHTTPClient
 import Foundation
 import HTTPTypes
@@ -14,12 +13,34 @@ package actor ResponsesUpstreamConnection {
     private typealias ItemKey = OpenAIResponsesOutputItemDoneEvent.Key
     private typealias SteeringField = ResponsesWebSocketContract.SteeringField
     private typealias ControlField = ResponsesWebSocketContract.ControlField
+    private struct SteeringDeadline: Sendable {
+        let identifier: UUID
+        let instant: ContinuousClock.Instant
+    }
+    private enum Retirement: Error {
+        case steeringAcknowledgementTimeout
+    }
+    private enum TerminalDisposition {
+        case allowsAutomaticContinuation
+        case requiresRequest
+    }
+    private enum RunEvent: Sendable {
+        case connection(Result<Void, any Error>)
+        case acknowledgementDeadline(Result<Void, any Error>)
+        case closeRequested
+    }
     package let key: ResponsesUpstreamKey
     private let request: UpstreamWebSocketRequest
     private let maximumBytes: Int
+    private let maximumPendingSteers: Int
+    private let steeringAcknowledgementTimeout: Duration
+    private let validateSteering: @Sendable (ResponsesWebSocketSteering) throws -> Void
     private let control: @Sendable (Data) async throws -> Void
     private var outbound: (any UpstreamWebSocketOutbound)?
-    private var ready: [CheckedContinuation<Void, any Error>] = []
+    private let readiness = ResponsesUpstreamReadiness()
+    private let steeringDeadlines = AsyncStream<SteeringDeadline>.makeStream(bufferingPolicy: .bufferingNewest(1))
+    private let closeRequests = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
+    private var steeringDeadlineID: UUID?
     private var failure: (any Error)?
     private var body: ResponsesUpstreamBody?
     private var submitted: [ResponsesWebSocketSteering] = []
@@ -28,7 +49,7 @@ package actor ResponsesUpstreamConnection {
     private var retainedSteeringBytes = 0
     private var responseID: String?
     private var latestCompletedID: String?
-    private var terminal = false
+    private var terminal: TerminalDisposition?
     private var waitsForTools = false
     private var validateProvider: @Sendable () async throws -> Void = {}
     private var observeControl: @Sendable (String) -> Void = { _ in }
@@ -39,22 +60,61 @@ package actor ResponsesUpstreamConnection {
         key: ResponsesUpstreamKey,
         request: UpstreamWebSocketRequest,
         maximumBytes: Int,
+        maximumPendingSteers: Int = ResponsesWebSocketLimits().maxQueuedRequests,
+        steeringAcknowledgementTimeout: Duration = ResponsesWebSocketLimits().steeringAcknowledgementTimeout,
+        validateSteering: @escaping @Sendable (ResponsesWebSocketSteering) throws -> Void = { _ in },
         control: @escaping @Sendable (Data) async throws -> Void
     ) {
         self.key = key
         self.request = request
         self.maximumBytes = maximumBytes
+        self.maximumPendingSteers = maximumPendingSteers
+        self.steeringAcknowledgementTimeout = steeringAcknowledgementTimeout
+        self.validateSteering = validateSteering
         self.control = control
     }
 
     package func run(transport: any UpstreamWebSocketTransport) async {
+        guard failure == nil else { return }
+        defer {
+            steeringDeadlines.continuation.finish()
+            closeRequests.continuation.finish()
+        }
         do {
-            try await transport.withConnection(request) { connection in
-                await self.connected(connection.outbound)
-                _ = try await connection.inbound.consume { try await self.receive($0) }
+            try await withThrowingTaskGroup(of: RunEvent.self) { group in
+                group.addTask { [request] in
+                    do {
+                        try await transport.withConnection(request) { try await self.consumeConnection($0) }
+                        return .connection(.success(()))
+                    } catch { return .connection(.failure(error)) }
+                }
+                group.addTask {
+                    do {
+                        try await self.monitorSteeringAcknowledgements()
+                        return .acknowledgementDeadline(.success(()))
+                    } catch { return .acknowledgementDeadline(.failure(error)) }
+                }
+                group.addTask { [closeRequests] in
+                    for await _ in closeRequests.stream { return .closeRequested }
+                    return .closeRequested
+                }
+                defer { group.cancelAll() }
+                while let event = try await group.next() {
+                    switch event {
+                    case .closeRequested:
+                        return
+                    case .acknowledgementDeadline(let result):
+                        try result.get()
+                        return
+                    case .connection(let result):
+                        if await self.shouldDrainRetirement(after: result) { continue }
+                        try result.get()
+                        return
+                    }
+                }
             }
-            await fail(UpstreamWebSocketFailure(kind: .connectionEnded))
-        } catch { await fail(error) }
+            await finishRun(UpstreamWebSocketFailure(kind: .connectionEnded))
+        } catch { await finishRun(error) }
     }
 
     package func exchange(
@@ -63,13 +123,15 @@ package actor ResponsesUpstreamConnection {
         observeControl: @escaping @Sendable (String) -> Void,
         validateProvider: @escaping @Sendable () async throws -> Void
     ) async throws -> HTTPClientResponse {
-        try await waitUntilReady()
+        try await readiness.wait()
         try await validateProvider()
         try Task.checkCancellation()
-        guard body == nil, let outbound else { throw UpstreamWebSocketFailure(kind: .connectionClosing) }
+        guard failure == nil, body == nil, let outbound else {
+            throw UpstreamWebSocketFailure(kind: .connectionClosing)
+        }
         let channel = ResponsesUpstreamBody()
         body = channel
-        terminal = false
+        terminal = nil
         waitsForTools = false
         responseID = nil
         self.validateProvider = validateProvider
@@ -78,7 +140,7 @@ package actor ResponsesUpstreamConnection {
         guard accepted.isEmpty || previousResponseID == latestCompletedID else {
             body = nil
             throw ResponsesWebSocketFailure(
-                status: 409, code: "pending_steering", message: "Continue the response with pending steering")
+                status: 409, code: .pendingSteering, message: "Continue the response with pending steering")
         }
         guard let text = String(data: data, encoding: .utf8) else { throw ResponsesWebSocketEvents.Error.invalidEvent }
         do {
@@ -107,22 +169,23 @@ package actor ResponsesUpstreamConnection {
         do { try await validateProvider() } catch is CancellationError { throw CancellationError() } catch {
             throw ResponsesWebSocketFailure(
                 status: 409,
-                code: "response_not_found",
+                code: .responseNotFound,
                 message:
                     "The response provider is no longer available. Reconnect, replay complete portable history, and explicitly resubmit unapplied steering."
             )
         }
         guard failure == nil, let outbound,
-            responseID == steering.previousResponseID, body != nil, !terminal
+            responseID == steering.previousResponseID, body != nil, terminal == nil
         else {
             throw ResponsesWebSocketFailure(
-                status: 400, code: "response_not_found", message: "The response is not active on this connection")
+                status: 400, code: .responseNotFound, message: "The response is not active on this connection")
         }
-        guard submitted.count + accepted.count < 128,
+        try validateSteering(steering)
+        guard submitted.count + accepted.count < maximumPendingSteers,
             steering.body.count <= maximumBytes - retainedSteeringBytes
         else {
             throw ResponsesWebSocketFailure(
-                status: 429, code: "too_many_pending_steers", message: "Too much steering input is pending")
+                status: 429, code: .tooManyPendingSteers, message: "Too much steering input is pending")
         }
         submitted.append(steering)
         submittedObservers.append(observeControl)
@@ -142,35 +205,68 @@ package actor ResponsesUpstreamConnection {
     }
 
     package func close() async {
+        closeRequests.continuation.yield(())
         await fail(CancellationError())
         try? await outbound?.close()
     }
 
-    private func connected(_ outbound: any UpstreamWebSocketOutbound) {
-        self.outbound = outbound
-        let waiters = ready
-        ready.removeAll()
-        for waiter in waiters { waiter.resume() }
+    private func consumeConnection(_ connection: UpstreamWebSocketConnection) async throws {
+        if let failure { throw failure }
+        outbound = connection.outbound
+        defer { outbound = nil }
+        await readiness.resolve(.success(()))
+        _ = try await connection.inbound.consume { try await self.receive($0) }
     }
 
-    private func waitUntilReady() async throws {
-        if let failure { throw failure }
-        if outbound != nil { return }
-        try await withCheckedThrowingContinuation { ready.append($0) }
+    private func shouldDrainRetirement(after result: Result<Void, any Error>) async -> Bool {
+        if let failure, failure is Retirement { return true }
+        let error: any Error
+        switch result {
+        case .success: error = UpstreamWebSocketFailure(kind: .connectionEnded)
+        case .failure(let cause): error = cause
+        }
+        // Mark the ordinary disconnect before suspension, so a retirement
+        // cannot begin between this decision and cancelling the monitor.
+        if beginFailure(error) { await completeFailure(error) }
+        return false
     }
 
     private func fail(_ error: any Error) async {
-        guard failure == nil else { return }
-        failure = error
-        await body?.fail(error)
-        body = nil
-        let waiters = ready
-        ready.removeAll()
-        for waiter in waiters { waiter.resume(throwing: error) }
+        guard beginFailure(error) else { return }
+        await completeFailure(error)
     }
 
+    private func beginFailure(_ error: any Error) -> Bool {
+        guard failure == nil else { return false }
+        failure = error
+        steeringDeadlineID = nil
+        return true
+    }
+
+    private func completeFailure(_ error: any Error) async {
+        let failedBody = body
+        body = nil
+        await failedBody?.fail(error)
+        await readiness.resolve(.failure(error))
+    }
+
+    private func finishRun(_ error: any Error) async {
+        // Only the run owner can finish an interrupted retirement. A concurrent
+        // steer write failure must leave the body open until controls drain.
+        if let failure, failure is Retirement {
+            await finishBody()
+        } else {
+            await fail(error)
+        }
+    }
+}
+
+extension ResponsesUpstreamConnection {
     private func receive(_ message: UpstreamWebSocketMessage) async throws {
         try Task.checkCancellation()
+        // Retirement rejects all new work before asynchronous control writes;
+        // late acknowledgements cannot bind to another turn while those drain.
+        guard failure == nil else { return }
         guard case .text(let text) = message, text.utf8.count <= maximumBytes,
             let event = try JSONValue.parse(text).object, let type = event[EventKey.type.rawValue]?.string
         else { throw ResponsesWebSocketEvents.Error.invalidEvent }
@@ -186,9 +282,9 @@ package actor ResponsesUpstreamConnection {
             guard let identifier = event[EventKey.response.rawValue]?.object?[ResponseKey.id.rawValue]?.string else {
                 throw ResponsesWebSocketEvents.Error.invalidEvent
             }
-            if responseID != nil, !terminal { throw ResponsesWebSocketEvents.Error.mismatchedResponse }
+            if responseID != nil, terminal == nil { throw ResponsesWebSocketEvents.Error.mismatchedResponse }
             responseID = identifier
-            terminal = false
+            terminal = nil
             waitsForTools = false
             if !accepted.isEmpty {
                 applied[identifier] = accepted.flatMap(\.1.input)
@@ -201,13 +297,10 @@ package actor ResponsesUpstreamConnection {
         if itemDone, let item = event[ItemKey.item.rawValue] {
             waitsForTools = waitsForTools || ResponsesClientToolContinuation.requiresInput(item)
         }
-        let isTerminal = [
-            OpenAIResponsesCompletedEventType.responseCompleted.rawValue,
-            OpenAIResponsesIncompleteEventType.responseIncomplete.rawValue,
-            OpenAIResponsesFailedEventType.responseFailed.rawValue, OpenAIResponsesErrorEventType.error.rawValue,
-        ].contains(type)
-        if isTerminal {
-            terminal = true
+        let disposition = Self.terminalDisposition(type)
+        let terminalReceivedAt = disposition.map { _ in ContinuousClock.now }
+        if let disposition {
+            terminal = disposition
             latestCompletedID =
                 event[EventKey.response.rawValue]?.object?[ResponseKey.id.rawValue]?.string ?? responseID
             waitsForTools =
@@ -216,16 +309,18 @@ package actor ResponsesUpstreamConnection {
                     ResponsesClientToolContinuation.requiresInput($0)
                 } ?? false)
         }
-        var framed = Data("data: ".utf8)
-        framed.append(data)
-        framed.append(Data("\n\n".utf8))
+        let framed = try ServerSentEventEncoder.encode(data: data)
         try await body.send(ByteBuffer(bytes: framed))
         try Task.checkCancellation()
-        let cannotContinue =
-            type == OpenAIResponsesFailedEventType.responseFailed.rawValue
-            || type == OpenAIResponsesErrorEventType.error.rawValue || waitsForTools
-        let hasSteering = !accepted.isEmpty || !submitted.isEmpty
-        if isTerminal, cannotContinue || !hasSteering { await finishBody() }
+        if let terminalReceivedAt, !submitted.isEmpty, steeringDeadlineID == nil {
+            let identifier = UUID()
+            steeringDeadlineID = identifier
+            steeringDeadlines.continuation.yield(
+                SteeringDeadline(
+                    identifier: identifier,
+                    instant: terminalReceivedAt.advanced(by: steeringAcknowledgementTimeout)))
+        }
+        if shouldFinishBody { await finishBody() }
     }
 
     private func steeringEvent(_ event: JSONObject, type: String, data: Data) async throws {
@@ -259,8 +354,26 @@ package actor ResponsesUpstreamConnection {
         default:
             throw ResponsesWebSocketEvents.Error.invalidEvent
         }
+        if submitted.isEmpty { steeringDeadlineID = nil }
         try await control(data)
-        if terminal && (waitsForTools || (accepted.isEmpty && submitted.isEmpty)) { await finishBody() }
+        if shouldFinishBody { await finishBody() }
+    }
+
+    private var shouldFinishBody: Bool {
+        failure == nil && terminal != nil && submitted.isEmpty
+            && (terminal == .requiresRequest || waitsForTools || accepted.isEmpty)
+    }
+
+    private static func terminalDisposition(_ type: String) -> TerminalDisposition? {
+        switch type {
+        case OpenAIResponsesCompletedEventType.responseCompleted.rawValue,
+            OpenAIResponsesIncompleteEventType.responseIncomplete.rawValue:
+            return .allowsAutomaticContinuation
+        case OpenAIResponsesFailedEventType.responseFailed.rawValue, OpenAIResponsesErrorEventType.error.rawValue:
+            return .requiresRequest
+        default:
+            return nil
+        }
     }
 
     private func finishBody() async {
@@ -270,50 +383,47 @@ package actor ResponsesUpstreamConnection {
 
 }
 
-/// Acknowledgement occurs when the consumer asks for the next chunk, after the
-/// current event passed all wrappers and its public checkpoint was published.
-private actor ResponsesUpstreamBody: AsyncSequence {
-    fileprivate struct Chunk: Sendable {
-        let buffer: ByteBuffer
-        let acknowledgement: AsyncStream<Void>.Continuation
-    }
-    private let channel = AsyncThrowingChannel<Chunk, any Error>()
-    private var pending: AsyncStream<Void>.Continuation?
-
-    func send(_ buffer: ByteBuffer) async throws {
-        let (stream, acknowledgement) = AsyncStream<Void>.makeStream()
-        pending = acknowledgement
-        await channel.send(Chunk(buffer: buffer, acknowledgement: acknowledgement))
-        for await _ in stream {}
-        pending = nil
-        try Task.checkCancellation()
-    }
-
-    func finish() {
-        channel.finish()
-        pending?.finish()
-        pending = nil
-    }
-    func fail(_ error: any Error) {
-        channel.fail(error)
-        pending?.finish()
-        pending = nil
-    }
-
-    nonisolated func makeAsyncIterator() -> AsyncIterator { AsyncIterator(source: channel.makeAsyncIterator()) }
-
-    struct AsyncIterator: AsyncIteratorProtocol {
-        private var source: AsyncThrowingChannel<Chunk, any Error>.Iterator
-        private var previous: AsyncStream<Void>.Continuation?
-
-        fileprivate init(source: AsyncThrowingChannel<Chunk, any Error>.Iterator) { self.source = source }
-
-        mutating func next() async throws -> ByteBuffer? {
-            previous?.finish()
-            previous = nil
-            guard let chunk = try await source.next() else { return nil }
-            previous = chunk.acknowledgement
-            return chunk.buffer
+extension ResponsesUpstreamConnection {
+    private func monitorSteeringAcknowledgements() async throws {
+        for await deadline in steeringDeadlines.stream {
+            // Deadlines are monotonic. A satisfied older timer may finish its
+            // sleep before observing the newest buffered deadline, but cannot
+            // delay that newer deadline or expire a different generation.
+            try await ContinuousClock().sleep(until: deadline.instant)
+            if try await expireSteeringAcknowledgements(deadline.identifier) { return }
         }
+    }
+
+    private func expireSteeringAcknowledgements(_ identifier: UUID) async throws -> Bool {
+        guard failure == nil, steeringDeadlineID == identifier, !submitted.isEmpty else { return false }
+        let failures =
+            accepted.map { identifier, steering in
+                ResponsesUpstreamSteeringFailure(
+                    identifier: identifier,
+                    previousResponseID: steering.previousResponseID,
+                    code: .steeringConnectionRetired,
+                    observer: acceptedObservers[identifier])
+            }
+            + zip(submitted, submittedObservers).map { steering, observer in
+                ResponsesUpstreamSteeringFailure(
+                    identifier: nil,
+                    previousResponseID: steering.previousResponseID,
+                    code: .steeringAcknowledgementTimeout,
+                    observer: observer)
+            }
+        // Retire before suspending: neither a new turn nor a late upstream
+        // acknowledgement may consume an intent from this expired generation.
+        failure = Retirement.steeringAcknowledgementTimeout
+        steeringDeadlineID = nil
+        submitted.removeAll()
+        submittedObservers.removeAll()
+        accepted.removeAll()
+        acceptedObservers.removeAll()
+        retainedSteeringBytes = 0
+        for failure in failures { failure.observer?(ResponsesWebSocketContract.Event.steerFailed.rawValue) }
+        for failure in failures { try await control(failure.encoded()) }
+        await finishBody()
+        try? await outbound?.close()
+        return true
     }
 }

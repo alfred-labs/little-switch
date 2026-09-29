@@ -18,12 +18,38 @@ package struct ResponsesUpstreamKey: Equatable, Sendable {
     let provider: ResponsesUpstreamProvider?
     let endpoint: String
     let model: String
+    let steeringProjection: ResponsesSteeringProjection
+
+    init(
+        provider: ResponsesUpstreamProvider?,
+        endpoint: String,
+        model: String,
+        steeringProjection: ResponsesSteeringProjection = .native
+    ) {
+        self.provider = provider
+        self.endpoint = endpoint
+        self.model = model
+        self.steeringProjection = steeringProjection
+    }
 }
 
 package struct ResponsesUpstreamPolicy: Sendable {
     let provider: ResponsesUpstreamProvider?
     let observeControl: @Sendable (String) -> Void
     let validateProvider: @Sendable () async throws -> Void
+    let steeringProjection: ResponsesSteeringProjection
+
+    init(
+        provider: ResponsesUpstreamProvider?,
+        observeControl: @escaping @Sendable (String) -> Void,
+        validateProvider: @escaping @Sendable () async throws -> Void,
+        steeringProjection: ResponsesSteeringProjection = .native
+    ) {
+        self.provider = provider
+        self.observeControl = observeControl
+        self.validateProvider = validateProvider
+        self.steeringProjection = steeringProjection
+    }
 }
 
 package struct ResponsesWebSocketExchangeContext: Sendable {
@@ -31,6 +57,7 @@ package struct ResponsesWebSocketExchangeContext: Sendable {
     private typealias RoutingKey = OpenAIResponsesRoutingRequest.Key
     let session: ResponsesUpstreamSession
     let turn: ResponsesWebSocketTurn
+    var steeringProjection = ResponsesSteeringProjection.native
 
     func execute(
         request: HTTPClientRequest,
@@ -43,7 +70,11 @@ package struct ResponsesWebSocketExchangeContext: Sendable {
             turn: turn,
             request: request,
             body: body,
-            policy: .init(provider: provider, observeControl: observeControl, validateProvider: validateProvider))
+            policy: .init(
+                provider: provider,
+                observeControl: observeControl,
+                validateProvider: validateProvider,
+                steeringProjection: steeringProjection))
         if let nativeResponse { return nativeResponse }
         return turn.generate ? nil : try Self.warmup(body: body)
     }
@@ -75,6 +106,7 @@ package actor ResponsesUpstreamSession {
     private typealias InputKey = OpenAIResponsesRequestEnvelope.Key
     private typealias RoutingKey = OpenAIResponsesRoutingRequest.Key
     private typealias RequestField = ResponsesWebSocketContract.RequestField
+    private enum Lifecycle { case accepting, finished }
     private let transport: any UpstreamWebSocketTransport
     private let limits: ResponsesWebSocketLimits
     private let control: @Sendable (Data) async throws -> Void
@@ -82,6 +114,7 @@ package actor ResponsesUpstreamSession {
     private var lanes: [String: ResponsesUpstreamConnection] = [:]
     private var turns: [UUID: ResponsesUpstreamConnection] = [:]
     private var unsupported: Set<String> = []
+    private var lifecycle = Lifecycle.accepting
 
     package init(
         transport: any UpstreamWebSocketTransport,
@@ -94,8 +127,10 @@ package actor ResponsesUpstreamSession {
     }
 
     package func run() async {
+        defer { finish() }
         await withDiscardingTaskGroup { group in
             for await connection in openings {
+                guard case .accepting = lifecycle else { break }
                 group.addTask { [transport] in await connection.run(transport: transport) }
             }
             group.cancelAll()
@@ -103,6 +138,7 @@ package actor ResponsesUpstreamSession {
     }
 
     package func finish() {
+        lifecycle = .finished
         openings.finish()
     }
 
@@ -122,7 +158,7 @@ package actor ResponsesUpstreamSession {
         if let connection = lanes[turn.streamID ?? ""], await connection.usable, await connection.hasPendingSteering {
             throw ResponsesWebSocketFailure(
                 status: 409,
-                code: "pending_steering",
+                code: .pendingSteering,
                 message: "Resolve pending steering on its original native connection."
                     + " Reconnect with complete portable history and explicitly resubmit unapplied steering if that provider is no longer valid."
             )
@@ -134,7 +170,7 @@ package actor ResponsesUpstreamSession {
         for connection in lanes.values where await connection.owns(steering.previousResponseID) {
             guard owner == nil else {
                 throw ResponsesWebSocketFailure(
-                    status: 400, code: "response_not_found", message: "The response identifier is ambiguous")
+                    status: 400, code: .responseNotFound, message: "The response identifier is ambiguous")
             }
             owner = connection
         }
@@ -143,7 +179,7 @@ package actor ResponsesUpstreamSession {
             return
         }
         throw ResponsesWebSocketFailure(
-            status: 400, code: "steering_not_supported", message: "The response has no compatible native connection")
+            status: 400, code: .steeringNotSupported, message: "The response has no compatible native connection")
     }
 
     package func exchange(
@@ -152,38 +188,51 @@ package actor ResponsesUpstreamSession {
         body: Data,
         policy: ResponsesUpstreamPolicy
     ) async throws -> HTTPClientResponse? {
-        try Task.checkCancellation()
+        try requireAccepting()
         guard var fields = try JSONValue.parse(body).object,
             let model = fields[RoutingKey.model.rawValue]?.string
         else { throw ResponsesWebSocketEvents.Error.invalidEvent }
         let key = ResponsesUpstreamKey(
             provider: policy.provider,
             endpoint: request.url,
-            model: model)
+            model: model,
+            steeringProjection: policy.steeringProjection)
         let laneID = turn.streamID ?? ""
         let endpointKey = request.url
         guard !unsupported.contains(endpointKey) else { return nil }
         let connection: ResponsesUpstreamConnection
         if let existing = lanes[laneID], existing.key == key, await existing.usable {
+            try requireAccepting()
             connection = existing
         } else {
             if let old = lanes[laneID], await old.usable, await old.hasPendingSteering {
+                try requireAccepting()
                 let providerChanged =
                     old.key.provider != key.provider || old.key.endpoint != key.endpoint
                 throw ResponsesWebSocketFailure(
                     status: 409,
-                    code: "pending_steering",
+                    code: .pendingSteering,
                     message: providerChanged
                         ? "The pending response provider changed. Reconnect, replay complete portable history, and explicitly resubmit unapplied steering."
                         : "Resolve pending steering on the original model before changing the upstream chain")
             }
             if let old = lanes.removeValue(forKey: laneID) { await old.close() }
-            let upgrade = try Self.upgrade(request)
+            try requireAccepting()
+            let upgrade = try UpstreamWebSocketRequest(upgrading: request)
             connection = ResponsesUpstreamConnection(
-                key: key, request: upgrade, maximumBytes: limits.maxResponseBytes, control: control)
+                key: key,
+                request: upgrade,
+                maximumBytes: limits.maxResponseBytes,
+                maximumPendingSteers: limits.maxQueuedRequests,
+                steeringAcknowledgementTimeout: limits.steeringAcknowledgementTimeout,
+                validateSteering: {
+                    try key.steeringProjection.validate($0, model: key.model)
+                },
+                control: control)
             lanes[laneID] = connection
             await openings.send(connection)
         }
+        try requireAccepting()
         fields[EventKey.type.rawValue] = .string(ResponsesWebSocketContract.Event.create.rawValue)
         fields[RequestField.stream.rawValue] = nil
         fields[RequestField.previousResponseID.rawValue] = nil
@@ -196,18 +245,22 @@ package actor ResponsesUpstreamSession {
             fields[RequestField.previousResponseID.rawValue] = .string(previous)
             fields[InputKey.input.rawValue] = .array(delta)
         }
+        try requireAccepting()
         do {
             let response = try await connection.exchange(
                 JSONValue.object(fields).serializedData(),
                 previousResponseID: fields[RequestField.previousResponseID.rawValue]?.string,
                 observeControl: policy.observeControl,
                 validateProvider: policy.validateProvider)
+            try requireAccepting()
             turns[turn.id] = connection
             return response
         } catch let failure as UpstreamWebSocketFailure where failure.kind == .upgradeRejected {
-            // The HTTP upgrade sent no model request. Only an explicit lack of
-            // WS support falls back; auth/rate errors keep their original cause.
-            if let status = failure.response?.head.status.code, [400, 404, 405, 426, 501].contains(status) {
+            try requireAccepting()
+            // An upgrade GET never submitted a model request. Informational,
+            // successful and redirect rejections do not prove Responses support;
+            // auth/rate/server errors keep their origin, except the existing 501 fallback.
+            if let status = failure.response?.head.status.code, Self.allowsHTTPFallback(status) {
                 unsupported.insert(endpointKey)
                 lanes.removeValue(forKey: laneID)
                 return nil
@@ -222,23 +275,17 @@ package actor ResponsesUpstreamSession {
         }
     }
 
+    private func requireAccepting() throws {
+        try Task.checkCancellation()
+        guard case .accepting = lifecycle else { throw CancellationError() }
+    }
+
+    private static func allowsHTTPFallback(_ status: UInt) -> Bool {
+        ((100..<400).contains(status) && status != 101) || [400, 404, 405, 426, 501].contains(status)
+    }
+
     private static func endsWith(_ full: [JSONValue]?, delta: [JSONValue]) -> Bool {
         guard let full, full.count >= delta.count else { return false }
         return Array(full.suffix(delta.count)) == delta
-    }
-
-    private static func upgrade(_ request: HTTPClientRequest) throws -> UpstreamWebSocketRequest {
-        guard var url = URLComponents(string: request.url), ["http", "https"].contains(url.scheme ?? "") else {
-            throw UpstreamWebSocketFailure(kind: .invalidRequest)
-        }
-        url.scheme = url.scheme == "https" ? "wss" : "ws"
-        guard let address = url.url else { throw UpstreamWebSocketFailure(kind: .invalidRequest) }
-        var headers = request.headers
-        for name in [
-            "host", "connection", "upgrade", "content-length", HTTPField.Name.contentType.rawName, "accept",
-            "transfer-encoding", "content-encoding", "sec-websocket-key", "sec-websocket-version",
-            "sec-websocket-protocol", "sec-websocket-extensions",
-        ] { headers.remove(name: name) }
-        return try UpstreamWebSocketRequest(url: address, headers: headers)
     }
 }

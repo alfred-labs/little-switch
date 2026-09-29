@@ -34,7 +34,7 @@ package enum ServerSentEventDataRewriter {
         for frame in frames where !frame.terminal {
             let transformed = try transform(frame.data)
             guard transformed != frame.data else { continue }
-            guard String(data: transformed, encoding: .utf8) != nil, !transformed.contains(0x0D) else {
+            guard ServerSentEventEncoder.isRepresentable(transformed) else {
                 throw Error.invalidData
             }
             let source = try source(
@@ -85,12 +85,7 @@ package enum ServerSentEventDataRewriter {
                     let ending = original[contentEnd..<lineEnd]
                     let joining =
                         ending.isEmpty ? separator.prefix(separator.starts(with: [0x0D, 0x0A]) ? 2 : 1) : ending
-                    let lines = transformed.split(separator: 0x0A, omittingEmptySubsequences: false)
-                    for (index, line) in lines.enumerated() {
-                        if index > 0 { result.append(joining) }
-                        result.append(contentsOf: "data: ".utf8)
-                        result.append(line)
-                    }
+                    result.append(ServerSentEventEncoder.dataLines(transformed, separatedBy: joining))
                     result.append(ending)
                     inserted = true
                 }
