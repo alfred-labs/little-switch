@@ -15,7 +15,8 @@ struct ResponsesUpstreamImageRejectionTests {
             state: image.state,
             secrets: MemorySecretStore())
         let websocket = SyntheticResponsesWebSocketTransport(automaticReplies: false)
-        let harness = try NativeResponsesSessionHarness(websocket: websocket, fixture: fixture)
+        let harness = try NativeResponsesSessionHarness(
+            websocket: websocket, fixture: fixture, clock: ResolverTestClock())
         let task = harness.start()
         defer {
             harness.input.finish()
@@ -36,6 +37,10 @@ struct ResponsesUpstreamImageRejectionTests {
         #expect(
             try !GatewayImageFixture.containsImage(JSONValue.object(requests[1]).serializedData(), wire: .responses))
         let identifier = await websocket.connections
+        // The acceptsImages projection participates in the lane key: the
+        // text-only retry must replace, not reuse, the image-capable socket.
+        #expect(identifier == 2)
+        #expect(await websocket.closeRequests == 1)
         try await websocket.publish(
             #"{"type":"response.created","response":{"id":"r2","output":[]}}"#, connection: identifier)
         try await websocket.publish(
@@ -63,6 +68,7 @@ struct ResponsesUpstreamImageRejectionTests {
             }
         }
         #expect(await harness.http.requests.isEmpty)
+        #expect(await websocket.connections == 2)
         harness.input.finish()
         try await valueWithinTimeout(task, description: "native image retry cleanup")
         await image.registry.shutdown()

@@ -242,11 +242,13 @@ extension GatewayResponder {
         let upstreamResponse = exchange.response
         await recordResponsesCapability(
             providerID: context.target.provider.id,
-            status: UInt(upstreamResponse.status.code)
+            status: UInt(upstreamResponse.status.code),
+            origin: exchange.origin
         )
         if responsesAdapterFallbackApplies(
             status: UInt(upstreamResponse.status.code),
-            provider: context.target.provider
+            provider: context.target.provider,
+            origin: exchange.origin
         ) {
             // Consume the small error body so the pooled connection survives
             // for the adapter retry to the same host.

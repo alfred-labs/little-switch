@@ -169,7 +169,8 @@ package actor ResponsesUpstreamSession {
         }
     }
 
-    package func steer(_ steering: ResponsesWebSocketSteering) async throws {
+    @discardableResult
+    package func steer(_ steering: ResponsesWebSocketSteering) async throws -> ResponsesSteeringOutcome {
         var owner: ResponsesUpstreamConnection?
         for connection in lanes.values where await connection.owns(steering.previousResponseID) {
             guard owner == nil else {
@@ -179,8 +180,7 @@ package actor ResponsesUpstreamSession {
             owner = connection
         }
         if let owner {
-            try await owner.steer(steering)
-            return
+            return try await owner.steer(steering)
         }
         throw ResponsesWebSocketFailure(
             status: 400, code: .steeringNotSupported, message: "The response has no compatible native connection")
@@ -229,6 +229,7 @@ package actor ResponsesUpstreamSession {
                 maximumBytes: limits.maxResponseBytes,
                 maximumPendingSteers: limits.maxQueuedRequests,
                 steeringAcknowledgementTimeout: limits.steeringAcknowledgementTimeout,
+                steeringContinuationTimeout: limits.steeringContinuationTimeout,
                 closeGrace: .seconds(limits.closeGraceSeconds),
                 clock: clock,
                 validateSteering: {

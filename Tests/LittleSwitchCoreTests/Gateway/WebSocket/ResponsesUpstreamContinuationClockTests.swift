@@ -57,7 +57,7 @@ struct ResponsesUpstreamContinuationClockTests {
             try await websocket.publish(
                 #"{"type":"response.steer.failed","steer":{"id":"s2","previous_response_id":"r1"}}"#)
             try await valueWithinTimeout(consumer, description: "resolved automatic continuation")
-            await clock.advance(by: .seconds(10))
+            await clock.advance(by: .seconds(120))
             // A new exchange is a barrier after the previous body ended; it
             // must remain on this usable connection despite the old timer.
             #expect(await connection.usable)
@@ -77,7 +77,7 @@ struct ResponsesUpstreamContinuationClockTests {
             #expect(await connection.hasPendingSteering == false)
             await connection.close()
         } else {
-            await clock.advance(by: .seconds(5))
+            await clock.advance(by: .seconds(60))
             try await valueWithinTimeout(consumer, description: "partially pending steering timeout")
             #expect(await connection.usable == false)
         }

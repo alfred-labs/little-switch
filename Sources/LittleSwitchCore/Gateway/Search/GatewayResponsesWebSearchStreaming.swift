@@ -25,6 +25,25 @@ package struct GatewayResponsesLiveModelHead {
     var bufferedError: Data?
     var nextAttempt = 0
     var imageFallbackUsed = false
+    let origin: GatewayModelExchange.Origin
+
+    init(
+        response: HTTPClientResponse,
+        adapted: PreparedResponsesChatCompletionsRequest?,
+        trace: GatewayUpstreamResponseTrace,
+        bufferedError: Data? = nil,
+        nextAttempt: Int = 0,
+        imageFallbackUsed: Bool = false,
+        origin: GatewayModelExchange.Origin = .http
+    ) {
+        self.response = response
+        self.adapted = adapted
+        self.trace = trace
+        self.bufferedError = bufferedError
+        self.nextAttempt = nextAttempt
+        self.imageFallbackUsed = imageFallbackUsed
+        self.origin = origin
+    }
 }
 
 private struct GatewayResponsesLiveLoopState {
@@ -98,7 +117,8 @@ extension GatewayResponder {
                 !context.needsChatCompletionsAdapter
                 && responsesAdapterFallbackApplies(
                     status: UInt(firstHead.response.status.code),
-                    provider: context.target.provider
+                    provider: context.target.provider,
+                    origin: firstHead.origin
                 )
             if nativeProbeFailed {
                 // Consume the small error body so the pooled connection
@@ -234,7 +254,7 @@ extension GatewayResponder {
             throw GatewayResponsesLiveError.providerFailed
         }
         let response = exchange.response
-        await recordResponsesCapability(context: context, status: response.status.code)
+        await recordResponsesCapability(context: context, status: response.status.code, origin: exchange.origin)
         // The adapter's own route missing is the mirror lesson: only native
         // can be left, so a stale adapter verdict relearns instead of
         // relaying the 404 forever.
@@ -266,7 +286,8 @@ extension GatewayResponder {
             trace: exchange.trace,
             bufferedError: bufferedError,
             nextAttempt: attempt + 1,
-            imageFallbackUsed: forceText
+            imageFallbackUsed: forceText,
+            origin: exchange.origin
         )
     }
 }

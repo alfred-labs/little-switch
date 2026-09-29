@@ -116,7 +116,8 @@ extension GatewayResponder {
     ) async throws -> Bool {
         let status = failure.response.status.code
         let routeAbsent =
-            attempt.wire == .responses && responsesAdapterFallbackApplies(status: status, provider: target.provider)
+            attempt.wire == .responses
+            && responsesAdapterFallbackApplies(status: status, provider: target.provider, origin: failure.origin)
         if routeAbsent {
             guard let budget = try? attempt.budget.taking(.routeFallback) else { return false }
             attempt.budget = budget
@@ -160,4 +161,11 @@ extension GatewayResponder {
 package struct CompactionUpstreamFailure: Swift.Error {
     let response: HTTPClientResponse
     let body: Data
+    let origin: GatewayModelExchange.Origin
+
+    init(response: HTTPClientResponse, body: Data, origin: GatewayModelExchange.Origin = .http) {
+        self.response = response
+        self.body = body
+        self.origin = origin
+    }
 }

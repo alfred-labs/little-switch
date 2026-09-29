@@ -7,7 +7,7 @@ import Testing
 
 @Suite("Native terminal delivery clock", .timeLimit(.minutes(1)))
 struct ResponsesUpstreamDeliveryClockTests {
-    @Test("Slow accepted-control delivery pauses the remaining continuation budget")
+    @Test("Slow ACK delivery cannot expire steering before a buffered successor")
     func bufferedSuccessorAfterControlDelivery() async throws {
         let clock = ResolverTestClock()
         let websocket = SyntheticResponsesWebSocketTransport(automaticReplies: false)
@@ -56,10 +56,6 @@ struct ResponsesUpstreamDeliveryClockTests {
         try await websocket.publish(#"{"type":"response.completed","response":{"id":"r2","output":[]}}"#)
         await clock.advance(by: .seconds(10))
         await delivered.open()
-        let resumed = Task { try await clock.waitForSleeps(2) }
-        defer { resumed.cancel() }
-        try await valueWithinTimeout(resumed, description: "continuation budget resumes after delivery")
-        #expect(await clock.deadlines.last?.offset == .seconds(15))
         try await valueWithinTimeout(consumer, description: "buffered successor after accepted delivery")
         #expect(await connection.usable)
         #expect(await connection.hasPendingSteering == false)
@@ -68,8 +64,8 @@ struct ResponsesUpstreamDeliveryClockTests {
         try await valueWithinTimeout(runner, description: "accepted delivery cleanup")
     }
 
-    @Test("Slow terminal delivery does not spend the upstream acknowledgement budget")
-    func bufferedAcknowledgementAfterDelivery() async throws {
+    @Test("Slow terminal delivery does not spend the upstream acknowledgement budget", arguments: [false, true])
+    func bufferedAcknowledgementAfterDelivery(buffered: Bool) async throws {
         let clock = ResolverTestClock()
         let websocket = SyntheticResponsesWebSocketTransport(automaticReplies: false)
         let controls = WebSocketEventRecorder()
@@ -117,12 +113,15 @@ struct ResponsesUpstreamDeliveryClockTests {
         try await websocket.publish(#"{"type":"response.completed","response":{"id":"r1","output":[]}}"#)
         try await received.wait()
         await clock.advance(by: .seconds(10))
-        try await websocket.publish(
-            #"{"type":"response.steer.accepted","steer":{"id":"s1","previous_response_id":"r1"}}"#)
+        let accepted = #"{"type":"response.steer.accepted","steer":{"id":"s1","previous_response_id":"r1"}}"#
+        if buffered { try await websocket.publish(accepted) }
         #expect(await clock.deadlines.isEmpty)
         await delivered.open()
-        try await clock.waitForSleeps(1)
-        #expect(await clock.deadlines.first?.offset == .seconds(15))
+        if !buffered {
+            try await clock.waitForSleeps(1)
+            #expect(await clock.deadlines.first?.offset == .seconds(15))
+            try await websocket.publish(accepted)
+        }
         _ = try await controls.wait(type: "response.steer.accepted")
         #expect(await connection.usable)
         #expect(try await controls.values().contains { $0["type"] == "response.steer.failed" } == false)

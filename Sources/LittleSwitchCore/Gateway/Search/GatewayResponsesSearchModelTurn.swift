@@ -9,6 +9,7 @@ struct BufferedResponsesModelTurn {
     let body: Data
     let nextAttempt: Int
     let imageFallbackUsed: Bool
+    let origin: GatewayModelExchange.Origin
 }
 
 extension GatewayResponder {
@@ -63,7 +64,7 @@ extension GatewayResponder {
         }
         let response = exchange.response
         defer { exchange.trace.finish() }
-        await recordResponsesCapability(context: context, status: response.status.code)
+        await recordResponsesCapability(context: context, status: response.status.code, origin: exchange.origin)
         // The adapter's own route missing is the mirror lesson: only native
         // can be left, so a stale adapter verdict relearns instead of
         // relaying the 404 forever.
@@ -92,7 +93,8 @@ extension GatewayResponder {
                 response: response,
                 body: responseBody,
                 nextAttempt: turnRequest.attempt + 1,
-                imageFallbackUsed: forceText)
+                imageFallbackUsed: forceText,
+                origin: exchange.origin)
         }
         do {
             return BufferedResponsesModelTurn(
@@ -102,7 +104,8 @@ extension GatewayResponder {
                     prepared: adapted
                 ),
                 nextAttempt: turnRequest.attempt + 1,
-                imageFallbackUsed: forceText
+                imageFallbackUsed: forceText,
+                origin: exchange.origin
             )
         } catch {
             throw GatewayResponsesWebSearchError.invalidProviderResponse

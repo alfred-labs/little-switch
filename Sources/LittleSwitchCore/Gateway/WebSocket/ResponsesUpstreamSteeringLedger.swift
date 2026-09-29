@@ -53,9 +53,21 @@ struct ResponsesUpstreamSteeringLedger: Sendable {
             retainedBytes -= submission.steering.body.count
             submission.observer(type)
         case ResponsesWebSocketContract.Event.steerPending.rawValue:
-            guard let identifier = steer?[SteeringField.id.rawValue]?.string,
-                let submission = accepted.first(where: { $0.0 == identifier })?.1
-            else { throw ResponsesWebSocketEvents.Error.invalidEvent }
+            guard let identifier = steer?[SteeringField.id.rawValue]?.string else {
+                throw ResponsesWebSocketEvents.Error.invalidEvent
+            }
+            let previous = steer?[SteeringField.previousResponseID.rawValue]?.string
+            let submission: Submission
+            if let existing = accepted.first(where: { $0.0 == identifier })?.1 {
+                submission = existing
+            } else if let first = submitted.first, previous == first.steering.previousResponseID {
+                // Pending may itself acknowledge a submitted intent. Keep it
+                // accepted but waiting for tools, not an automatic successor.
+                submission = submitted.removeFirst()
+                accepted.append((identifier, submission))
+            } else {
+                throw ResponsesWebSocketEvents.Error.invalidEvent
+            }
             pendingTools.insert(identifier)
             submission.observer(type)
         default:
@@ -76,14 +88,15 @@ struct ResponsesUpstreamSteeringLedger: Sendable {
     }
 
     mutating func takeFailures(
-        submittedCode: ResponsesWebSocketContract.ErrorCode
+        submittedCode: ResponsesWebSocketContract.ErrorCode,
+        acceptedCode: ResponsesWebSocketContract.ErrorCode = .steeringConnectionRetired
     ) -> [ResponsesUpstreamSteeringFailure] {
         let reports =
             accepted.map { identifier, submission in
                 ResponsesUpstreamSteeringFailure(
                     identifier: identifier,
                     previousResponseID: submission.steering.previousResponseID,
-                    code: .steeringConnectionRetired,
+                    code: pendingTools.contains(identifier) ? .steeringConnectionRetired : acceptedCode,
                     observer: submission.observer)
             }
             + submitted.map { submission in

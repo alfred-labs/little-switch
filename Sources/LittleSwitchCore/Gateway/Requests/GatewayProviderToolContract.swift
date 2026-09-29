@@ -117,7 +117,8 @@ extension GatewayResponder {
                     maximumBytes: maximumErrorBytes
                 )
             }
-            return GatewayModelExchange(response: validated, trace: trace)
+            return GatewayModelExchange(
+                response: validated, trace: trace, origin: nativeResponse == nil ? .http : .webSocket)
         } catch {
             trace.finish()
             throw error

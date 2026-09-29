@@ -24,8 +24,20 @@ struct ResponsesWebSocketSteeringQueue {
         input.yield(steering)
     }
 
-    mutating func complete(bytes: Int) {
+    /// Queue accounting completes for every writer result, including a failure
+    /// already owned by the connection. Only pre-submission rejections need a
+    /// separate command error; the original response's error is independent.
+    mutating func complete(
+        bytes: Int, result: Result<ResponsesSteeringOutcome, any Error>
+    ) -> ResponsesWebSocketFailure? {
         count -= 1
         self.bytes -= bytes
+        switch result {
+        case .success(.forwarded), .success(.connectionOwnedFailure):
+            return nil
+        case .failure(let error):
+            return (error as? ResponsesWebSocketFailure)
+                ?? ResponsesWebSocketFailure(status: 502, code: .upstreamError, message: "Could not forward steering")
+        }
     }
 }

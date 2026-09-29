@@ -16,10 +16,19 @@ struct ResponsesUpstreamSteeringFailure: Sendable {
             SteeringField.previousResponseID.rawValue: .string(previousResponseID)
         ]
         steer[SteeringField.id.rawValue] = identifier.map(JSONValue.string)
-        let message =
-            code == .steeringAcknowledgementTimeout
-            ? "The provider did not acknowledge steering before the deadline. Explicitly resubmit this unapplied input."
-            : "The upstream connection was retired before applying this steering. Explicitly resubmit this unapplied input."
+        let message: String
+        switch code {
+        case .steeringAcknowledgementTimeout:
+            message =
+                "The provider did not acknowledge steering before the deadline. Explicitly resubmit this unapplied input."
+        case .steeringContinuationTimeout:
+            message =
+                "The provider accepted steering but did not start the next response before the deadline."
+                + " Explicitly resubmit this unapplied input."
+        default:
+            message =
+                "The upstream connection was retired before applying this steering. Explicitly resubmit this unapplied input."
+        }
         let event: JSONValue = [
             EventKey.type.rawValue: .string(ResponsesWebSocketContract.Event.steerFailed.rawValue),
             ResponsesWebSocketContract.ControlField.steer.rawValue: .object(steer),

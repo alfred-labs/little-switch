@@ -65,7 +65,7 @@ extension GatewayResponder {
         if adapted != nil {
             await recordChatCompletionsRouteAbsent(providerID: route.provider.id, status: status)
         } else {
-            await recordResponsesCapability(providerID: route.provider.id, status: status)
+            await recordResponsesCapability(providerID: route.provider.id, status: status, origin: exchange.origin)
         }
         let turn = try await collectCompactionTurn(exchange, adapted: adapted)
         let root = try ResponsesCompactionJSON.object(turn.rootJSON, error: .invalidResponse)
@@ -89,9 +89,9 @@ extension GatewayResponder {
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
-                throw CompactionUpstreamFailure(response: response, body: Data())
+                throw CompactionUpstreamFailure(response: response, body: Data(), origin: exchange.origin)
             }
-            throw CompactionUpstreamFailure(response: response, body: bytes)
+            throw CompactionUpstreamFailure(response: response, body: bytes, origin: exchange.origin)
         }
         if response.headers["content-type"].contains(where: { $0.lowercased().contains("text/event-stream") }) {
             defer { exchange.trace.finish() }

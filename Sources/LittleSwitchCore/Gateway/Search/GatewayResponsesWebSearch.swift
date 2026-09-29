@@ -219,7 +219,8 @@ extension GatewayResponder {
                     && !context.needsChatCompletionsAdapter
                     && responsesAdapterFallbackApplies(
                         status: UInt(buffered.response.status.code),
-                        provider: context.target.provider
+                        provider: context.target.provider,
+                        origin: buffered.origin
                     )
                 if nativeProbeFailed {
                     // The native first turn proved the provider has no

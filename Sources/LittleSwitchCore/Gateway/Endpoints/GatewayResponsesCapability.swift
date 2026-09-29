@@ -15,13 +15,15 @@ extension GatewayResponder {
     }
 
     /// Classifies a native `/v1/responses` attempt so later requests skip the
-    /// failed wire: 2xx proves the route, 404/405 prove its absence, and any
-    /// other status says nothing about capability.
+    /// failed wire: 2xx proves the route, HTTP 404/405 prove its absence, and
+    /// other statuses say nothing. WS rejection frames are not route evidence.
     package func recordResponsesCapability(
         providerID: UUID,
-        status: UInt
+        status: UInt,
+        origin: GatewayModelExchange.Origin = .http
     ) async {
         if status == 404 || status == 405 {
+            guard origin == .http else { return }
             await state.responsesCapabilities.record(
                 providerID: providerID,
                 supportsNative: false
@@ -41,14 +43,16 @@ extension GatewayResponder {
     /// route.
     package func recordResponsesCapability(
         context: GatewayResponsesWebSearchContext,
-        status: UInt
+        status: UInt,
+        origin: GatewayModelExchange.Origin = .http
     ) async {
         guard !context.needsChatCompletionsAdapter else {
             return
         }
         await recordResponsesCapability(
             providerID: context.target.provider.id,
-            status: status
+            status: status,
+            origin: origin
         )
     }
 
@@ -74,8 +78,9 @@ extension GatewayResponder {
     /// of being silently rerouted.
     package func responsesAdapterFallbackApplies(
         status: UInt,
-        provider: Provider
+        provider: Provider,
+        origin: GatewayModelExchange.Origin = .http
     ) -> Bool {
-        (status == 404 || status == 405) && provider.responsesWireOverride == nil
+        origin == .http && (status == 404 || status == 405) && provider.responsesWireOverride == nil
     }
 }

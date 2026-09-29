@@ -154,9 +154,9 @@ struct ResponsesUpstreamAckRaceTests {
         _ = try await controls.wait(type: "response.steer.failed")
         await writeGate.open()
         await controlGate.open()
-        await #expect(throws: UpstreamWebSocketSendFailure.self) {
+        #expect(
             try await valueWithinTimeout(write, description: "failed steering write during retirement")
-        }
+                == .connectionOwnedFailure)
         try await valueWithinTimeout(consumer, description: "body after failed write retirement drain")
         try await valueWithinTimeout(runner, description: "connection after failed write retirement drain")
         #expect(try await controls.values().count == 1)

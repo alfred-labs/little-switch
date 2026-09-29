@@ -4,8 +4,18 @@ import NIOCore
 import os
 
 package struct GatewayModelExchange: Sendable {
+    /// A WebSocket message rejects a model request, not the upgraded HTTP route.
+    package enum Origin: Sendable { case http, webSocket }
+
     let response: HTTPClientResponse
     let trace: GatewayUpstreamResponseTrace
+    let origin: Origin
+
+    init(response: HTTPClientResponse, trace: GatewayUpstreamResponseTrace, origin: Origin = .http) {
+        self.response = response
+        self.trace = trace
+        self.origin = origin
+    }
 }
 
 /// One ordered, bounded byte trace shared by validation and the body consumer.

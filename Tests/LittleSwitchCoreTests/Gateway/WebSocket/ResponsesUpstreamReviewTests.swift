@@ -13,7 +13,8 @@ struct ResponsesUpstreamReviewTests {
         let websocket = SyntheticResponsesWebSocketTransport(automaticReplies: false)
         let clock = ResolverTestClock()
         var limits = ResponsesWebSocketLimits()
-        limits.steeringAcknowledgementTimeout = .seconds(5)
+        limits.steeringAcknowledgementTimeout = .seconds(2)
+        limits.steeringContinuationTimeout = .seconds(12)
         let harness = try NativeResponsesSessionHarness(websocket: websocket, limits: limits, clock: clock)
         let task = harness.start()
         defer {
@@ -24,10 +25,11 @@ struct ResponsesUpstreamReviewTests {
         try await websocket.publish(#"{"type":"response.completed","response":{"id":"r1","output":[]}}"#)
         _ = try await harness.events.wait(type: "response.completed")
         try await clock.waitForSleeps(1)
-        await clock.advance(by: .seconds(5))
+        #expect(await clock.deadlines.first?.offset == .seconds(12))
+        await clock.advance(by: .seconds(12))
         let failed = try await harness.events.wait(type: "response.steer.failed")
         #expect(failed["steer"]?.object?["id"] == "s1")
-        #expect(failed["error"]?.object?["code"] == "steering_connection_retired")
+        #expect(failed["error"]?.object?["code"] == "steering_continuation_timeout")
         harness.input.finish()
         try await valueWithinTimeout(task, description: "missing successor cleanup")
     }

@@ -14,6 +14,7 @@ package enum ResponsesWebSocketContract {
         case responseNotFound = "response_not_found"
         case steeringNotSupported = "steering_not_supported"
         case steeringAcknowledgementTimeout = "steering_acknowledgement_timeout"
+        case steeringContinuationTimeout = "steering_continuation_timeout"
         case steeringConnectionRetired = "steering_connection_retired"
         case tooManyPendingSteers = "too_many_pending_steers"
         case upstreamError = "upstream_error"

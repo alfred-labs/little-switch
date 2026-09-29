@@ -90,12 +90,7 @@ package struct ResponsesWebSocketSession: Sendable {
                         throw error
                     // swiftlint:disable:next pattern_matching_keywords
                     case .steered(let bytes, let result):
-                        steeringQueue.complete(bytes: bytes)
-                        if case .failure(let error) = result {
-                            let failure =
-                                (error as? ResponsesWebSocketFailure)
-                                ?? ResponsesWebSocketFailure(
-                                    status: 502, code: .upstreamError, message: "Could not forward steering")
+                        if let failure = steeringQueue.complete(bytes: bytes, result: result) {
                             try await send(failure.encoded())
                         }
                     case .expired:
@@ -187,10 +182,9 @@ package struct ResponsesWebSocketSession: Sendable {
         channel: AsyncChannel<Event>
     ) async {
         for await steering in messages {
-            let result: Result<Void, any Error>
+            let result: Result<ResponsesSteeringOutcome, any Error>
             do {
-                try await upstream.steer(steering)
-                result = .success(())
+                result = .success(try await upstream.steer(steering))
             } catch { result = .failure(error) }
             await channel.send(.steered(steering.body.count, result))
         }
@@ -261,7 +255,7 @@ package struct ResponsesWebSocketSession: Sendable {
         case checkpoint(
             ResponsesWebSocketTurn, ResponsesWebSocketEventResult, [JSONValue],
             AsyncThrowingStream<Void, any Error>.Continuation)
-        case steered(Int, Result<Void, any Error>)
+        case steered(Int, Result<ResponsesSteeringOutcome, any Error>)
         case readFailed(any Error)
         case closed
         case expired
