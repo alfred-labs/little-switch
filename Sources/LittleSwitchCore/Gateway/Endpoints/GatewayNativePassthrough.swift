@@ -73,6 +73,6 @@ extension GatewayResponder {
                 eventID: eventID, action: .annotation(.init(kind: "websocket-steering", message: type)))
         }
         return try await context.execute(
-            request: request, body: body, observeControl: observeControl)
+            request: request, body: body, observeControl: observeControl)?.response
     }
 }

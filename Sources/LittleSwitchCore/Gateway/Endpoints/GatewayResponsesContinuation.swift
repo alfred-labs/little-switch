@@ -21,7 +21,7 @@ extension GatewayResponder {
         }
         if let socket = responsesWebSocketContext, !socket.turn.generate, requiresFallback {
             let response = try ResponsesWebSocketExchangeContext.warmup(body: prepared.body)
-            return streamingResponse(response, eventID: context.eventID, attempt: 0, errorStyle: .openAI)
+            return streamingResponse(response.response, eventID: context.eventID, attempt: 0, errorStyle: .openAI)
         }
         if let compactionPlan = prepared.compaction {
             responder.responsesWebSocketContext = nil

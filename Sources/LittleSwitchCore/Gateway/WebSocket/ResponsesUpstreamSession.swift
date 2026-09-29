@@ -52,6 +52,11 @@ package struct ResponsesUpstreamPolicy: Sendable {
 }
 
 package struct ResponsesWebSocketExchangeContext: Sendable {
+    struct Result: Sendable {
+        let response: HTTPClientResponse
+        let origin: GatewayModelExchange.Origin
+    }
+
     private typealias ResponseKey = OpenAIResponsesResponse.Key
     private typealias RoutingKey = OpenAIResponsesRoutingRequest.Key
     let session: ResponsesUpstreamSession
@@ -64,7 +69,7 @@ package struct ResponsesWebSocketExchangeContext: Sendable {
         provider: ResponsesUpstreamProvider? = nil,
         observeControl: @escaping @Sendable (String) -> Void = { _ in },
         validateProvider: @escaping @Sendable () async throws -> Void = {}
-    ) async throws -> HTTPClientResponse? {
+    ) async throws -> Result? {
         let nativeResponse = try await session.exchange(
             turn: turn,
             request: request,
@@ -74,11 +79,11 @@ package struct ResponsesWebSocketExchangeContext: Sendable {
                 observeControl: observeControl,
                 validateProvider: validateProvider,
                 steeringProjection: steeringProjection))
-        if let nativeResponse { return nativeResponse }
+        if let nativeResponse { return Result(response: nativeResponse, origin: .webSocket) }
         return turn.generate ? nil : try Self.warmup(body: body)
     }
 
-    static func warmup(body: Data) throws -> HTTPClientResponse {
+    static func warmup(body: Data) throws -> Result {
         let response: JSONValue = [
             ResponseKey.id.rawValue: .string(
                 "resp_ls_" + UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()),
@@ -87,10 +92,12 @@ package struct ResponsesWebSocketExchangeContext: Sendable {
             ResponseKey.output.rawValue: [],
             RoutingKey.model.rawValue: try JSONValue.parse(body).object?[RoutingKey.model.rawValue] ?? .null,
         ]
-        return HTTPClientResponse(
-            status: .ok,
-            headers: [HTTPField.Name.contentType.rawName: "application/json"],
-            body: .bytes(.init(bytes: try response.serializedData())))
+        return Result(
+            response: HTTPClientResponse(
+                status: .ok,
+                headers: [HTTPField.Name.contentType.rawName: "application/json"],
+                body: .bytes(.init(bytes: try response.serializedData()))),
+            origin: .synthetic)
     }
 
     func requireFallbackAllowed() async throws {

@@ -66,7 +66,7 @@ extension GatewayResponder {
             outgoing, projection: projection, wire: wire, eventID: eventID)
         var response: HTTPClientResponse
         if let nativeResponse {
-            response = nativeResponse
+            response = nativeResponse.response
         } else {
             try await responsesWebSocketContext?.requireFallbackAllowed()
             response = try await transport.execute(outgoing)
@@ -118,7 +118,7 @@ extension GatewayResponder {
                 )
             }
             return GatewayModelExchange(
-                response: validated, trace: trace, origin: nativeResponse == nil ? .http : .webSocket)
+                response: validated, trace: trace, origin: nativeResponse?.origin ?? .http)
         } catch {
             trace.finish()
             throw error
@@ -127,7 +127,7 @@ extension GatewayResponder {
 
     private func webSocketModelResponse(
         _ request: HTTPClientRequest, projection: CustomToolProjection, wire: ProviderToolContract.Wire, eventID: UUID
-    ) async throws -> HTTPClientResponse? {
+    ) async throws -> ResponsesWebSocketExchangeContext.Result? {
         if wire == .responses, projection.isIdentity, let context = responsesWebSocketContext {
             let provider = responsesWebSocketProvider
             return try await context.execute(

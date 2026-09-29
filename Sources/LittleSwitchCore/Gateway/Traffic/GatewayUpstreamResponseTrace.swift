@@ -4,8 +4,9 @@ import NIOCore
 import os
 
 package struct GatewayModelExchange: Sendable {
-    /// A WebSocket message rejects a model request, not the upgraded HTTP route.
-    package enum Origin: Sendable { case http, webSocket }
+    /// HTTP route evidence differs from WebSocket model evidence; locally
+    /// synthesized replies provide no evidence of provider capabilities.
+    package enum Origin: Sendable { case http, webSocket, synthetic }
 
     let response: HTTPClientResponse
     let trace: GatewayUpstreamResponseTrace

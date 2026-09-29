@@ -16,12 +16,14 @@ extension GatewayResponder {
 
     /// Classifies a native `/v1/responses` attempt so later requests skip the
     /// failed wire: 2xx proves the route, HTTP 404/405 prove its absence, and
-    /// other statuses say nothing. WS rejection frames are not route evidence.
+    /// other statuses say nothing. WS rejection frames are not route evidence;
+    /// synthetic warmups provide no evidence, regardless of their status.
     package func recordResponsesCapability(
         providerID: UUID,
         status: UInt,
         origin: GatewayModelExchange.Origin = .http
     ) async {
+        guard origin != .synthetic else { return }
         if status == 404 || status == 405 {
             guard origin == .http else { return }
             await state.responsesCapabilities.record(
