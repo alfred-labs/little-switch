@@ -60,6 +60,25 @@ validate the history of the committed magic-string baseline.
 It uses GitHub's [Xcode 27 ARM64 preview image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md),
 which provides the Xcode version required by `mise run toolchains`.
 
+### Pull request previews
+
+After all CI checks pass for a pull request, its workflow run uploads
+`LittleSwitch-preview.zip` as an artifact, retained for seven days. Download it
+from the run's **Artifacts** section while signed in to GitHub, then extract it
+to obtain `LittleSwitch.app`. Xcode is only needed to build from source, not to
+run this preview on a supported Apple Silicon Mac. Fork pull requests may need a
+maintainer to approve their first workflow run.
+
+The preview is an unsigned, non-notarized development build, so macOS may require
+approval before opening it. The archive preserves the app's executable permissions
+and framework symlinks. It is uploaded only after bundle verification succeeds.
+
+Finish active gateway sessions and quit the running LittleSwitch before opening
+the preview; run only one instance. Check `http://127.0.0.1:11436/api/about` against
+the preview's `LSBuildTag` in `LittleSwitch.app/Contents/Info.plist` before testing.
+For model-catalog changes, reapply the managed client profile, restart that client,
+and start a fresh chat so it loads the regenerated catalog.
+
 ### Dependency caches
 
 Mise caches its pinned tools. SwiftPM's shared caches at `.build/cache` and

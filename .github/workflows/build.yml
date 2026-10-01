@@ -87,6 +87,19 @@ jobs:
         timeout-minutes: 15
         run: mise run check:bundle
 
+      - name: Package pull request preview
+        if: github.event_name == 'pull_request'
+        run: ditto -c -k --sequesterRsrc --keepParent build/LittleSwitch.app build/LittleSwitch-preview.zip
+
+      - name: Upload pull request preview
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          path: build/LittleSwitch-preview.zip
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
+
       # Preserve downloaded dependencies when a check fails, to speed up fixes.
       - name: Save SwiftPM dependencies
         if: ${{ !cancelled() && steps.swift-cache.outcome == 'success' && steps.swift-cache.outputs.cache-hit != 'true' }}
