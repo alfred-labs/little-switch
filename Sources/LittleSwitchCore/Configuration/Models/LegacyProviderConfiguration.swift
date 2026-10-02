@@ -28,7 +28,6 @@ enum LegacyProviderConfiguration {
         case anthropicBaseURL
         case wireProbe
         case imageInputObservations
-        case integration
     }
 
     static func decode(
@@ -85,8 +84,7 @@ enum LegacyProviderConfiguration {
             anthropicBaseURL: values.decodeIfPresent(String.self, forKey: .anthropicBaseURL),
             wireProbe: values.decodeIfPresent(ProviderWireProbe.self, forKey: .wireProbe),
             imageInputObservations: ModelImageInputObservationDecoding.decode(
-                from: values, forKey: .imageInputObservations),
-            integration: values.decodeIfPresent(ProviderIntegration.self, forKey: .integration) ?? .openAICompatible
+                from: values, forKey: .imageInputObservations)
         )
     }
 

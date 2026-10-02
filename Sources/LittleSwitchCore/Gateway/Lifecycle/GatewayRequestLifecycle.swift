@@ -54,13 +54,24 @@ extension GatewayResponder {
         }
         do {
             try Task.checkCancellation()
-            let response = try await routeResponse(request, eventID: eventID)
+            let response: Response
+            var terminalFailure: TrafficFailure?
+            do {
+                response = try await routeResponse(request, eventID: eventID)
+            } catch let failure as GatewayUpstreamRequestFailure {
+                let message = failure.message(eventID: eventID)
+                response = openAIError(status: .badGateway, message: message)
+                terminalFailure = TrafficFailure(kind: "transport", message: message)
+            }
+            // Cancellation still wins if the transport threw another error
+            // while this task was being cancelled.
             try Task.checkCancellation()
             return finalizingResponse(
                 response,
                 eventID: eventID,
                 permitCompletion: permitCompletion,
-                recordsTraffic: recordsTraffic
+                recordsTraffic: recordsTraffic,
+                terminalFailure: terminalFailure
             )
         } catch let failure as HandledAdmissionFailure {
             await permitCompletion.finish()

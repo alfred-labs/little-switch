@@ -25,7 +25,7 @@ struct WebSocketCloseWriteFailureTests {
             .get()
         do {
             let received = eventLoop.flatSubmit {
-                control.state.value.receivedClose(.init(code: 1_000, reason: nil), control: control)
+                control.state.value.receivedClose(.init(code: 1_000), control: control)
                 let closed = control.state.value.waitForCloseWrite().flatMapThrowing {
                     try control.state.value.receivedPeerClose()
                 }
@@ -37,7 +37,7 @@ struct WebSocketCloseWriteFailureTests {
             }
             try await injected.futureResult.get()
             if physicalCloseFirst {
-                #expect(try await received.get() == .init(code: 1_000, reason: nil))
+                #expect(try await received.get() == .init(code: 1_000))
             } else {
                 await #expect {
                     try await received.get()

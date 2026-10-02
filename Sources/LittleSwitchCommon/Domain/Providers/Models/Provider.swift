@@ -13,7 +13,6 @@ public struct Provider: Codable, Equatable, Identifiable, Sendable {
     public var id: UUID
     public var name: String
     public var baseURL: String
-    public var integration: ProviderIntegration
     public var authMode: AuthMode
     /// Where the credential value comes from: pasted into the editor or
     /// produced by the chosen script. Script sources require a header mode.
@@ -64,13 +63,11 @@ public struct Provider: Codable, Equatable, Identifiable, Sendable {
         responsesWireOverride: ProviderResponsesWireOverride? = nil,
         anthropicBaseURL: String? = nil,
         wireProbe: ProviderWireProbe? = nil,
-        imageInputObservations: [ModelImageInputObservation] = [],
-        integration: ProviderIntegration = .openAICompatible
+        imageInputObservations: [ModelImageInputObservation] = []
     ) {
         self.id = id
         self.name = name
         self.baseURL = baseURL
-        self.integration = integration
         self.authMode = authMode
         self.credentialSource = credentialSource
         self.credentialScriptPath = credentialScriptPath
@@ -89,7 +86,7 @@ public struct Provider: Codable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, baseURL, integration, authMode, credentialSource, credentialScriptPath
+        case id, name, baseURL, authMode, credentialSource, credentialScriptPath
         case credentialRefreshInterval, models, lastRefresh, status, lastError
         case maximumParallelRequests, imageInputOverride, disabledThinkingOverride
         case responsesWireOverride, anthropicBaseURL, wireProbe, imageInputObservations
@@ -120,8 +117,7 @@ public struct Provider: Codable, Equatable, Identifiable, Sendable {
             anthropicBaseURL: try values.decodeIfPresent(String.self, forKey: .anthropicBaseURL),
             wireProbe: try values.decodeIfPresent(ProviderWireProbe.self, forKey: .wireProbe),
             imageInputObservations: ModelImageInputObservationDecoding.decode(
-                from: values, forKey: .imageInputObservations),
-            integration: try values.decodeIfPresent(ProviderIntegration.self, forKey: .integration) ?? .openAICompatible
+                from: values, forKey: .imageInputObservations)
         )
     }
 

@@ -10,16 +10,15 @@ public actor NIOUpstreamWebSocketTransport: UpstreamWebSocketTransport {
     private var stopped = false
     private var shutdownWaiters: [CheckedContinuation<Void, Never>] = []
 
-    public init(configuration: UpstreamWebSocketConfiguration = .init()) throws {
+    /// The client trust configuration defaults to the platform trust store, as
+    /// for the HTTP transport; callers may pin explicit trust roots instead.
+    public init(
+        configuration: UpstreamWebSocketConfiguration = .init(),
+        tlsConfiguration: TLSConfiguration = .makeClientConfiguration()
+    ) throws {
         try configuration.validate()
         self.configuration = configuration
-        self.tlsContext = try NIOSSLContext(configuration: .makeClientConfiguration())
-    }
-
-    init(configuration: UpstreamWebSocketConfiguration = .init(), tlsContext: NIOSSLContext) throws {
-        try configuration.validate()
-        self.configuration = configuration
-        self.tlsContext = tlsContext
+        self.tlsContext = try NIOSSLContext(configuration: tlsConfiguration)
     }
 
     public func withConnection(
@@ -89,12 +88,12 @@ public actor NIOUpstreamWebSocketTransport: UpstreamWebSocketTransport {
                     case .rejected(let response):
                         throw UpstreamWebSocketFailure(kind: .upgradeRejected, response: try await response.get())
                     // swiftlint:disable:next pattern_matching_keywords
-                    case .upgraded(let channel, let handshake):
+                    case .upgraded(let channel, let compression):
                         try await WSCoreConnectionDriver.run(
                             channel: channel,
-                            handshake: handshake,
                             control: control,
                             configuration: configuration,
+                            compression: compression,
                             operation: operation)
                     }
                     control.finishSignal()

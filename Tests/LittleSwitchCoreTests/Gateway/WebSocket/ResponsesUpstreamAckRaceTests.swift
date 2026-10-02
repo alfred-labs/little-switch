@@ -251,7 +251,6 @@ private struct AcknowledgementObservedTransport: UpstreamWebSocketTransport {
     ) async throws {
         try await base.withConnection(request) { connection in
             let observed = UpstreamWebSocketConnection(
-                handshake: connection.handshake,
                 inbound: AcknowledgementObservedInbound(base: connection.inbound, ended: inboundEnded),
                 outbound: connection.outbound)
             if cancelsScopeOnDisconnect {
@@ -302,10 +301,7 @@ private struct RetirementFailingWriteTransport: UpstreamWebSocketTransport {
     ) async throws {
         try await base.withConnection(request) { connection in
             try await operation(
-                .init(
-                    handshake: connection.handshake,
-                    inbound: connection.inbound,
-                    outbound: RetirementFailingWriter(base: connection.outbound)))
+                .init(inbound: connection.inbound, outbound: RetirementFailingWriter(base: connection.outbound)))
         }
     }
 

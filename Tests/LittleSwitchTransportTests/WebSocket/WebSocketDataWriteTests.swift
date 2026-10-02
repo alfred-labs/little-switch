@@ -6,8 +6,9 @@ import Testing
 
 @Suite(.timeLimit(.minutes(1)))
 struct WebSocketDataWriteTests {
-    @Test func sendKeepsItsQueueBudgetUntilTheLastFragmentIsWritten() async throws {
-        let fixture = try await WebSocketDataWriteFixture.start(fragment: 2)
+    @Test(arguments: [false, true])
+    func sendKeepsItsQueueBudgetUntilTheLastFragmentIsWritten(compressed: Bool) async throws {
+        let fixture = try await WebSocketDataWriteFixture.start(fragment: 2, compressed: compressed)
         let completion = WebSocketSendCompletion()
         do {
             try await fixture.run { connection in
@@ -36,9 +37,9 @@ struct WebSocketDataWriteTests {
         }
     }
 
-    @Test(arguments: [1, 2])
-    func failedFragmentIsReportedAsPossiblySubmitted(fragment: Int) async throws {
-        let fixture = try await WebSocketDataWriteFixture.start(fragment: fragment)
+    @Test(arguments: [1, 2], [false, true])
+    func failedFragmentIsReportedAsPossiblySubmitted(fragment: Int, compressed: Bool) async throws {
+        let fixture = try await WebSocketDataWriteFixture.start(fragment: fragment, compressed: compressed)
         do {
             await #expect {
                 try await fixture.run { connection in
@@ -59,8 +60,9 @@ struct WebSocketDataWriteTests {
         }
     }
 
-    @Test func cancellingAHeldDataWriteReleasesThePump() async throws {
-        let fixture = try await WebSocketDataWriteFixture.start()
+    @Test(arguments: [false, true])
+    func cancellingAHeldDataWriteReleasesThePump(compressed: Bool) async throws {
+        let fixture = try await WebSocketDataWriteFixture.start(compressed: compressed)
         do {
             await #expect {
                 try await fixture.run { connection in
@@ -79,8 +81,9 @@ struct WebSocketDataWriteTests {
         }
     }
 
-    @Test func peerCloseReleasesAHeldDataWriteWithoutLosingItsCloseMetadata() async throws {
-        let fixture = try await WebSocketDataWriteFixture.start()
+    @Test(arguments: [false, true])
+    func peerCloseReleasesAHeldDataWriteWithoutLosingItsCloseMetadata(compressed: Bool) async throws {
+        let fixture = try await WebSocketDataWriteFixture.start(compressed: compressed)
         do {
             try await fixture.run { connection in
                 async let peer = connection.inbound.consume { _ in }
@@ -89,7 +92,7 @@ struct WebSocketDataWriteTests {
                 var close = ByteBuffer()
                 close.writeInteger(UInt16(1_000))
                 try await fixture.server.send(.init(fin: true, opcode: .connectionClose, data: close))
-                #expect(try await peer == .init(code: 1_000, reason: nil))
+                #expect(try await peer == .init(code: 1_000))
                 await send.value
             }
             try await fixture.stop()
@@ -99,8 +102,9 @@ struct WebSocketDataWriteTests {
         }
     }
 
-    @Test func aWrittenPongCannotAcknowledgeAHeldDataFragment() async throws {
-        let fixture = try await WebSocketDataWriteFixture.start()
+    @Test(arguments: [false, true])
+    func aWrittenPongCannotAcknowledgeAHeldDataFragment(compressed: Bool) async throws {
+        let fixture = try await WebSocketDataWriteFixture.start(compressed: compressed)
         let completion = WebSocketSendCompletion()
         do {
             try await fixture.run { connection in
@@ -116,7 +120,7 @@ struct WebSocketDataWriteTests {
                 try await fixture.release()
                 try await send.value
                 try await connection.outbound.close()
-                #expect(try await peer == .init(code: 1_000, reason: nil))
+                #expect(try await peer == .init(code: 1_000))
             }
             try await fixture.stop()
         } catch {

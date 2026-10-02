@@ -1,5 +1,4 @@
 import Foundation
-import NIOHTTP1
 
 public protocol UpstreamWebSocketTransport: Sendable {
     /// Opens one connection and invokes the operation once after a verified upgrade.
@@ -16,18 +15,23 @@ public protocol UpstreamWebSocketTransport: Sendable {
 }
 
 public struct UpstreamWebSocketConnection: Sendable {
-    public let handshake: HTTPResponseHead
     public let inbound: any UpstreamWebSocketInbound
     public let outbound: any UpstreamWebSocketOutbound
+    package private(set) var diagnostics: @Sendable () async -> UpstreamWebSocketDiagnostics?
 
-    public init(
-        handshake: HTTPResponseHead,
-        inbound: any UpstreamWebSocketInbound,
-        outbound: any UpstreamWebSocketOutbound
-    ) {
-        self.handshake = handshake
+    public init(inbound: any UpstreamWebSocketInbound, outbound: any UpstreamWebSocketOutbound) {
         self.inbound = inbound
         self.outbound = outbound
+        self.diagnostics = { nil }
+    }
+
+    package init(
+        inbound: any UpstreamWebSocketInbound,
+        outbound: any UpstreamWebSocketOutbound,
+        diagnostics: @escaping @Sendable () async -> UpstreamWebSocketDiagnostics?
+    ) {
+        self.init(inbound: inbound, outbound: outbound)
+        self.diagnostics = diagnostics
     }
 }
 
@@ -57,13 +61,12 @@ public enum UpstreamWebSocketMessage: Sendable, Equatable {
     case binary(Data)
 }
 
+/// The peer's close code. Its reason text is validated on the wire but not retained.
 public struct UpstreamWebSocketPeerClose: Sendable, Equatable {
     /// An empty close frame has no code.
     public let code: UInt16?
-    public let reason: String?
 
-    public init(code: UInt16?, reason: String?) {
+    public init(code: UInt16?) {
         self.code = code
-        self.reason = reason
     }
 }

@@ -35,13 +35,25 @@ extension GatewayResponder {
             body: ResponseBody(contentLength: nil) { writer in
                 defer { trace.finish() }
                 var outcome = NativeResponsesStreamOutcome(maximumBytes: maximumBytes)
-                for try await buffer in upstream.body {
-                    trace.append(Data(buffer.readableBytesView))
-                    try await writer.write(buffer)
-                    outcome.append(buffer)
+                var progress = GatewayStreamProgress()
+                do {
+                    for try await buffer in upstream.body {
+                        progress.upstreamBytes += UInt64(buffer.readableBytes)
+                        trace.append(Data(buffer.readableBytesView))
+                        progress.boundary = .downstreamWrite
+                        try await writer.write(buffer)
+                        progress.downstreamBytes += UInt64(buffer.readableBytes)
+                        outcome.append(buffer)
+                        progress.boundary = .upstreamRead
+                    }
+                    outcome.finish()
+                    progress.boundary = .downstreamFinish
+                    try await writer.finish(nil)
+                } catch {
+                    if error is CancellationError || Task.isCancelled { throw CancellationError() }
+                    await GatewayStreamDiagnostics.current?.record(progress.failure(error))
+                    throw error
                 }
-                outcome.finish()
-                try await writer.finish(nil)
                 if outcome.unavailable {
                     recorder.record(
                         eventID: eventID,

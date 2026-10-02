@@ -17,13 +17,13 @@ struct WebSocketTLSTests {
                 .init(fin: true, opcode: .binary, data: ByteBuffer(bytes: [0, 1, 255])),
                 .init(fin: true, opcode: .connectionClose, data: close),
             ]), tlsContext: contexts.server)
-        let transport = try NIOUpstreamWebSocketTransport(tlsContext: contexts.client)
+        let transport = try NIOUpstreamWebSocketTransport(tlsConfiguration: contexts.client)
         let messages = WebSocketMessageRecorder()
         do {
             let url = try #require(URL(string: "wss://\(host):\(server.port)/v1/responses"))
             try await transport.withConnection(UpstreamWebSocketRequest(url: url)) { connection in
                 let peer = try await connection.inbound.consume { await messages.append($0) }
-                #expect(peer == .init(code: 1_000, reason: nil))
+                #expect(peer == .init(code: 1_000))
             }
             #expect(await messages.values == [.binary(Data([0, 1, 255]))])
             try await transport.shutdown()
@@ -41,7 +41,7 @@ struct WebSocketTLSTests {
         let server = try await WebSocketTestServer.start(tlsContext: contexts.server)
         let transport =
             try wrongHostname
-            ? NIOUpstreamWebSocketTransport(tlsContext: contexts.client)
+            ? NIOUpstreamWebSocketTransport(tlsConfiguration: contexts.client)
             : NIOUpstreamWebSocketTransport()
         do {
             let url = try #require(URL(string: "wss://localhost:\(server.port)/v1/responses"))
@@ -69,7 +69,7 @@ struct WebSocketTLSTests {
         let server = try await WebSocketTestServer.start(
             behavior: .init(acknowledgeClose: false, stopReadingAfterUpgrade: true), tlsContext: contexts.server)
         let transport = try NIOUpstreamWebSocketTransport(
-            configuration: .init(closeTimeout: .milliseconds(50)), tlsContext: contexts.client)
+            configuration: .init(closeTimeout: .milliseconds(50)), tlsConfiguration: contexts.client)
         let started = ContinuousClock.now
         do {
             let url = try #require(URL(string: "wss://localhost:\(server.port)/responses"))

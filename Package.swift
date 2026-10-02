@@ -40,6 +40,7 @@ let package = Package(
             url: "https://github.com/hummingbird-project/swift-websocket.git",
             exact: "1.6.1"
         ),
+        .package(url: "https://github.com/adam-fowler/compress-nio.git", exact: "1.4.2"),
         .package(
             url: "https://github.com/apple/swift-async-algorithms.git",
             exact: "1.1.5"
@@ -101,7 +102,10 @@ let package = Package(
                 .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl"),
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "WSCore", package: "swift-websocket"),
+                .product(name: "WSCompression", package: "swift-websocket"),
+                .product(name: "CompressNIO", package: "compress-nio"),
                 .product(name: "libzstd", package: "zstd"),
             ]
         ),

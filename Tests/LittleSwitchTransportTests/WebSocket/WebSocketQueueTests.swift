@@ -119,7 +119,7 @@ struct WebSocketQueueTests {
             _ = queue.take()
             queue.enqueue(queued)
             if peerInitiated {
-                control.state.value.receivedClose(.init(code: 1_000, reason: nil), control: control)
+                control.state.value.receivedClose(.init(code: 1_000), control: control)
             } else {
                 control.state.value.sentClose()
             }
@@ -143,7 +143,7 @@ struct WebSocketQueueTests {
         let control = Self.control(maximumMessages: 1, maximumBytes: 4)
         let pending = control.eventLoop.submit {
             if peerInitiated {
-                control.state.value.receivedClose(.init(code: 1_000, reason: nil), control: control)
+                control.state.value.receivedClose(.init(code: 1_000), control: control)
             } else {
                 control.state.value.sentClose()
             }

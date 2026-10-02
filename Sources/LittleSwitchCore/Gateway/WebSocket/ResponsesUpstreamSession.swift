@@ -35,6 +35,7 @@ package struct ResponsesUpstreamKey: Equatable, Sendable {
 package struct ResponsesUpstreamPolicy: Sendable {
     let provider: ResponsesUpstreamProvider?
     let observeControl: @Sendable (String) -> Void
+    let observeTransport: @Sendable (String) -> Void
     let validateProvider: @Sendable () async throws -> Void
     let steeringProjection: ResponsesSteeringProjection
 
@@ -42,10 +43,12 @@ package struct ResponsesUpstreamPolicy: Sendable {
         provider: ResponsesUpstreamProvider?,
         observeControl: @escaping @Sendable (String) -> Void,
         validateProvider: @escaping @Sendable () async throws -> Void,
+        observeTransport: @escaping @Sendable (String) -> Void = { _ in },
         steeringProjection: ResponsesSteeringProjection = .native
     ) {
         self.provider = provider
         self.observeControl = observeControl
+        self.observeTransport = observeTransport
         self.validateProvider = validateProvider
         self.steeringProjection = steeringProjection
     }
@@ -68,6 +71,7 @@ package struct ResponsesWebSocketExchangeContext: Sendable {
         body: Data,
         provider: ResponsesUpstreamProvider? = nil,
         observeControl: @escaping @Sendable (String) -> Void = { _ in },
+        observeTransport: @escaping @Sendable (String) -> Void = { _ in },
         validateProvider: @escaping @Sendable () async throws -> Void = {}
     ) async throws -> Result? {
         let nativeResponse = try await session.exchange(
@@ -78,6 +82,7 @@ package struct ResponsesWebSocketExchangeContext: Sendable {
                 provider: provider,
                 observeControl: observeControl,
                 validateProvider: validateProvider,
+                observeTransport: observeTransport,
                 steeringProjection: steeringProjection))
         if let nativeResponse { return Result(response: nativeResponse, origin: .webSocket) }
         return turn.generate ? nil : try Self.warmup(body: body)
@@ -265,6 +270,7 @@ package actor ResponsesUpstreamSession {
                 JSONValue.object(fields).serializedData(),
                 previousResponseID: fields[RequestField.previousResponseID.rawValue]?.string,
                 observeControl: policy.observeControl,
+                observeTransport: policy.observeTransport,
                 validateProvider: policy.validateProvider)
             try requireAccepting()
             if response.status == .ok { turns[turn.id] = connection } else { turns.removeValue(forKey: turn.id) }
@@ -280,9 +286,16 @@ package actor ResponsesUpstreamSession {
                 return nil
             }
             if let rejected = failure.response {
+                var headers = rejected.head.headers
+                // A bounded or interrupted prefix no longer matches the framing the
+                // provider advertised for its complete rejection body.
+                if rejected.bodyState != .complete {
+                    headers.remove(name: HTTPField.Name.contentLength.rawName)
+                    headers.remove(name: HTTPField.Name.transferEncoding.rawName)
+                }
                 return HTTPClientResponse(
                     status: rejected.head.status,
-                    headers: rejected.head.headers,
+                    headers: headers,
                     body: .bytes(.init(bytes: rejected.bodyPrefix)))
             }
             throw failure

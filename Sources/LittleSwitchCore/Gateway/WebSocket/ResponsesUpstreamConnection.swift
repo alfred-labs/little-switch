@@ -55,6 +55,7 @@ package actor ResponsesUpstreamConnection {
     private var waitsForTools = false
     private var validateProvider: @Sendable () async throws -> Void = {}
     private var observeControl: @Sendable (String) -> Void = { _ in }
+    private var diagnostics = ResponsesUpstreamDiagnostics()
 
     package init<C: Clock>(
         key: ResponsesUpstreamKey,
@@ -123,7 +124,8 @@ package actor ResponsesUpstreamConnection {
                     }
                 }
             }
-            await finishRun(UpstreamWebSocketFailure(kind: .connectionEnded))
+            await finishRun(
+                UpstreamWebSocketFailure(kind: .connectionEnded, peerCloseCode: diagnostics.peerClose?.code))
         } catch { await finishRun(error) }
     }
 
@@ -131,9 +133,14 @@ package actor ResponsesUpstreamConnection {
         _ data: Data,
         previousResponseID: String?,
         observeControl: @escaping @Sendable (String) -> Void,
+        observeTransport: @escaping @Sendable (String) -> Void = { _ in },
         validateProvider: @escaping @Sendable () async throws -> Void
     ) async throws -> HTTPClientResponse {
-        try await readiness.wait()
+        diagnostics.begin(requestBytes: data.count, observer: observeTransport)
+        do { try await readiness.wait() } catch {
+            await recordDiagnosticFailure(error)
+            throw error
+        }
         try await validateProvider()
         try Task.checkCancellation()
         guard failure == nil, body == nil, let outbound else {
@@ -155,7 +162,9 @@ package actor ResponsesUpstreamConnection {
         }
         guard let text = String(data: data, encoding: .utf8) else { throw ResponsesWebSocketEvents.Error.invalidEvent }
         do {
+            diagnostics.phase = .sending
             try await outbound.send(.text(text))
+            if diagnostics.phase == .sending { diagnostics.phase = .awaitingResponse }
             return try await channel.response()
         } catch {
             await fail(error)
@@ -229,9 +238,10 @@ package actor ResponsesUpstreamConnection {
     private func consumeConnection(_ connection: UpstreamWebSocketConnection) async throws {
         if let failure { throw failure }
         outbound = connection.outbound
+        diagnostics.snapshot = connection.diagnostics
         defer { outbound = nil }
         await readiness.resolve(.success(()))
-        _ = try await connection.inbound.consume { try await self.receive($0) }
+        diagnostics.peerClose = try await connection.inbound.consume { try await self.receive($0) }
     }
 
     private func closeTransport() async {
@@ -283,6 +293,7 @@ package actor ResponsesUpstreamConnection {
 
     private func finishRun(_ error: any Error) async {
         _ = beginFailure(error)
+        await recordDiagnosticFailure(failure ?? error)
         let reports = pendingReports
         pendingReports.removeAll()
         if !reportingDisabled, !Task.isCancelled {
@@ -300,6 +311,17 @@ package actor ResponsesUpstreamConnection {
         try Task.checkCancellation()
         guard !reportingDisabled else { throw CancellationError() }
         try await control(data)
+    }
+
+    private func recordDiagnosticFailure(_ error: any Error) async {
+        guard !diagnostics.reportedFailure else { return }
+        diagnostics.reportedFailure = true
+        let observation = diagnostics
+        let cancelled =
+            error is CancellationError || Task.isCancelled
+            || (error as? UpstreamWebSocketFailure)?.kind == .cancelled
+        let event = observation.phase == .idle ? "connection-closed" : (cancelled ? "cancelled" : "failed")
+        observation.record(event, wire: await observation.snapshot(), error: error)
     }
 }
 
@@ -322,6 +344,9 @@ extension ResponsesUpstreamConnection {
         guard let body else { throw ResponsesWebSocketEvents.Error.eventAfterTerminal }
         if !receivedResponseEvent, type == OpenAIResponsesErrorEventType.error.rawValue {
             let rejection = try ResponsesUpstreamRejection(event)
+            let observation = diagnostics
+            diagnostics.phase = .idle
+            observation.record("exchange-rejected status=\(rejection.status.code)", wire: await observation.snapshot())
             // Release the exchange before publishing its headers: the caller
             // may immediately retry, including a text-only image projection.
             self.body = nil
@@ -329,6 +354,7 @@ extension ResponsesUpstreamConnection {
             return
         }
         receivedResponseEvent = true
+        diagnostics.phase = .streaming
         if type == OpenAIResponsesCreatedEventType.responseCreated.rawValue {
             guard let identifier = event[EventKey.response.rawValue]?.object?[ResponseKey.id.rawValue]?.string else {
                 throw ResponsesWebSocketEvents.Error.invalidEvent
@@ -404,6 +430,9 @@ extension ResponsesUpstreamConnection {
     }
 
     private func finishBody() async {
+        let observation = diagnostics
+        diagnostics.phase = .idle
+        observation.record("exchange-completed", wire: await observation.snapshot())
         await body?.finish()
         body = nil
     }

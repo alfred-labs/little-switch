@@ -2,7 +2,7 @@ import NIOSSL
 
 /// Synthetic loopback material generated for these tests; never trusted by the default client.
 enum WebSocketTLSFixture {
-    static func contexts(wrongHostname: Bool = false) throws -> (server: NIOSSLContext, client: NIOSSLContext) {
+    static func contexts(wrongHostname: Bool = false) throws -> (server: NIOSSLContext, client: TLSConfiguration) {
         let certificate = try NIOSSLCertificate(
             bytes: Array((wrongHostname ? wrongHostnameCertificate : loopbackCertificate).utf8), format: .pem)
         let key = try NIOSSLPrivateKey(bytes: Array(privateKey.utf8), format: .pem)
@@ -11,7 +11,7 @@ enum WebSocketTLSFixture {
                 certificateChain: [.certificate(certificate)], privateKey: .privateKey(key)))
         var client = TLSConfiguration.makeClientConfiguration()
         client.trustRoots = .certificates([certificate])
-        return (server, try NIOSSLContext(configuration: client))
+        return (server, client)
     }
 
     private static let loopbackCertificate = """

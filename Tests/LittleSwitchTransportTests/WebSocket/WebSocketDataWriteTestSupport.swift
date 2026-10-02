@@ -1,6 +1,5 @@
 import Foundation
 import NIOCore
-import NIOHTTP1
 import NIOSSL
 import NIOTransportServices
 import NIOWebSocket
@@ -12,17 +11,24 @@ struct WebSocketDataWriteFixture: Sendable {
     let control: WebSocketConnectionControl
     let server: WebSocketTestServer
     let channel: NIOAsyncChannel<WebSocketFrame, WebSocketFrame>
-    let handshake: HTTPResponseHead
     let configuration: UpstreamWebSocketConfiguration
+    let compression: WebSocketCompressionNegotiation
     let held: NIOLoopBoundBox<HeldWebSocketDataWrite>
     let received: EventLoopFuture<Void>
     let pongWritten: EventLoopFuture<Void>
 
     static func start(
-        fragment: Int = 1, fragmentBytes: Int = 4, holdClose: Bool = false, acknowledgeClose: Bool = true
+        fragment: Int = 1,
+        fragmentBytes: Int = 4,
+        holdClose: Bool = false,
+        acknowledgeClose: Bool = true,
+        compressed: Bool = false
     ) async throws -> Self {
         let server = try await WebSocketTestServer.start(
-            behavior: .init(echo: false, acknowledgeClose: acknowledgeClose))
+            behavior: .init(
+                headers: compressed ? ["Sec-WebSocket-Extensions": "permessage-deflate"] : [:],
+                echo: false,
+                acknowledgeClose: acknowledgeClose))
         let configuration = UpstreamWebSocketConfiguration(
             closeTimeout: .seconds(1),
             outboundFragmentBytes: fragmentBytes,
@@ -45,7 +51,7 @@ struct WebSocketDataWriteFixture: Sendable {
                 tlsContext: NIOSSLContext(configuration: .makeClientConfiguration()),
                 control: control)
             // swiftlint:disable:next pattern_matching_keywords
-            guard case .upgraded(let channel, let handshake) = outcome else {
+            guard case .upgraded(let channel, let compression) = outcome else {
                 throw UpstreamWebSocketFailure(kind: .invalidUpgrade)
             }
             let installed = control.eventLoop.submit {
@@ -57,8 +63,8 @@ struct WebSocketDataWriteFixture: Sendable {
                 control: control,
                 server: server,
                 channel: channel,
-                handshake: handshake,
                 configuration: configuration,
+                compression: compression,
                 held: held,
                 received: received.futureResult,
                 pongWritten: pongWritten.futureResult)
@@ -74,9 +80,9 @@ struct WebSocketDataWriteFixture: Sendable {
         do {
             try await WSCoreConnectionDriver.run(
                 channel: channel,
-                handshake: handshake,
                 control: control,
                 configuration: configuration,
+                compression: compression,
                 operation: operation)
         } catch {
             throw await control.normalized(error)

@@ -14,6 +14,9 @@ package struct GatewayServerConfiguration: Sendable {
     /// the wire protocol per connection.
     let tlsIdentity: GatewayTLSIdentity?
     var monitoring: GatewayMonitoring?
+    /// Owned by one run: created when the server starts and shut down with the
+    /// HTTP transport once its runner exits, so no upstream socket outlives a run.
+    var upstreamWebSocketTransport: (any UpstreamWebSocketTransport)?
 
     var bindAddress: BindAddress {
         .hostname(ProductIdentity.gatewayLoopbackHost, port: listenPort)
@@ -50,7 +53,7 @@ private struct LiveGatewayServerRunner: GatewayServerRunning {
             responder: responder,
             requiredAuthorityPort: configuration.requiredAuthorityPort,
             tlsConfiguration: configuration.tlsIdentity?.tlsConfiguration,
-            upstreamTransport: try NIOUpstreamWebSocketTransport()
+            upstreamTransport: configuration.upstreamWebSocketTransport
         )
         let application = Application(
             responder: responder,
@@ -117,10 +120,13 @@ public actor GatewayServer {
         guard !hasStarted else {
             throw Error.alreadyStarted
         }
+        let upstreamWebSocketTransport: any UpstreamWebSocketTransport = try NIOUpstreamWebSocketTransport()
         hasStarted = true
 
         let runID = UUID()
-        let runner = runnerFactory.makeRunner(configuration: configuration)
+        var runConfiguration = configuration
+        runConfiguration.upstreamWebSocketTransport = upstreamWebSocketTransport
+        let runner = runnerFactory.makeRunner(configuration: runConfiguration)
         let transport = configuration.transport
         let (readyEvents, readyContinuation) = AsyncThrowingStream<Void, any Swift.Error>.makeStream()
         activeRunID = runID
@@ -139,6 +145,7 @@ public actor GatewayServer {
             await self?.runnerDidExit()
             let cleanupTask = Task {
                 try? await transport.shutdown()
+                try? await upstreamWebSocketTransport.shutdown()
             }
             await cleanupTask.value
             await self?.runnerDidFinish()

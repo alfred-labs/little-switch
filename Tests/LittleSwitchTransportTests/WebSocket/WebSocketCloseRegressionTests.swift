@@ -18,7 +18,7 @@ struct WebSocketCloseRegressionTests {
         do {
             try await transport.withConnection(Self.request(port: server.port)) { connection in
                 let close = try await connection.inbound.consume { _ in }
-                #expect(close == .init(code: 1_000, reason: nil))
+                #expect(close == .init(code: 1_000))
                 try await server.waitForConnectionsToClose()
                 try await Task.sleep(for: .milliseconds(150))
             }
@@ -46,7 +46,7 @@ struct WebSocketCloseRegressionTests {
                     return failure.submission == .mayHaveBeenSubmitted && failure.cause.kind == .connectionClosing
                 }
                 let close = try await closed
-                #expect(close == .init(code: 1_000, reason: nil))
+                #expect(close == .init(code: 1_000))
             }
             try await server.waitForConnectionsToClose()
             let frames = try await server.frames()

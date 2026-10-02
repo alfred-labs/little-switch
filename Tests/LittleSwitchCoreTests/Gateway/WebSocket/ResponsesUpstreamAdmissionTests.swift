@@ -73,6 +73,33 @@ struct ResponsesUpstreamAdmissionTests {
     }
 
     @Test(
+        "A complete rejection keeps its framing while a bounded prefix drops the advertised length",
+        arguments: [
+            UpstreamWebSocketHTTPResponse.BodyState.complete, .limitReached, .deadlineExpired, .connectionClosed,
+            .invalidHTTP,
+        ])
+    func rejectionFraming(bodyState: UpstreamWebSocketHTTPResponse.BodyState) async throws {
+        let websocket = PolicyRejectingWebSocketTransport(
+            status: 401,
+            headers: ["content-length": "4096", "transfer-encoding": "chunked", "retry-after": "7"],
+            bodyState: bodyState)
+        let session = ResponsesUpstreamSession(transport: websocket, limits: .init()) { _ in }
+        let runner = Task { await session.run() }
+        defer { runner.cancel() }
+        let request = HTTPClientRequest(url: "https://synthetic.example/v1/responses")
+        let body = Data(#"{"model":"model","input":"go"}"#.utf8)
+        let response = try #require(
+            await session.exchange(turn: turn(body: body), request: request, body: body, policy: policy()))
+        let complete = bodyState == .complete
+        #expect(response.headers["content-length"] == (complete ? ["4096"] : []))
+        #expect(response.headers["transfer-encoding"] == (complete ? ["chunked"] : []))
+        #expect(response.headers["retry-after"] == ["7"])
+        #expect(Data(try await response.body.collect(upTo: 1_024).readableBytesView) == websocket.body)
+        await session.finish()
+        try await valueWithinTimeout(runner, description: "rejection framing cleanup")
+    }
+
+    @Test(
         "An upgrade GET never teaches native Responses capability",
         arguments: [200, 302, 401, 403, 429, 500, 501, 502, 503])
     func upgradeDoesNotTeachCapability(status: Int) async throws {
@@ -114,10 +141,20 @@ struct ResponsesUpstreamAdmissionTests {
 
 private actor PolicyRejectingWebSocketTransport: UpstreamWebSocketTransport {
     let status: Int
+    let headers: HTTPHeaders
+    let bodyState: UpstreamWebSocketHTTPResponse.BodyState
     let body = Data(#"{"error":{"message":"upgrade origin"}}"#.utf8)
     private(set) var attempts = 0
 
-    init(status: Int) { self.status = status }
+    init(
+        status: Int,
+        headers: HTTPHeaders = ["retry-after": "7"],
+        bodyState: UpstreamWebSocketHTTPResponse.BodyState = .complete
+    ) {
+        self.status = status
+        self.headers = headers
+        self.bodyState = bodyState
+    }
 
     func withConnection(
         _ request: UpstreamWebSocketRequest,
@@ -127,9 +164,9 @@ private actor PolicyRejectingWebSocketTransport: UpstreamWebSocketTransport {
         throw UpstreamWebSocketFailure(
             kind: .upgradeRejected,
             response: .init(
-                head: .init(version: .http1_1, status: .init(statusCode: status), headers: ["retry-after": "7"]),
+                head: .init(version: .http1_1, status: .init(statusCode: status), headers: headers),
                 bodyPrefix: body,
-                bodyState: .complete))
+                bodyState: bodyState))
     }
 
     func shutdown() async throws {}

@@ -1,7 +1,6 @@
 import Foundation
 import Logging
 import NIOCore
-import NIOHTTP1
 import NIOWebSocket
 @_spi(WSInternal) import WSCore
 
@@ -12,9 +11,9 @@ struct WebSocketOperationFailure: Error {
 enum WSCoreConnectionDriver {
     static func run(
         channel: NIOAsyncChannel<WebSocketFrame, WebSocketFrame>,
-        handshake: HTTPResponseHead,
         control: WebSocketConnectionControl,
         configuration: UpstreamWebSocketConfiguration,
+        compression: WebSocketCompressionNegotiation = .none,
         operation: @escaping @Sendable (UpstreamWebSocketConnection) async throws -> Void
     ) async throws {
         var logger = Logger(label: "LittleSwitch.WebSocket")
@@ -23,7 +22,8 @@ enum WSCoreConnectionDriver {
         _ = try await WebSocketHandler.handle(
             type: .client,
             configuration: .init(
-                extensions: [],
+                extensions: try compression.makeExtensions(
+                    maximumBytes: configuration.maximumInboundMessageBytes, control: control),
                 autoPing: ping,
                 closeTimeout: configuration.closeTimeout,
                 validateUTF8: true,
@@ -34,10 +34,10 @@ enum WSCoreConnectionDriver {
             try await control.eventLoop.submit { try control.state.value.installWriter(control: control) }.get()
             let writer = WebSocketMessageWriter(control: control)
             let connection = UpstreamWebSocketConnection(
-                handshake: handshake,
                 inbound: Incoming(
                     stream: inbound, control: control, maximumBytes: configuration.maximumInboundMessageBytes),
-                outbound: writer)
+                outbound: writer
+            ) { try? await control.eventLoop.submit { control.state.value.diagnostics }.get() }
             try await withThrowingTaskGroup(of: Void.self) { group in
                 group.addTask {
                     try await writer.run { command in

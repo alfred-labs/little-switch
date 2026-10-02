@@ -89,10 +89,7 @@ actor SyntheticResponsesWebSocketTransport: UpstreamWebSocketTransport {
         defer { continuations.removeValue(forKey: identifier) }
         let outbound = SyntheticResponsesOutbound(owner: self, continuation: continuation)
         try await operation(
-            .init(
-                handshake: .init(version: .http1_1, status: .switchingProtocols),
-                inbound: SyntheticResponsesInbound(stream: stream, owner: self),
-                outbound: outbound))
+            .init(inbound: SyntheticResponsesInbound(stream: stream, owner: self), outbound: outbound))
     }
 
     func send(
@@ -192,7 +189,7 @@ private struct SyntheticResponsesInbound: UpstreamWebSocketInbound {
             try await onMessage(message)
             await owner.didProcessMessage()
         }
-        return .init(code: 1_000, reason: nil)
+        return .init(code: 1_000)
     }
 }
 

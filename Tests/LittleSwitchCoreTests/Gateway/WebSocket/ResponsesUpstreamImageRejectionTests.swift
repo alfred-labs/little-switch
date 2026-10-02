@@ -15,8 +15,9 @@ struct ResponsesUpstreamImageRejectionTests {
             state: image.state,
             secrets: MemorySecretStore())
         let websocket = SyntheticResponsesWebSocketTransport(automaticReplies: false)
+        let traffic = TrafficTestRecorder()
         let harness = try NativeResponsesSessionHarness(
-            websocket: websocket, fixture: fixture, clock: ResolverTestClock())
+            websocket: websocket, fixture: fixture, traffic: traffic, clock: ResolverTestClock())
         let task = harness.start()
         defer {
             harness.input.finish()
@@ -46,6 +47,16 @@ struct ResponsesUpstreamImageRejectionTests {
         try await websocket.publish(
             #"{"type":"response.completed","response":{"id":"r2","output":[]}}"#, connection: identifier)
         _ = try await harness.events.wait(type: "response.completed")
+        let starts = try #require(traffic.events.first?.annotations)
+            .filter {
+                $0.kind == "upstream-transport" && $0.message.contains("event=exchange-start")
+            }
+            .map(\.message)
+        #expect(starts.count == 2)
+        #expect(starts.first?.contains("attempt=0 ") == true)
+        #expect(starts.last?.contains("attempt=1 ") == true)
+        let connections = starts.compactMap { $0.split(separator: " ").first { $0.hasPrefix("connection=") } }
+        #expect(Set(connections).count == 2)
         let observations = await image.registry.observations()
         #expect(observations.count == 1)
         #expect(observations.first?.verdict == .unsupported)

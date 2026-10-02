@@ -47,28 +47,31 @@ public struct UpstreamWebSocketFailure: Error, Sendable, CustomStringConvertible
 
     public let kind: Kind
     public let response: UpstreamWebSocketHTTPResponse?
+    /// Validated numeric metadata only; never retain the peer's private reason.
+    public let peerCloseCode: UInt16?
 
-    public init(kind: Kind, response: UpstreamWebSocketHTTPResponse? = nil) {
+    public init(kind: Kind, response: UpstreamWebSocketHTTPResponse? = nil, peerCloseCode: UInt16? = nil) {
         self.kind = kind
         self.response = response
+        self.peerCloseCode = peerCloseCode
     }
 
     public var description: String { "WebSocket failure: \(kind)" }
 }
 
-public struct UpstreamWebSocketSendFailure: Error, Sendable, CustomStringConvertible {
-    public enum Submission: Sendable, Equatable {
+package struct UpstreamWebSocketSendFailure: Error, Sendable, CustomStringConvertible {
+    package enum Submission: Sendable, Equatable {
         case notSubmitted
         case mayHaveBeenSubmitted
     }
 
-    public let submission: Submission
-    public let cause: UpstreamWebSocketFailure
+    package let submission: Submission
+    package let cause: UpstreamWebSocketFailure
 
-    public init(submission: Submission, cause: UpstreamWebSocketFailure) {
+    package init(submission: Submission, cause: UpstreamWebSocketFailure) {
         self.submission = submission
         self.cause = cause
     }
 
-    public var description: String { "\(cause) (\(submission))" }
+    package var description: String { "\(cause) (\(submission))" }
 }

@@ -5,7 +5,7 @@ import NIOSSL
 import NIOWebSocket
 
 enum WebSocketUpgradeOutcome: Sendable {
-    case upgraded(NIOAsyncChannel<WebSocketFrame, WebSocketFrame>, HTTPResponseHead)
+    case upgraded(NIOAsyncChannel<WebSocketFrame, WebSocketFrame>, WebSocketCompressionNegotiation)
     case rejected(EventLoopFuture<UpstreamWebSocketHTTPResponse>)
 }
 
@@ -62,6 +62,7 @@ final class WebSocketConnectionState {
     var tlsCloseContext: ChannelHandlerContext?
     var writerQueue: WebSocketMessageQueue?
     private(set) var peerClose: UpstreamWebSocketPeerClose?
+    var diagnostics = UpstreamWebSocketDiagnostics()
     private let handshake: EventLoopPromise<WebSocketUpgradeOutcome>
     private let signal: EventLoopPromise<Void>
     private var handshakeFinished = false
@@ -224,6 +225,8 @@ final class WebSocketConnectionState {
     func receivedClose(_ close: UpstreamWebSocketPeerClose, control: WebSocketConnectionControl) {
         guard peerClose == nil else { return }
         peerClose = close
+        if diagnostics.closeOrigin == nil { diagnostics.closeOrigin = .peer }
+        diagnostics.peerCloseCode = close.code
         armCloseDeadline(control: control)
         writerQueue?.peerClosed()
         settleDataWrite(.success(()))
@@ -259,7 +262,9 @@ final class WebSocketConnectionState {
         pending?.promise.completeWith(result)
     }
 
-    func sentClose() {
+    func sentClose(code: UInt16? = nil) {
+        if diagnostics.closeOrigin == nil { diagnostics.closeOrigin = .local }
+        diagnostics.localCloseCode = code
         closeSent = true
         writerQueue?.closeFrameSent()
         settleDataWrite(.success(()))

@@ -63,12 +63,14 @@ extension GatewayResponder {
             trafficRecorder.record(eventID: eventID, action: .upstreamRequest(traffic))
         }
         let nativeResponse = try await webSocketModelResponse(
-            outgoing, projection: projection, wire: wire, eventID: eventID)
+            outgoing, projection: projection, wire: wire, eventID: eventID, attempt: attempt)
         var response: HTTPClientResponse
         if let nativeResponse {
             response = nativeResponse.response
         } else {
             try await responsesWebSocketContext?.requireFallbackAllowed()
+            transportDiagnosticObserver(eventID: eventID, attempt: attempt)(
+                "transport=http event=request-start requestBytes=\(projection.upstreamBody.count)")
             response = try await transport.execute(outgoing)
         }
         if let monitoring = GatewayMonitoringScope.current {
@@ -126,22 +128,28 @@ extension GatewayResponder {
     }
 
     private func webSocketModelResponse(
-        _ request: HTTPClientRequest, projection: CustomToolProjection, wire: ProviderToolContract.Wire, eventID: UUID
+        _ request: HTTPClientRequest,
+        projection: CustomToolProjection,
+        wire: ProviderToolContract.Wire,
+        eventID: UUID,
+        attempt: Int
     ) async throws -> ResponsesWebSocketExchangeContext.Result? {
         if wire == .responses, projection.isIdentity, let context = responsesWebSocketContext {
             let provider = responsesWebSocketProvider
+            let observeControl: @Sendable (String) -> Void = { [trafficRecorder] type in
+                trafficRecorder.record(
+                    eventID: eventID, action: .annotation(.init(kind: "websocket-steering", message: type)))
+            }
             return try await context.execute(
                 request: request,
                 body: projection.upstreamBody,
                 provider: provider,
-                observeControl: { [trafficRecorder] type in
-                    trafficRecorder.record(
-                        eventID: eventID, action: .annotation(.init(kind: "websocket-steering", message: type)))
-                },
-                validateProvider: { [state] in
-                    guard let provider else { return }
-                    try await state.validateResponsesProvider(provider)
-                })
+                observeControl: observeControl,
+                observeTransport: transportDiagnosticObserver(eventID: eventID, attempt: attempt)
+            ) { [state] in
+                guard let provider else { return }
+                try await state.validateResponsesProvider(provider)
+            }
         } else if wire == .responses, responsesWebSocketContext?.turn.generate == false {
             return try ResponsesWebSocketExchangeContext.warmup(body: projection.upstreamBody)
         } else {

@@ -168,7 +168,7 @@ final class WebSocketMessageQueue {
             waiting = nil
             return
         }
-        failAll(.init(kind: .connectionClosing))
+        failAll(.init(kind: .connectionClosing, peerCloseCode: control.state.value.peerClose?.code))
     }
 
     func closeFrameSent() {

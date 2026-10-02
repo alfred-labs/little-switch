@@ -244,13 +244,17 @@ extension GatewayResponder {
             return buffer
         }
         let body = ResponseBody(contentLength: contentLength) { writer in
+            let diagnostics = GatewayStreamDiagnostics()
             do {
                 try Task.checkCancellation()
-                try await GatewayMonitoringScope.$current.withValue(monitoring) {
-                    if let monitoring, isEventStream, status < 400 {
-                        try await recordedBody.write(MonitoringResponseBodyWriter(writer: writer, context: monitoring))
-                    } else {
-                        try await recordedBody.write(writer)
+                try await GatewayStreamDiagnostics.$current.withValue(diagnostics) {
+                    try await GatewayMonitoringScope.$current.withValue(monitoring) {
+                        if let monitoring, isEventStream, status < 400 {
+                            try await recordedBody.write(
+                                MonitoringResponseBodyWriter(writer: writer, context: monitoring))
+                        } else {
+                            try await recordedBody.write(writer)
+                        }
                     }
                 }
                 try Task.checkCancellation()
@@ -295,10 +299,11 @@ extension GatewayResponder {
                         TrafficFailureCompletion(
                             status: status,
                             finishedAt: Date(),
-                            failure: TrafficFailure(
-                                kind: "stream",
-                                message: "Response streaming failed"
-                            )
+                            failure: await diagnostics.failure?.trafficFailure(eventID: eventID)
+                                ?? TrafficFailure(
+                                    kind: "stream",
+                                    message: "Response streaming failed"
+                                )
                         )
                     )
                 )
@@ -325,18 +330,46 @@ extension GatewayResponder {
                 ? gatewayRewrittenResponseHeaders(upstream.headers) : gatewayResponseHeaders(upstream.headers),
             body: ResponseBody(contentLength: nil) { writer in
                 defer { trace.finish() }
+                var progress = GatewayStreamProgress()
                 do {
                     for try await buffer in upstreamBody {
+                        progress.upstreamBytes += UInt64(buffer.readableBytes)
                         trace.append(Data(buffer.readableBytesView))
+                        progress.boundary = .downstreamWrite
                         try await writer.write(buffer)
+                        progress.downstreamBytes += UInt64(buffer.readableBytes)
+                        progress.boundary = .upstreamRead
                     }
+                    progress.boundary = .downstreamFinish
                     try await writer.finish(nil)
                 } catch let error as ProviderToolContract.Error {
-                    guard let errorStyle else { throw error }
+                    guard let errorStyle else {
+                        // Unselected-wire consumers require the original typed
+                        // contract error, even without recordingClientResponse.
+                        trafficRecorder.record(
+                            eventID: eventID,
+                            action: .annotation(
+                                .init(kind: "stream-boundary", message: progress.failure(error).diagnostic)))
+                        await GatewayStreamDiagnostics.current?.record(progress.failure(error))
+                        throw error
+                    }
                     let frame = providerToolFailureFrame(style: errorStyle, error: error, eventID: eventID)
-                    try await writer.write(ByteBuffer(bytes: frame))
-                    try await writer.finish(nil)
+                    do {
+                        progress.boundary = .downstreamWrite
+                        try await writer.write(ByteBuffer(bytes: frame))
+                        progress.downstreamBytes += UInt64(frame.count)
+                        progress.boundary = .downstreamFinish
+                        try await writer.finish(nil)
+                    } catch {
+                        if error is CancellationError || Task.isCancelled { throw CancellationError() }
+                        await GatewayStreamDiagnostics.current?.record(progress.failure(error))
+                        throw error
+                    }
                     throw GatewayCommittedStreamFailure(reason: "Provider tool contract rejected", toolError: error)
+                } catch {
+                    if error is CancellationError || Task.isCancelled { throw CancellationError() }
+                    await GatewayStreamDiagnostics.current?.record(progress.failure(error))
+                    throw error
                 }
             }
         )

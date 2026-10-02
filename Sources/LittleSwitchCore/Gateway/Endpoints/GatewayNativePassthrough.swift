@@ -45,6 +45,8 @@ extension GatewayResponder {
             if let native {
                 upstream = native
             } else {
+                transportDiagnosticObserver(eventID: eventID)(
+                    "transport=http event=request-start requestBytes=\(body.count)")
                 upstream = try await transport.execute(upstreamRequest)
             }
         } catch let failure as ResponsesWebSocketFailure {
@@ -52,7 +54,7 @@ extension GatewayResponder {
         } catch is CancellationError {
             throw CancellationError()
         } catch {
-            return openAIError(status: .badGateway, message: "Provider request failed")
+            throw GatewayUpstreamRequestFailure(error)
         }
         if let monitoring = GatewayMonitoringScope.current {
             upstream.body = .stream(MonitoringProviderBody(body: upstream.body, context: monitoring))
@@ -73,6 +75,9 @@ extension GatewayResponder {
                 eventID: eventID, action: .annotation(.init(kind: "websocket-steering", message: type)))
         }
         return try await context.execute(
-            request: request, body: body, observeControl: observeControl)?.response
+            request: request,
+            body: body,
+            observeControl: observeControl,
+            observeTransport: transportDiagnosticObserver(eventID: eventID))?.response
     }
 }

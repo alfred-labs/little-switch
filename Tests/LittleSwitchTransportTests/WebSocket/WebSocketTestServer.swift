@@ -9,6 +9,7 @@ struct WebSocketTestServer: Sendable {
         var headers: HTTPHeaders = .init()
         var initialFrames: [WebSocketFrame] = []
         var echo = true
+        var echoCompression = false
         var acknowledgeClose = true
         var stopReadingAfterUpgrade = false
         var closeOnFirstDataFrame = false
@@ -156,7 +157,10 @@ private final class EchoHandler: ChannelInboundHandler {
                 context.writeAndFlush(
                     wrapOutboundOut(
                         .init(
-                            fin: frame.fin, opcode: frame.opcode, data: frame.unmaskedData)), promise: nil)
+                            fin: frame.fin,
+                            rsv1: behavior.echoCompression && frame.rsv1,
+                            opcode: frame.opcode,
+                            data: frame.unmaskedData)), promise: nil)
             }
         default:
             break

@@ -89,6 +89,8 @@ extension GatewayResponder {
                 eventID: eventID,
                 requestedStreaming: requestedStreaming
             )
+        } catch let failure as GatewayUpstreamRequestFailure {
+            throw failure
         } catch let failure as ResponsesWebSocketFailure {
             throw failure
         } catch is CancellationError {

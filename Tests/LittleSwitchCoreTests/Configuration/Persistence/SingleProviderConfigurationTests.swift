@@ -25,6 +25,45 @@ struct SingleProviderConfigurationTests {
         #expect(try JSONDecoder().decode(AppConfiguration.self, from: data) == configuration)
     }
 
+    @Test(
+        "Obsolete integration values cannot alter migrated provider settings or image observations",
+        arguments: [9, 10, 11], ["openAICompatible", "anthropic", "gemini"])
+    func obsoleteIntegration(version: Int, integration: String) throws {
+        let provider = Provider(
+            id: Self.providerID,
+            name: "Separate provider",
+            baseURL: "https://synthetic.example/v1",
+            authMode: .xAPIKey,
+            models: [DiscoveredModel(id: "model")],
+            responsesWireOverride: .chatCompletions,
+            anthropicBaseURL: "https://synthetic.example/anthropic",
+            imageInputObservations: [
+                .init(
+                    key: .init(
+                        providerID: Self.providerID,
+                        modelID: "model",
+                        wire: .responses,
+                        endpoint: "https://synthetic.example/v1/responses"),
+                    verdict: .unsupported,
+                    source: .providerRejection,
+                    observedAt: Date(timeIntervalSince1970: 1))
+            ])
+        let configuration = AppConfiguration(version: version, providers: [provider])
+        var object = try #require(
+            JSONSerialization.jsonObject(with: configurationFixtureData(configuration)) as? [String: Any])
+        var rows = try #require(object["providers"] as? [[String: Any]])
+        rows[0]["integration"] = integration
+        object["providers"] = rows
+        let decoded = try JSONDecoder().decode(
+            AppConfiguration.self, from: JSONSerialization.data(withJSONObject: object))
+        #expect(decoded.providers == [provider])
+        #expect(decoded.providers.first?.hasSameImageInputIdentity(as: provider) == true)
+        let encoded = try #require(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(decoded)) as? [String: Any])
+        let encodedRows = try #require(encoded["providers"] as? [[String: Any]])
+        #expect(encodedRows.first?["integration"] == nil)
+    }
+
     @Test("Experimental primary credentials migrate without changing provider identity", arguments: [false, true])
     func versionTen(script: Bool) throws {
         let credential =
@@ -51,7 +90,7 @@ struct SingleProviderConfigurationTests {
         #expect(configuration.autoMode)
     }
 
-    @Test("Experimental migration keeps integration settings and an exact recovery snapshot")
+    @Test("Experimental migration keeps provider settings and an exact recovery snapshot")
     func migrationPreservesSettings() throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -70,8 +109,7 @@ struct SingleProviderConfigurationTests {
             imageInputOverride: .disabled,
             disabledThinkingOverride: .passthrough,
             responsesWireOverride: .chatCompletions,
-            anthropicBaseURL: "https://synthetic.example/anthropic",
-            integration: .anthropic)
+            anthropicBaseURL: "https://synthetic.example/anthropic")
         let mapping = ModelMapping(providerID: provider.id, modelID: "model")
         var expected = AppConfiguration(
             version: 10,

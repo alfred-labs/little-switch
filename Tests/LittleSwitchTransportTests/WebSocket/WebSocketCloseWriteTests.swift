@@ -31,7 +31,7 @@ struct WebSocketCloseWriteTests {
                     try await fixture.server.send(.init(fin: true, opcode: .connectionClose, data: reply))
                 }
                 let received = try await peer
-                #expect(received == .init(code: 1_000, reason: nil))
+                #expect(received == .init(code: 1_000))
             }
             try await fixture.stop()
         } catch {

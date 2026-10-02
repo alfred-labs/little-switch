@@ -18,7 +18,7 @@ struct WebSocketMessageValidationTests {
         let messages = WebSocketMessageRecorder()
         try await Self.withPeer(frames: frames) { connection in
             let close = try await connection.inbound.consume { await messages.append($0) }
-            #expect(close == .init(code: 1_013, reason: "retry later"))
+            #expect(close == .init(code: 1_013))
         }
         #expect(await messages.values == [.text("😀"), .binary(Data([0, 255, 0]))])
     }

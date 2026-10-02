@@ -26,11 +26,14 @@ enum WebSocketUpgradeHandler {
             enableAutomaticErrorHandling: false
         ) { channel, head in
             channel.eventLoop.makeCompletedFuture {
-                try channel.pipeline.syncOperations.addHandler(WebSocketFrameValidation(control: control))
+                let compression = try WebSocketCompressionNegotiation.negotiate(head.headers)
+                control.state.value.diagnostics.compression = compression.enabled ? .perMessageDeflate : .none
+                try channel.pipeline.syncOperations.addHandler(
+                    WebSocketFrameValidation(control: control, compressionEnabled: compression.enabled))
                 let framed = try NIOAsyncChannel<WebSocketFrame, WebSocketFrame>(
                     wrappingChannelSynchronously: channel,
                     configuration: .init(backPressureStrategy: .init(lowWatermark: 1, highWatermark: 2)))
-                return .upgraded(framed, head)
+                return .upgraded(framed, compression)
             }
         }
         let upgradeConfiguration = NIOTypedHTTPClientUpgradeConfiguration(
@@ -58,15 +61,22 @@ private struct ValidatedWebSocketUpgrader: NIOTypedHTTPClientProtocolUpgrader {
 
     func addCustom(upgradeRequestHeaders: inout HTTPHeaders) {
         base.addCustom(upgradeRequestHeaders: &upgradeRequestHeaders)
+        upgradeRequestHeaders.add(name: "Sec-WebSocket-Extensions", value: WebSocketCompressionNegotiation.offer)
     }
 
     func shouldAllowUpgrade(upgradeResponse: HTTPResponseHead) -> Bool {
-        upgradeResponse.version == .http1_1
-            && upgradeResponse.headers[canonicalForm: "Connection"].contains { $0.lowercased() == "upgrade" }
-            && upgradeResponse.headers[canonicalForm: "Upgrade"].contains { $0.lowercased() == "websocket" }
-            && !upgradeResponse.headers.contains(name: "Sec-WebSocket-Extensions")
-            && !upgradeResponse.headers.contains(name: "Sec-WebSocket-Protocol")
-            && base.shouldAllowUpgrade(upgradeResponse: upgradeResponse)
+        guard
+            upgradeResponse.version == .http1_1
+                && upgradeResponse.headers[canonicalForm: "Connection"].contains(where: { $0.lowercased() == "upgrade" }
+                )
+                && upgradeResponse.headers[canonicalForm: "Upgrade"].contains(where: { $0.lowercased() == "websocket" })
+                && !upgradeResponse.headers.contains(name: "Sec-WebSocket-Protocol")
+                && base.shouldAllowUpgrade(upgradeResponse: upgradeResponse)
+        else { return false }
+        do {
+            _ = try WebSocketCompressionNegotiation.negotiate(upgradeResponse.headers)
+            return true
+        } catch { return false }
     }
 
     func upgrade(channel: any Channel, upgradeResponse: HTTPResponseHead) -> EventLoopFuture<WebSocketUpgradeOutcome> {

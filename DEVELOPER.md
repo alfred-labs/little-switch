@@ -128,6 +128,66 @@ Preserve Swift 6 strict concurrency. Prefer actors, immutable snapshots, and exh
 
 Keep the gateway protocol-transparent unless an explicitly designed adapter (such as the bounded web-search bridge for Firecrawl, Tavily, Brave, or Exa) owns the conversion.
 
+### Diagnosing interrupted responses
+
+Start with the request UUID in `~/Library/Application Support/LittleSwitch/Logs/errors.jsonl`,
+then correlate that `eventID` in the retained `traffic-*.jsonl` files. An HTTP 200
+only opens a stream; check its terminal action as well.
+
+`upstream-transport` annotations identify HTTP request starts and WebSocket
+exchanges. For WebSockets, `connection` stays stable across reused turns;
+`exchange` counts turns on that connection and `attempt` matches the upstream
+request/response records, including image retries. `phase` distinguishes
+connecting, sending, awaiting the first response, streaming, and idle. Early
+provider refusals produce `exchange-rejected` with their status. Closing an idle
+connection is `connection-closed`, not a failed completed request.
+
+WebSocket payload/frame counters are **connection-wide**. Written bytes count
+successful local socket writes, not provider acceptance; received bytes count
+data frames, excluding control frames and framing overhead. These are wire payload
+sizes after optional compression. `compression=permessage-deflate` identifies the
+negotiated extension; individual messages may still be uncompressed. Compare
+snapshots for per-exchange deltas. `requestBytes` is
+the outgoing exchange's logical size before compression; do not compare it with
+the entire connection's cumulative written bytes to infer a compression ratio.
+`peerCloseCode` preserves the validated peer code; `closeOrigin` identifies the
+first observed close frame direction. `unobserved` does not establish which end
+caused an abrupt disconnect. Numeric peer codes also survive in visible request
+failures, including a close during a partially written message. Close reason
+strings are never logged here. A peer 1009 is a size rejection, not evidence that
+the provider lacks WebSocket support, and does not authorize automatic replay.
+
+Only outbound provider connections negotiate `permessage-deflate`; incoming
+gateway WebSockets remain uncompressed. A peer may decline compression. Unknown
+extensions, duplicate parameters, malformed windows and subprotocols reject the
+upgrade. Compression state is per physical connection, with negotiated context
+takeover. The default 64 MiB outbound/queue limits count uncompressed input;
+provider frames are bounded to 8 MiB on the wire, with bounded per-frame inflation
+and an 8 MiB cumulative decoded-message limit. A raw-zlib inflater counts actual
+decoded bytes, permits exact-limit messages and continues through final DEFLATE
+blocks without dropping negotiated history. The stripped empty-block boundary is
+validated before restoring the trailer, so truncated data cannot appear complete.
+Compression does not remove images
+or history, and does not guarantee acceptance under the provider's own limits.
+
+Stream failure diagnostics distinguish `upstream-read`, `downstream-write`, and
+`downstream-finish`, with read and successfully forwarded payload counts. These
+are retained in the terminal failure without changing the original thrown error.
+An unselected-wire tool-contract rejection also records a `stream-boundary`
+annotation for consumers without a terminal recorder.
+Error details are restricted to known types/codes, never arbitrary descriptions,
+headers, credentials, or message content. Full traffic bodies remain sensitive.
+
+Use synthetic tests before a live reproduction:
+
+```sh
+mise run swift:test -- --filter 'WebSocketCompression|WebSocketDeflateRegressionTests|WebSocketDiagnosticsTests|ResponsesTransportDiagnosticsTests|GatewayStreamDiagnosticsTests|ResponsesUpstreamImageRejectionTests'
+```
+
+Do not restart the active gateway or replay a private conversation to diagnose
+an incident. Have the user relaunch the built app, verify `/api/about` against
+`git describe --tags --always --dirty`, and agree on any live synthetic probe.
+
 ## Implementation rules
 
 - Start behavior changes with a focused failing Swift Testing test. Keep tests beside the owning target and compare complete values when practical.

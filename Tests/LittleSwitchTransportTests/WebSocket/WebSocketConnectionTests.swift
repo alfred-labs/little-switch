@@ -6,7 +6,7 @@ import Testing
 @testable import LittleSwitchTransport
 
 struct WebSocketConnectionTests {
-    @Test func readsMessagesAndPreservesUpgradeHeaders() async throws {
+    @Test func readsMessagesBehindExtraUpgradeHeaders() async throws {
         var close = ByteBuffer()
         close.writeInteger(UInt16(1_000))
         let server = try await WebSocketTestServer.start(
@@ -20,9 +20,8 @@ struct WebSocketConnectionTests {
         let messages = WebSocketMessageRecorder()
         do {
             try await transport.withConnection(request(port: server.port)) { connection in
-                #expect(connection.handshake.headers["X-Turn-State"] == ["ready"])
                 let closed = try await connection.inbound.consume { await messages.append($0) }
-                #expect(closed == .init(code: 1_000, reason: nil))
+                #expect(closed == .init(code: 1_000))
                 await #expect(throws: UpstreamWebSocketFailure.self) {
                     try await connection.inbound.consume { _ in }
                 }

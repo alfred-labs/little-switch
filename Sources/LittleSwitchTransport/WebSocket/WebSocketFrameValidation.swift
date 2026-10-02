@@ -10,15 +10,14 @@ enum WebSocketCloseValidation {
 
     static func decode(_ data: ByteBuffer) throws -> UpstreamWebSocketPeerClose {
         guard data.readableBytes != 1 else { throw UpstreamWebSocketFailure(kind: .protocolViolation) }
-        guard data.readableBytes > 0 else { return .init(code: nil, reason: nil) }
+        guard data.readableBytes > 0 else { return .init(code: nil) }
         guard let code = data.getInteger(at: data.readerIndex, as: UInt16.self), valid(code: code) else {
             throw UpstreamWebSocketFailure(kind: .protocolViolation)
         }
-        let bytes = data.readableBytesView.dropFirst(2)
-        guard let reason = String(bytes: bytes, encoding: .utf8) else {
+        guard String(bytes: data.readableBytesView.dropFirst(2), encoding: .utf8) != nil else {
             throw UpstreamWebSocketFailure(kind: .protocolViolation)
         }
-        return .init(code: code, reason: bytes.isEmpty ? nil : reason)
+        return .init(code: code)
     }
 }
 
@@ -28,18 +27,26 @@ final class WebSocketFrameValidation: ChannelDuplexHandler {
     typealias OutboundIn = WebSocketFrame
     typealias OutboundOut = WebSocketFrame
     private let control: WebSocketConnectionControl
+    private let compressionEnabled: Bool
 
-    init(control: WebSocketConnectionControl) { self.control = control }
+    init(control: WebSocketConnectionControl, compressionEnabled: Bool = false) {
+        self.control = control
+        self.compressionEnabled = compressionEnabled
+    }
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         var frame = unwrapInboundIn(data)
         do {
-            guard frame.maskKey == nil, !frame.rsv1, !frame.rsv2, !frame.rsv3 else {
+            let startsMessage = frame.opcode == .text || frame.opcode == .binary
+            guard frame.maskKey == nil, !frame.rsv2, !frame.rsv3,
+                !frame.rsv1 || (compressionEnabled && startsMessage)
+            else {
                 throw UpstreamWebSocketFailure(kind: .protocolViolation)
             }
             switch frame.opcode {
             case .text, .binary, .continuation:
-                break
+                control.state.value.diagnostics.receivedPayloadBytes += UInt64(frame.data.readableBytes)
+                control.state.value.diagnostics.receivedDataFrames += 1
             case .ping, .pong:
                 guard frame.fin, frame.data.readableBytes <= 125 else {
                     throw UpstreamWebSocketFailure(kind: .protocolViolation)
@@ -86,13 +93,19 @@ final class WebSocketFrameValidation: ChannelDuplexHandler {
             let written = context.eventLoop.makePromise(of: Void.self)
             let control = control
             written.futureResult.whenComplete {
+                if case .success = $0 {
+                    control.state.value.diagnostics.writtenPayloadBytes += UInt64(frame.data.readableBytes)
+                    control.state.value.diagnostics.writtenDataFrames += 1
+                } else if case .failure(let error) = $0, control.state.value.diagnostics.underlyingError == nil {
+                    control.state.value.diagnostics.underlyingError = error
+                }
                 control.state.value.completedDataWrite(identifier, result: $0)
             }
             if let promise { written.futureResult.cascade(to: promise) }
             context.write(wrapOutboundOut(frame), promise: written)
             return
         case .connectionClose:
-            control.state.value.sentClose()
+            control.state.value.sentClose(code: frame.data.getInteger(at: frame.data.readerIndex, as: UInt16.self))
             // NIOAsyncChannel yields without awaiting socket writes. Join this
             // write before a completed consumer can let WSCore close its scope.
             let written = context.eventLoop.makePromise(of: Void.self)
@@ -113,6 +126,9 @@ final class WebSocketFrameValidation: ChannelDuplexHandler {
         let expectedClose = error as? NIOSSLError == .uncleanShutdown || error as? ChannelError == .ioOnClosedChannel
         if control.state.value.peerClose != nil, expectedClose {
             return
+        }
+        if control.state.value.diagnostics.underlyingError == nil {
+            control.state.value.diagnostics.underlyingError = error
         }
         let kind: UpstreamWebSocketFailure.Kind =
             if let frameError = error as? NIOWebSocketError {
