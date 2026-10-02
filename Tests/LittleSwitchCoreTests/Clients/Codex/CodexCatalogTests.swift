@@ -96,7 +96,7 @@ struct CodexCatalogTests {
         #expect(first.effectiveContextWindowPercent == 95)
         #expect(first.experimentalSupportedTools.isEmpty)
         #expect(first.inputModalities == ["text", "image"])
-        #expect(!first.supportsSearchTool)
+        #expect(catalog.models.map(\.supportsSearchTool) == [true, true, true])
         #expect(first.multiAgentVersion == "v2")
     }
 
@@ -174,7 +174,7 @@ struct CodexCatalogTests {
         #expect(try modalities(override: .disabled, detected: true) == ["text"])
     }
 
-    @Test("Encoded catalog advertises every Codex reasoning effort")
+    @Test("Encoded catalog advertises reasoning efforts and deferred tool search")
     func encodedReasoningEfforts() throws {
         let providerID = UUID()
         let provider = Provider(
@@ -194,6 +194,7 @@ struct CodexCatalogTests {
 
         #expect(model["default_reasoning_level"] as? String == "medium")
         #expect(model["multi_agent_version"] as? String == "v2")
+        #expect(models.map { $0["supports_search_tool"] as? Bool } == [true, true])
         let levels = try #require(
             model["supported_reasoning_levels"] as? [[String: String]]
         )

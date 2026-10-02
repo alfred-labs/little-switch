@@ -18,7 +18,7 @@ struct CodexCatalogToolModeTests {
         )
         let native: [String: Any] = [
             "slug": "native-model", "tool_mode": "code_mode_only", "apply_patch_tool_type": "freeform",
-            "priority": 9, "supported_in_api": true,
+            "priority": 9, "supported_in_api": true, "supports_search_tool": false,
         ]
         let configuration = CodexConfiguration(
             defaultModel: ModelMapping(providerID: providerID, modelID: "coding-model"))
@@ -36,6 +36,7 @@ struct CodexCatalogToolModeTests {
         for entry in managed {
             #expect(entry["tool_mode"] == nil)
             #expect(entry["apply_patch_tool_type"] is NSNull)
+            #expect(entry["supports_search_tool"] as? Bool == true)
         }
         var expectedNative = native
         expectedNative["supported_in_api"] = false

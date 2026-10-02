@@ -243,7 +243,9 @@ public enum CodexCatalog {
             inputModalities: acceptsImages
                 ? ["text", "image"]
                 : ["text"],
-            supportsSearchTool: false,
+            // The gateway lowers client-executed discovery to ordinary function calls.
+            // Advertise it so clients can defer large tool catalogs.
+            supportsSearchTool: true,
             multiAgentVersion: "v2",
             autoReviewModelOverride: managedAutoReviewModel
         )
